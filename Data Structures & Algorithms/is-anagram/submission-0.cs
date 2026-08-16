@@ -1,5 +1,5 @@
 public class Solution {
-    /*public bool IsAnagram(string s, string t) {
+    public bool IsAnagram(string s, string t) {
 
     //Length have to be equal
     if (s.Length != t.Length)
@@ -30,23 +30,5 @@ public class Solution {
     return true;
     
     }
-    Above solution is good, but as we only work with lowercase chars we can optimize*/
-    
-    public bool IsAnagram(string s, string t) {
-    if (s.Length != t.Length)
-        return false;
-
-    int[] counts = new int[26];
-    for (int i = 0; i < s.Length; i++)
-    {
-        counts[s[i] - 'a']++;
-        counts[t[i] - 'a']--;
-    }
-
-    foreach (int c in counts)
-        if (c != 0)
-            return false;
-
-    return true;
-}
-}
+    //Time Complexity ----O(n)
+    //Space Complexity ---O(n)
