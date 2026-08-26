@@ -2,6 +2,7 @@ public class Solution
 {
     public int LengthOfLongestSubstring(string s)
     {
+        //most optimal solution
         var lastSeen = new Dictionary<char, int>();
         int maxLen = 0;
         int left = 0;
