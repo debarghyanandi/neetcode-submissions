@@ -1,5 +1,6 @@
 public class Solution {
     public int LengthOfLongestSubstring(string s) {
+        //sub optimal but easy
         HashSet<char> charSet = new HashSet<char>();
         int l = 0;
         int res = 0;
