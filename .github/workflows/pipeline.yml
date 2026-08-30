@@ -1,0 +1,93 @@
+name: NeetCode pipeline
+
+# ---------------------------------------------------------------------------
+# MILESTONE 1 - detection only.
+# This workflow reads the repo and prints what it would do. It writes no files,
+# makes no commits, and calls no model. Do not add those until you have watched
+# this run and agreed with every folder it names.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/submission-*'
+  schedule:
+    # 20:30 UTC = 02:00 IST daily. GitHub's scheduler is best-effort and can
+    # run late under load; nothing here is time-critical, so that is fine.
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+    inputs:
+      exclude:
+        description: 'Comma-separated slugs to hold back (leave empty to drain everything)'
+        required: false
+        default: ''
+
+concurrency:
+  # A cron run and a push run must never scan the same repo at once.
+  group: neetcode-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+
+    # LOOP GUARD 1 of 2. The pipeline's own commits are prefixed chore(pipeline);
+    # this refuses to act on them. Guard 2 is that later milestones must commit
+    # with the built-in GITHUB_TOKEN, whose pushes do not start new workflow runs.
+    # A personal access token defeats guard 2 - do not introduce one.
+    if: >-
+      github.event_name != 'push' ||
+      !startsWith(github.event.head_commit.message, 'chore(pipeline)')
+
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v4
+        with:
+          # detect.mjs diffs against the pre-push SHA. A shallow clone cannot.
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Detect pending submissions
+        id: detect
+        env:
+          # Empty on cron and manual runs - which is what makes those drain
+          # everything, including the folder a push would have held back.
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+          MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$BEFORE_SHA" ]; then
+            args+=(--exclude-changed-since "$BEFORE_SHA")
+          fi
+          if [ -n "${MANUAL_EXCLUDE:-}" ]; then
+            args+=(--exclude "$MANUAL_EXCLUDE")
+          fi
+          echo "::group::Human-readable report"
+          node scripts/detect.mjs "${args[@]}"
+          echo "::endgroup::"
+          echo "::group::Machine-readable report"
+          node scripts/detect.mjs "${args[@]}" --json | tee "$RUNNER_TEMP/detect.json"
+          echo "::endgroup::"
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### NeetCode pipeline - detection"
+            echo ""
+            echo "- trigger: \`${{ github.event_name }}\`"
+            echo "- selected folders: **${{ steps.detect.outputs.count }}**"
+            echo ""
+            echo '```json'
+            cat "$RUNNER_TEMP/detect.json" 2>/dev/null || echo '{}'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

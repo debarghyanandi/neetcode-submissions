@@ -1,0 +1,12 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Pipeline scratch - state.json IS committed, tmp is not
+.agent/tmp/
