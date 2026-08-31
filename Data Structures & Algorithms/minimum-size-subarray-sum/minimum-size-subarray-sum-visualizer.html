@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minimum Size Subarray Sum — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -52,7 +52,7 @@ body{
 }
 .brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
 .brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
-.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:66ch;}
+.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
 .brand-sub code, .status code, .note-text code{
   font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
 }
@@ -327,40 +327,126 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Minimum Size Subarray Sum',
-  note: 'a prefix array you can delete — the sum is maintainable',
+  note: 'each element enters the window once and leaves once',
   inputs: [
-    {id:'nums', label:'array', value:'2,3,1,2,4,3', width:240},
-    {id:'target', label:'target', type:'number', value:7, width:80}
+    {id:'t', label:'target', value:'7', width:90},
+    {id:'n', label:'nums', value:'2,3,1,2,4,3', width:260}
   ],
   parse(raw){
-    const nums = parseInts(raw.nums, 12);
-    const target = Number(raw.target);
-    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (nums.some(v => v < 0)) return {ok:false, msg:'Values must be non-negative — negatives break the monotonicity that licenses shrinking.'};
-    if (!Number.isFinite(target) || target <= 0) return {ok:false, msg:'Target must be a positive integer.'};
-    return {ok:true, value:{nums, target}, normalized:{nums: nums.join(',')}};
+    const n = parseInts(raw.n, 10);
+    if (!n) return {ok:false, msg:'Enter a valid comma-separated list of numbers.'};
+    if (n.length < 2) return {ok:false, msg:'Needs at least two values.'};
+    if (n.some(v => v <= 0)) return {ok:false, msg:'Values must be positive — the shrinking window depends on it.'};
+    const t = parseInts(raw.t, 1);
+    if (!t) return {ok:false, msg:'Enter a numeric target.'};
+    const target = t[0];
+    if (target <= 0) return {ok:false, msg:'Target must be positive.'};
+    return {ok:true, value:{n, target}, normalized:{n: n.join(','), t: String(target)}};
   },
   shuffle(){
-    const a = randInts(7 + Math.floor(Math.random()*3), 1, 6);
-    return {nums: a.join(','), target: 6 + Math.floor(Math.random()*8)};
+    const n = randInts(6 + Math.floor(Math.random()*2), 1, 6);
+    const total = n.reduce((a, b) => a + b, 0);
+    return {n: n.join(','), t: String(Math.max(2, Math.round(total * 0.45)))};
   },
   solutions: [
   {
-    label: 'Prefix-sum array',
-    badge: 'O(n) time · O(n) space · suboptimal.cs · your solution',
-    blurb: 'Store every prefix so the sum of <code>nums[l..r]</code> is <code>prefix[r+1] − prefix[l]</code> in O(1). The window logic stays pure. Reaching for prefix sums is the right instinct when the queried ranges are <b>arbitrary</b> — here they are not.',
+    label: 'Sliding window with a running sum',
+    badge: 'O(n) time · O(1) space · optimal.cs',
+    blurb: 'All values are positive, so widening only raises the sum and shrinking only lowers it. That means one left pointer suffices: widen until the window reaches <code>target</code>, then shrink while it still does. Each index is added once and subtracted once — 2n operations, two ints of state.',
     legend: [
-      {cls:'win', text:'the window [left, right]'},
-      {cls:'hot', text:'right'},
-      {cls:'good', text:'shortest qualifying window so far'},
-      {cls:null, text:'prefix[i] = sum of the first i elements'}
+      {cls:'win', text:'current window left…right'},
+      {cls:'hot', text:'element entering or leaving'},
+      {cls:'good', text:'shortest window found'},
+      {cls:'dim', text:'not yet reached'}
+    ],
+    code: [
+      'int sum = 0;',
+      'int left = 0;',
+      'int result = int.MaxValue;',
+      '',
+      'for (int right = 0; right < nums.Length; right++)',
+      '{',
+      '    sum = sum + nums[right];',
+      '',
+      '    while (sum >= target)',
+      '    {',
+      '        result = Math.Min(result, right - left + 1);',
+      '        sum = sum - nums[left];',
+      '        left++;',
+      '    }',
+      '}',
+      'return result == int.MaxValue ? 0 : result;'
+    ],
+    simulate(input){
+      const n = input.n, target = input.target, steps = [];
+      let sum = 0, left = 0, result = Infinity, bl = -1, br = -1;
+      const panels = (r, ev) => [
+        pBars('nums — the window is left…right', n, (k) => ({
+          cls: k === ev ? 'hot'
+             : (r >= 0 && k >= left && k <= r) ? 'in-window'
+             : (r >= 0 && k > r) ? 'dim' : ''
+        })),
+        pPills('', [
+          {k:'left', v: left, cls:'accent'},
+          {k:'right', v: r >= 0 ? r : '–', cls:'hot'},
+          {k:'sum', v: sum},
+          {k:'target', v: target},
+          {k:'result', v: result === Infinity ? '∞' : result, cls:'good'}
+        ])
+      ];
+      steps.push({lines:[1,2,3], msg:'Every value is positive, so the window sum rises when <code>right</code> moves and falls when <code>left</code> moves — <em>monotonic</em> in both directions. That is the whole reason a single left pointer is enough. <code>result</code> starts at <code>int.MaxValue</code> so any real window beats it.', panels: panels(-1)});
+      for (let r = 0; r < n.length; r++){
+        sum = sum + n[r];
+        const qualifies = sum >= target;
+        steps.push({lines:[5,7], msg:'Admit <code>nums[' + r + '] = ' + n[r] + '</code>. The running sum becomes <b>' + sum + '</b> — one addition, however wide the window is. Window [' + left + '…' + r + '] ' + (qualifies ? 'now reaches ' + target + ', so the <code>while</code> can start trimming.' : 'is still short of ' + target + ', so nothing to trim yet — widen again.'),
+          panels: panels(r, r)});
+        let shrank = false;
+        while (sum >= target){
+          const len = r - left + 1;
+          const better = len < result;
+          if (better){ result = len; bl = left; br = r; }
+          steps.push({lines:[11,12,13], msg:'Window [' + left + '…' + r + '] sums to ' + sum + ' ≥ ' + target + ', length <b>' + len + '</b>' + (better ? ' — a new shortest.' : '; result stays ' + result + '.') + ' Record it <em>before</em> evicting, then drop <code>nums[' + left + '] = ' + n[left] + '</code>: any window that starts further left and ends at ' + r + ' is longer and no better, so index ' + left + ' is finished forever.',
+            panels: panels(r, left)});
+          sum = sum - n[left];
+          left++;
+          shrank = true;
+        }
+        if (shrank){
+          steps.push({lines:[9], msg:'Sum is now <b>' + sum + '</b> &lt; ' + target + ', so the window ending at ' + r + ' has been trimmed as far as it can go. Shrinking more only makes it smaller and still failing — the only useful move is to widen. <code>left</code> never rewinds, which is why this is one pass and not n².',
+            panels: panels(r)});
+        }
+      }
+      if (bl >= 0){
+        left = bl;
+        sum = n.slice(bl, br + 1).reduce((a, b) => a + b, 0);
+      }
+      steps.push({lines:[16], msg: result === Infinity
+          ? 'No window ever reached ' + target + ' — the whole array sums to less. Return <b>0</b>, which is what the <code>int.MaxValue</code> sentinel is there to detect.'
+          : 'Shortest qualifying window is <b>' + result + '</b> long: indices ' + bl + '…' + br + ' summing to ' + sum + '. Each of the ' + n.length + ' values entered the sum once and left it at most once.',
+        panels: panels(bl >= 0 ? br : -1)});
+      return steps;
+    }
+  },
+  {
+    label: 'Same window, sums from a prefix table',
+    badge: 'O(n) time · O(n) space · suboptimal.cs',
+    blurb: 'The window walk is identical; only the sum lookup changes. A prefix table makes <code>nums[l…r]</code> a single subtraction — but the sliding window already maintains that number incrementally for free. So the extra n+1 ints buy nothing here: same time, worse space.',
+    legend: [
+      {cls:'win', text:'current window left…right'},
+      {cls:'hot', text:'prefix cells being subtracted'},
+      {cls:'good', text:'shortest window found'},
+      {cls:'dim', text:'not yet reached / not yet built'}
     ],
     code: [
       'int[] prefix = new int[nums.Length + 1];',
-      'for (int i = 0; i < nums.Length; i++)',
-      '    prefix[i + 1] = prefix[i] + nums[i];',
       '',
-      'int left = 0, result = int.MaxValue;',
+      'for (int i = 0; i < nums.Length; i++)',
+      '{',
+      '    prefix[i + 1] = prefix[i] + nums[i];',
+      '}',
+      '',
+      'int left = 0;',
+      'int result = int.MaxValue;',
       '',
       'for (int right = 0; right < nums.Length; right++)',
       '{',
@@ -373,114 +459,63 @@ const PROBLEM = {
       'return result == int.MaxValue ? 0 : result;'
     ],
     simulate(input){
-      const nums = input.nums, target = input.target, n = nums.length, steps = [];
-      const prefix = new Array(n + 1).fill(null);
-      prefix[0] = 0;
-      let left = 0, best = Infinity, bestA = 0, bestB = -1;
-      const panels = (right, phase) => [
-        pTiles('nums', nums, (k) => ({
-          cls: phase === 'build' ? (k === right ? 'hot is-current' : (k < right ? 'done' : ''))
-             : k === right ? 'hot is-current'
-             : (right >= 0 && k >= left && k < right) ? 'win'
-             : (bestB >= bestA && k >= bestA && k <= bestB) ? 'good' : ''
-        }), {focus:right, bracket: (phase !== 'build' && right >= 0 && left <= right) ? {from:left, to:right} : null,
-             ptrs: phase === 'build' ? [] : [{name:'left', idx:left, cls:'accent'}, {name:'right', idx: right < 0 ? 0 : right}]}),
-        pSlots('prefix — n+1 ints held for a value one int wide', prefix.map(v => ({text: v === null ? '' : v}))),
-        pPills('', [
-          {k:'window sum', v: (phase !== 'build' && right >= 0) ? (prefix[right+1] - prefix[left]) : '–', cls:'hot'},
-          {k:'target', v: target, cls:'accent'},
-          {k:'shortest', v: best === Infinity ? '∞' : best, cls:'good'},
-          {k:'extra memory', v: (n + 1) + ' ints'}
-        ])
-      ];
-      steps.push({lines:[1], msg:'One extra slot: <code>prefix[0] = 0</code> so that <code>prefix[r+1] − prefix[l]</code> works even when <code>l = 0</code>.', panels: panels(-1, 'build')});
-      for (let i = 0; i < n; i++){
-        prefix[i+1] = prefix[i] + nums[i];
-        steps.push({lines:[3], msg:'prefix[' + (i+1) + '] = ' + prefix[i] + ' + ' + nums[i] + ' = <b>' + prefix[i+1] + '</b>. A full extra pass before the real work starts.', panels: panels(i, 'build')});
+      const n = input.n, target = input.target, steps = [];
+      const pre = new Array(n.length + 1).fill(null);
+      let built = -1, left = 0, result = Infinity, bl = -1, br = -1;
+      const preView = () => pre.map(v => v === null ? '·' : v);
+      const panels = (r, hotA, hotB) => {
+        const ws = (r >= 0 && pre[r + 1] !== null) ? pre[r + 1] - pre[left] : null;
+        return [
+          pBars('nums — the window is left…right', n, (k) => ({
+            cls: (r >= 0 && k >= left && k <= r) ? 'in-window'
+               : (r >= 0 && k > r) ? 'dim'
+               : (r < 0 && k > built) ? 'dim' : ''
+          })),
+          pTiles('prefix — prefix[i] is the sum of the first i values', preView(), (k) => ({
+            cls: (k === hotA || k === hotB) ? 'hot' : (pre[k] === null ? 'dim' : '')
+          })),
+          pPills('', [
+            {k:'left', v: left, cls:'accent'},
+            {k:'right', v: r >= 0 ? r : '–', cls:'hot'},
+            {k:'window sum', v: ws === null ? '–' : ws},
+            {k:'target', v: target},
+            {k:'result', v: result === Infinity ? '∞' : result, cls:'good'}
+          ])
+        ];
+      };
+      pre[0] = 0;
+      steps.push({lines:[1], msg:'Allocate <b>' + (n.length + 1) + '</b> ints — one more than the array. <code>prefix[0] = 0</code> is the empty-prefix sentinel; without it a window starting at index 0 would have nothing to subtract.', panels: panels(-1, 0)});
+      for (let i = 0; i < n.length; i++){
+        pre[i + 1] = pre[i] + n[i];
+        built = i;
+        steps.push({lines:[5], msg:'<code>prefix[' + (i + 1) + '] = prefix[' + i + '] + nums[' + i + '] = ' + pre[i] + ' + ' + n[i] + ' = <b>' + pre[i + 1] + '</b></code>. After this pass, the sum of any range is one subtraction — but note it has already cost a full sweep and n+1 ints before the real work begins.',
+          panels: panels(-1, i, i + 1)});
       }
-      steps.push({lines:[5], msg:'Now the window. <code>result</code> starts at <code>int.MaxValue</code> as the "not found" sentinel.', panels: panels(-1, 'scan')});
-      for (let right = 0; right < n; right++){
-        steps.push({lines:[9], msg:'right = ' + right + '. Window sum = prefix[' + (right+1) + '] − prefix[' + left + '] = ' + prefix[right+1] + ' − ' + prefix[left] + ' = <b>' + (prefix[right+1] - prefix[left]) + '</b>, in O(1).',
-          panels: panels(right, 'scan')});
-        while (prefix[right+1] - prefix[left] >= target){
-          const len = right - left + 1;
-          if (len < best){ best = len; bestA = left; bestB = right; }
-          steps.push({lines:[11,12], msg:'<b>' + (prefix[right+1] - prefix[left]) + ' ≥ ' + target + '</b> — qualifies at length <b>' + len + '</b>' + (best === len && bestB === right ? ', a new shortest.' : '; shortest stays ' + best + '.') + ' Record <b>before</b> <code>left++</code>, or the length is off by one. Then shrink.',
-            panels: panels(right, 'scan')});
+      steps.push({lines:[8,9], msg:'Now the same two pointers as the optimal version. Values are positive, so <code>prefix</code> is strictly increasing — the window sum still only rises with <code>right</code> and falls with <code>left</code>, which is what keeps one left pointer sufficient.', panels: panels(-1)});
+      for (let r = 0; r < n.length; r++){
+        const ws = pre[r + 1] - pre[left];
+        steps.push({lines:[11,13], msg:'<code>right = ' + r + '</code>. Window [' + left + '…' + r + '] sums to <code>prefix[' + (r + 1) + '] − prefix[' + left + '] = ' + pre[r + 1] + ' − ' + pre[left] + ' = <b>' + ws + '</b></code>. ' + (ws >= target ? 'That reaches ' + target + ' — shrink.' : 'Short of ' + target + ', so widen again. Two array reads to learn what a running sum would have already known.'),
+          panels: panels(r, left, r + 1)});
+        let shrank = false;
+        while (pre[r + 1] - pre[left] >= target){
+          const len = r - left + 1;
+          const better = len < result;
+          if (better){ result = len; bl = left; br = r; }
+          steps.push({lines:[15,16], msg:'Length <b>' + len + '</b> qualifies' + (better ? ' and is a new shortest.' : '; result stays ' + result + '.') + ' Advance <code>left</code> — no re-summing needed, the next iteration just reads <code>prefix[' + (left + 1) + ']</code> instead. <code>left</code> only moves forward, so this inner loop runs at most n times in total across the whole scan.',
+            panels: panels(r, left, r + 1)});
           left++;
+          shrank = true;
+        }
+        if (shrank){
+          steps.push({lines:[13], msg:'<code>prefix[' + (r + 1) + '] − prefix[' + left + '] = ' + (pre[r + 1] - pre[left]) + '</code> &lt; ' + target + ' — trimmed as far as it can go for this <code>right</code>. Move on.',
+            panels: panels(r, left, r + 1)});
         }
       }
-      steps.push({lines:[15], msg: best === Infinity
-        ? 'No window ever reached ' + target + '. Return <b>0</b>, not <code>int.MaxValue</code>.'
-        : 'Shortest qualifying window: <b>' + best + '</b> (<code>[' + bestA + ', ' + bestB + ']</code>). O(n) time — and ' + (n+1) + ' ints of memory that the next tab does without.',
-        panels: panels(-1, 'scan')});
-      return steps;
-    }
-  },
-  {
-    label: 'Running sum',
-    badge: 'O(n) time · O(1) space · optimal.cs · your solution',
-    blurb: 'The algorithm never asks about an arbitrary pair — it asks about <b>one window that only moves forward</b>. A quantity that changes by a known delta on each move does not need to be stored; it needs to be <b>maintained</b>. That is the most reusable idea in the whole sliding-window family.',
-    legend: [
-      {cls:'win', text:'the window [left, right]'},
-      {cls:'hot', text:'element being admitted'},
-      {cls:'rem', text:'element being evicted'},
-      {cls:'good', text:'shortest qualifying window so far'}
-    ],
-    code: [
-      'int sum = 0, left = 0, result = int.MaxValue;',
-      '',
-      'for (int right = 0; right < nums.Length; right++)',
-      '{',
-      '    sum += nums[right];          // admit',
-      '',
-      '    while (sum >= target)',
-      '    {',
-      '        result = Math.Min(result, right - left + 1);',
-      '        sum -= nums[left];       // evict, THEN move the edge',
-      '        left++;',
-      '    }',
-      '}',
-      'return result == int.MaxValue ? 0 : result;'
-    ],
-    simulate(input){
-      const nums = input.nums, target = input.target, steps = [];
-      let sum = 0, left = 0, best = Infinity, bestA = 0, bestB = -1;
-      const panels = (right, evicting) => [
-        pTiles('nums', nums, (k) => ({
-          cls: k === evicting ? 'is-current' : k === right ? 'hot is-current'
-             : (right >= 0 && k >= left && k < right) ? 'win'
-             : (bestB >= bestA && k >= bestA && k <= bestB) ? 'good' : '',
-          flash: k === evicting
-        }), {focus:right, bracket: (right >= 0 && left <= right) ? {from:left, to:right} : null,
-             ptrs:[{name:'left', idx:left, cls:'accent'}, {name:'right', idx: right < 0 ? 0 : right}]}),
-        pPills('', [
-          {k:'sum', v: sum, cls:'hot'},
-          {k:'target', v: target, cls:'accent'},
-          {k:'window', v: right >= 0 ? Math.max(right - left + 1, 0) : 0},
-          {k:'shortest', v: best === Infinity ? '∞' : best, cls:'good'},
-          {k:'extra memory', v:'3 ints', cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1], msg:'Three ints, no array. Non-negative values make the sum <b>monotonic</b> in the window size — that is what licenses shrinking without ever moving <code>left</code> back.', panels: panels(-1)});
-      for (let right = 0; right < nums.length; right++){
-        sum += nums[right];
-        steps.push({lines:[5], msg:'Admit <b>' + nums[right] + '</b> → sum = <b>' + sum + '</b>. One addition, versus the other tab’s stored prefix.', panels: panels(right)});
-        while (sum >= target){
-          const len = right - left + 1;
-          if (len < best){ best = len; bestA = left; bestB = right; }
-          steps.push({lines:[7,9], msg:'<b>' + sum + ' ≥ ' + target + '</b> — window <code>[' + left + ', ' + right + ']</code> qualifies at length <b>' + len + '</b>' + (bestB === right && best === len ? ', a new shortest.' : '; shortest stays ' + best + '.'),
-            panels: panels(right)});
-          sum -= nums[left];
-          steps.push({lines:[10,11], msg:'Evict <b>' + nums[left] + '</b> → sum = <b>' + sum + '</b>, <i>then</i> <code>left++</code>. Reversing those two lines is the classic bug — it returns wrong answers silently rather than crashing.',
-            panels: panels(right, left)});
-          left++;
-        }
-      }
-      steps.push({lines:[14], msg: best === Infinity
-        ? 'No window ever reached ' + target + '. Return <b>0</b>.'
-        : 'Shortest: <b>' + best + '</b> (<code>[' + bestA + ', ' + bestB + ']</code>). <code>right</code> advanced n times and <code>left</code> advanced at most n times <i>across the whole run</i> — the amortised argument to say out loud, because the nested <code>while</code> makes it look quadratic.',
-        panels: panels(-1)});
+      if (bl >= 0) left = bl;
+      steps.push({lines:[19], msg: result === Infinity
+          ? 'No window reached ' + target + ', so the sentinel survives and the answer is <b>0</b>.'
+          : 'Shortest qualifying window is <b>' + result + '</b> long: indices ' + bl + '…' + br + '. Same answer, same O(n) time as <code>optimal.cs</code> — paid for with an extra array and an extra pass that the running sum makes unnecessary.',
+        panels: panels(bl >= 0 ? br : -1, bl >= 0 ? bl : -1, bl >= 0 ? br + 1 : -1)});
       return steps;
     }
   }]

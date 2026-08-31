@@ -4,11 +4,11 @@
 // #  [sliding-window-prefix-sum]
 // #  ranks below optimal.cs (O(n) time / O(1) space)
 // #
-// #  YOU SOLVED THIS YOURSELF - marked '//My solution'
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  same two-pointer shrink logic but computes each window sum via an
-// #  O(n)-sized prefix array instead of an incremental total, costing
-// #  linear auxiliary space.
+// #  same two-pointer shrink logic but fetches each window sum via an
+// #  O(n)-sized prefix array instead of tracking a running total, costing
+// #  linear auxiliary space
 // ##########################################################################
 
 public class Solution

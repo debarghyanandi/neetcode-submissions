@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T02:15:55.941Z",
+  "updatedAt": "2026-08-31T02:49:06.757Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -325,6 +325,28 @@
           "selfMarked": true,
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, shrink while valid, running sum\",\"approachKey\":\"sliding-window-running-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, shrink while valid, prefix-sum lookup\",\"approachKey\":\"sliding-window-prefix-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "sliding window, shrink while valid, running sum",
+          "approachKey": "sliding-window-running-sum",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "sliding window, shrink while valid, prefix-sum lookup",
+          "approachKey": "sliding-window-prefix-sum",
+          "correct": true,
+          "bruteForce": false
         }
       }
     },

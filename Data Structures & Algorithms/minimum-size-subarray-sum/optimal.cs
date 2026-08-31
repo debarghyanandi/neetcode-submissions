@@ -4,11 +4,10 @@
 // #  [sliding-window-running-sum]
 // #  ranks above suboptimal.cs (O(n) time / O(n) space)
 // #
-// #  YOU SOLVED THIS YOURSELF - marked '//My solution'
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  maintains window sum incrementally with add/subtract as pointers move,
-// #  so left advances at most n times total (amortized O(n)) with only
-// #  scalar state.
+// #  maintains the window sum incrementally via add/subtract as pointers
+// #  move, so left advances at most n times total with only scalar state
 // ##########################################################################
 
 public class Solution
