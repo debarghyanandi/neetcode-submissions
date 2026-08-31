@@ -23,13 +23,34 @@ import { join } from 'node:path';
 
 const INDEX_PATH = join(REPO, 'index.md');
 
-/** github.com/<owner>/<repo> from the remote, so source links are not hardcoded. */
-function repoWebBase() {
+/** <owner>/<repo> from the git remote, so nothing below is hardcoded. */
+function originSlug() {
   try {
     const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: REPO, encoding: 'utf8' }).trim();
     const m = url.match(/github\.com[:/](.+?)(?:\.git)?$/);
-    return m ? `https://github.com/${m[1]}/blob/main` : null;
+    return m ? m[1] : null;
   } catch { return null; }
+}
+
+/** Where GitHub renders source files. */
+function repoWebBase() {
+  const slug = originSlug();
+  return slug ? `https://github.com/${slug}/blob/main` : null;
+}
+
+/**
+ * Where GitHub Pages SERVES the site.
+ *
+ * Visualizer links must be absolute, not relative. A relative link only
+ * resolves correctly when the page is read on the Pages site; read the same
+ * markdown on github.com - which is where you actually browse the repo - and it
+ * resolves against github.com and lands on the HTML source instead of running it.
+ */
+function pagesBase() {
+  const slug = originSlug();
+  if (!slug) return null;
+  const [owner, repo] = slug.split('/');
+  return `https://${owner}.github.io/${repo}`;
 }
 
 const dryRun = process.argv.includes('--dry-run');
@@ -48,8 +69,9 @@ function buildIndex(problems) {
     const sols = p.curatedFiles.length
       ? p.curatedFiles.map((f) => `\`${f.replace(/\.cs$/, '')}\``).join(' · ')
       : '_uncurated_';
-    const vis = p.hasVisualizer
-      ? `[view](${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
+    const pages = pagesBase();
+    const vis = p.hasVisualizer && pages
+      ? `[view](${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
       : '—';
     const raw = p.pending.length
       ? p.pending.map((s) => s.file.replace(/^submission-/, '#').replace(/\.cs$/, '')).join(', ')
@@ -106,6 +128,7 @@ function writeIndex(block) {
  */
 function buildIndexPage(problems, state) {
   const web = repoWebBase();
+  const pages = pagesBase();
   const nice = (slug) => slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   const out = [
@@ -125,8 +148,8 @@ function buildIndexPage(problems, state) {
     const sources = p.curatedFiles.length && web
       ? p.curatedFiles.map((f) => `[${f.replace(/\.cs$/, '')}](${web}/${linkPath(`${p.path}/${f}`)})`).join(' · ')
       : p.curatedFiles.map((f) => f.replace(/\.cs$/, '')).join(' · ') || '—';
-    const watch = p.hasVisualizer
-      ? `[▶ run](${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
+    const watch = p.hasVisualizer && pages
+      ? `[▶ run](${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
       : '—';
     out.push(`| [${nice(p.slug)}](https://neetcode.io/problems/${p.slug}) | ${complexity} | ${sources} | ${watch} |`);
   }
