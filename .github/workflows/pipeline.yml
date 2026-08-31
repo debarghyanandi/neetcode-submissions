@@ -1,11 +1,15 @@
 name: NeetCode pipeline
 
 # ---------------------------------------------------------------------------
-# MILESTONE 2 - detects, then writes the index and state, then commits.
+# Detect -> classify -> rename and header -> refresh index -> commit.
 #
-# It still does NOT rename, delete, or edit your .cs files, and calls no model.
-# Deciding which submission is the optimal one is a reading task; that is
-# Milestone 3.
+# Authentication is CLAUDE_CODE_OAUTH_TOKEN, which bills your Claude
+# subscription. Never add ANTHROPIC_API_KEY: it outranks the OAuth token in
+# non-interactive mode and would silently move you to per-token billing.
+#
+# --bare is deliberately NOT used. Bare mode does not read
+# CLAUDE_CODE_OAUTH_TOKEN, so it and the subscription are mutually exclusive.
+# The "Guard" step below recovers the safety half of what --bare would give.
 # ---------------------------------------------------------------------------
 
 on:
@@ -78,6 +82,46 @@ jobs:
           node scripts/detect.mjs "${args[@]}"
           node scripts/detect.mjs "${args[@]}" --json > "$RUNNER_TEMP/detect.json"
 
+      - name: Guard - repo must carry no Claude Code config
+        run: |
+          set -euo pipefail
+          # Without --bare, `claude -p` executes hooks from .claude/settings.json
+          # and connects servers from .mcp.json found in the checked-out repo,
+          # with no trust prompt. Neither belongs here, so their appearance is
+          # either a mistake or an attack. Refuse to run the model either way.
+          bad=0
+          for path in .claude .mcp.json; do
+            if [ -e "$path" ]; then echo "::error::$path exists in the repo; refusing to run the model"; bad=1; fi
+          done
+          if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error::ANTHROPIC_API_KEY is set; it outranks the subscription token. Refusing."
+            bad=1
+          fi
+          [ "$bad" -eq 0 ] && echo "clean"
+
+      - name: Install Claude Code
+        if: steps.detect.outputs.count != '0'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Classify, rename and write headers
+        id: classify
+        if: steps.detect.outputs.count != '0'
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+          MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
+        run: |
+          set -euo pipefail
+          args=(--apply --verbose --limit 5)
+          if [ -n "$BEFORE_SHA" ]; then
+            args+=(--exclude-changed-since "$BEFORE_SHA")
+          fi
+          if [ -n "${MANUAL_EXCLUDE:-}" ]; then
+            args+=(--exclude "$MANUAL_EXCLUDE")
+          fi
+          node scripts/classify.mjs "${args[@]}"
+
       - name: Apply - refresh index and state
         id: apply
         run: node scripts/apply.mjs
@@ -88,7 +132,8 @@ jobs:
           set -euo pipefail
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add README.md .agent/state.json
+          git add -- README.md .agent/state.json "Data Structures & Algorithms"
+          git add -A -- "Data Structures & Algorithms"
           if git diff --cached --quiet; then
             echo "nothing staged after all - not committing"
             exit 0
@@ -106,6 +151,7 @@ jobs:
             echo ""
             echo "- trigger: \`${{ github.event_name }}\`"
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
+            echo "- classify outcome: \`${{ steps.classify.outcome || 'skipped' }}\`"
             echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
             echo ""
             echo '```json'

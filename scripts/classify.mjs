@@ -16,12 +16,13 @@
  *   node scripts/classify.mjs --limit 2 --verbose
  *   node scripts/classify.mjs --slug two-integer-sum --model opus
  *   node scripts/classify.mjs --slug two-integer-sum --apply     # renames + rewrites headers
+ *   node scripts/classify.mjs --apply --exclude-changed-since <sha> --limit 5
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { loadState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
+import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './lib/scan.mjs';
 
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
@@ -181,6 +182,20 @@ function classify(dir, files) {
 // is evidence; disagreement is worth reading before this thing renames anything.
 const everything = scanRepo(loadState());
 let targets = only ? everything.filter((p) => p.slug === only) : pendingOnly(everything);
+
+// Same exclusion contract as detect.mjs, and it has to be here too: on a push
+// run this must skip the folder that was just pushed to, or the pipeline
+// classifies a problem you may still be submitting against.
+const exclude = new Set();
+for (const v of argv.flatMap((a, i) => (a === '--exclude' ? [argv[i + 1]] : [])))
+  String(v ?? '').split(',').map((x) => x.trim()).filter(Boolean).forEach((x) => exclude.add(x));
+for (const slug of foldersChangedSince(arg('--exclude-changed-since'))) exclude.add(slug);
+if (exclude.size) {
+  const before = targets.length;
+  targets = targets.filter((p) => !exclude.has(p.slug));
+  console.log(`excluding ${[...exclude].join(', ')} (${before - targets.length} folder(s) held back)`);
+}
+
 if (limit) targets = targets.slice(0, limit);
 
 if (targets.length === 0) {
