@@ -93,7 +93,12 @@ for (const p of problems) {
   // resubmission of the version you replaced should still read as "seen before".
   const known = { ...(rec.knownFingerprints ?? {}), ...p.curatedPrints };
 
+  // Spread the existing record first. Replacing it wholesale silently drops any
+  // key this file does not know about - which is exactly what happened to the
+  // headerSignatures that classify.mjs writes one step earlier in the workflow,
+  // quietly re-enabling the nightly header churn it exists to prevent.
   state.problems[p.slug] = {
+    ...rec,
     topic: p.topic,
     curatedFiles: p.curatedFiles,
     hasVisualizer: p.hasVisualizer,
