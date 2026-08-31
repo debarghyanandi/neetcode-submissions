@@ -16,10 +16,13 @@
  *   node scripts/classify.mjs --limit 2 --verbose
  */
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { loadState, scanRepo, pendingOnly } from './lib/scan.mjs';
+import { loadState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
+
+// Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
+const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
 
 const argv = process.argv.slice(2);
@@ -66,6 +69,8 @@ const INSTRUCTIONS = [
   'Set correct=false only when the code is actually wrong. Slow is not wrong.',
   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
+  '',
+  'You have no tools available and no access to the filesystem. Everything you need is on stdin. Do not attempt to read, list, or search files - answer directly from the text you were given.',
 ].join('\n');
 
 function classify(dir, files) {
@@ -78,7 +83,9 @@ function classify(dir, files) {
     '--output-format', 'json',
     '--json-schema', JSON.stringify(SCHEMA),
     '--permission-mode', 'dontAsk',
-    '--max-turns', '1',
+    // 1 was enough for a trivial probe. A real classification thinks first, and
+    // a denied tool attempt burns a turn on its own - so give it headroom.
+    '--max-turns', '8',
   ];
   if (model) args.push('--model', model);
 
@@ -94,13 +101,36 @@ function classify(dir, files) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (e) {
-    const detail = [
-      e.status != null ? `exit status ${e.status}` : null,
-      e.code ? `code ${e.code}` : null,
-      e.stderr ? `stderr: ${String(e.stderr).trim().slice(0, 600)}` : null,
-      e.stdout ? `stdout: ${String(e.stdout).trim().slice(0, 600)}` : null,
-    ].filter(Boolean).join('\n        ');
-    throw new Error(`claude invocation failed\n        ${detail || e.message}`);
+    // The envelope's usage block is enormous and says nothing. Slicing the raw
+    // JSON just shows you token counts. Parse it and print the fields that
+    // actually explain the failure.
+    const stdout = String(e.stdout ?? '');
+    const lines = [
+      e.status != null ? `exit status  : ${e.status}` : null,
+      e.code ? `error code   : ${e.code}` : null,
+    ].filter(Boolean);
+
+    let env = null;
+    try { env = JSON.parse(stdout); } catch { /* not JSON */ }
+
+    if (env) {
+      for (const k of ['is_error', 'subtype', 'terminal_reason', 'stop_reason', 'num_turns']) {
+        if (env[k] !== undefined) lines.push(`${k.padEnd(13)}: ${JSON.stringify(env[k])}`);
+      }
+      if (env.result !== undefined) lines.push(`result       : ${String(env.result).slice(0, 500)}`);
+      if (Array.isArray(env.permission_denials) && env.permission_denials.length) {
+        lines.push(`denials      : ${JSON.stringify(env.permission_denials).slice(0, 400)}`);
+      }
+      mkdirSync(dirname(DUMP), { recursive: true });
+      writeFileSync(DUMP, stdout, 'utf8');
+      lines.push(`full response: ${DUMP}`);
+    } else {
+      if (stdout.trim()) lines.push(`stdout       : ${stdout.trim().slice(0, 500)}`);
+      const err = String(e.stderr ?? '').trim();
+      if (err) lines.push(`stderr       : ${err.slice(0, 500)}`);
+      if (!stdout.trim() && !err) lines.push(`message      : ${e.message.slice(0, 300)}`);
+    }
+    throw new Error(`claude invocation failed\n        ${lines.join('\n        ')}`);
   }
 
   const envelope = JSON.parse(raw);
@@ -116,7 +146,7 @@ function classify(dir, files) {
   if (missing.length) throw new Error(`model omitted: ${missing.join(', ')}`);
   if (extra.length) throw new Error(`model invented: ${extra.join(', ')}`);
 
-  return { solutions: out.solutions, cost: envelope.total_cost_usd };
+  return { solutions: out.solutions, cost: envelope.total_cost_usd, turns: envelope.num_turns };
 }
 
 // ---------------------------------------------------------------- run
@@ -170,7 +200,7 @@ for (const p of targets) {
       console.log(`    ${from.padEnd(22)} ${from === to ? '=  unchanged' : '-> ' + to}`);
     }
   }
-  if (res.cost != null) console.log(`  est. cost this folder: $${res.cost}`);
+  if (res.cost != null) console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}`);
   console.log('');
 }
 
