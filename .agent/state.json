@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T15:38:37.681Z",
+  "updatedAt": "2026-08-31T15:43:38.090Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -508,14 +508,41 @@
     },
     "string-encode-and-decode": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-4.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "optimal.cs"
+      },
+      "fingerprints": {
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "optimal.cs"
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding\",\"approachKey\":\"length-prefix-encode\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-4.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "length-prefix encoding",
+          "approachKey": "length-prefix-encode",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding\",\"approachKey\":\"length-prefix-encode\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      }
     },
     "three-integer-sum": {
       "topic": "Data Structures & Algorithms",
