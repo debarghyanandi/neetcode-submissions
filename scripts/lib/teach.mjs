@@ -127,3 +127,33 @@ export function sourceFor(origin, name, selfMark) {
     ? `YOUR OWN SOLUTION${from}, marked '//My solution'`
     : `No '//My solution' marker in the source${from} - provenance unknown`;
 }
+
+/**
+ * Split off a teaching block sitting at the END of a file.
+ *
+ * The block lives below the code, so replacing it must not disturb the short
+ * banner at the top - that belongs to classify.mjs and carries different
+ * information. Requires a full-width = rule inside the block before claiming
+ * it: a file may legitimately end in some other block comment, and eating
+ * someone's trailing comment would be a silent, permanent loss.
+ */
+export function splitTrailingTeach(src) {
+  const eol = src.includes('\r\n') ? '\r\n' : '\n';
+  const lines = src.split(/\r?\n/);
+
+  let end = lines.length - 1;
+  while (end >= 0 && lines[end].trim() === '') end--;
+  if (end < 0 || lines[end].trim() !== '*/') return { code: src, eol, had: false };
+
+  let start = end;
+  while (start >= 0 && lines[start].trim() !== '/*') start--;
+  if (start < 0) return { code: src, eol, had: false };
+
+  if (!lines.slice(start, end + 1).some((l) => /^={60,}$/.test(l.trim()))) {
+    return { code: src, eol, had: false };
+  }
+
+  let k = start - 1;
+  while (k >= 0 && lines[k].trim() === '') k--;
+  return { code: lines.slice(0, k + 1).join(eol), eol, had: true };
+}

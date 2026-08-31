@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 import { stripHeader } from './lib/header.mjs';
-import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor } from './lib/teach.mjs';
+import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
 
 const argv = process.argv.slice(2);
@@ -48,7 +48,7 @@ function ask(dir, file, ctx) {
   let raw;
   try {
     raw = execFileSync('claude', args, {
-      input: stripHeader(readFileSync(join(dir, file), 'utf8')).body,
+      input: stripHeader(splitTrailingTeach(readFileSync(join(dir, file), 'utf8')).code).body,
       encoding: 'utf8',
       maxBuffer: 32 * 1024 * 1024,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -96,7 +96,7 @@ for (const p of targets) {
     // ranking and complexity are unchanged keeps the prose it already has.
     const sig = sigs[file] ?? null;
     const src = readFileSync(join(p.dir, file), 'utf8');
-    const hasBlock = stripHeader(src).had && /^\s*\/\*/.test(src);
+    const hasBlock = splitTrailingTeach(src).had;
 
     if (!backfill && hasBlock && teach[file] && teach[file] === sig) {
       console.log(`  ${file.padEnd(22)} up to date`);
@@ -104,7 +104,7 @@ for (const p of targets) {
       continue;
     }
 
-    const selfMark = isSelfMarked(stripHeader(src).body);
+    const selfMark = isSelfMarked(stripHeader(splitTrailingTeach(src).code).body);
     const ctx = {
       source: sourceFor(null, file, selfMark),
       status: statusFor(file),
@@ -128,7 +128,11 @@ for (const p of targets) {
       console.log(block.split('\n').map((l) => '      ' + l).join('\n'));
       continue;
     }
-    writeFileSync(join(p.dir, file), block + '\n\n' + stripHeader(src).body.replace(/^(\r?\n)+/, ''), 'utf8');
+    // banner header -> code -> teaching block. The block goes last, so the file
+    // still opens on the code rather than on fifty lines of prose.
+    const { code, eol } = splitTrailingTeach(src);
+    const out = code.replace(/(\r?\n)+$/, '') + eol + eol + block.split('\n').join(eol) + eol;
+    writeFileSync(join(p.dir, file), out, 'utf8');
     teach[file] = sig;
     wrote++;
   }
