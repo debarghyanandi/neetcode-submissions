@@ -141,7 +141,6 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        env:
           # classify renames the raw submissions away, so teach cannot rediscover
           # what was just processed - it has to be told.
           APPLIED: ${{ steps.classify.outputs.applied }}
