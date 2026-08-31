@@ -1,10 +1,11 @@
 name: NeetCode pipeline
 
 # ---------------------------------------------------------------------------
-# MILESTONE 1 - detection only.
-# This workflow reads the repo and prints what it would do. It writes no files,
-# makes no commits, and calls no model. Do not add those until you have watched
-# this run and agreed with every folder it names.
+# MILESTONE 2 - detects, then writes the index and state, then commits.
+#
+# It still does NOT rename, delete, or edit your .cs files, and calls no model.
+# Deciding which submission is the optimal one is a reading task; that is
+# Milestone 3.
 # ---------------------------------------------------------------------------
 
 on:
@@ -13,32 +14,31 @@ on:
     paths:
       - '**/submission-*'
   schedule:
-    # 20:30 UTC = 02:00 IST daily. GitHub's scheduler is best-effort and can
-    # run late under load; nothing here is time-critical, so that is fine.
+    # 20:30 UTC = 02:00 IST. GitHub's scheduler is best-effort; nothing here
+    # is time-critical.
     - cron: '30 20 * * *'
   workflow_dispatch:
     inputs:
       exclude:
-        description: 'Comma-separated slugs to hold back (leave empty to drain everything)'
+        description: 'Comma-separated slugs to hold back (empty = process everything)'
         required: false
         default: ''
 
 concurrency:
-  # A cron run and a push run must never scan the same repo at once.
   group: neetcode-pipeline
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  detect:
+  pipeline:
     runs-on: ubuntu-latest
 
-    # LOOP GUARD 1 of 2. The pipeline's own commits are prefixed chore(pipeline);
-    # this refuses to act on them. Guard 2 is that later milestones must commit
-    # with the built-in GITHUB_TOKEN, whose pushes do not start new workflow runs.
-    # A personal access token defeats guard 2 - do not introduce one.
+    # LOOP GUARD 1 of 2: refuse to act on the pipeline's own commits.
+    # LOOP GUARD 2 of 2: those commits are pushed with the built-in GITHUB_TOKEN,
+    # whose pushes do not start new workflow runs. Swapping in a personal access
+    # token defeats guard 2 - do not introduce one.
     if: >-
       github.event_name != 'push' ||
       !startsWith(github.event.head_commit.message, 'chore(pipeline)')
@@ -47,7 +47,7 @@ jobs:
       - name: Check out full history
         uses: actions/checkout@v4
         with:
-          # detect.mjs diffs against the pre-push SHA. A shallow clone cannot.
+          # detect.mjs diffs against the pre-push SHA; a shallow clone cannot.
           fetch-depth: 0
 
       - name: Set up Node
@@ -65,27 +65,48 @@ jobs:
         run: |
           set -euo pipefail
           args=()
+          # Explicit ifs rather than `[ -n "$X" ] && args+=(...)`. Bash exempts a
+          # failing left-hand side of an && list from set -e, so both forms work
+          # here - but the && form returns non-zero, and if such a line ever ends
+          # up last in a step it becomes the step's exit code. Not worth the trap.
           if [ -n "$BEFORE_SHA" ]; then
             args+=(--exclude-changed-since "$BEFORE_SHA")
           fi
           if [ -n "${MANUAL_EXCLUDE:-}" ]; then
             args+=(--exclude "$MANUAL_EXCLUDE")
           fi
-          echo "::group::Human-readable report"
           node scripts/detect.mjs "${args[@]}"
-          echo "::endgroup::"
-          echo "::group::Machine-readable report"
-          node scripts/detect.mjs "${args[@]}" --json | tee "$RUNNER_TEMP/detect.json"
-          echo "::endgroup::"
+          node scripts/detect.mjs "${args[@]}" --json > "$RUNNER_TEMP/detect.json"
+
+      - name: Apply - refresh index and state
+        id: apply
+        run: node scripts/apply.mjs
+
+      - name: Commit and push
+        if: steps.apply.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md .agent/state.json
+          if git diff --cached --quiet; then
+            echo "nothing staged after all - not committing"
+            exit 0
+          fi
+          # The chore(pipeline) prefix is what guard 1 above keys on. Do not change
+          # it in one place without changing it in the other.
+          git commit -m "chore(pipeline): refresh index and state"
+          git push
 
       - name: Summarise
         if: always()
         run: |
           {
-            echo "### NeetCode pipeline - detection"
+            echo "### NeetCode pipeline"
             echo ""
             echo "- trigger: \`${{ github.event_name }}\`"
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
+            echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
             echo ""
             echo '```json'
             cat "$RUNNER_TEMP/detect.json" 2>/dev/null || echo '{}'

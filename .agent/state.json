@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-31T00:18:43.892Z",
+  "problems": {
+    "anagram-groups": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
+        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
+        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs"
+      }
+    },
+    "buy-and-sell-crypto": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
+      },
+      "fingerprints": {
+        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
+      }
+    },
+    "duplicate-integer": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "04893c3ee615e8eaa83dbf0704ead5706cee0fdd4dd83788ba4c6a67fbaf2f0d": "optimal.cs",
+        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "04893c3ee615e8eaa83dbf0704ead5706cee0fdd4dd83788ba4c6a67fbaf2f0d": "optimal.cs",
+        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "suboptimal.cs"
+      }
+    },
+    "is-anagram": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ddf7058904455fc82f9ef0a1f6b5a2c48b7c78aa0d1b61064625a2e1e548a583": "optimal.cs",
+        "36e22936a298fdb6ed399942207751c12e6f97e0688c274b01850f6e612003dc": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "ddf7058904455fc82f9ef0a1f6b5a2c48b7c78aa0d1b61064625a2e1e548a583": "optimal.cs",
+        "36e22936a298fdb6ed399942207751c12e6f97e0688c274b01850f6e612003dc": "suboptimal.cs"
+      }
+    },
+    "is-palindrome": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "5a0fe1057baf1085e68c595c8919a07cc1941d850ca16b6c2fc43a5036b0e931": "optimal.cs"
+      },
+      "fingerprints": {
+        "5a0fe1057baf1085e68c595c8919a07cc1941d850ca16b6c2fc43a5036b0e931": "optimal.cs"
+      }
+    },
+    "longest-consecutive-sequence": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs"
+      },
+      "fingerprints": {
+        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs"
+      }
+    },
+    "longest-repeating-substring-with-replacement": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "bf1a8a6b1e829e0fb68aa4ba87e37a356334607ea54210acd635af3a715a7458": "optimal.cs",
+        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "bf1a8a6b1e829e0fb68aa4ba87e37a356334607ea54210acd635af3a715a7458": "optimal.cs",
+        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs"
+      }
+    },
+    "longest-substring-without-duplicates": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d051b5e92c816bd219e03835283ff27a47c9dd74992cd3e3ce58cde462555351": "optimal.cs",
+        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "d051b5e92c816bd219e03835283ff27a47c9dd74992cd3e3ce58cde462555351": "optimal.cs",
+        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "suboptimal.cs"
+      }
+    },
+    "max-water-container": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs"
+      },
+      "fingerprints": {
+        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs"
+      }
+    },
+    "maximum-subarray": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "66de7d2dfc7c5b0dc4b5f9cbef584801d2927b83d7ca4d3b4910fe32abdef575": "optimal.cs",
+        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "66de7d2dfc7c5b0dc4b5f9cbef584801d2927b83d7ca4d3b4910fe32abdef575": "optimal.cs",
+        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs"
+      }
+    },
+    "merge-intervals": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs"
+      },
+      "fingerprints": {
+        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs"
+      }
+    },
+    "minimum-size-subarray-sum": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "3b0e84ebfabf94bc8d3664f6327436dc475bdd9e24c048d81f23350d40ccd70f": "optimal.cs",
+        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "3b0e84ebfabf94bc8d3664f6327436dc475bdd9e24c048d81f23350d40ccd70f": "optimal.cs",
+        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs"
+      }
+    },
+    "minimum-stack": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs"
+      },
+      "fingerprints": {
+        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs"
+      }
+    },
+    "minimum-window-with-characters": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "bfe9106c0fc048fcd629bea8ab16a8567efe643b98055d100e5092d643082d77": "optimal.cs",
+        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "bfe9106c0fc048fcd629bea8ab16a8567efe643b98055d100e5092d643082d77": "optimal.cs",
+        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs"
+      }
+    },
+    "move-zeroes": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs"
+      },
+      "fingerprints": {
+        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs"
+      }
+    },
+    "permutation-string": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "2664c64e9078a69d862d19f73159fa3e06dc55e40356cdc936ce5087d87cc350": "optimal.cs",
+        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "2664c64e9078a69d862d19f73159fa3e06dc55e40356cdc936ce5087d87cc350": "optimal.cs",
+        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs"
+      }
+    },
+    "products-of-array-discluding-self": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs"
+      },
+      "fingerprints": {
+        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs"
+      }
+    },
+    "sliding-window-maximum": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "f90a987c5e3f0f47d698c6546df7f5f708bb22a20c9f88f82e563d200a8e0ba6": "optimal.cs",
+        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "f90a987c5e3f0f47d698c6546df7f5f708bb22a20c9f88f82e563d200a8e0ba6": "optimal.cs",
+        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs"
+      }
+    },
+    "three-integer-sum": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs"
+      },
+      "fingerprints": {
+        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs"
+      }
+    },
+    "top-k-elements-in-list": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "8d0903e0e7b7df2a5a3ef89fce3de55e950b32598cd5102bd7d86debe2fd59f2": "optimal.cs",
+        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "8d0903e0e7b7df2a5a3ef89fce3de55e950b32598cd5102bd7d86debe2fd59f2": "optimal.cs",
+        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs"
+      }
+    },
+    "two-integer-sum": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs"
+      },
+      "fingerprints": {
+        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs"
+      }
+    },
+    "two-integer-sum-ii": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs"
+      },
+      "fingerprints": {
+        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs"
+      }
+    },
+    "validate-parentheses": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs"
+      },
+      "fingerprints": {
+        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs"
+      }
+    }
+  }
+}
