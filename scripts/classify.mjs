@@ -190,7 +190,11 @@ function classify(dir, files) {
 // and see whether the model's proposed names match the ones you chose. Agreement
 // is evidence; disagreement is worth reading before this thing renames anything.
 const everything = scanRepo(loadState());
-let targets = only ? everything.filter((p) => p.slug === only) : pendingOnly(everything);
+// --backfill widens the net from "folders with raw submissions" to every folder,
+// so an old folder can be brought up to the current standard.
+let targets = only
+  ? everything.filter((p) => p.slug === only)
+  : has('--backfill') ? everything.filter((p) => p.curatedFiles.length) : pendingOnly(everything);
 
 // Same exclusion contract as detect.mjs, and it has to be here too: on a push
 // run this must skip the folder that was just pushed to, or the pipeline

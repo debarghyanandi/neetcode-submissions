@@ -27,6 +27,14 @@ on:
         description: 'Comma-separated slugs to hold back (empty = process everything)'
         required: false
         default: ''
+      backfill:
+        description: 'Backfill folders that already have solutions (classify + teach). Empty = off.'
+        required: false
+        default: ''
+      limit:
+        description: 'Max folders to process this run'
+        required: false
+        default: '5'
 
 concurrency:
   group: neetcode-pipeline
@@ -100,12 +108,12 @@ jobs:
           [ "$bad" -eq 0 ] && echo "clean"
 
       - name: Install Claude Code
-        if: steps.detect.outputs.count != '0'
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Classify, rename and write headers
         id: classify
-        if: steps.detect.outputs.count != '0'
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -113,7 +121,10 @@ jobs:
           MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
         run: |
           set -euo pipefail
-          args=(--apply --verbose --limit 5)
+          args=(--apply --verbose --limit "${{ github.event.inputs.limit || '5' }}")
+          if [ -n "${{ github.event.inputs.backfill }}" ]; then
+            args+=(--backfill)
+          fi
           if [ -n "$BEFORE_SHA" ]; then
             args+=(--exclude-changed-since "$BEFORE_SHA")
           fi
@@ -121,6 +132,28 @@ jobs:
             args+=(--exclude "$MANUAL_EXCLUDE")
           fi
           node scripts/classify.mjs "${args[@]}"
+
+      - name: Write teaching blocks
+        id: teach
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          if [ -n "${{ github.event.inputs.backfill }}" ]; then
+            args+=(--backfill)
+          fi
+          node scripts/teach.mjs "${args[@]}"
+
+      - name: Build visualizers for problems that have none
+        id: visualize
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: node scripts/visualize.mjs --apply --limit "${{ github.event.inputs.limit || '5' }}"
 
       - name: Apply - refresh index and state
         id: apply
@@ -151,7 +184,7 @@ jobs:
             echo ""
             echo "- trigger: \`${{ github.event_name }}\`"
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
-            echo "- classify outcome: \`${{ steps.classify.outcome || 'skipped' }}\`"
+            echo "- classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
             echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
             echo ""
             echo '```json'
