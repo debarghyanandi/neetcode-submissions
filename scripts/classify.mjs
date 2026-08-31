@@ -19,7 +19,7 @@
  *   node scripts/classify.mjs --apply --exclude-changed-since <sha> --limit 5
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './lib/scan.mjs';
@@ -252,6 +252,7 @@ console.log(doApply
   : `\nDRY RUN - ${targets.length} folder(s). No file will be modified.\n`);
 let failures = 0;
 let touched = 0;
+const applied = [];
 
 for (const p of targets) {
   console.log(`${p.path}`);
@@ -375,6 +376,7 @@ for (const p of targets) {
     rec.classification = { ...(rec.classification ?? {}), ...nextClass };
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
+    applied.push(p.slug);
 
     // Duplicates: recorded as handled so they stop showing up as pending.
     if (dupes.length) {
@@ -393,6 +395,13 @@ for (const p of targets) {
 }
 
 if (doApply) saveState(state);
+
+// Hand the processed folders to the next step. teach.mjs cannot work them out
+// for itself: this script renames the raw submissions away, so by the time it
+// runs there is nothing "pending" left to find.
+if (process.env.GITHUB_OUTPUT) {
+  appendFileSync(process.env.GITHUB_OUTPUT, `applied=${applied.join(',')}\n`);
+}
 
 console.log(failures ? `${failures} folder(s) failed.\n` : 'All folders classified.\n');
 if (doApply) console.log('Review with: git status && git diff --cached\n');

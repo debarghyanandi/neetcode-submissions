@@ -29,7 +29,10 @@ const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 const has = (n) => argv.includes(n);
 
-const only = arg('--slug');
+// A comma-separated list, so the workflow can hand over everything classify
+// just processed in one argument.
+const onlyRaw = arg('--slug');
+const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const backfill = has('--backfill');
@@ -93,7 +96,7 @@ const atCurrentStandard = (p) => {
 // pendingOnly - which during a backfill is empty, and the step did nothing.
 let targets;
 if (only) {
-  targets = everything.filter((p) => p.slug === only);
+  targets = everything.filter((p) => only.includes(p.slug));
 } else if (backfill) {
   const all = everything.filter((p) => p.curatedFiles.length);
   targets = force ? all : all.filter((p) => !atCurrentStandard(p));
