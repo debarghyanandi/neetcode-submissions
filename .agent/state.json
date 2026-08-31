@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T02:00:46.037Z",
+  "updatedAt": "2026-08-31T02:03:24.719Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -47,10 +47,10 @@
         "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass, track running minimum\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "teachSignatures": {
-        "optimal.cs": "{\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass, track running minimum\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
