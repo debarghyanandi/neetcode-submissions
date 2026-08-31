@@ -107,7 +107,43 @@ try {
           }
         }
         if (typeof st.msg !== 'string' || !st.msg.trim()) E(w + '.msg is empty');
-        if (!Array.isArray(st.panels)) E(w + '.panels must be an array');
+        if (!Array.isArray(st.panels)) { E(w + '.panels must be an array'); return; }
+
+        // Panel shapes. Without this, a panel that the renderer will choke on
+        // sails through: the file looks finished, and playback dies mid-run on
+        // whichever step first contains the bad panel.
+        st.panels.forEach((pn, pi) => {
+          const pw = w + '.panels[' + pi + ']';
+          if (!pn || typeof pn !== 'object') { E(pw + ' is not an object'); return; }
+          const arr = (k) => Array.isArray(pn[k]);
+          switch (pn.t) {
+            case 'chips':
+              // The one that bit us: pChips takes ROWS, each with its own items
+              // array - not a flat list of chips.
+              if (!arr('rows')) { E(pw + " (chips) needs a rows array; pChips takes rows, not chips"); break; }
+              pn.rows.forEach((r, ri) => {
+                if (!r || typeof r !== 'object') E(pw + '.rows[' + ri + '] is not an object');
+                else if (!Array.isArray(r.items)) E(pw + '.rows[' + ri + '].items must be an array - each row wraps its own chips');
+              });
+              break;
+            case 'tiles': case 'bars':
+              if (!arr('items')) E(pw + ' (' + pn.t + ') needs an items array');
+              else pn.items.forEach((it, ii) => { if (!it || it.v === undefined) E(pw + '.items[' + ii + '] needs a v'); });
+              break;
+            case 'slots': case 'pills':
+              if (!arr('items')) E(pw + ' (' + pn.t + ') needs an items array');
+              break;
+            case 'ranges':
+              if (!arr('items')) E(pw + ' (ranges) needs an items array');
+              if (typeof pn.min !== 'number' || typeof pn.max !== 'number') E(pw + ' (ranges) needs numeric min and max');
+              break;
+            case 'note':
+              if (typeof pn.html !== 'string') E(pw + ' (note) needs an html string');
+              break;
+            default:
+              E(pw + " has unknown panel type " + JSON.stringify(pn.t));
+          }
+        });
       });
       out.stats[where] = steps.length + ' steps';
     });
