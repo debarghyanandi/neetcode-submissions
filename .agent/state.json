@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T01:33:08.102Z",
+  "updatedAt": "2026-08-31T01:34:13.343Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -338,18 +338,19 @@
     "two-integer-sum": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
-        "optimal.cs"
+        "optimal.cs",
+        "suboptimal.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-42.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
-        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs"
+        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs",
+        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs"
       },
       "fingerprints": {
-        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs"
+        "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs",
+        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs"
       }
     },
     "two-integer-sum-ii": {

@@ -1,6 +1,12 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(n) space
+// -  hash map complement lookup, one pass   [hashmap-complement]
+// -  ranks above suboptimal.cs (O(n^2) time / O(1) space)
+// -
+// -  No '//My solution' marker in the source
+// -
+// -  single pass storing seen values in a dictionary, checking complement
+// -  before insertion gives O(n) time and O(n) auxiliary space for the map
 // --------------------------------------------------------------------------
 
 public class Solution
