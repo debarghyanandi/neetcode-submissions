@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T19:33:31.326Z",
+  "updatedAt": "2026-08-31T19:40:18.954Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -89,6 +89,17 @@
           "recordedFrom": "c76939d"
         }
       }
+    },
+    "evaluate-reverse-polish-notation": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "is-anagram": {
       "topic": "Data Structures & Algorithms",
@@ -508,15 +519,59 @@
     },
     "string-encode-and-decode": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-5.cs",
-        "submission-6.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"length-prefix encoding (interleaved length#string)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding (sizes header + concatenated payload)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-6.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-5.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "length-prefix encoding (interleaved length#string)",
+          "approachKey": "length-prefix-encoding",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "length-prefix encoding (sizes header + concatenated payload)",
+          "approachKey": "length-prefix-encoding",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"length-prefix encoding (interleaved length#string)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding (sizes header + concatenated payload)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      }
     },
     "three-integer-sum": {
       "topic": "Data Structures & Algorithms",
