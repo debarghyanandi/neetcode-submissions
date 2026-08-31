@@ -167,7 +167,10 @@ jobs:
           set -euo pipefail
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- README.md .agent/state.json "Data Structures & Algorithms"
+          # Every path the pipeline can write. A file regenerated on the runner but
+          # not staged here is silently discarded when the runner is destroyed -
+          # index.md was exactly that, so the Pages site would never have updated.
+          git add -- README.md index.md .agent/state.json
           git add -A -- "Data Structures & Algorithms"
           if git diff --cached --quiet; then
             echo "nothing staged after all - not committing"
