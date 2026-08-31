@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T12:51:05.129Z",
+  "updatedAt": "2026-08-31T12:52:23.265Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -512,7 +512,8 @@
       "hasVisualizer": false,
       "processedSubmissions": [],
       "awaitingClassification": [
-        "submission-2.cs"
+        "submission-2.cs",
+        "submission-3.cs"
       ],
       "knownFingerprints": {},
       "fingerprints": {}
