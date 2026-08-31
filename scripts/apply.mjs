@@ -36,7 +36,7 @@ function buildIndex(problems) {
       ? p.curatedFiles.map((f) => `\`${f.replace(/\.cs$/, '')}\``).join(' · ')
       : '_uncurated_';
     const vis = p.hasVisualizer
-      ? `[view](${linkPath(`${p.path}/visualizer.html`)})`
+      ? `[view](${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
       : '—';
     const raw = p.pending.length
       ? p.pending.map((s) => s.file.replace(/^submission-/, '#').replace(/\.cs$/, '')).join(', ')

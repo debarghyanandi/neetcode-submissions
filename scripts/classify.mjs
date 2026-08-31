@@ -79,9 +79,13 @@ const SCHEMA = {
           space: { type: 'string', enum: COMPLEXITY },
           approachKey: { type: 'string', description: 'short slug for the technique, e.g. "hashmap-complement". Two files sharing a key are the same idea.' },
           correct: { type: 'boolean', description: 'false only if the code is clearly wrong, not merely slow' },
+          bruteForce: {
+            type: 'boolean',
+            description: 'true only for exhaustive enumeration with no insight - nested loops over all pairs, trying every subset, recomputing from scratch. A slower but genuinely different technique (prefix sums, sorting, a heap) is NOT brute force.',
+          },
           note: { type: 'string', description: 'one sentence on the mechanism that makes the complexity what it is' },
         },
-        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'note'],
+        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note'],
       },
     },
   },
@@ -96,6 +100,7 @@ const INSTRUCTIONS = [
   'Space complexity means auxiliary space, excluding the input and excluding the output where the problem requires building one.',
   'Two files that implement the same idea must share an approachKey. Two files with the same complexity but genuinely different mechanisms must not.',
   'Set correct=false only when the code is actually wrong. Slow is not wrong.',
+  'Set bruteForce=true only for exhaustive enumeration with no idea behind it. Slower-but-different is not brute force.',
   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
   '',
@@ -324,6 +329,19 @@ for (const p of targets) {
       };
     }
     rec.provenance = nextProv;
+
+    // The full classification, keyed by final name. Kept out of headerSignature
+    // deliberately: bruteForce changes nothing in the header, and folding it in
+    // would rewrite every header for a field the header never prints.
+    const nextClass = {};
+    for (const [origin, finalName] of plan.names) {
+      const s = byFile.get(origin);
+      nextClass[finalName] = {
+        time: s.time, space: s.space, algorithm: s.algorithm,
+        approachKey: s.approachKey, correct: s.correct, bruteForce: !!s.bruteForce,
+      };
+    }
+    rec.classification = { ...(rec.classification ?? {}), ...nextClass };
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
 

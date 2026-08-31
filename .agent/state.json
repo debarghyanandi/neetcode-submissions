@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T02:03:24.719Z",
+  "updatedAt": "2026-08-31T02:15:55.941Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -539,8 +539,7 @@
     "two-integer-sum": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
-        "optimal.cs",
-        "suboptimal.cs"
+        "optimal.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
