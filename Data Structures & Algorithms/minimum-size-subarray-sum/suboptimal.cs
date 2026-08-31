@@ -1,13 +1,6 @@
 // ##########################################################################
-// #  suboptimal.cs         O(n) time / O(n) space
-// #  sliding window, shrink while valid, prefix-sum lookup   [sliding-window-prefix-sum]
-// #  ranks below optimal.cs (O(n) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF - marked '//My solution'
-// #
-// #  precomputes a prefix-sum array to fetch any window sum in O(1),
-// #  trading O(n) auxiliary memory for a value the running-sum version
-// #  tracks with a single int
+// #  YOU SOLVED THIS YOURSELF  (submission-0, marked '//My solution')
+// #  prefix-sum framing - correct, but carries O(n) memory it does not need
 // ##########################################################################
 
 public class Solution
