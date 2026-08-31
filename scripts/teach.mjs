@@ -33,6 +33,7 @@ const only = arg('--slug');
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const backfill = has('--backfill');
+const force = has('--force');
 // The step with real design latitude - this is where the larger model earns it.
 const model = arg('--model', 'opus');
 
@@ -73,7 +74,33 @@ function ask(dir, file, ctx) {
 
 const state = loadState();
 const everything = scanRepo(state);
-let targets = only ? everything.filter((p) => p.slug === only) : pendingOnly(everything);
+
+/** Every curated file has a block, generated from the classification on record. */
+const atCurrentStandard = (p) => {
+  const rec = state.problems[p.slug] ?? {};
+  const t = rec.teachSignatures ?? {};
+  const sigs = rec.headerSignatures ?? {};
+  if (!p.curatedFiles.length) return false;
+  return p.curatedFiles.every((f) => {
+    if (!t[f] || !sigs[f] || t[f] !== sigs[f]) return false;
+    return splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).had;
+  });
+};
+
+// --backfill widens the scope to every curated folder and drops the ones already
+// done, so successive runs work THROUGH the repo instead of redoing the first N.
+// Previously --backfill widened nothing, so in the workflow it selected
+// pendingOnly - which during a backfill is empty, and the step did nothing.
+let targets;
+if (only) {
+  targets = everything.filter((p) => p.slug === only);
+} else if (backfill) {
+  const all = everything.filter((p) => p.curatedFiles.length);
+  targets = force ? all : all.filter((p) => !atCurrentStandard(p));
+  console.log(`\nbackfill: ${all.length} folder(s), ${all.length - targets.length} already done, ${targets.length} remaining`);
+} else {
+  targets = pendingOnly(everything);
+}
 if (limit) targets = targets.slice(0, limit);
 
 if (!targets.length) {
@@ -101,7 +128,7 @@ for (const p of targets) {
     const src = readFileSync(join(p.dir, file), 'utf8');
     const hasBlock = splitTrailingTeach(src).had;
 
-    if (!backfill && hasBlock && teach[file] && teach[file] === sig) {
+    if (!force && hasBlock && teach[file] && teach[file] === sig) {
       console.log(`  ${file.padEnd(22)} up to date`);
       skipped++;
       continue;

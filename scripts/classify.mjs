@@ -27,7 +27,7 @@ import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './l
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
-import { stripHeader, buildHeader, applyHeader, headerSignature } from './lib/header.mjs';
+import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 
@@ -189,12 +189,41 @@ function classify(dir, files) {
 // best available test cheap: run it over folders you already curated by hand
 // and see whether the model's proposed names match the ones you chose. Agreement
 // is evidence; disagreement is worth reading before this thing renames anything.
-const everything = scanRepo(loadState());
+const state = _ls();
+const everything = scanRepo(state);
+/**
+ * Is this folder already at the current standard?
+ *
+ * Every curated file needs a recorded classification and a header signature
+ * stamped with the CURRENT format version. A folder that predates a format bump
+ * is not up to date even though it has both.
+ */
+const atCurrentStandard = (p) => {
+  const rec = state.problems[p.slug] ?? {};
+  const sigs = rec.headerSignatures ?? {};
+  const cls = rec.classification ?? {};
+  if (!p.curatedFiles.length || p.pending.length) return false;
+  return p.curatedFiles.every((f) => {
+    if (!cls[f] || !sigs[f]) return false;
+    try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
+  });
+};
+
 // --backfill widens the net from "folders with raw submissions" to every folder,
-// so an old folder can be brought up to the current standard.
-let targets = only
-  ? everything.filter((p) => p.slug === only)
-  : has('--backfill') ? everything.filter((p) => p.curatedFiles.length) : pendingOnly(everything);
+// then removes the ones already done. Without that second half, --limit always
+// took the first N alphabetically, so repeated backfill runs redid the same
+// folders forever and never reached the rest.
+let targets;
+if (only) {
+  targets = everything.filter((p) => p.slug === only);
+} else if (has('--backfill')) {
+  const all = everything.filter((p) => p.curatedFiles.length);
+  targets = has('--force') ? all : all.filter((p) => !atCurrentStandard(p));
+  const done = all.length - targets.length;
+  console.log(`\nbackfill: ${all.length} folder(s), ${done} already at the current standard, ${targets.length} remaining`);
+} else {
+  targets = pendingOnly(everything);
+}
 
 // Same exclusion contract as detect.mjs, and it has to be here too: on a push
 // run this must skip the folder that was just pushed to, or the pipeline
@@ -221,8 +250,6 @@ if (targets.length === 0) {
 console.log(doApply
   ? `\nAPPLY - ${targets.length} folder(s). Files WILL be renamed and re-headered.\n`
   : `\nDRY RUN - ${targets.length} folder(s). No file will be modified.\n`);
-
-const state = _ls();
 let failures = 0;
 let touched = 0;
 
