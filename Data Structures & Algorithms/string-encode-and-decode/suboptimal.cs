@@ -1,3 +1,18 @@
+// --------------------------------------------------------------------------
+// -  suboptimal.cs         O(n) time / O(n) space
+// -  encode all string lengths as a comma-separated header block terminated
+// -  by '#', then concatenate raw string data; decode by parsing the header
+// -  list then slicing by size
+// -  [length-header-block]
+// -  ranks below optimal.cs (O(n) time / O(1) space)
+// -
+// -  Reference solution - not one you solved yourself (from submission-0)
+// -
+// -  single pass to build sizes list and header, single pass to concatenate
+// -  data, decode does two linear passes; auxiliary sizes list scales with
+// -  number of strings
+// --------------------------------------------------------------------------
+
 public class Solution {
 
     public string Encode(IList<string> strs) {
