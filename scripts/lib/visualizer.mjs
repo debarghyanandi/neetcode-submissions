@@ -86,6 +86,12 @@ try {
       for (const k of ['label','badge','blurb','code','simulate']) {
         if (sol[k] === undefined) E(where + '.' + k + ' is missing');
       }
+      // The blurb sits in a fixed-height header slot. Past ~450 visible
+      // characters it pushes past five rendered lines and the layout sprawls.
+      const visible = String(sol.blurb || '').replace(/<[^>]+>/g, '');
+      if (visible.length > 450) {
+        E(where + '.blurb is ' + visible.length + ' visible chars; over 450 it exceeds five rendered lines');
+      }
       if (!Array.isArray(sol.code) || !sol.code.length) { E(where + '.code must be a non-empty array'); return; }
       let steps = null;
       try { steps = sol.simulate(parsed.value); } catch (e) { E(where + '.simulate() threw: ' + e.message); return; }
