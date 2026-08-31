@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T18:00:47.198Z",
+  "updatedAt": "2026-08-31T19:33:31.326Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -505,6 +505,18 @@
           "recordedFrom": "c76939d"
         }
       }
+    },
+    "string-encode-and-decode": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-5.cs",
+        "submission-6.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "three-integer-sum": {
       "topic": "Data Structures & Algorithms",
