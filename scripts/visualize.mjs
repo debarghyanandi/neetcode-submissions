@@ -87,19 +87,26 @@ function instructions(slug, sols, feedback) {
     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
     '- Output only the statement: const PROBLEM = { ... };',
+    '',
+    'You have no tools and no filesystem access. The solution code is on stdin and everything else',
+    'you need is above. Do not attempt to read, list or search files - answer directly.',
     ...(feedback ? ['', 'Your previous attempt failed validation. Fix exactly these:', ...feedback.map((e) => `  - ${e}`)] : []),
   ].join('\n');
 }
 
 function ask(prompt, code) {
   const args = ['-p', prompt, '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
-                '--permission-mode', 'dontAsk', '--max-turns', '8', '--model', model];
+                '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', model];
   let raw;
   try {
     raw = execFileSync('claude', args, { input: code, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['pipe','pipe','pipe'] });
   } catch (e) {
     let env = null; try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
-    throw new Error(`claude failed (exit ${e.status}): ${env ? `${env.terminal_reason} - ${String(env.result).slice(0,300)}` : String(e.stderr || e.message).slice(0,300)}`);
+    const detail = env
+      ? [env.terminal_reason, env.subtype, env.num_turns != null ? `${env.num_turns} turns used` : null,
+         env.result ? String(env.result).slice(0, 300) : null].filter(Boolean).join(' · ')
+      : String(e.stderr || e.message).slice(0, 300);
+    throw new Error(`claude failed (exit ${e.status}): ${detail}`);
   }
   const env = JSON.parse(raw);
   if (!env.structured_output?.problemSource) throw new Error(`no problemSource (result: ${String(env.result).slice(0,200)})`);
@@ -145,7 +152,16 @@ for (const p of targets) {
   for (let attempt = 1; attempt <= 2 && !result; attempt++) {
     let r;
     try { r = ask(instructions(p.slug, sols, feedback), code); }
-    catch (e) { console.log(`  attempt ${attempt} FAILED: ${e.message}`); break; }
+    catch (e) {
+      console.log(`  attempt ${attempt} FAILED: ${e.message}`);
+      // Retry a run that simply ran out of room; do not retry an auth or
+      // configuration failure, which will fail identically the second time.
+      if (/max_turns|overloaded|rate_limit|timeout/i.test(e.message)) {
+        feedback = ['Your previous attempt ran out of room before finishing. Answer immediately, in one reply, with no preamble.'];
+        continue;
+      }
+      break;
+    }
     spend += r.cost ?? 0;
     const v = validate(r.src);
     if (!v.errors.length) {
