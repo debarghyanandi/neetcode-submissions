@@ -1,6 +1,13 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0 + submission-1)
-//  Not one you solved yourself.
+// -  suboptimal.cs         O(n log k) time / O(n) space
+// -  bounded min-heap of size k   [bounded-min-heap-topk]
+// -  ranks below optimal.cs (O(n) time / O(n) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  counts frequencies into a dictionary, then maintains a size-k min-heap
+// -  over distinct values, evicting the smallest-frequency entry whenever
+// -  the heap exceeds k.
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,7 +1,15 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-1, marked '//My solution')
-// #  right idea - fixed window - but the two maps are compared from
-// #  scratch on every single position. See optimal.cs.
+// #  suboptimal.cs         O(n * k) time / O(1) space
+// #  sliding window, full multiset comparison per position
+// #  [sliding-window-map-compare]
+// #  ranks below optimal.cs (O(n) time / O(1) space)
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  Fixed-size window over s2, but re-compares the two frequency
+// #  dictionaries (bounded by alphabet size k<=26) from scratch at every
+// #  window position instead of maintaining the comparison result
+// #  incrementally.
 // ##########################################################################
 
 public class Solution
@@ -89,82 +97,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - FIXED SIZE, comparing two frequency maps
- SOURCE  : YOUR OWN SOLUTION (submission-1, marked '//My solution')
- STATUS  : Sub-optimal (O(n * a) - correct, and the right shape)
+ PATTERN : Fixed-width window + full count-map compare per step
+ SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
+ STATUS  : Suboptimal
 ================================================================================
-
 WHY THIS PATTERN
-  "s2 contains a permutation of s1" means: some window of s2 of length
-  |s1| has EXACTLY s1's character multiset. Permutation = same multiset,
-  order irrelevant. Once that translation is made, the window size is fixed
-  and known up front, so there is no shrink phase at all - the window just
-  marches, admitting one character and evicting one on every move.
-
-  Getting to "fixed-size window + multiset equality" is the actual insight
-  of this problem, and this submission has it. What it does not yet have is
-  a cheap way to test equality.
-
-BRUTE FORCE (and why it fails)
-  Sort every length-|s1| substring and compare: O(n * m log m). Or generate
-  all permutations of s1 and search for each: O(m! * n), unusable past m = 8.
-  Both re-derive from scratch what the previous window already established.
-
+  A permutation of s1 living inside s2 is exactly a contiguous block of length
+  s1.Length whose character multiset equals s1's. Order inside the block is
+  irrelevant, so the only state worth carrying is a count map - and because the
+  block length is pinned to s1.Length, this is the fixed-width window, not the
+  grow/shrink kind. left and right move in lockstep; there is no condition under
+  which the window widens.
+SETUP AND THE OFF-BY-ONE
+  The single seed loop over i in [0, s1.Length) does double duty: it accumulates
+  s1Counts from s1[i] and windowCounts from s2[i], so after it runs windowCounts
+  already describes the first candidate window. That is why right is initialized
+  to s1.Length - 1 and not s1.Length - the window is the closed interval [left,
+  right], which holds exactly s1.Length characters, matching what the seed loop
+  consumed. Initializing right to s1.Length would double-count the first slide
+  and shift every window by one.
 INVARIANT
-  windowCounts is the exact multiset of s2[left..right], and right - left + 1
-  == s1.Length at every comparison.
-
-WHY THIS IS SUB-OPTIMAL
-  The two-map comparison runs on every one of the n - m + 1 positions, and
-  each comparison walks all distinct characters of s1: O(n * a) with a <= 26.
-  The window itself changes by only TWO characters per step, so the ANSWER to
-  "are these equal?" also changes by a bounded amount - it should be
-  maintained incrementally, not recomputed.
-
-  optimal.cs keeps a single `matches` counter (how many of the 26 letters
-  currently agree) and updates it in O(1) inside Add/Remove. Same window,
-  same eviction, O(1) equality test.
-
-  Secondary cost: Dictionary hashing per character where the alphabet is a
-  known 26 letters. int[26] indexed by (c - 'a') is a direct array write -
-  no hashing, no allocation, and it makes the comparison a fixed 26-slot
-  loop rather than a LINQ enumeration with a closure allocation per call.
-
-ALGORITHM
-  1. Reject if s1 is longer than s2.
-  2. Build s1Counts from s1 and windowCounts from s2's first m characters.
-  3. Loop: compare the maps; if equal, return true. Otherwise evict s2[left],
-     advance both edges, admit s2[right].
-  4. Return false if the right edge runs off the end.
-
-COMPLEXITY
-  Time  : O(n * a) - n positions, each doing an O(a) multiset comparison.
-  Space : O(a) - two maps bounded by the alphabet.
-
-TRIGGER
-  "Does a window of exactly length m satisfy X?" - anagram / permutation /
-  "all characters of t appear exactly once" phrasing. Fixed size is the
-  signal: no shrink loop, one in and one out per step.
-
-C# NOTES
-  - s1Counts.All(...) allocates an enumerator and a closure on every call.
-    Inside a per-position loop that is real garbage-collector pressure, not
-    a micro-nit.
-  - ContainsKey + indexer is two hash probes for what TryGetValue does in
-    one; CollectionsMarshal.GetValueRefOrAddDefault does the increment in
-    one probe total.
-  - Removing the key at zero is load-bearing here: the s1Counts.Count ==
-    windowCounts.Count guard is only correct if zero-count keys never linger.
-    That is subtle, and it is a good thing to be able to explain out loud.
-
+  Two things hold at the top of every while iteration. (1) windowCounts is
+  exactly the multiset of s2[left..right], a block of size s1.Length. (2) No key
+  in windowCounts ever maps to 0 - the eviction branch calls Remove when the
+  count is about to hit zero instead of decrementing to zero. Property (2) is
+  load-bearing: it is what lets s1Counts.Count == windowCounts.Count mean 'same
+  set of distinct characters'. Decrement-to-zero without Remove would leave dead
+  keys behind and the Count test would go false on windows that actually match.
+WHY IT LOSES
+  Every iteration re-derives equality from scratch: the Count test plus
+  s1Counts.All(...) walks all distinct characters of s1 on each of the roughly
+  s2.Length window positions. But a slide changes exactly two characters -
+  s2[left] leaves, s2[right] enters - so at most two entries of the comparison
+  can change. Carry the answer instead of recomputing it: keep int matches = the
+  number of characters whose s1 count equals the window count, and when you
+  decrement or increment a character's window count, adjust matches by checking
+  that one character against s1Counts before and after. Report true when matches
+  == s1Counts.Count. That is O(1) per slide and O(n) overall. If the alphabet is
+  known lowercase, replace both dictionaries with int[26] indexed by c - 'a' and
+  matches ranges over 26.
+INTERVIEWER FOLLOW-UP
+  Is the s1Counts.Count == windowCounts.Count guard necessary? No, and you can
+  prove it. The window is always exactly s1.Length characters, so the values in
+  windowCounts sum to s1.Length; the values in s1Counts sum to the same. If the
+  All(...) clause passes, windowCounts agrees with s1Counts on every key of
+  s1Counts, and those keys already account for the entire sum s1.Length. Any
+  extra key in windowCounts would therefore have to carry count 0 - impossible,
+  by the no-zero-keys invariant. So All(...) alone is sufficient here. Keeping
+  the Count test is a cheap short-circuit, not a correctness requirement.
 WATCH OUT
-  - The comparison must happen BEFORE the eviction, or the first window is
-    never tested.
-  - The `right == s2.Length` guard after the increment is what stops the
-    final admit from reading past the end. Losing it is an
-    IndexOutOfRangeException on the last window.
-  - Seeding both maps in the same loop is fine only because both strings are
-    indexed by the same i over the first m positions - correct here, and
-    easy to break if the window size is ever decoupled from s1.Length.
+  The bounds check that actually matters is the inner if (right == s2.Length)
+  return false, placed after left++/right++ and before the character at
+  s2[right] is added. The while condition right < s2.Length only ever gets
+  evaluated as true: the loop never falls out of the bottom, because that inner
+  guard returns first. The trailing return false after the loop is structurally
+  unreachable and exists only to satisfy the compiler. Do not 'clean up' the
+  inner guard on the assumption the while header covers it - deleting it indexes
+  s2[s2.Length].
+EDGE CASES
+  The s1.Length > s2.Length early return is not just a shortcut: it also
+  protects the seed loop, which indexes s2[i] for i up to s1.Length - 1. Empty
+  s1 falls through with right = -1 and two empty maps, and the first comparison
+  is 0 == 0 plus a vacuously true All, so it returns true without ever touching
+  s2 - the conventional answer for an empty pattern.
+COMPLEXITY
+  Time  : O(n * k)
+  Space : O(1)
 ================================================================================
 */

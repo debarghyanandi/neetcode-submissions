@@ -1,6 +1,14 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-3, marked '// My solution')
-// #  your own per-character window - see optimal.cs for the standard trick
+// #  suboptimal.cs         O(n * k) time / O(1) space
+// #  sliding window rerun per candidate target character
+// #  [sliding-window-per-char]
+// #  ranks below optimal.cs (O(n) time / O(1) space)
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  enumerates each of the (bounded, constant) distinct characters as the
+// #  fixed target and reruns a linear window per candidate, multiplying the
+// #  single-pass cost by alphabet size
 // ##########################################################################
 
 public class Solution
@@ -41,64 +49,95 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - Variable Size, run once PER CANDIDATE CHARACTER
- SOURCE  : YOUR OWN SOLUTION (submission-3, marked '// My solution')
- STATUS  : Sub-optimal (O(26n) - correct, and a genuinely good first answer)
+ PATTERN : Sliding Window - one pass per candidate target character
+ SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
+ STATUS  : Suboptimal
 ================================================================================
+THE REFRAME
+  The hard version of this problem asks "which character should the window end
+  up as?" while the window is still moving. This file refuses to answer that
+  question and brute-forces it instead: fix targetChar, then the problem
+  collapses into an ordinary sliding window where the rule is dead simple -
+  every character in [left, right] that is not targetChar costs one replacement.
+  Run that window once per distinct character of s and keep the global max in
+  longest.
 
-WHY THIS PATTERN
-  The problem has a hidden unknown: WHICH character the final run is made of.
-  The honest first move is to remove the unknown by brute-forcing it - try
-  every candidate, and for each one the problem collapses to a clean, easy
-  window: "longest stretch where at most k characters are not targetChar."
+  The payoff is that inside one pass there is no ambiguity at all: (right - left
+  + 1) - targetCount is exactly the number of replacements the current window
+  needs, so the feasibility test is a single arithmetic comparison against k.
+WHY ONLY CHARACTERS IN S
+  The obvious follow-up: the final substring could in principle be made of a
+  letter that never appears in s, so why is it safe to iterate only over
+  distinctCharacters?
 
-  This is a real technique, not a beginner's detour. "Enumerate the small
-  unknown, then solve the easy version" is how a lot of hard problems get
-  cracked. Keep it; it is worth more than memorising the trick in 03.
+  Split on window length. If the best window is longer than k, then at least one
+  of its characters survives unreplaced, and that survivor is the target - it is
+  in s by construction. If the best window has length <= k, every character in
+  it can be replaced, so its length is at most k - but that window is also found
+  by any pass, including targetChar = s[0], since a window of size <= k needs at
+  most k replacements regardless of contents. Either way the answer is reached
+  by some character already in s. Nothing is missed.
 
-BRUTE FORCE (and why it fails)
-  Check every substring, counting its most frequent character: O(n^2) or
-  worse. This version is already linear-with-a-constant.
+  Corollary edge case: s empty gives an empty distinctCharacters, the foreach
+  body never runs, and longest stays 0.
+INVARIANT
+  At the point where longest is updated, two things hold for the pass over
+  targetChar:
 
-INVARIANT (within one target pass)
-  s[left..right] can be turned into a run of targetChar using at most k
-  replacements, because (window size - targetCount) <= k.
+  1. targetCount is exactly the number of occurrences of targetChar in
+  s[left..right]. It is incremented when right steps onto a targetChar and
+  decremented when left steps off one - the two branches are mirror images,
+  which is the whole bookkeeping.
 
-WHY THIS IS SUB-OPTIMAL
-  It repeats the whole scan once per distinct character: O(26n) for lowercase
-  input. optimal.cs collapses all 26 passes into one by tracking the
-  highest frequency seen instead of a fixed target. Both are O(n) formally -
-  the alphabet is a constant - so this is a CONSTANT-FACTOR loss, not an
-  asymptotic one. Worth saying precisely in an interview: "mine is O(26n),
-  the standard one is O(n); same class, 26x the work."
+  2. (right - left + 1) - targetCount <= k. The while loop is the only thing
+  enforcing this, and it runs to completion before Math.Max, so every value fed
+  into longest is a genuinely achievable window.
 
-ALGORITHM
-  1. Collect the distinct characters of s.
-  2. For each one, slide a window over s:
-       - extend right, counting occurrences of targetChar
-       - while (window size - targetCount) > k, shrink from left
-       - record the window size
-  3. Return the largest window over all targets.
+  Read together: longest is the largest window that could be turned into a run
+  of targetChar with at most k edits, maximized over every targetChar.
+THE SHRINK STEP
+  Order matters inside the while body. targetCount must be decremented while
+  s[left] is still the character about to leave, then left++ - swap those two
+  lines and you decrement based on the wrong index.
 
-COMPLEXITY
-  Time  : O(a * n) where a = distinct characters (<= 26 here). Each pass is
-          O(n) because left never moves backward within that pass.
-  Space : O(a) for the set of distinct characters.
+  The while could be an if without changing behavior: extending right adds at
+  most one non-targetChar, so the deficit grows by at most 1 per iteration and a
+  single left++ always restores the invariant. Keeping it as a while is harmless
+  and matches the general shape of the pattern, but do not read it as "the
+  window can collapse by many positions here" - it cannot.
 
+  Also note left is not reset inside the for loop, only per targetChar. Within
+  one pass left only moves right, which is what makes a single pass linear.
+WHY THIS LOSES
+  This does one full traversal of s for every distinct character, so the same
+  string is walked up to 26 times for lowercase or 52 for mixed case. The
+  optimal solution walks it once.
+
+  The single-pass version keeps int[26] count for the current window plus
+  maxCount, the highest single-character frequency the window has ever held. The
+  window is valid when (right - left + 1) - maxCount <= k. The trick that makes
+  it work is that maxCount is deliberately never decreased when left advances: a
+  stale maxCount is an overestimate of the current window's best character, so
+  it can only make the window look worse than it is, never better. The window
+  then never shrinks - left advances at most in lockstep with right - and the
+  answer is simply the final window size. Stale maxCount can only prevent
+  growth, never permit an invalid window, and the size recorded was legitimately
+  achieved earlier.
+
+  So the trade here is explicit: this file buys a trivially provable inner loop
+  by paying for repeated passes.
 TRIGGER
-  A window problem where one parameter is unknown but drawn from a SMALL
-  FIXED SET. Enumerate it and solve the easy inner problem.
+  Reach for the per-target outer loop whenever a window's validity depends on a
+  choice you cannot make until the window is known - "longest substring after at
+  most k changes to make it uniform" is the archetype. Fixing the choice and
+  looping over the small alphabet is the escape hatch when you cannot see the
+  maxCount argument under interview pressure.
 
-C# NOTES
-  - new HashSet<char>(s) works because string implements IEnumerable<char>.
-  - Resetting left and targetCount at the top of each foreach body is
-    essential - leaking state between passes is the bug to look for.
-
-WATCH OUT
-  - `(right - left + 1) - targetCount` is the number of replacements needed.
-    Deriving that expression is the actual insight of this problem; the rest
-    is standard window mechanics.
-  - Decrement targetCount BEFORE left++ when the evicted character is the
-    target, or the count drifts out of sync with the window.
+  The general tell for the inner loop is the phrasing "at most k of X" over a
+  contiguous range: expand right unconditionally, and let a monotone left
+  restore the budget.
+COMPLEXITY
+  Time  : O(n * k)
+  Space : O(1)
 ================================================================================
 */

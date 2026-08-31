@@ -1,6 +1,14 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-1)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(1) space
+// -  fixed-size array as perfect hash, balance counting
+// -  [array-frequency-balance]
+// -  ranks above suboptimal.cs (O(n) time / O(n) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  single pass increments/decrements a 26-slot array keyed by char-'a',
+// -  then checks all slots are zero, giving constant extra space since the
+// -  alphabet is fixed.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -33,57 +41,63 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hashing - Fixed-Alphabet Frequency Array
- SOURCE  : NeetCode / other resource (submission-1)
+ PATTERN : Fixed counting array - one signed balance pass
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  When the key space is small, dense and known ahead of time (26 letters),
-  an ARRAY IS A PERFECT HASH TABLE. c - 'a' is the hash function, it never
-  collides, and it costs one subtraction instead of a hash + bucket probe.
-
-BRUTE FORCE (and why it fails)
-  Sorting both strings: O(n log n). Counting is O(n). The dictionary version
-  in suboptimal.cs is also O(n) but pays hashing on every single access.
-
-THE TRICK THAT MAKES THIS ONE PASS
-  Instead of counting s, then counting t, then comparing two arrays, keep a
-  single BALANCE array: += for s, -= for t. Anagrams cancel to all zeroes.
-  This halves the passes and halves the memory versus two count arrays.
-
+  Anagram is multiset equality over characters. The alphabet here is fixed and
+  known (26 lowercase letters), so the whole multiset fits in an int[26]
+  addressed by c - 'a', and "compare two multisets" collapses to "compare 26
+  integers". The signed trick folds both counts into one table: s credits (++),
+  t debits (--). That is why there is no second array and no table-vs-table
+  comparison at the end - only a scan for a nonzero slot.
 INVARIANT
-  letterBalance[k] = (occurrences of letter k in s[0..i]) minus
-                     (occurrences of letter k in t[0..i]).
-  For true anagrams this reaches 0 for every k at i = n-1.
-
-ALGORITHM (NeetCode: "Hash Table (Using Array)")
-  1. Length mismatch -> false.
-  2. One loop, one index i, touching s[i] and t[i] together.
-  3. Increment the s letter's slot, decrement the t letter's slot.
-  4. Scan the 26 slots; any non-zero -> false.
-
-COMPLEXITY
-  Time  : O(n) - one pass of length n, plus a fixed 26-slot scan.
-  Space : O(1) - exactly 26 ints, independent of input size.
-          (Formally O(k) for alphabet size k, but k is a constant here.)
-
-TRIGGER
-  "Anagram / permutation / same multiset of characters" AND the problem
-  constrains input to lowercase English letters. That constraint sentence in
-  the problem statement is the signal to reach for int[26] over Dictionary.
-
-C# NOTES
-  - `s[i] - 'a'` is char arithmetic promoted to int. No conversion needed.
-  - `new int[26]` is zero-initialised by the CLR - no Array.Fill required.
-  - stackalloc int[26] avoids the heap allocation entirely if this ran in a
-    hot loop. Overkill for a single call, but it is the .NET-idiomatic move.
-
+  After the loop body runs for index i, letterBalance[c - 'a'] equals
+  (occurrences of c in s[0..i]) minus (occurrences of c in t[0..i]). Slots are
+  fully independent: a surplus in one letter can never cancel a deficit in
+  another, because they live at different indices. Combined with the
+  equal-length precondition, "every slot is zero at the end" is exactly "every
+  letter appears the same number of times in both" - which is the definition of
+  anagram. That is the whole correctness argument.
+THE LENGTH GUARD IS LOAD-BEARING
+  The early return on s.Length != t.Length is not a shortcut, it is a
+  precondition for the loop. The single pass indexes t[i] while i is bounded
+  only by s.Length, so with s = "ab" and t = "a" you get an
+  IndexOutOfRangeException, not a wrong answer. Contrast with the two-loop shape
+  (count all of s, then decount all of t): there, unequal lengths would
+  necessarily leave some slot nonzero and the guard would be a pure
+  optimization. This version trades that safety for the fused pass, so the guard
+  has to stay.
 WATCH OUT
-  - THIS CRASHES on any character outside a-z: an uppercase 'A' gives index
-    -32 and throws IndexOutOfRangeException. Always confirm the constraint
-    before using this shape. If Unicode is possible, use suboptimal.cs.
-  - The length check is not an optimisation, it is REQUIRED for correctness:
-    the single loop indexes both strings with the same i.
+  1. c - 'a' silently assumes every character is in 'a'..'z'. An uppercase 'A'
+  produces index -32 and a space produces -65, so bad input throws rather than
+  lying - loud, but still a crash. If the interviewer widens the input, this is
+  the first thing to fix.
+  2. Do not "optimize" by returning false the moment a slot goes negative inside
+  the loop. Negative only means t has led on that letter so far, and s can still
+  catch up. Concretely, s = "ba" and t = "ab": at i = 0 letterBalance['a' - 'a']
+  is already -1, yet the strings are anagrams. Only the final values carry
+  meaning.
+THE OBVIOUS FOLLOW-UP
+  "What if the input is Unicode, or the alphabet is unbounded?" Swap int[26] for
+  Dictionary<char, int> with the same +1 / -1 balance, then verify every value
+  is zero - or maintain a running count of nonzero entries so the final check is
+  O(1). Space then scales with the number of distinct characters instead of a
+  flat 26. Mention too that iterating char by char breaks on surrogate pairs and
+  combining marks; a truly correct Unicode version compares text elements, not
+  chars. The alphabet-free alternative is sorting both strings and comparing,
+  which needs no counting table but pays n log n.
+RECALL TRIGGER
+  Reach for a fixed counting array whenever the question is "same contents,
+  order irrelevant" over a small known symbol set: anagram grouping,
+  permutation-in-a-string sliding windows, character frequency checks. The tell
+  is a bounded alphabet plus an answer that depends only on counts. The signed
+  single-array variant specifically applies when you are comparing exactly two
+  sequences of equal length.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(1)
 ================================================================================
 */

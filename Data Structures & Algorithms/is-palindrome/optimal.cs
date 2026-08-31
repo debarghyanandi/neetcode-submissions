@@ -1,6 +1,14 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0 + submission-1)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(1) space
+// -  two pointers converging inward, skipping non-alphanumerics
+// -  [two-pointer-inplace-palindrome]
+// -  the only solution in this folder
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  left/right indices advance toward each other over the original string,
+// -  skipping non-alphanumeric chars and case-folding, using only O(1)
+// -  extra scalars.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -32,62 +40,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - Converging from Both Ends
- SOURCE  : NeetCode / other resource (submission-0 + submission-1 merged; the
-           custom AlphaNum helper replaced by char.IsLetterOrDigit)
+ PATTERN : Two pointers converging, skipping non-alphanumerics
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
-WHY THIS PATTERN
-  A palindrome is defined by a symmetry: position i must match position
-  n-1-i. Two pointers walking inward test exactly that relation, one pair per
-  step, and meet after n/2 comparisons.
-
-BRUTE FORCE (and why it fails)
-  Build a cleaned lowercase string, reverse it, compare: O(n) time but O(n)
-  EXTRA SPACE for two more strings. Correct, and a fine first answer. The
-  two-pointer version reads the original in place for O(1) extra space -
-  the improvement here is memory, not time.
-
+WHY THIS SHAPE
+  A palindrome is a statement about mirrored pairs: position i must match
+  position (n-1-i) once the junk is removed. Two indices walking toward each
+  other evaluate exactly that pairing, one pair per outer iteration, without
+  ever materializing the cleaned string. The filtering is folded into the walk -
+  left and right skip forward over anything char.IsLetterOrDigit rejects, so the
+  pointers only ever meet on characters that actually participate in the
+  comparison.
 INVARIANT
-  Everything strictly outside [left, right] has already been verified as
-  symmetric. The unverified region shrinks every iteration, so it terminates.
+  At the top of every outer iteration: every character at an index below left or
+  above right has already been either matched against its mirror or discarded as
+  punctuation. So the remaining question is always the same question on the
+  smaller slice s[left..right]. Each pass either confirms one pair and shrinks
+  that slice by at least two, or returns false immediately. Reaching left >=
+  right means nothing is left to disprove, hence the unconditional return true.
+WHY THE COMPARE IS ALWAYS IN BOUNDS
+  This is the detail an interviewer probes. Both skip loops are guarded by the
+  crossing condition (left < right, and right > left - the same test written two
+  ways), never by s.Length. That is sufficient because left and right start
+  inside the array and each skip loop stops the moment the pointers touch. So at
+  the char.ToLower comparison, both indices are still within [0, s.Length-1].
+  There is no need for a separate bounds check, and no need to re-test left <
+  right before comparing.
 
-WHY THE INNER SKIP LOOPS ALSO CHECK left < right
-  Without it, a string of only punctuation ("...") runs a pointer past the
-  other and indexes out of range. The guard is correctness, not tidiness.
-
-ALGORITHM (NeetCode: "Two Pointers")
-  1. left at 0, right at the last index.
-  2. Advance left past non-alphanumerics; retreat right past them.
-  3. Compare case-folded characters; mismatch -> false.
-  4. Step both inward and repeat until they cross.
-
-COMPLEXITY
-  Time  : O(n) - each pointer only ever moves toward the other, so the two
-          together traverse the string once. Nested loops, linear work: the
-          amortised argument, same shape as longest-consecutive-sequence.
-  Space : O(1) - two ints, no copies of the string.
-
-TRIGGER
-  "Palindrome", "mirror", "symmetric", or any condition relating position i
-  to position n-1-i. More broadly: two pointers converge when the answer
-  depends on a pair drawn from OPPOSITE ENDS of an ordered structure.
-
-C# NOTES
-  - char.IsLetterOrDigit is Unicode-aware; the hand-rolled ASCII range check
-    is not. For the LeetCode constraints both pass, but the built-in is
-    correct for a wider input and needs no maintenance.
-  - char.ToLower uses the CURRENT CULTURE. char.ToLowerInvariant is the safer
-    default in production - the Turkish dotless-i is the classic bug where
-    culture-sensitive casing silently changes behaviour by machine locale.
-  - For a truly allocation-free variant, ReadOnlySpan<char> over the string
-    gives the same indexing with no copies. Already O(1) here, so it buys
-    nothing - but it is the .NET move when substrings ARE involved.
-
+  The case that looks broken but is not: a skip loop can exit on the guard
+  rather than on an alphanumeric, leaving left == right on a punctuation
+  character. Then the line compares s[left] against s[right] - the same index -
+  which is trivially equal, the pointers cross, and the loop ends.
+  Wrong-looking, harmless.
+EDGE CASES THIS QUIETLY HANDLES
+  1. Empty string: right = -1, the outer condition 0 < -1 fails, returns true.
+  2. All punctuation, e.g. ",.": left skips to meet right, the degenerate
+  self-comparison succeeds, returns true - which is the required answer, since
+  the filtered string is empty.
+  3. Odd-length center, e.g. "aba": left and right both land on 'b' or cross
+  past it; the middle character is never compared against a different index,
+  which is correct since it is its own mirror.
+  4. Digits: char.IsLetterOrDigit keeps them, so "0P" correctly returns false
+  rather than being treated as two skippable characters.
 WATCH OUT
-  - Only one of the two skip loops uses `left < right` and the other `right >
-    left` - they are the same condition written twice. Keep both; dropping
-    either reintroduces the out-of-range crash on all-punctuation input.
+  char.ToLower uses the current culture. Under a Turkish culture, 'I' lowercases
+  to dotless 'i' while 'i' stays 'i', so "Ii" would report false.
+  char.ToLowerInvariant removes that dependency and is the safer default here,
+  since the comparison is meant to be a plain ASCII case fold, not a
+  locale-aware one.
+
+  Relatedly, char.IsLetterOrDigit is Unicode-wide, not [a-zA-Z0-9] - accented
+  letters and non-Latin digits are kept, not skipped. Fine for the judge's ASCII
+  inputs; state the assumption if asked.
+THE ALTERNATIVE AND WHY IT LOSES
+  The obvious first attempt: build a filtered lowercase string, then compare it
+  to its reverse (or run two pointers over it). Same asymptotic time, but it
+  allocates a second buffer proportional to the input. This version keeps only
+  left and right, which is the whole reason for interleaving the skip loops with
+  the comparison instead of doing a clean pass first.
+TRIGGER
+  Reach for this when a predicate over a sequence is symmetric about the center
+  and the elements can be judged pairwise, and when some elements are noise to
+  be ignored rather than data. The generalization is: outer loop advances the
+  answer, inner loops advance past irrelevant input, all pointers move
+  monotonically so the walk always terminates.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(1)
 ================================================================================
 */

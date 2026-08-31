@@ -1,6 +1,13 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-0, then submission-2 - both marked)
-// #  merged with submission-3 - your helper-method form is the one kept
+// #  optimal.cs            O(n^2) time / O(1) space
+// #  sort + fix anchor + two pointers   [sort-fix-two-pointers]
+// #  the only solution in this folder
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  sorts then fixes each element as anchor, using a two-pointer scan over
+// #  the remaining sorted suffix to find pairs summing to the negated
+// #  anchor, skipping duplicates for both anchor and pair values
 // ##########################################################################
 
 public class Solution

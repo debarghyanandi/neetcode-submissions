@@ -1,12 +1,13 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
 // -  hash map complement lookup, one pass   [hashmap-complement]
-// -  ranks above suboptimal.cs (O(n^2) time / O(1) space)
+// -  the only solution in this folder
 // -
-// -  No '//My solution' marker in the source
+// -  Reference solution - not one you solved yourself
 // -
-// -  single pass storing seen values in a dictionary, checking complement
-// -  before insertion gives O(n) time and O(n) auxiliary space for the map
+// -  single pass storing seen value->index in a dictionary, checking for
+// -  the complement before inserting the current value gives O(n) time with
+// -  O(n) auxiliary space for the map
 // --------------------------------------------------------------------------
 
 public class Solution

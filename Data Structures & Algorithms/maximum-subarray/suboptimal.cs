@@ -1,6 +1,13 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-1)
-//  Not one you solved yourself.
+// -  suboptimal.cs         O(n) time / O(n) space
+// -  1D DP table, best sum ending at i   [kadane-dp-table]
+// -  ranks below optimal.cs (O(n) time / O(1) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  Same recurrence as Kadane but materializes the full array of per-index
+// -  best sums before scanning it for the max, costing O(n) auxiliary
+// -  space.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -30,62 +37,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Dynamic Programming - 1D table, "best ending at index i"
- SOURCE  : NeetCode / other resource (submission-1)
- STATUS  : Sub-optimal on SPACE (O(n) table where O(1) suffices)
+ PATTERN : Kadane / DP - best subarray ending at each index
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
+ STATUS  : Suboptimal
 ================================================================================
-
 WHY THIS PATTERN
-  The obstacle is that a subarray can start anywhere. Fix that by defining
-  the state around its END instead: "the best subarray ending exactly at i."
-  Now every index has one well-defined answer, and each depends only on its
-  neighbour - which is the definition of a 1D DP.
+  The brute force enumerates every (start, end) pair - quadratic, and it
+  recomputes overlapping sums. The reframe that kills it: instead of asking
+  "what is the best subarray?", ask "what is the best subarray that ENDS exactly
+  at index i?" There are only n such questions, and the answer at i is
+  determined entirely by the answer at i-1. That turns a search over pairs into
+  a single left-to-right scan, which is exactly what bestEndingAt holds.
+THE RECURRENCE AND WHY IT IS EXHAUSTIVE
+  bestEndingAt[i] = Math.Max(nums[i], nums[i] + bestEndingAt[i - 1]).
 
-  Recurrence:
-      bestEndingAt[i] = max( nums[i], nums[i] + bestEndingAt[i-1] )
-  In words: at each element you make one binary decision - START A NEW
-  SUBARRAY HERE, or EXTEND THE ONE BEFORE. That is the whole problem.
-
-  The global answer is max over all i, because the optimal subarray must end
-  somewhere.
-
-BRUTE FORCE (and why it fails)
-  All O(n^2) subarrays, summing each: O(n^3), or O(n^2) with a running sum.
-  The DP notices that the best run ending at i is one step from the best run
-  ending at i-1 - so the recomputation is pure waste.
-
-WHY THIS IS SUB-OPTIMAL
-  The table is never read further back than one index. Storing all n values
-  and then scanning them again is O(n) space and two passes for information
-  that fits in two ints. Collapsing it gives optimal.cs (Kadane).
-  Keep this file: writing the explicit table FIRST and then collapsing it is
-  the reliable way to derive Kadane rather than memorise it - and the same
-  collapse trick applies to climbing-stairs, house-robber, and most 1D DP.
-
-ALGORITHM (NeetCode: "Dynamic Programming")
-  1. Copy nums into bestEndingAt (each element alone is a valid subarray).
-  2. For i from 1: bestEndingAt[i] = max(nums[i], nums[i] + bestEndingAt[i-1]).
-  3. Return the maximum entry of the table.
-
+  Any subarray ending at i is either the single element [i], or it also contains
+  i-1 - there is no third case. In the second case it is some subarray ending at
+  i-1 plus nums[i], and since nums[i] is a fixed additive constant, maximizing
+  that sum means maximizing the part ending at i-1, which is bestEndingAt[i - 1]
+  by the inductive hypothesis. So the two-way max covers every candidate. Read
+  it as the greedy "drop the prefix if it is a net loss": you extend only while
+  bestEndingAt[i - 1] is positive.
+WHAT CLONE IS BUYING
+  (int[])nums.Clone() seeds every cell with nums[i], the length-1 subarray,
+  which is the base case of the recurrence and the correct value for
+  bestEndingAt[0]. That is why the loop can start at i = 1 - index i-1 is always
+  in range and always already final, because the scan writes cell i only after
+  cell i-1 is settled. Clone also copies rather than aliases, so nums itself is
+  never mutated; the caller's array survives.
+THE NEGATIVE-NUMBERS TRAP
+  maxSum is seeded with bestEndingAt[0], not 0. This is the single line most
+  likely to be gotten wrong from memory. On all-negative input like [-3, -1, -2]
+  the true answer is -1, the least-bad single element; seeding maxSum = 0 would
+  return 0, an empty subarray, which the problem does not allow. Same reason the
+  recurrence uses Math.Max(nums[i], ...) rather than Math.Max(0, ...) - the run
+  is allowed to be negative, it is just not allowed to be empty.
+WHY THIS LOSES TO THE ONE-PASS VERSION
+  bestEndingAt[i] is read exactly once, by iteration i+1, and never again.
+  Nothing reconstructs indices from the table, and the final foreach just takes
+  a max over it. So the whole array collapses to one int: keep a rolling current
+  = Math.Max(nums[i], nums[i] + current) and fold maxSum = Math.Max(maxSum,
+  current) inside the same loop, both seeded from nums[0]. That is constant
+  extra space and one traversal instead of two, with the identical recurrence.
+  The array form is the useful teaching scaffold - it makes the DP table visible
+  - but it stores a history the algorithm has no use for.
+EDGE CASES THE CODE ASSUMES AWAY
+  nums.Length == 0 throws IndexOutOfRangeException at maxSum = bestEndingAt[0];
+  the method is written for a guaranteed non-empty input. Length 1 is fine: the
+  loop body never runs and maxSum is nums[0]. Overflow on nums[i] +
+  bestEndingAt[i - 1] is a real int hazard in principle, but under the standard
+  constraints (n up to 1e5, |nums[i]| up to 1e4) the extreme total is 1e9,
+  inside int range - worth saying out loud rather than leaving it looking
+  unexamined.
+THE FOLLOW-UP TO EXPECT
+  "Return the subarray, not just the sum." Track start, end, and a candidate
+  start: when Math.Max picks nums[i] over the extension, the run restarted, so
+  set candidateStart = i; when the running value beats maxSum, commit start =
+  candidateStart and end = i. Note that the current array-based shape does not
+  give you this for free - you would still need those trackers, since
+  bestEndingAt records sums, not boundaries. Related variants that reuse this
+  recurrence: maximum product subarray (track both max and min ending at i,
+  because a negative flips them) and maximum sum circular subarray (total minus
+  the minimum subarray, with the all-negative case special-cased for the same
+  reason as above).
 COMPLEXITY
-  Time  : O(n) - one pass to fill, one to scan. Could be fused into one.
-  Space : O(n) - the table.
-
-TRIGGER
-  "Maximum/minimum over all CONTIGUOUS subarrays." Whenever a subarray's
-  start is unconstrained, re-anchor the state on its end.
-
-C# NOTES
-  - (int[])nums.Clone() is a shallow copy; the cast is needed because
-    Array.Clone() returns object. nums.ToArray() (LINQ) or Array.Copy do the
-    same - Clone is the allocation-cheapest of the three.
-  - Cloning also PROTECTS THE INPUT: writing into nums directly would mutate
-    the caller's array, an invisible side effect and a real interview ding.
-  - The final scan could be folded into the fill loop, saving a pass.
-
-WATCH OUT
-  - Seed maxSum from bestEndingAt[0], never from 0 - an all-negative array
-    like [-3,-1,-2] must return -1, not 0. This is THE test case for this
-    problem.
+  Time  : O(n)
+  Space : O(n)
 ================================================================================
 */

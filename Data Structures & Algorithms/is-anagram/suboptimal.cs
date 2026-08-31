@@ -1,6 +1,14 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0)
-//  Not one you solved yourself.
+// -  suboptimal.cs         O(n) time / O(n) space
+// -  dictionary frequency map with budget consumption
+// -  [hashmap-frequency-consume]
+// -  ranks below optimal.cs (O(n) time / O(1) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  builds a Dictionary<char,int> counting s (up to O(n) distinct keys in
+// -  the worst case for an unbounded alphabet), then decrements per
+// -  character of t, failing on missing/zero counts.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -40,59 +48,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hashing - Frequency Map
- SOURCE  : NeetCode / other resource (submission-0, refactored: TryGetValue,
-           no negative-count trick)
- STATUS  : Sub-optimal on space; the general-purpose version
+ PATTERN : Hash Map Frequency Budget - build then drain
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
+ STATUS  : Suboptimal
 ================================================================================
-
 WHY THIS PATTERN
-  An anagram is defined purely by character COUNTS, order is irrelevant.
-  Anything defined by counts wants a frequency map.
-
-BRUTE FORCE (and why it fails)
-  Sort both strings and compare: O(n log n) time, O(n) space for the char
-  arrays. Correct and only three lines, but the log n factor is unnecessary -
-  counting is strictly cheaper than ordering when you only need counts.
-
-INVARIANT
-  charFrequency[c] holds the number of unconsumed occurrences of c from s.
-  If t ever needs a character with zero budget left, the strings differ.
-
-WHY THIS ONE IS SUB-OPTIMAL
-  Only against optimal.cs, and only on space and constant factor:
-  a Dictionary costs O(k) memory for k distinct characters plus hashing on
-  every access, where the array version is O(1) memory and a raw index.
-  In exchange this version handles ANY character set - Unicode, digits,
-  spaces, emoji. optimal.cs assumes lowercase a-z and breaks otherwise.
-  That is the actual trade, and the right interview answer is "which alphabet?"
-
-ALGORITHM (NeetCode: "Hash Map")
-  1. Length mismatch -> false immediately.
-  2. Count every character of s into a dictionary.
-  3. For each character of t, decrement its count; fail if missing or zero.
-  4. Equal lengths + full coverage => the map is exactly drained => true.
-
-COMPLEXITY
-  Time  : O(n) - two passes over strings of length n, O(1) average per lookup.
-  Space : O(k) where k = distinct characters. Bounded by the alphabet, so
-          O(1) for a fixed alphabet, O(n) in the worst theoretical case.
-
-TRIGGER
-  "Is X a rearrangement/permutation of Y", "same characters, any order",
-  "group by character content". Any time ORDER IS EXPLICITLY IRRELEVANT.
-
-C# NOTES
-  - TryGetValue(c, out int n) does ONE hash lookup. ContainsKey followed by
-    the indexer does two - a habit worth breaking early.
-  - out int currentCount defaults to 0 when the key is absent, which is
-    exactly the seed value a counter wants.
-  - For counting, CollectionsMarshal.GetValueRefOrAddDefault gives a ref to
-    the slot and beats even TryGetValue in hot paths. Niche, but real.
-
+  Anagram is multiset equality: the two strings are equal as bags of characters,
+  order discarded. A Dictionary<char,int> is the direct encoding of a bag. The
+  build loop over s turns s into counts; the loop over t spends those counts.
+  Sorting both strings and comparing also decides multiset equality, but pays
+  O(n log n) for an ordering nobody looks at. Counting is the cheaper route to
+  the same fact.
+THE INVARIANT
+  At every point during the second loop, charFrequency[c] equals (occurrences of
+  c in s) minus (occurrences of c consumed so far from t), and it is never
+  negative. The two guards are exactly what maintain non-negativity: the
+  TryGetValue miss rejects a character s never had, and the remaining == 0 test
+  rejects spending a budget already drained to zero. Every surviving iteration
+  decrements exactly one unit.
+WHY NO SECOND SWEEP
+  The closing comment is the load-bearing part of the argument, so make it
+  explicit. Let n = s.Length. The build loop deposits exactly n units total
+  across all keys. If the t loop runs to completion it withdraws exactly
+  t.Length units, and the guard at the top proved t.Length == n. Withdrawing n
+  units from a pool of n without any balance going negative forces every balance
+  to zero, so no leftover scan is needed. Delete the length check and the
+  argument collapses: s = "aab", t = "ab" drains cleanly and wrongly returns
+  true.
+WHY THIS LOSES
+  When the alphabet is bounded - the usual lowercase-English constraint - an
+  int[26] indexed by c - 'a' does the same job. Increment on s, decrement on t,
+  early-exit the moment a slot would go negative, and the same
+  n-units-from-n-units argument still closes it. That version is O(1) space
+  instead of space proportional to the distinct characters of s, and each of the
+  2n operations is a bounds-checked array index rather than a hash, bucket probe
+  and possible resize. This file is the right answer only when the character
+  domain is unbounded (full Unicode, arbitrary symbols), where a 26-slot array
+  is not an option.
 WATCH OUT
-  - The original version allowed the count to go NEGATIVE and then tested for
-    it. Checking `remaining == 0` before decrementing is the same logic with
-    one less state to reason about.
+  1. TryGetValue(c, out int currentCount) writes 0 into currentCount on a miss,
+  which is why the build loop needs no ContainsKey branch. That is the
+  documented behavior of the out parameter, not an accident.
+  2. Keys are never removed. A character fully spent stays in the map with value
+  0, so the missing-key check and the remaining == 0 check are two different
+  failures and you need both. Drop the zero check and "aab" vs "abb" is
+  accepted.
+  3. foreach over a string yields UTF-16 code units, not code points. Surrogate
+  pairs are counted as two unrelated chars and combining-mark or normalization
+  differences are invisible. Fine for the stated constraints; say so out loud
+  before an interviewer asks.
+THE FOLLOW-UP
+  "Now the input is arbitrary Unicode" is the question this file already answers
+  - point at it and note the int[26] version breaks. "Make it one pass": since
+  the lengths are equal you can walk both strings in a single loop, incrementing
+  for s[i] and decrementing for t[i], but you then lose the early exit reasoning
+  and must scan the map at the end, because a temporarily negative balance may
+  be repaid later. "Case-insensitive or ignore whitespace" is a normalization
+  step before counting, not a change to the algorithm.
+TRIGGER
+  Reach for build-then-drain whenever the question is whether two sequences hold
+  the same items in any order. The same budget map, kept over a moving window
+  instead of a whole string, is what permutation-in-string and minimum-window
+  need - recognizing that this is the fixed-window degenerate case of those is
+  most of the transfer value here.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(n)
 ================================================================================
 */

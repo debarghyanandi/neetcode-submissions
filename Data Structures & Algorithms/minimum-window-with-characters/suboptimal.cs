@@ -1,7 +1,14 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-0, marked '//My Solution')
-// #  the window logic is completely right; the validity TEST is the
-// #  expensive part. See optimal.cs.
+// #  suboptimal.cs         O(n * k) time / O(n) space
+// #  sliding window, recomputed validity check
+// #  [sliding-window-recompute-validity]
+// #  ranks below optimal.cs (O(n) time / O(n) space)
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  Same linear two-pointer window movement, but IsMatch() re-walks all
+// #  distinct characters of t on every iteration of both loops, multiplying
+// #  the O(n) scan by O(|t| distinct) work per step.
 // ##########################################################################
 
 public class Solution
@@ -84,89 +91,80 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - Variable Size, with a RECOMPUTED validity test
- SOURCE  : YOUR OWN SOLUTION (submission-0, marked '//My Solution')
- STATUS  : Sub-optimal (O(n * a) - correct, and the hard part is already right)
+ PATTERN : Sliding Window - shrink while valid, rescan to check
+ SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
+ STATUS  : Suboptimal
 ================================================================================
-
 WHY THIS PATTERN
-  Two things have to be true at once: the window must CONTAIN all of t
-  (which pushes it to grow) and it must be as SHORT as possible (which pushes
-  it to shrink). A variable-size window resolves that by alternating: extend
-  right until valid, then shrink left while it stays valid, recording as you
-  go. Every index enters once and leaves once, so the whole scan is linear
-  in moves - regardless of how the validity test is implemented.
-
-  That structure is correct here and it is the part people get wrong. What
-  is left is the cost of asking "is it valid?".
-
-BRUTE FORCE (and why it fails)
-  Every substring, checking each against t: O(n^2) substrings x O(n) to
-  count = O(n^3), or O(n^2 * a) with per-substring histograms. Unusable at
-  n = 10^5. The window's key idea is that `left` never moves backward, which
-  is licensed by monotonicity: if s[l..r] is invalid, so is every s[l'..r]
-  with l' > l, so there is nothing to go back for.
-
+  Validity is monotone under growth: if s[left..right] already covers the
+  multiset of t, so does every window that contains it. That monotonicity is the
+  whole license for two pointers - for a fixed right there is one threshold
+  start position beyond which the window breaks, so the smallest valid window
+  ending at right is found by pushing left forward until validity dies, and left
+  never has to move backward. Strip the monotonicity away and you are back to
+  checking all pairs.
 INVARIANT
-  window is the exact multiset of s[left..right]; minLength / minIndices
-  hold the shortest valid window seen so far.
+  After the add at the top of the outer loop, window is the exact character
+  count of s[left..right] - every insertion goes through the ContainsKey /
+  add-or-increment pair and every deletion through the (count > 1 ? decrement :
+  Remove) pair, so a key is present if and only if its count is at least 1.
 
-WHY THIS IS SUB-OPTIMAL
-  IsMatch() is O(distinct characters of t) and runs on every iteration of
-  both loops - overall O(n * a). The window changes by ONE character per
-  move, so validity can change by at most one character's worth. Recomputing
-  the whole test throws that away.
+  The inner while exits only when the window is no longer valid, which means the
+  previous left was the last valid start for this right. minLength and
+  minIndices were already updated on that final valid iteration, before the
+  character at left was evicted. So at every point minLength is the length of
+  the best window seen so far and minIndices delimits it.
+WHY THIS LOSES
+  IsMatch re-walks every entry of need through LINQ All, and it is called once
+  per outer step plus once per shrink step. It recomputes a whole answer when
+  exactly one character changed - that is the defect, not the loop nesting.
 
-  optimal.cs keeps two ints - `have` (how many required characters are
-  currently satisfied) and `required` (how many there are) - and updates
-  `have` in O(1) at the exact moment a count crosses its threshold. The test
-  becomes `have == required`.
-
-  Secondary costs, all of them real but smaller:
-    - need.All(...) allocates an enumerator and a closure on every call.
-    - ContainsKey + indexer is two hash probes where TryGetValue is one.
-    - List<int> minIndices for two values is a heap allocation standing in
-      for two ints.
-    - The final StringBuilder loop copies the answer character by character
-      where s.Substring(start, length) does it in one memcpy.
-
-ALGORITHM
-  1. Build need from t. Empty window, left = 0, minLength = MaxValue.
-  2. Extend right, admitting s[right] into window.
-  3. While the window satisfies need: record it if shorter, evict s[left],
-     left++.
-  4. Return the recorded window, or "" if none was ever valid.
-
-COMPLEXITY
-  Time  : O(n * a) - the O(n) window scan multiplied by the O(a) validity
-          test.
-  Space : O(a) - two maps bounded by the alphabet.
-
-TRIGGER
-  "Smallest / shortest window containing all of X" - the minimum-window
-  family. Contrast with permutation-string, where the window is FIXED size
-  and the test is exact equality; here the window is variable and the test
-  is containment (>=, not ==), which is why extra characters are tolerated.
-
-C# NOTES
-  - `bool IsMatch()` as a local function is the right shape - it captures
-    need and window without a delegate allocation. The allocation cost here
-    is inside the LINQ .All, not in the local function itself.
-  - Removing the key at count zero is not required by the >= test, but it
-    keeps the map small and matches the mental model of "what is in the
-    window".
-  - s.Substring(minIndices[0], minLength) replaces the whole StringBuilder
-    block. For a zero-copy result, s.AsSpan(start, len) avoids the string
-    allocation entirely when the caller only reads it.
-
+  The fix is incremental bookkeeping: keep required = need.Count and have =
+  number of distinct required characters currently satisfied. When incrementing
+  window[c], if c is in need and window[c] just reached need[c], have++. When
+  decrementing, if c is in need and the count just fell below need[c], have--.
+  Validity is then have == required, one integer comparison, with no extra
+  storage. Same pointer motion, the per-step scan of need disappears.
+WHY THE NESTED LOOP IS NOT QUADRATIC
+  Interviewers push on this. right advances at most s.Length times and adds one
+  character each time; left only ever increases and is never reset, so the total
+  number of shrink-loop iterations over the entire run is bounded by s.Length.
+  Each index enters window once and leaves at most once. The extra factor in
+  this solution comes from IsMatch alone - say that explicitly, because the
+  nested while invites the wrong guess.
 WATCH OUT
-  - Record the window BEFORE evicting s[left], or the recorded bounds are
-    off by one.
-  - The shrink loop is a while, not an if: after admitting one character
-    several left evictions can be legal.
-  - `count >= pair.Value`, not ==. Duplicates in t are the trap - t = "AABC"
-    needs two As, and a window with three As is still valid.
-  - minLength == int.MaxValue is the only reliable "never found" signal;
-    minIndices is initialised to {0, 0}, which is a legitimate-looking window.
+  1. The comparison is count >= pair.Value, not ==. For t = "AABC" the window
+  may hold three A's and must still count as valid; == would reject valid
+  windows and stall the shrink.
+
+  2. window records every character of s in range, not just the ones in t.
+  Harmless for correctness since IsMatch only reads keys drawn from need, but
+  the dictionary grows with the distinct characters of s, not of t.
+
+  3. Empty t is a crash, not a wrong answer. need is empty, All over an empty
+  sequence is vacuously true, so the shrink loop keeps going until left = right
+  + 1 with window emptied, and window[s[left]] throws KeyNotFoundException. If
+  the constraints allow t to be empty, guard it next to the s.Length < t.Length
+  check.
+
+  4. minIndices starts as {0,0}, which decodes to the single character s[0]. The
+  only thing keeping that sentinel from being returned as a real answer is the
+  minLength == int.MaxValue test at the end - do not remove it. Two ints would
+  carry the same information as this two-element List<int>.
+RECONSTRUCTION
+  Storing indices instead of the substring is the right call: an improvement is
+  recorded with two int writes rather than materializing a new string each time
+  a shorter window is found. The final StringBuilder loop over
+  minIndices[0]..minIndices[1] is just s.Substring(minIndices[0], minLength)
+  spelled out.
+TRIGGER
+  "Shortest contiguous window satisfying a containment or count condition",
+  where the condition survives growing the window - reach for the variable-width
+  window with an explicit shrink phase and a counter-based validity test.
+  Contrast the fixed-width case (permutation in a string), where left moves in
+  lockstep with right and there is no inner loop at all.
+COMPLEXITY
+  Time  : O(n * k)
+  Space : O(n)
 ================================================================================
 */

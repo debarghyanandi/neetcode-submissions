@@ -1,6 +1,13 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(1) space
+// -  prefix/suffix product accumulation   [prefix-suffix-product]
+// -  the only solution in this folder
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  two linear passes accumulate running left and right products directly
+// -  into the output array, avoiding division and using only O(1) auxiliary
+// -  accumulators
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -34,69 +41,83 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Prefix & Suffix Products (two-pass accumulation)
- SOURCE  : NeetCode / other resource (submission-0, refactored: named
-           prefix/suffix accumulators, no Array.Fill)
+ PATTERN : Prefix/Suffix Products - two passes, output as scratch
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+CORE IDENTITY
+  Everything rests on one factorization: the product of all elements except
+  nums[i] equals (product of nums[0..i-1]) * (product of nums[i+1..n-1]). Prefix
+  times suffix. Once you see that, the code is just "compute the prefix for
+  every i, then multiply in the suffix for every i" - and each of those is a
+  single running accumulator, because prefix(i+1) = prefix(i) * nums[i].
 
-WHY THIS PATTERN
-  "Everything except me" decomposes into "everything to my left" times
-  "everything to my right". Both halves are running accumulations, and a
-  running accumulation is one linear sweep. Two sweeps, no division, O(n).
+  The obvious alternative - total product divided by nums[i] - is what the
+  problem forbids, and it is genuinely broken, not just banned: any zero in nums
+  makes the division undefined at that index, and two zeros make the total
+  product 0 so you cannot recover anything.
+THE TWO INVARIANTS
+  Pass 1, at the top of iteration i: prefixProduct holds the product of
+  nums[0..i-1] (empty product = 1 when i == 0). It is stored into result[i] and
+  only then multiplied by nums[i], which re-establishes the invariant for i+1.
 
-BRUTE FORCE (and why it fails)
-  For each i, loop the array multiplying all j != i: O(n^2).
-  The redundancy is obvious once named - the prefix for index 5 recomputes
-  everything the prefix for index 4 already knew.
+  Pass 2, at the top of iteration i: suffixProduct holds the product of
+  nums[i+1..n-1] (1 when i == length-1). result[i] already holds the prefix, so
+  result[i] *= suffixProduct completes the answer for i, and suffixProduct *=
+  nums[i] re-establishes the invariant for i-1.
 
-WHY NOT TOTAL PRODUCT / nums[i]?
-  It is O(n) and one line, and the problem BANS division precisely because it
-  breaks on zeros: one zero makes every other answer 0/0, two zeros make the
-  whole array zero. Handling that needs a zero-count special case. The
-  prefix/suffix version has no special cases at all - zeros flow through
-  naturally. That robustness is the real reason this is the taught solution.
+  At no point does either accumulator contain nums[i] while index i is being
+  written. That is the whole correctness argument.
+WRITE BEFORE UPDATE
+  The trap is the line order inside each loop. In pass 1, result[i] =
+  prefixProduct must come before prefixProduct *= nums[i]. Swap them and
+  prefixProduct already includes nums[i], so you get the product of nums[0..i] -
+  the inclusive prefix - and every answer is wrong by a factor of nums[i] (or
+  silently zero). Same hazard in pass 2 with suffixProduct.
 
-INVARIANT
-  After pass 1: result[i] = nums[0] * ... * nums[i-1]   (1 when i = 0)
-  After pass 2: result[i] = that, times nums[i+1] * ... * nums[n-1]
+  Mnemonic: the accumulator is always one step behind the index. Read it, then
+  feed it.
+OUTPUT AS SCRATCH
+  result is not just the return value; during pass 1 it is the storage for the
+  prefix table, and pass 2 upgrades it in place rather than allocating a suffix
+  array. The textbook version of this problem builds two arrays, prefix[] and
+  suffix[], and combines them in a third loop. Collapsing to one array works
+  only because pass 2 walks right to left: the suffix for index i depends on
+  nums, never on result, so overwriting result[i] destroys nothing that a later
+  iteration needs.
 
-THE TRICK
-  Assign result[i] BEFORE folding nums[i] into the accumulator. That one
-  ordering is what excludes the element itself, in both directions.
-
-ALGORITHM (NeetCode: "Prefix & Suffix")
-  1. result array of length n.
-  2. Sweep left to right carrying prefixProduct; write, then multiply.
-  3. Sweep right to left carrying suffixProduct; multiply into result, then
-     fold nums[i] in.
-
-COMPLEXITY
-  Time  : O(n) - exactly two passes.
-  Space : O(1) extra - the output array does not count as auxiliary space by
-          the problem's own definition; only the two int accumulators do.
-          The naive version of this keeps separate prefix[] and suffix[]
-          arrays for O(n) extra - reusing `result` as the prefix array is
-          what gets it to O(1).
-
-TRIGGER
-  "For each index, compute something over ALL OTHER elements", or any range
-  query answerable as (accumulate from left) combined with (accumulate from
-  right). Same family as prefix sums, range-sum queries, and trapping rain
-  water.
-
-C# NOTES
-  - int overflow is silent in C# by default (unchecked). The problem
-    constrains the product to fit in int; in production use long or wrap in
-    a `checked` block so it throws instead of corrupting quietly.
-  - Array.Fill(result, 1) is unnecessary here: pass 1 writes every slot
-    before it is ever read.
-  - Two plain for-loops beat any LINQ formulation on both clarity and speed
-    for this shape.
-
+  Interviewer follow-up to expect: "can you do it without extra space?" The
+  intended answer is exactly this - the output array is not counted, and no
+  second array is needed.
+ZEROS FALL OUT FREE
+  Worth checking explicitly, because it is the case the division approach dies
+  on and the case an interviewer will probe. With exactly one zero at index k:
+  for i != k, either prefixProduct or suffixProduct spans across k, so result[i]
+  is 0. For i == k, the prefix stops before k and the suffix starts after k, so
+  neither ever multiplies in the zero, and result[k] is the product of
+  everything else - correct. With two or more zeros, every index has a zero on
+  one side or the other, so the whole array is 0. No special-casing, no zero
+  counting.
 WATCH OUT
-  - Reversing the write/multiply order in either pass silently includes
-    nums[i] in its own product. It still runs, still returns numbers, and is
-    wrong - the classic bug in this problem.
+  The accumulators are int and C# arithmetic here is unchecked, so an
+  overflowing prefixProduct wraps silently instead of throwing. The code relies
+  on the problem's guarantee that every prefix and suffix product fits in 32
+  bits; if that guarantee is lifted, both accumulators and result need to become
+  long.
+
+  Edge cases that need no code: length 1 returns [1] (both accumulators stay at
+  their identity value of 1), and length 0 returns an empty array since both
+  loops have zero iterations.
+TRIGGER
+  Reach for prefix/suffix when the answer at index i is a fold over everything
+  except i, and the fold operation has no safe inverse - product with possible
+  zeros, min, max, GCD, bitwise OR. If the operation does have a clean inverse
+  (sum, XOR), the one-pass total-minus-element trick is simpler and you should
+  use that instead. The two-pass shape generalizes: replace * with the operation
+  and 1 with its identity.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(1)
 ================================================================================
 */

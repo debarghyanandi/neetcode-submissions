@@ -1,6 +1,14 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-2)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(1) space
+// -  sliding window, incremental match counter
+// -  [sliding-window-incremental-counter]
+// -  ranks above suboptimal.cs (O(n * k) time / O(1) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  Fixed-size window over s2 maintains a `matches` counter of how many of
+// -  the 26 letter counts currently agree with need[], updated in O(1) per
+// -  add/remove instead of recomputing equality.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -58,87 +66,101 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - FIXED SIZE, with an INCREMENTALLY MAINTAINED
-           equality counter
- SOURCE  : NeetCode / other resource (submission-2)
- STATUS  : Optimal - O(n) time, O(1) space
+ PATTERN : Fixed-size sliding window + matched-letter counter
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
+ STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  suboptimal.cs asks "are these two multisets equal?" from scratch at every
-  position. This version never asks. It maintains the ANSWER.
+  "Is some permutation of s1 a substring of s2" is really "does some
+  length-s1.Length window of s2 have the same letter multiset as s1".
+  Permutation means order is irrelevant, so the only thing a window has to
+  expose is its 26 counts. Every candidate window has exactly the same length,
+  so the window never has to grow or shrink adaptively - left and right advance
+  in lockstep, one char in and one char out per step. That fixed width is what
+  lets the counts be maintained incrementally instead of rebuilt.
 
-  `matches` counts how many of the 26 letters currently satisfy
-  window[c] == need[c]. The window changes by one character in and one out
-  per step, so at most two letters can change status, and each status change
-  is detectable with two comparisons around the mutation:
-
-      was it equal before the change?   -> if so, matches--
-      is it equal after the change?     -> if so, matches++
-
-  matches == 26 then means every letter agrees, which is exactly multiset
-  equality, tested in O(1).
-
-  This "maintain the aggregate instead of recomputing it" move is the same
-  idea as the running sum in minimum-size-subarray-sum and the `have`
-  counter in minimum-window-with-characters. Three problems, one technique.
-
-BRUTE FORCE (and why it fails)
-  Sorting each substring is O(n m log m); permuting s1 is factorial. Even
-  the map comparison in suboptimal.cs is O(n * 26) - fine at these limits,
-  wasteful in principle, and it is the version that stops scaling first if
-  the alphabet grows.
-
+  The recognition cue: fixed-length window + an equality test on counts. The
+  moment you see those two together, reach for a scalar that summarizes the
+  equality test so the per-step check is a single comparison rather than a scan.
+BRUTE FORCE
+  Slide the window and, at each of the s2.Length - s1.Length + 1 positions,
+  compare need and window slot by slot (or sort the substring and compare to
+  sorted s1). Correct, but every step redoes work the previous step already
+  established: adding s2[right] and dropping s2[left] can only change two of the
+  26 slots, yet the naive comparison re-reads all of them. The matches counter
+  is exactly the memo that removes that rescan.
 INVARIANT
-  window[] is the exact letter histogram of s2[left..right], the window is
-  always exactly s1.Length wide after the seeding loop, and
-  matches == |{ c : window[c] == need[c] }|.
+  matches = the number of letters c in 0..25 for which window[c] == need[c].
 
-WHY 26 AND NOT need.Count
-  Counting all 26 letters, including those needed zero times, is deliberate:
-  it turns "the window contains at least what is needed" into "the window
-  contains exactly what is needed" for free. A letter with need[c] == 0 stops
-  matching the moment it enters the window, so any foreign character drops
-  matches below 26 automatically. No separate "extra characters" check.
-  That is why the seed loop counts the zero-need letters up front.
+  That is the whole correctness argument. Add and Remove are written to preserve
+  it under a single-count change: before touching window[c] they subtract the
+  letter's current contribution (if window[c] == need[c], matches--), then
+  mutate, then re-add it (if window[c] == need[c], matches++). No other slot
+  moved, so no other letter's contribution can be stale.
 
-ALGORITHM (NeetCode: "Sliding Window")
-  1. Reject if s1 is longer than s2. Build need[] from s1.
-  2. Seed matches by counting the letters where need[c] == window[c] == 0.
-  3. Add s2[0..m-1] to the window. If matches == 26, return true.
-  4. For right = m..n-1: Add(s2[right]), Remove(s2[left]), left++,
-     and test matches == 26.
-  5. Return false.
+  When matches == 26 every slot agrees, so the window's multiset equals s1's
+  multiset. The window is structurally always exactly s1.Length characters wide
+  (right - left == s1.Length - 1 at the point of the check), so equal multisets
+  means the window IS a permutation of s1. Both halves are needed - the counter
+  proves the contents, the index arithmetic proves the length.
+WHY ALL 26 AND NOT JUST THE LETTERS IN S1
+  The letters with need[c] == 0 are doing real work: they are what rejects a
+  window containing a character s1 never had. If you only tracked the distinct
+  letters of s1 and stopped at matches == (distinct count), a window padded with
+  a foreign letter would still "match" - but that window is the wrong length or
+  has too few of something, so this is really a redundancy that keeps the
+  invariant uniform rather than a bug you must handle separately.
 
-COMPLEXITY
-  Time  : O(n + m + 26) = O(n). Every character is added once and removed at
-          most once, and each does O(1) work.
-  Space : O(1) - two fixed 26-int arrays regardless of input size.
-
-TRIGGER
-  Fixed-size window plus an exact-match condition over a small fixed
-  alphabet. The moment the validity test is a comparison of two histograms,
-  reach for a counter of agreeing buckets rather than the comparison itself.
-
-C# NOTES
-  - `ch - 'a'` is char arithmetic promoting to int; it assumes lowercase
-    ASCII, which the constraints give. For arbitrary Unicode this becomes a
-    Dictionary again and the 26 becomes need.Count with a different framing.
-  - Add and Remove are LOCAL FUNCTIONS, not lambdas: they capture `window`,
-    `need` and `matches` by reference through a compiler-generated struct,
-    with no delegate allocation and no closure on the heap. A
-    `Action<char>` lambda here would allocate. This is a real C#-specific
-    point worth making in an interview.
-  - int[26] on the stack via stackalloc would remove even those two heap
-    allocations: `Span<int> need = stackalloc int[26];`.
-
+  That uniformity is why the second setup loop exists. Before anything is added,
+  window is all zeros, so every c with need[c] == 0 already satisfies window[c]
+  == need[c] and must be credited up front. Skipping that loop and starting
+  matches at 0 would make matches == 26 unreachable whenever s1 uses fewer than
+  26 distinct letters, i.e. always. Equivalently: matches starts at 26 minus the
+  number of distinct letters in s1.
+ALGORITHM
+  1. Guard s1.Length > s2.Length - no window of the required width exists, so
+  return false before the arrays are even built.
+  2. Fill need from s1. Seed matches by counting the c where need[c] ==
+  window[c] (all the zero-need letters).
+  3. Prime the first window: Add(s2[i]) for i in 0..s1.Length-1.
+  4. Check matches == 26 once, right here. This check is not optional decoration
+  - the main loop only tests after admitting a NEW character at index right >=
+  s1.Length, so window [0, s1.Length-1] would never be examined otherwise.
+  5. For right from s1.Length to s2.Length-1: Add(s2[right]), Remove(s2[left]),
+  left++, then test matches == 26.
+  6. Fall out with false.
 WATCH OUT
-  - Order inside Add/Remove is exact: compare, mutate, compare. Collapsing
-    it to a single post-check silently drifts the counter.
-  - Add BEFORE Remove in the sliding loop. Removing first would briefly make
-    the window m-1 wide and, worse, can underflow a count to -1 when the
-    same character is entering and leaving.
-  - The seeding `if (matches == 26) return true;` before the loop is not
-    redundant - the very first window is never re-tested inside the loop.
+  Test matches only at the top of a loop iteration's end, never inside Add.
+  Between Add(s2[right]) and Remove(s2[left]) the window transiently holds
+  s1.Length + 1 characters; a check there would be comparing counts for a window
+  that is one char too wide. Here the ordering is harmless precisely because
+  both mutations complete before the read - Remove-then-Add would work equally
+  well.
+
+  In Add, the two ifs cannot both fire: window[c] == need[c] before the
+  increment and window[c] == need[c] after it are mutually exclusive, so matches
+  moves by at most 1 per call. Same for Remove. If you ever write these as "if
+  equal after, matches++" without the symmetric decrement first, matches drifts
+  upward and the function starts returning true for windows that do not match.
+
+  s2[i] - 'a' assumes lowercase ASCII input; there is no bounds check, so any
+  other character indexes out of the array or silently into the wrong slot.
+
+  Edge cases fall out for free: s1.Length == s2.Length runs zero loop iterations
+  and is decided entirely by the step-4 check; an empty s1 leaves need all
+  zeros, matches seeded at 26, and returns true immediately.
+FOLLOW-UP: DROP THE 26-LETTER ASSUMPTION
+  The interviewer's natural next question is arbitrary characters. Replace the
+  two arrays with dictionaries and replace the constant 26 with need.Count:
+  matches then counts only the keys present in need, and Add/Remove use the same
+  subtract-mutate-re-add ritual around a TryGetValue lookup. The zero-need
+  letters can no longer be enumerated, so you lose the free rejection described
+  above and must reintroduce the window-width guarantee explicitly - which the
+  fixed right - left spacing already gives you, so the algorithm survives
+  intact. The 26-slot array is the specialization, not the idea.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(1)
 ================================================================================
 */

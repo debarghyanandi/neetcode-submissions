@@ -1,6 +1,13 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-2)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(n) space
+// -  bucket sort by frequency   [bucket-sort-frequency]
+// -  ranks above suboptimal.cs (O(n log k) time / O(n) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  counts frequencies into a dictionary, then places values into
+// -  frequency-indexed buckets (bounded by n) and scans buckets from high
+// -  to low, avoiding any comparison sort.
 // --------------------------------------------------------------------------
 
 public class Solution

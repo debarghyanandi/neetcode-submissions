@@ -1,6 +1,12 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-2, marked '//my solution.')
-// #  merged with submission-3 - same partition, fewer edge cases
+// #  optimal.cs            O(n) time / O(1) space
+// #  two pointers, fast/slow swap partition   [two-pointer-swap-partition]
+// #  the only solution in this folder
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  single pass swaps each non-zero into the writeIndex slot, pushing
+// #  zeroes rightward automatically without a second pass
 // ##########################################################################
 
 public class Solution
@@ -26,76 +32,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - Fast/Slow (in-place partition, order preserving)
- SOURCE  : YOUR OWN SOLUTION (submission-2, marked '//my solution.'), merged
-           with submission-3 - your pre-scanning loops that hunted for the
-           first zero and the first non-zero are unnecessary; a single
-           read/write pair does the same job with no edge cases
+ PATTERN : Two Pointers (read/write) - stable partition by swap
+ SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  Two pointers do not always converge from opposite ends. Here both move in
-  the SAME direction at DIFFERENT SPEEDS: a fast reader scans every element,
-  a slow writer marks where the next kept element belongs. That is the
-  read/write (fast/slow) form, and it is the tool for every in-place
-  "remove / compact / partition, keep relative order" problem.
-
-BRUTE FORCE (and why it fails)
-  Build a new array of non-zeroes and pad with zeroes: O(n) time but O(n)
-  extra space, and the problem demands in place.
-  Or repeatedly shift on each zero found: O(n^2) in the worst case
-  ([0,0,0,...,1]).
-
+  The task is a stable partition: non-zeroes keep their relative order, zeroes
+  get pushed to the tail, and it must happen inside nums with no auxiliary
+  array. That is exactly the read/write two-pointer shape - readIndex scans
+  every slot once and decides only "does this element belong to the kept
+  prefix", while writeIndex marks where the next kept element goes. Any pattern
+  that reorders (sorting by a key, or swapping from the far end like the classic
+  Dutch-flag partition) breaks the required order of the non-zeroes.
 INVARIANT
-  nums[0 .. writeIndex-1]        = all non-zeroes seen so far, original order
-  nums[writeIndex .. readIndex]  = the zeroes seen so far
-  Both hold after every iteration, which is why one pass is enough.
-
-WHY SWAP AND NOT ASSIGN
-  Assigning (nums[writeIndex] = nums[readIndex]) also compacts correctly, but
-  leaves stale values in the tail and needs a SECOND loop to zero it out.
-  Swapping moves the displaced zero to readIndex, which the reader has
-  already passed - so the tail is zero-filled for free. Same complexity,
-  half the code, no second pass to get wrong.
-
-  When writeIndex == readIndex the swap is a no-op on itself. Harmless, and
-  removing the redundant self-swap with an extra `if` buys nothing readable.
-
-ALGORITHM (NeetCode: "Two Pointers")
-  1. writeIndex = 0.
-  2. Scan with readIndex over the whole array.
-  3. On a non-zero: swap it into writeIndex and advance writeIndex.
-  4. Zeroes are simply skipped by the reader.
-
-COMPLEXITY
-  Time  : O(n) - one pass, each element inspected once.
-  Space : O(1) - two indices, mutation in place.
-
+  After each iteration of the loop, two things hold:
+  1. nums[0 .. writeIndex-1] holds every non-zero seen so far, in the order it
+  was seen.
+  2. nums[writeIndex .. readIndex-1] is all zeroes.
+  writeIndex is incremented only inside the non-zero branch, so writeIndex <=
+  readIndex always, and readIndex - writeIndex is precisely the number of zeroes
+  seen so far. When the loop ends readIndex == nums.Length, so clause 2 covers
+  the whole tail and the array is finished with no second pass.
+WHY THE SWAP IS SAFE
+  The worry with an in-place swap is clobbering a value you have not read yet.
+  It cannot happen here. By invariant clause 2, the slot at writeIndex is either
+  readIndex itself (when no zero has been seen, writeIndex == readIndex, and the
+  swap is a self-swap no-op) or it sits strictly inside the zero band, so it
+  holds a 0. So the value the swap sends backwards to readIndex is always a zero
+  - a value carrying no information, already scanned, and destined for the tail
+  anyway. Nothing that still needs to be placed is ever overwritten. That is the
+  whole correctness argument, and it is the thing to say out loud in an
+  interview.
+WALK IT
+  nums = [0,1,0,3,12], writeIndex starts at 0.
+  r=0: nums[0] is 0, skip. w=0.
+  r=1: 1 is non-zero, swap slots 0 and 1 -> [1,0,0,3,12], w=1. The zero that was
+  at slot 0 rode out to slot 1.
+  r=2: 0, skip. w=1.
+  r=3: 3, swap slots 1 and 3 -> [1,3,0,0,12], w=2.
+  r=4: 12, swap slots 2 and 4 -> [1,3,12,0,0], w=3.
+  Notice the zeroes accumulate in the band [w, r) exactly as the invariant
+  claims, and the final array needed no cleanup loop.
 TRIGGER
-  "In place", "keep relative order", "remove all X", "move all X to the end",
-  "compact / partition an array". Same skeleton as remove-duplicates and
-  remove-element - change only the predicate on the fast pointer.
-
-C# NOTES
-  - (a, b) = (b, a) is C# 7 tuple deconstruction: a genuine swap with no
-    temp variable and no allocation - the compiler emits plain loads/stores.
-  - The method returns void and MUTATES the caller's array. int[] is a
-    reference type, so the caller sees the change. Do not reassign the
-    parameter (nums = new int[...]) - that rebinds the local only.
-  - Span<T> has no built-in Swap; the tuple form is the idiomatic answer.
-  - Worth knowing: (a[i], a[j]) = (a[j], a[i]) is guaranteed correct by the
-    C# spec - the right-hand tuple is fully evaluated BEFORE any assignment
-    happens. Roslyn (.NET 8, and the NeetCode judge) gets this right. The
-    legacy Mono mcs compiler miscompiles it into a plain copy, so if you ever
-    see this "swap" silently not swapping, suspect the toolchain, not the
-    logic. The explicit temp-variable swap is immune either way.
-
+  Reach for this shape whenever the ask is "remove / relocate all elements
+  matching a predicate, in place, preserving the order of the survivors":
+  remove-element, remove-duplicates-from-sorted-array, and this problem are the
+  same skeleton with a different test in the if. The only variable is whether
+  you assign or swap - swap when the displaced values themselves have a required
+  destination (here, the zero tail); plain assign when the discarded values may
+  be left as garbage.
 WATCH OUT
-  - The original version pre-scanned for the first zero and the first
-    non-zero before the main loop. It works, but each pre-scan needs its own
-    bounds guard (`if (index >= nums.Length) return;`) and those guards are
-    exactly where the off-by-one lives. Fewer moving parts is not a style
-    preference here - it is the correctness argument.
+  Two things an interviewer will poke at.
+  First, the assign variant: nums[writeIndex++] = nums[readIndex] is also
+  correct but leaves stale copies past writeIndex, so it needs a second loop
+  filling writeIndex..Length-1 with 0. That version does at most n writes total;
+  this swap version does 2 writes per non-zero, including a pointless self-swap
+  on every leading non-zero while writeIndex == readIndex. If asked to minimize
+  writes, guard the swap with if (writeIndex != readIndex), or switch to assign
+  plus zero-fill. The trade is one branch versus a second pass - state the
+  trade, do not guess which is faster.
+  Second, stability only matters for the non-zeroes. Zeroes are
+  indistinguishable from one another, so shuffling them among themselves - which
+  the swap does - costs nothing.
+COMPLEXITY
+  Time  : O(n)
+  Space : O(1)
 ================================================================================
 */

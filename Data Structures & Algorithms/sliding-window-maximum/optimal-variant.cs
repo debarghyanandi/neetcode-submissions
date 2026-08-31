@@ -1,7 +1,15 @@
 // --------------------------------------------------------------------------
-//  Reference solution - variant of optimal.cs (submission-1,
-//  marked '// same also just operation swapped and used l instead of i - k + 1')
-//  Not one you solved yourself.
+// -  optimal-variant.cs    O(n) time / O(n) space
+// -  monotonic deque, index-based sliding window max with explicit l/r
+// -  pointers
+// -  [monotonic-deque-sliding-max]
+// -  ties with optimal.cs on O(n) time / O(n) space
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  identical mechanism to optimal.cs (dominate-then-expire order swapped,
+// -  harmless since the two ops touch opposite deque ends), same amortised
+// -  O(n) time and O(k) deque size
 // --------------------------------------------------------------------------
 
 public class Solution
