@@ -14,6 +14,7 @@
  *   node scripts/classify.mjs                 # every folder with pending work
  *   node scripts/classify.mjs --slug two-integer-sum
  *   node scripts/classify.mjs --limit 2 --verbose
+ *   node scripts/classify.mjs --slug two-integer-sum --model opus
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -32,7 +33,18 @@ const has = (n) => argv.includes(n);
 const only = arg('--slug');
 const limit = Number(arg('--limit', '0')) || 0;
 const verbose = has('--verbose');
-const model = arg('--model');
+// Per-step model choice, not one global setting.
+//
+// Classification is a constrained task: six fields, two of them enums, judged
+// against a fixed ladder. It is not where a bigger model earns its keep -
+// Sonnet reproduced a hand-made optimal/optimal-variant split on the hardest
+// folder in the repo. The visualizer and the header prose are the steps with
+// real design latitude, and those are worth spending Opus on.
+//
+// On Pro the account default is already Sonnet 5, so this changes nothing
+// today; it keeps the frequent path cheap if the account ever defaults to Opus.
+const DEFAULT_MODEL = 'sonnet';
+const model = arg('--model', DEFAULT_MODEL);
 
 const SCHEMA = {
   type: 'object',
@@ -87,7 +99,7 @@ function classify(dir, files) {
     // a denied tool attempt burns a turn on its own - so give it headroom.
     '--max-turns', '8',
   ];
-  if (model) args.push('--model', model);
+  if (model) args.push('--model', model);   // --model default overrides back to the account default
 
   // execFile, not a shell: no quoting, no injection surface from file contents.
   // stdio 'pipe' on stderr so a failure tells us WHY, not just that it failed.
