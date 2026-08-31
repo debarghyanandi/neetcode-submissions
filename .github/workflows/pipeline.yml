@@ -18,9 +18,11 @@ on:
     paths:
       - '**/submission-*'
   schedule:
-    # 20:30 UTC = 02:00 IST. GitHub's scheduler is best-effort; nothing here
-    # is time-critical.
-    - cron: '30 20 * * *'
+    # 05:30 UTC = 11:00 IST. Deliberately late morning: the study session runs
+    # 23:00-06:00 IST, so by 11:00 the subscription usage window has reset and
+    # the run competes with nothing. GitHub's scheduler is best-effort and can
+    # fire late under load; nothing here is time-critical.
+    - cron: '30 5 * * *'
   workflow_dispatch:
     inputs:
       exclude:
