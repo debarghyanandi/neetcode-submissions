@@ -109,7 +109,7 @@ function buildIndexPage(problems, state) {
   const web = repoWebBase();
   const byPattern = new Map();
   for (const p of problems) {
-    const k = patternFor(p.slug);
+    const k = patternFor(p.slug, state);
     if (!byPattern.has(k)) byPattern.set(k, []);
     byPattern.get(k).push(p);
   }

@@ -1,16 +1,19 @@
 /**
  * Which pattern each problem belongs to.
  *
- * Grouping comes from two sources, in this order:
- *   1. PATTERNS below - the NeetCode roadmap category, edited by hand.
- *   2. Nothing. An unmapped problem lands in "Unsorted" on the index page.
+ * Three sources, in strict order of precedence:
+ *   1. PATTERNS below - a hand-written override. Wins over everything.
+ *   2. The pattern recorded by classify.mjs, chosen by the model from the fixed
+ *      list in PATTERN_ORDER. This is what covers a problem you just solved.
+ *   3. "Unsorted" - visible at the bottom of the index, never silently misfiled.
  *
- * Deliberately not inferred from the classifier. approachKey describes the
- * technique used by one FILE ("sliding-window-prefix-sum"); a problem's pattern
- * is what section of the roadmap it teaches, and the two are not the same - the
- * brute-force file in a folder would drag the whole problem into the wrong
- * group. A visible Unsorted section is better than a confident mistake, so add
- * new problems here as you meet them.
+ * Note what is NOT used: approachKey. That describes the technique of one FILE
+ * ("sliding-window-prefix-sum"), whereas a problem's pattern is the roadmap
+ * section it teaches. The brute-force file in a folder would drag the whole
+ * problem into the wrong group. So the model is asked the question directly,
+ * from a closed list, exactly as it is asked for complexity.
+ *
+ * Disagree with what it picked? Add a line here and the override wins.
  */
 export const PATTERNS = {
   'two-integer-sum': 'Arrays & Hashing',
@@ -63,4 +66,13 @@ export const PATTERN_ORDER = [
   'Unsorted',
 ];
 
-export const patternFor = (slug) => PATTERNS[slug] ?? 'Unsorted';
+/**
+ * @param slug   problem folder name
+ * @param state  parsed .agent/state.json, optional
+ */
+export function patternFor(slug, state) {
+  if (PATTERNS[slug]) return PATTERNS[slug];
+  const recorded = state?.problems?.[slug]?.pattern;
+  if (recorded && PATTERN_ORDER.includes(recorded)) return recorded;
+  return 'Unsorted';
+}
