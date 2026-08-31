@@ -70,6 +70,27 @@ function standing(name, ranked) {
 }
 
 /**
+ * The stable part of a header: everything except the model's prose.
+ *
+ * Model wording varies between runs on identical input. Regenerating headers
+ * unconditionally therefore produces a diff every night forever - a commit that
+ * reworders your files and changes nothing. Compare on this instead, and leave
+ * a header alone when only the prose would move.
+ */
+export function headerSignature(name, sol, selfMark, ranked) {
+  return JSON.stringify({
+    name,
+    time: sol.time,
+    space: sol.space,
+    algorithm: sol.algorithm,
+    approachKey: sol.approachKey,
+    correct: sol.correct,
+    selfMark: !!selfMark,
+    standing: standing(name, ranked),
+  });
+}
+
+/**
  * @param name      final filename, e.g. optimal.cs
  * @param origin    filename it came from, e.g. submission-3.cs (null if already curated)
  * @param sol       classifier output for this file

@@ -26,7 +26,7 @@ import { loadState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
-import { stripHeader, buildHeader, applyHeader } from './lib/header.mjs';
+import { stripHeader, buildHeader, applyHeader, headerSignature } from './lib/header.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 
 const argv = process.argv.slice(2);
@@ -263,13 +263,27 @@ for (const p of targets) {
       .sort((a, b) => COMPLEXITY.indexOf(a.time) - COMPLEXITY.indexOf(b.time)
                    || COMPLEXITY.indexOf(a.space) - COMPLEXITY.indexOf(b.space));
 
+    const rec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+    const sigs = rec.headerSignatures ?? (rec.headerSignatures = {});
+
+    let wrote = 0, kept = 0;
     for (const [origin, finalName] of plan.names) {
       const full = join(p.dir, finalName);
       const src = readFileSync(full, 'utf8');
-      const header = buildHeader(finalName, origin, byFile.get(origin), marks.get(origin), ranked);
-      writeFileSync(full, applyHeader(src, header), 'utf8');
+      const sol = byFile.get(origin);
+      const sig = headerSignature(finalName, sol, marks.get(origin), ranked);
+
+      // Rewrite only when the file has no header, or when something other than
+      // the prose actually changed. Otherwise the nightly run rewords your
+      // headers in perpetuity and every diff is noise.
+      if (stripHeader(src).had && sigs[finalName] === sig) { kept++; continue; }
+
+      writeFileSync(full, applyHeader(src, buildHeader(finalName, origin, sol, marks.get(origin), ranked)), 'utf8');
+      sigs[finalName] = sig;
+      wrote++;
     }
-    console.log(`    applied: ${moves.length} rename(s), ${plan.names.size} header(s) rewritten`);
+    for (const k of Object.keys(sigs)) if (![...plan.names.values()].includes(k)) delete sigs[k];
+    console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
 
     // Duplicates: recorded as handled so they stop showing up as pending.
@@ -288,7 +302,7 @@ for (const p of targets) {
   console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
 }
 
-if (doApply && touched) saveState(state);
+if (doApply) saveState(state);
 
 console.log(failures ? `${failures} folder(s) failed.\n` : 'All folders classified.\n');
 if (doApply) console.log('Review with: git status && git diff --cached\n');
