@@ -12,6 +12,7 @@ export const COMPLEXITY = [
   'O(log n)',
   'O(sqrt n)',
   'O(n)',
+  'O(n log k)',   // k <= n, so this sits below O(n log n)
   'O(n log n)',
   'O(n * k)',
   'O(n^2)',
@@ -33,10 +34,19 @@ export const isUnrankable = (c) => c === 'other' || rank(c) >= COMPLEXITY.length
  * Turn classified solutions into filenames.
  *
  * Rules, from the repo owner:
- *   - best time complexity wins the name optimal.cs
- *   - another solution at the SAME best time complexity but a different
- *     approach becomes optimal-variant.cs (then -2, -3, ...)
- *   - everything slower is suboptimal.cs (then -2, -3, ...)
+ *   - the best solution is called optimal.cs
+ *   - a second solution that is JUST AS GOOD becomes optimal-variant.cs
+ *     (then -2, -3, ...)
+ *   - anything worse is suboptimal.cs (then -2, -3, ...)
+ *
+ * "Just as good" means equal on time AND space. An earlier version ranked on
+ * time alone, and it was wrong: minimum-size-subarray-sum holds two O(n) window
+ * solutions, one keeping a prefix array at O(n) space and one collapsing it to a
+ * running int at O(1). Ranking on time alone promoted the prefix-array version
+ * to optimal-variant.cs; the repo owner had called it suboptimal.cs, and the
+ * repo owner is right - same time, more space, strictly worse.
+ *
+ * So: order lexicographically by (time, space). Ties on both are variants.
  *
  * Two stability rules that matter more than they look:
  *   1. A file already called optimal.cs that is still in the best tier KEEPS
@@ -46,20 +56,23 @@ export const isUnrankable = (c) => c === 'other' || rank(c) >= COMPLEXITY.length
  *      an optimal one must not displace it. Ranking is by complexity only.
  */
 export function assignNames(solutions) {
-  if (solutions.some((s) => isUnrankable(s.time))) {
+  if (solutions.some((s) => isUnrankable(s.time) || isUnrankable(s.space))) {
     return { ok: false, reason: 'at least one solution has an unrankable complexity', names: null };
   }
 
-  const best = Math.min(...solutions.map((s) => rank(s.time)));
-  const bestTier = solutions.filter((s) => rank(s.time) === best);
-  const rest = solutions.filter((s) => rank(s.time) > best);
+  const key = (s) => [rank(s.time), rank(s.space)];
+  const cmp = (a, b) => rank(a.time) - rank(b.time) || rank(a.space) - rank(b.space);
+  const sorted = [...solutions].sort(cmp);
+  const [bt, bs] = key(sorted[0]);
 
-  // Within the best tier: an incumbent optimal.cs holds its name; otherwise the
-  // tie breaks on space, then on submission order.
+  // The best tier is everything equal on BOTH axes - genuinely interchangeable.
+  const bestTier = sorted.filter((s) => rank(s.time) === bt && rank(s.space) === bs);
+  const rest = sorted.filter((s) => !(rank(s.time) === bt && rank(s.space) === bs));
+
   const incumbent = bestTier.find((s) => s.file === 'optimal.cs');
   const others = bestTier
     .filter((s) => s !== incumbent)
-    .sort((a, b) => rank(a.space) - rank(b.space) || a.file.localeCompare(b.file, undefined, { numeric: true }));
+    .sort((a, b) => a.file.localeCompare(b.file, undefined, { numeric: true }));
   const tierOrder = incumbent ? [incumbent, ...others] : others;
 
   const names = new Map();
@@ -67,11 +80,9 @@ export function assignNames(solutions) {
     names.set(s.file, i === 0 ? 'optimal.cs' : i === 1 ? 'optimal-variant.cs' : `optimal-variant-${i}.cs`);
   });
 
-  rest
-    .sort((a, b) => rank(a.time) - rank(b.time) || rank(a.space) - rank(b.space) || a.file.localeCompare(b.file, undefined, { numeric: true }))
-    .forEach((s, i) => {
-      names.set(s.file, i === 0 ? 'suboptimal.cs' : `suboptimal-${i + 1}.cs`);
-    });
+  rest.forEach((s, i) => {
+    names.set(s.file, i === 0 ? 'suboptimal.cs' : `suboptimal-${i + 1}.cs`);
+  });
 
   return { ok: true, reason: null, names };
 }
