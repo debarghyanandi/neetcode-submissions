@@ -71,7 +71,7 @@ function buildIndex(problems) {
       : '_uncurated_';
     const pages = pagesBase();
     const vis = p.hasVisualizer && pages
-      ? `[view](${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
+      ? `<a href="${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)}" target="_blank" rel="noopener noreferrer">view</a>`
       : '—';
     const raw = p.pending.length
       ? p.pending.map((s) => s.file.replace(/^submission-/, '#').replace(/\.cs$/, '')).join(', ')
@@ -136,7 +136,7 @@ function buildIndexPage(problems, state) {
     '',
     `${problems.length} problems · every solution carries its complexity, a study block, and a step-through visualizer.`,
     '',
-    'Use your browser find (Ctrl+F) to jump to a problem. Source links open on GitHub.',
+    'Use your browser find (Ctrl+F) to jump to a problem. Visualizers open in a new tab; source links open on GitHub.',
     '',
     '| Problem | Complexity | Solutions | Watch |',
     '|---|---|---|---|',
@@ -148,8 +148,14 @@ function buildIndexPage(problems, state) {
     const sources = p.curatedFiles.length && web
       ? p.curatedFiles.map((f) => `[${f.replace(/\.cs$/, '')}](${web}/${linkPath(`${p.path}/${f}`)})`).join(' · ')
       : p.curatedFiles.map((f) => f.replace(/\.cs$/, '')).join(' · ') || '—';
+    // Raw HTML rather than a markdown link, because markdown has no way to
+    // express target. Jekyll passes this straight through on the Pages site, so
+    // the visualizer opens in its own tab and you keep your place in the list.
+    // GitHub's own markdown renderer strips target for safety, so on github.com
+    // it degrades to an ordinary link - correct destination, same tab.
+    // rel=noopener stops the opened page from touching window.opener.
     const watch = p.hasVisualizer && pages
-      ? `[▶ run](${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)})`
+      ? `<a href="${pages}/${linkPath(`${p.path}/${p.slug}-visualizer.html`)}" target="_blank" rel="noopener noreferrer">▶ run</a>`
       : '—';
     out.push(`| [${nice(p.slug)}](https://neetcode.io/problems/${p.slug}) | ${complexity} | ${sources} | ${watch} |`);
   }
