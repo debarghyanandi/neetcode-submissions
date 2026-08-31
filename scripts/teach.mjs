@@ -87,9 +87,12 @@ let failures = 0, wrote = 0, skipped = 0;
 
 for (const p of targets) {
   console.log(p.path);
-  const rec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+  // Read-only views. Creating rec.teachSignatures here would stamp an empty
+  // object onto every folder merely looked at, which is a state.json diff and
+  // therefore a commit for work that did not happen.
+  const rec = state.problems[p.slug] ?? {};
   const sigs = rec.headerSignatures ?? {};
-  const teach = rec.teachSignatures ?? (rec.teachSignatures = {});
+  const teach = rec.teachSignatures ?? {};
 
   for (const file of p.curatedFiles) {
     // Staleness is judged against the classification signature, so a file whose
@@ -133,13 +136,16 @@ for (const p of targets) {
     const { code, eol } = splitTrailingTeach(src);
     const out = code.replace(/(\r?\n)+$/, '') + eol + eol + block.split('\n').join(eol) + eol;
     writeFileSync(join(p.dir, file), out, 'utf8');
-    teach[file] = sig;
+
+    // Materialise the record only now that there is something to record.
+    const r = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+    (r.teachSignatures ?? (r.teachSignatures = {}))[file] = sig;
     wrote++;
   }
   console.log('');
 }
 
-if (doApply) saveState(state);
+if (doApply && wrote) saveState(state);
 console.log(`${wrote} written, ${skipped} left alone, ${failures} failed.\n`);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wrote=${wrote}\n`);
 process.exit(failures ? 1 : 0);
