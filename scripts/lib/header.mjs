@@ -29,7 +29,19 @@ export function stripHeader(src) {
 
   let i = 0;
   while (i < lines.length && lines[i].trim() === '') i++;
-  if (i >= lines.length || !RULE_RE.test(lines[i])) return { body: src, eol, had: false };
+  if (i >= lines.length) return { body: src, eol, had: false };
+
+  // A /* ... */ teaching block, which is what the visualiser-era headers use.
+  if (/^\s*\/\*/.test(lines[i])) {
+    let k = i;
+    while (k < lines.length && !/\*\//.test(lines[k])) k++;
+    if (k >= lines.length) return { body: src, eol, had: false };   // unterminated - leave it alone
+    k++;
+    while (k < lines.length && lines[k].trim() === '') k++;
+    return { body: lines.slice(k).join(eol), eol, had: true };
+  }
+
+  if (!RULE_RE.test(lines[i])) return { body: src, eol, had: false };
 
   let j = i + 1;
   while (j < lines.length && COMMENT_RE.test(lines[j]) && !RULE_RE.test(lines[j])) j++;
