@@ -27,7 +27,6 @@ import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './l
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
-import { PATTERN_ORDER } from './lib/patterns.mjs';
 import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
@@ -68,11 +67,6 @@ const SCHEMA = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    pattern: {
-      type: 'string',
-      enum: PATTERN_ORDER.filter((k) => k !== 'Unsorted'),
-      description: 'Which roadmap section this PROBLEM belongs to - the topic it teaches, not the technique one file happens to use.',
-    },
     solutions: {
       type: 'array',
       items: {
@@ -95,7 +89,7 @@ const SCHEMA = {
       },
     },
   },
-  required: ['pattern', 'solutions'],
+  required: ['solutions'],
 };
 
 const INSTRUCTIONS = [
@@ -108,7 +102,6 @@ const INSTRUCTIONS = [
   'Set correct=false only when the code is actually wrong. Slow is not wrong.',
   'Set bruteForce=true only for exhaustive enumeration with no idea behind it. Slower-but-different is not brute force.',
   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
-  'Also name the roadmap section this PROBLEM belongs to, from the allowed list. Judge the problem, not the technique a particular file uses - a brute-force file does not make it a different topic.',
   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
   '',
   'You have no tools available and no access to the filesystem. Everything you need is on stdin. Do not attempt to read, list, or search files - answer directly from the text you were given.',
@@ -187,7 +180,7 @@ function classify(dir, files) {
   if (missing.length) throw new Error(`model omitted: ${missing.join(', ')}`);
   if (extra.length) throw new Error(`model invented: ${extra.join(', ')}`);
 
-  return { solutions: out.solutions, pattern: out.pattern, cost: envelope.total_cost_usd, turns: envelope.num_turns };
+  return { solutions: out.solutions, cost: envelope.total_cost_usd, turns: envelope.num_turns };
 }
 
 // ---------------------------------------------------------------- run
@@ -380,7 +373,6 @@ for (const p of targets) {
       };
     }
     rec.classification = { ...(rec.classification ?? {}), ...nextClass };
-    if (res.pattern) rec.pattern = res.pattern;
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
 
