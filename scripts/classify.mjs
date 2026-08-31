@@ -83,12 +83,25 @@ function classify(dir, files) {
   if (model) args.push('--model', model);
 
   // execFile, not a shell: no quoting, no injection surface from file contents.
-  const raw = execFileSync('claude', args, {
-    input: payload,
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024,
-    env: { ...process.env },
-  });
+  // stdio 'pipe' on stderr so a failure tells us WHY, not just that it failed.
+  let raw;
+  try {
+    raw = execFileSync('claude', args, {
+      input: payload,
+      encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024,
+      env: { ...process.env },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (e) {
+    const detail = [
+      e.status != null ? `exit status ${e.status}` : null,
+      e.code ? `code ${e.code}` : null,
+      e.stderr ? `stderr: ${String(e.stderr).trim().slice(0, 600)}` : null,
+      e.stdout ? `stdout: ${String(e.stdout).trim().slice(0, 600)}` : null,
+    ].filter(Boolean).join('\n        ');
+    throw new Error(`claude invocation failed\n        ${detail || e.message}`);
+  }
 
   const envelope = JSON.parse(raw);
   const out = envelope.structured_output;
@@ -135,7 +148,7 @@ for (const p of targets) {
   try {
     res = classify(p.dir, files);
   } catch (e) {
-    console.log(`  FAILED: ${e.message.split('\n')[0]}\n`);
+    console.log(`  FAILED: ${e.message}\n`);
     failures++;
     continue;
   }
