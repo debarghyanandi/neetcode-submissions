@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T12:32:39.518Z",
+  "updatedAt": "2026-08-31T12:45:03.286Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -503,58 +503,6 @@
           "selfMarked": false,
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
-        }
-      }
-    },
-    "string-encode-and-decode": {
-      "topic": "Data Structures & Algorithms",
-      "curatedFiles": [
-        "optimal.cs",
-        "suboptimal.cs"
-      ],
-      "hasVisualizer": true,
-      "processedSubmissions": [],
-      "awaitingClassification": [],
-      "knownFingerprints": {
-        "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
-        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
-      },
-      "fingerprints": {
-        "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
-        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
-      },
-      "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"classic length-prefix delimiter: for each string append its length, a '#' delimiter, then the string itself inline; decode reads length up to '#' then slices exactly that many chars\",\"approachKey\":\"length-prefix-inline\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"encode all string lengths as a comma-separated header block terminated by '#', then concatenate raw string data; decode by parsing the header list then slicing by size\",\"approachKey\":\"length-header-block\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
-      },
-      "provenance": {
-        "optimal.cs": {
-          "selfMarked": false,
-          "evidence": "marker check on submission-1.cs when it was first processed",
-          "recordedFrom": "classify"
-        },
-        "suboptimal.cs": {
-          "selfMarked": false,
-          "evidence": "marker check on submission-0.cs when it was first processed",
-          "recordedFrom": "classify"
-        }
-      },
-      "classification": {
-        "optimal.cs": {
-          "time": "O(n)",
-          "space": "O(1)",
-          "algorithm": "classic length-prefix delimiter: for each string append its length, a '#' delimiter, then the string itself inline; decode reads length up to '#' then slices exactly that many chars",
-          "approachKey": "length-prefix-inline",
-          "correct": true,
-          "bruteForce": false
-        },
-        "suboptimal.cs": {
-          "time": "O(n)",
-          "space": "O(n)",
-          "algorithm": "encode all string lengths as a comma-separated header block terminated by '#', then concatenate raw string data; decode by parsing the header list then slicing by size",
-          "approachKey": "length-header-block",
-          "correct": true,
-          "bruteForce": false
         }
       }
     },

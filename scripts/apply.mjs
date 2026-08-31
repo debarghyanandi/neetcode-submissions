@@ -202,6 +202,17 @@ for (const p of problems) {
   };
 }
 
+// Drop records for folders that no longer exist. Without this a deleted problem
+// lingers in state.json forever, and its stale fingerprints and provenance would
+// silently apply to any future folder that reused the slug.
+const live = new Set(problems.map((p) => p.slug));
+for (const slug of Object.keys(state.problems)) {
+  if (!live.has(slug)) {
+    delete state.problems[slug];
+    console.log(`  pruned stale record: ${slug}`);
+  }
+}
+
 // updatedAt is set by saveState, and only when something actually changed.
 
 const indexChanged = writeIndex(buildIndex(problems));
