@@ -15,6 +15,7 @@
  *   node scripts/classify.mjs --slug two-integer-sum
  *   node scripts/classify.mjs --limit 2 --verbose
  *   node scripts/classify.mjs --slug two-integer-sum --model opus
+ *   node scripts/classify.mjs --slug two-integer-sum --apply     # renames + rewrites headers
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -25,6 +26,8 @@ import { loadState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
+import { stripHeader, buildHeader, applyHeader } from './lib/header.mjs';
+import { loadState as _ls, saveState } from './lib/scan.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -45,6 +48,15 @@ const verbose = has('--verbose');
 // today; it keeps the frequent path cheap if the account ever defaults to Opus.
 const DEFAULT_MODEL = 'sonnet';
 const model = arg('--model', DEFAULT_MODEL);
+const doApply = has('--apply');
+const deleteDupes = has('--delete-duplicates');
+
+// The //My solution marker must be read from the BODY, not the whole file.
+// Generated headers quote the marker text ("marked '//My solution'"), so
+// scanning the whole file would let a header assert a marker into existence.
+const markedInBody = (src) => isSelfMarked(stripHeader(src).body);
+
+const git = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', stdio: ['pipe','pipe','pipe'] });
 
 const SCHEMA = {
   type: 'object',
@@ -178,12 +190,26 @@ if (targets.length === 0) {
   process.exit(0);
 }
 
-console.log(`\nDRY RUN - ${targets.length} folder(s). No file will be modified.\n`);
+console.log(doApply
+  ? `\nAPPLY - ${targets.length} folder(s). Files WILL be renamed and re-headered.\n`
+  : `\nDRY RUN - ${targets.length} folder(s). No file will be modified.\n`);
 
+const state = _ls();
 let failures = 0;
+let touched = 0;
+
 for (const p of targets) {
-  const files = [...p.curatedFiles, ...p.pending.map((s) => s.file)];
   console.log(`${p.path}`);
+
+  // A raw submission identical to code already curated here has no destination
+  // name - naming it optimal-variant.cs would enshrine a copy. Take it out of
+  // the classification set and record it as dealt with.
+  const dupes = p.pending.filter((s) => s.duplicateOfCurated).map((s) => s.file);
+  const fresh = p.pending.filter((s) => !s.duplicateOfCurated).map((s) => s.file);
+  if (dupes.length) console.log(`  duplicates of curated code (not classified): ${dupes.join(', ')}`);
+
+  const files = [...p.curatedFiles, ...fresh];
+  if (files.length === 0) { console.log('  nothing to classify\n'); continue; }
   console.log(`  classifying ${files.length} file(s): ${files.join(', ')}`);
 
   let res;
@@ -195,26 +221,75 @@ for (const p of targets) {
     continue;
   }
 
+  const marks = new Map(files.map((f) => [f, markedInBody(readFileSync(join(p.dir, f), 'utf8'))]));
   for (const s of res.solutions) {
-    const self = isSelfMarked(readFileSync(join(p.dir, s.file), 'utf8'));
     console.log(`    ${s.file}`);
     console.log(`        ${s.time} time / ${s.space} space   ${s.algorithm}  [${s.approachKey}]${s.correct ? '' : '   *** MODEL SAYS INCORRECT ***'}`);
-    console.log(`        marked yours: ${self ? 'yes' : 'no marker found'}`);
+    console.log(`        marked yours: ${marks.get(s.file) ? 'yes' : 'no marker found'}`);
     if (verbose) console.log(`        ${s.note}`);
   }
 
   const plan = assignNames(res.solutions);
   console.log('  proposed names:');
   if (!plan.ok) {
-    console.log(`    REFUSED - ${plan.reason}. Left for you to decide.`);
-  } else {
-    for (const [from, to] of plan.names) {
-      console.log(`    ${from.padEnd(22)} ${from === to ? '=  unchanged' : '-> ' + to}`);
+    console.log(`    REFUSED - ${plan.reason}. Left untouched for you to decide.`);
+    console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
+    continue;
+  }
+  for (const [from, to] of plan.names) {
+    console.log(`    ${from.padEnd(22)} ${from === to ? '=  unchanged' : '-> ' + to}`);
+  }
+
+  if (doApply) {
+    const byFile = new Map(res.solutions.map((s) => [s.file, s]));
+
+    // Rename in two phases through temporary names. A single pass would clobber
+    // a file whenever two names swap - which is exactly what a demotion does.
+    const moves = [...plan.names].filter(([f, t]) => f !== t);
+    try {
+      moves.forEach(([f], i) => git(p.dir, 'mv', '--', f, `__pipeline_tmp_${i}`));
+      moves.forEach(([, t], i) => git(p.dir, 'mv', '--', `__pipeline_tmp_${i}`, t));
+    } catch (e) {
+      console.log(`    RENAME FAILED: ${String(e.stderr || e.message).trim().slice(0, 300)}`);
+      failures++;
+      console.log('');
+      continue;
+    }
+
+    // Whole-folder header regeneration, best-first so 'ranks above/below' is
+    // computed against the same ordering the names came from.
+    const ranked = [...res.solutions]
+      .map((s) => ({ ...s, name: plan.names.get(s.file) }))
+      .sort((a, b) => COMPLEXITY.indexOf(a.time) - COMPLEXITY.indexOf(b.time)
+                   || COMPLEXITY.indexOf(a.space) - COMPLEXITY.indexOf(b.space));
+
+    for (const [origin, finalName] of plan.names) {
+      const full = join(p.dir, finalName);
+      const src = readFileSync(full, 'utf8');
+      const header = buildHeader(finalName, origin, byFile.get(origin), marks.get(origin), ranked);
+      writeFileSync(full, applyHeader(src, header), 'utf8');
+    }
+    console.log(`    applied: ${moves.length} rename(s), ${plan.names.size} header(s) rewritten`);
+    touched++;
+
+    // Duplicates: recorded as handled so they stop showing up as pending.
+    if (dupes.length) {
+      const rec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+      rec.processedSubmissions = [...new Set([...(rec.processedSubmissions ?? []), ...dupes])].sort();
+      if (deleteDupes) {
+        for (const d of dupes) git(p.dir, 'rm', '-q', '--', d);
+        console.log(`    deleted ${dupes.length} duplicate(s)`);
+      } else {
+        console.log(`    left ${dupes.length} duplicate(s) in place, marked handled (--delete-duplicates to remove)`);
+      }
     }
   }
-  if (res.cost != null) console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}`);
-  console.log('');
+
+  console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
 }
 
+if (doApply && touched) saveState(state);
+
 console.log(failures ? `${failures} folder(s) failed.\n` : 'All folders classified.\n');
+if (doApply) console.log('Review with: git status && git diff --cached\n');
 process.exit(failures ? 1 : 0);
