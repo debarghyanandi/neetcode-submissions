@@ -138,8 +138,8 @@ for (const p of targets) {
     writeFileSync(join(p.dir, file), out, 'utf8');
 
     // Materialise the record only now that there is something to record.
-    const r = state.problems[p.slug] ?? (state.problems[p.slug] = {});
-    (r.teachSignatures ?? (r.teachSignatures = {}))[file] = sig;
+    const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+    (prec.teachSignatures ?? (prec.teachSignatures = {}))[file] = sig;
     wrote++;
   }
   console.log('');
