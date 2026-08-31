@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T01:27:22.350Z",
+  "updatedAt": "2026-08-31T01:33:08.102Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -201,10 +201,6 @@
       "fingerprints": {
         "3b0e84ebfabf94bc8d3664f6327436dc475bdd9e24c048d81f23350d40ccd70f": "optimal.cs",
         "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs"
-      },
-      "headerSignatures": {
-        "optimal.cs": "{\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, shrink while valid, running sum\",\"approachKey\":\"sliding-window-running-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, shrink while valid, prefix-sum lookup\",\"approachKey\":\"sliding-window-prefix-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       }
     },
     "minimum-stack": {
@@ -346,7 +342,9 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [],
+      "awaitingClassification": [
+        "submission-42.cs"
+      ],
       "knownFingerprints": {
         "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs"
       },
