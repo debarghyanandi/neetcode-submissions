@@ -1,6 +1,14 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-0, marked '//My solution')
-// #  prefix-sum framing - correct, but carries O(n) memory it does not need
+// #  suboptimal.cs         O(n) time / O(n) space
+// #  sliding window, shrink while valid, prefix-sum lookup
+// #  [sliding-window-prefix-sum]
+// #  ranks below optimal.cs (O(n) time / O(1) space)
+// #
+// #  YOU SOLVED THIS YOURSELF - marked '//My solution'
+// #
+// #  same two-pointer shrink logic but computes each window sum via an
+// #  O(n)-sized prefix array instead of an incremental total, costing
+// #  linear auxiliary space.
 // ##########################################################################
 
 public class Solution
