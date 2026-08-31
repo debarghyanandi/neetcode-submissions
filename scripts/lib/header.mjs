@@ -89,15 +89,21 @@ function standing(name, ranked) {
  * reworders your files and changes nothing. Compare on this instead, and leave
  * a header alone when only the prose would move.
  */
+// Bump when the rendered format changes. Without it a wording or layout fix
+// never reaches existing files: the signature only tracks the facts, so it
+// stays equal and every file politely declines to be rewritten.
+export const HEADER_FORMAT = 2;
+
 export function headerSignature(name, sol, selfMark, ranked) {
   return JSON.stringify({
+    v: HEADER_FORMAT,
     name,
     time: sol.time,
     space: sol.space,
     algorithm: sol.algorithm,
     approachKey: sol.approachKey,
     correct: sol.correct,
-    selfMark: !!selfMark,
+    selfMark: selfMark === true ? true : selfMark === false ? false : null,
     standing: standing(name, ranked),
   });
 }
@@ -110,7 +116,7 @@ export function headerSignature(name, sol, selfMark, ranked) {
  * @param ranked    [{name,time,space}] every solution in the folder, best first
  */
 export function buildHeader(name, origin, sol, selfMark, ranked) {
-  const ch = selfMark ? '#' : '-';
+  const ch = selfMark === true ? '#' : '-';
   const rule = `// ${ch.repeat(WIDTH)}`;
   const L = (t = '') => `// ${ch}  ${t}`.trimEnd();
 
@@ -122,9 +128,11 @@ export function buildHeader(name, origin, sol, selfMark, ranked) {
       ? ` (from ${origin.replace(/\.cs$/, '')})`
       : ` (was ${origin})`;
   }
-  const provenance = selfMark
-    ? `YOU SOLVED THIS YOURSELF - marked '//My solution'${where}`
-    : `No '//My solution' marker in the source${where}`;
+  const provenance = selfMark === true
+    ? `YOU SOLVED THIS YOURSELF${where}`
+    : selfMark === false
+      ? `Reference solution - not one you solved yourself${where}`
+      : `Provenance unknown${where}`;
 
   // Every content line wraps to the rule width. One unwrapped line - the
   // algorithm plus a long approachKey is the usual offender - juts out past the

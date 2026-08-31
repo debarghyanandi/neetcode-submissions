@@ -28,6 +28,7 @@ import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './l
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
 import { stripHeader, buildHeader, applyHeader, headerSignature } from './lib/header.mjs';
+import { splitTrailingTeach } from './lib/teach.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 
 const argv = process.argv.slice(2);
@@ -55,7 +56,10 @@ const deleteDupes = has('--delete-duplicates');
 // The //My solution marker must be read from the BODY, not the whole file.
 // Generated headers quote the marker text ("marked '//My solution'"), so
 // scanning the whole file would let a header assert a marker into existence.
-const markedInBody = (src) => isSelfMarked(stripHeader(src).body);
+// Strip the top banner AND any trailing teaching block before looking for the
+// marker. Both quote the marker text, so scanning past them lets an annotation
+// manufacture the very evidence it claims to be reporting.
+const markedInCode = (src) => isSelfMarked(stripHeader(splitTrailingTeach(src).code).body);
 
 const git = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', stdio: ['pipe','pipe','pipe'] });
 
@@ -236,7 +240,15 @@ for (const p of targets) {
     continue;
   }
 
-  const marks = new Map(files.map((f) => [f, markedInBody(readFileSync(join(p.dir, f), 'utf8'))]));
+  // Provenance is recorded once, at the only moment the evidence exists - in a
+  // raw submission. Curating a submission into optimal.cs rewrites the code and
+  // usually drops the marker, so re-deriving it later disowns your own work.
+  // A recorded value always wins over detection.
+  const recorded = state.problems[p.slug]?.provenance ?? {};
+  const marks = new Map(files.map((f) => [
+    f,
+    recorded[f] !== undefined ? recorded[f].selfMarked : markedInCode(readFileSync(join(p.dir, f), 'utf8')),
+  ]));
   for (const s of res.solutions) {
     console.log(`    ${s.file}`);
     console.log(`        ${s.time} time / ${s.space} space   ${s.algorithm}  [${s.approachKey}]${s.correct ? '' : '   *** MODEL SAYS INCORRECT ***'}`);
@@ -298,6 +310,20 @@ for (const p of targets) {
       wrote++;
     }
     for (const k of Object.keys(sigs)) if (![...plan.names.values()].includes(k)) delete sigs[k];
+
+    // Re-key provenance onto the new filenames, and record it for anything
+    // arriving from a raw submission - that is the last moment it is knowable.
+    const nextProv = {};
+    for (const [origin, finalName] of plan.names) {
+      nextProv[finalName] = recorded[origin] ?? {
+        selfMarked: marks.get(origin),
+        evidence: /^submission-\d+\./.test(origin)
+          ? `marker check on ${origin} when it was first processed`
+          : 'detected from the curated file',
+        recordedFrom: 'classify',
+      };
+    }
+    rec.provenance = nextProv;
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
 

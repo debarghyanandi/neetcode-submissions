@@ -121,11 +121,15 @@ export const statusFor = (name) =>
   : 'Suboptimal';
 
 /** SOURCE text. Absence of the marker is reported as absence, never as authorship. */
-export function sourceFor(origin, name, selfMark) {
+export function sourceFor(origin, name, prov) {
   const from = origin && /^submission-\d+\./.test(origin) ? ` (${origin.replace(/\.cs$/, '')})` : '';
-  return selfMark
-    ? `YOUR OWN SOLUTION${from}, marked '//My solution'`
-    : `No '//My solution' marker in the source${from} - provenance unknown`;
+  const why = prov && prov.evidence ? ` - ${prov.evidence}` : '';
+  if (!prov || prov.selfMarked === null || prov.selfMarked === undefined) {
+    return `Provenance unknown${from} - no marker and no earlier annotation`;
+  }
+  return prov.selfMarked
+    ? `YOUR OWN SOLUTION${from}${why}`
+    : `Reference solution - not one you solved yourself${from}${why}`;
 }
 
 /**

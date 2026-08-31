@@ -107,9 +107,12 @@ for (const p of targets) {
       continue;
     }
 
-    const selfMark = isSelfMarked(stripHeader(splitTrailingTeach(src).code).body);
+    const prov = rec.provenance?.[file] ?? {
+      selfMarked: isSelfMarked(stripHeader(splitTrailingTeach(src).code).body) || null,
+      evidence: 'detected from the curated file',
+    };
     const ctx = {
-      source: sourceFor(null, file, selfMark),
+      source: sourceFor(null, file, prov),
       status: statusFor(file),
       time: 'unknown', space: 'unknown',
     };
