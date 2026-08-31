@@ -93,16 +93,35 @@ export function buildHeader(name, origin, sol, selfMark, ranked) {
     ? `YOU SOLVED THIS YOURSELF - marked '//My solution'${where}`
     : `No '//My solution' marker in the source${where}`;
 
+  // Every content line wraps to the rule width. One unwrapped line - the
+  // algorithm plus a long approachKey is the usual offender - juts out past the
+  // banner and makes the whole block look broken.
+  const W = WIDTH - 4;
+  const W$ = (t) => wrap(t, W).map(L);
+
+  // Keep the approachKey with the algorithm when it fits, give it its own
+  // line when it doesn't, rather than letting wrap() split it mid-slug.
+  const algo = `${sol.algorithm}   [${sol.approachKey}]`.length <= W
+    ? [L(`${sol.algorithm}   [${sol.approachKey}]`)]
+    : [...W$(sol.algorithm), L(`[${sol.approachKey}]`)];
+
+  // The title line is column-aligned on purpose, so it must not go through
+  // wrap() - that collapses runs of spaces and destroys the padding.
+  const title = `${name.padEnd(22)}${sol.time} time / ${sol.space} space`;
+  const titleLines = title.length <= W
+    ? [L(title)]
+    : [L(name), L(`${sol.time} time / ${sol.space} space`)];
+
   return [
     rule,
-    L(`${name.padEnd(22)}${sol.time} time / ${sol.space} space`),
-    L(`${sol.algorithm}   [${sol.approachKey}]`),
-    L(standing(name, ranked)),
+    ...titleLines,
+    ...algo,
+    ...W$(standing(name, ranked)),
     L(),
-    L(provenance),
-    ...(sol.correct ? [] : [L(), L('*** flagged as INCORRECT by classification - check before trusting ***')]),
+    ...W$(provenance),
+    ...(sol.correct ? [] : [L(), ...W$('*** flagged as INCORRECT by classification - check before trusting ***')]),
     L(),
-    ...wrap(sol.note, WIDTH - 4).map(L),
+    ...W$(sol.note),
     rule,
   ].join('\n');
 }

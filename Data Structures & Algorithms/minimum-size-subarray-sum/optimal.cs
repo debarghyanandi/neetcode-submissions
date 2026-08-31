@@ -1,7 +1,13 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-1, marked '//My solution')
-// #  your own follow-up to suboptimal.cs - the prefix array collapsed
-// #  into a single running int
+// #  optimal.cs            O(n) time / O(1) space
+// #  sliding window, shrink while valid, running sum   [sliding-window-running-sum]
+// #  ranks above suboptimal.cs (O(n) time / O(n) space)
+// #
+// #  YOU SOLVED THIS YOURSELF - marked '//My solution'
+// #
+// #  maintains window sum incrementally by adding nums[right] and
+// #  subtracting nums[left] as the two pointers advance, each index visited
+// #  O(1) amortized times
 // ##########################################################################
 
 public class Solution
