@@ -301,8 +301,14 @@ for (const p of targets) {
   const plan = assignNames(res.solutions);
   console.log('  proposed names:');
   if (!plan.ok) {
+    // Counted as a failure on purpose. A refusal is a legitimate outcome - the
+    // ladder could not rank something - but exiting 0 made the step report
+    // success while recording nothing, and every step downstream then had
+    // nothing to work from and failed for reasons that looked unrelated.
     console.log(`    REFUSED - ${plan.reason}. Left untouched for you to decide.`);
+    console.log(`      complexities returned: ${res.solutions.map((s) => `${s.file}=${s.time}/${s.space}`).join(', ')}`);
     console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
+    failures++;
     continue;
   }
   for (const [from, to] of plan.names) {

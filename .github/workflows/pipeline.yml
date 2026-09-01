@@ -233,7 +233,7 @@ jobs:
             echo ""
             echo "- trigger: \`${{ github.event_name }}\`"
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
-            echo "- backfill batch: \`${{ steps.batch.outputs.slugs || 'n/a' }}\` (${{ steps.batch.outputs.remaining || '0' }} remaining)"
+            echo "- backfill batch: \`${{ steps.batch.outputs.slugs || 'n/a' }}\` (${{ steps.batch.outputs.remaining || '0' }} needed work before this run)"
             echo "- lint: \`${{ steps.lint.outcome || 'skipped' }}\` · classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
             echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
             echo ""

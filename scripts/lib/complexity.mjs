@@ -12,9 +12,11 @@ export const COMPLEXITY = [
   'O(log n)',
   'O(sqrt n)',
   'O(n)',
+  'O(n + m)',     // two independent inputs, each scanned once
   'O(n log k)',   // k <= n, so this sits below O(n log n)
   'O(n log n)',
-  'O(n * k)',
+  'O(n * k)',     // n items of length k - the whole input, once
+  'O(n * k log k)', // ...and again with a sort per item. anagram-groups lives here.
   'O(n^2)',
   'O(n^2 log n)',
   'O(n^3)',
