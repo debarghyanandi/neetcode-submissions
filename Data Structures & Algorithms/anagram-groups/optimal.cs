@@ -1,6 +1,14 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-2 + submission-3)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n * k) time / O(n) space
+// -  hash by 26-letter frequency-count signature
+// -  [frequency-signature-hashmap]
+// -  ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  counting letters is O(k) per word with no sort, and the serialized
+// -  signature key has a fixed number of fields (26) independent of k, so
+// -  key storage is O(n) rather than scaling with word length.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -46,60 +54,74 @@ public class Solution
     }
 }
 
-
 /*
 ================================================================================
- PATTERN : Hashing - Frequency Signature as Key
- SOURCE  : NeetCode / other resource (submission-2 + submission-3 merged)
+ PATTERN : Hash map on a canonical key - 26-slot letter count
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  Same canonical-form idea as suboptimal.cs, but a cheaper canonical form.
-  Two words are anagrams iff their character COUNTS match, and counts can be
-  produced in O(m) - no ordering required. Sorting answers a stronger
-  question than the problem asks, and you pay log m for the surplus.
-
-BRUTE FORCE (and why it fails)
-  Pairwise anagram checks: O(n^2 * m). Sorting keys: O(n * m log m).
-  Counting keys: O(n * m). Each step removes work the problem never needed.
-
-INVARIANT
-  Every word maps to exactly one signature, and two words share a signature
-  iff they are anagrams. That is what makes one dictionary pass sufficient.
-
-ALGORITHM (NeetCode: "Hash Table")
-  1. Dictionary from signature -> list of words.
-  2. For each word, count its 26 letters into an int[26].
-  3. Serialise the counts into a delimited string - that is the signature.
-  4. Append the word to that signature's list.
-  5. Return the dictionary's values.
-
-COMPLEXITY
-  Time  : O(n * m) where n = number of words, m = average word length.
-          The 26-slot key build is a constant per word.
-          Strictly O(n * (m + 26)), and 26 is dominated whenever m is not tiny.
-  Space : O(n * m) for the output, plus O(26) scratch per word.
-
-TRIGGER
-  "Group by content, ignoring order" over a SMALL FIXED ALPHABET.
-  If the alphabet is unbounded (Unicode), fall back to the sorting key.
-
-C# NOTES
-  - StringBuilder over repeated string concatenation: `key += count + ","` in
-    a loop allocates a new string every iteration - O(n^2) in the key length.
-    This is the single most common accidental C# slowdown in DSA code.
-  - The comma separator is NOT decoration. Without it counts 1 and 11 would
-    produce the same key as 11 and 1 - a real, silent wrong answer.
-  - A tuple or ValueTuple of 26 ints would also work as a by-value key but is
-    unreadable. In .NET you could also hash the array contents manually with
-    a rolling hash; the string is the honest, debuggable choice.
-
+  Grouping means partitioning into equivalence classes, and the cheap way to do
+  that is never to compare pairs of words - it is to map each word to a
+  canonical representative of its class and bucket on that. Here the class is
+  "same multiset of letters" and the representative is letterCounts, a 26-slot
+  tally serialized into signature. Each word is touched once and dropped into a
+  dictionary; strs is never scanned against itself.
+CORRECTNESS
+  Two directions, both needed.
+  1. No group is split. letterCounts is built by ++ over the characters of word,
+  and increments commute, so the array depends only on which letters appear and
+  how often - not on their order. Anagrams therefore produce identical arrays
+  and identical signature strings, so they always land in the same bucket.
+  2. No two classes merge. Non-anagrams differ in at least one of the 26 counts.
+  The counts are appended in fixed index order 0..25, each followed by a
+  delimiter, so signature is an injective encoding of the int[26]: different
+  arrays give different strings.
+  Together the buckets are exactly the anagram classes.
+THE SEPARATOR TRAP
+  The Append(',') is load-bearing for the injectivity argument above. Without
+  it, counts of 1 then 11 and 11 then 1 both flatten to "111" and two unrelated
+  groups silently fuse. The comma makes each field self-delimiting so
+  multi-digit counts cannot bleed into their neighbor. Note how quietly this
+  fails: no count reaches 10 until a word has ten copies of one letter, so the
+  broken version compiles and passes every small hand-written test.
+WHY NOT USE INT[] AS THE KEY DIRECTLY
+  int[] inherits reference equality and the default object hash, so two arrays
+  holding identical counts are distinct dictionary keys and every word would get
+  a bucket of its own. That is the reason for flattening to a string at all. The
+  alternatives to the StringBuilder: pass a custom IEqualityComparer<int[]> to
+  the Dictionary, or use a sorted-characters key such as new
+  string(word.OrderBy(c => c).ToArray()), which is a canonical form too but pays
+  a sort per word instead of a linear count.
+WHY TRYGETVALUE AND NOT CONTAINSKEY
+  TryGetValue does one hash lookup that both answers "is it there" and hands
+  back the list. Just as important, group is a reference to the very
+  List<string> stored in the dictionary - on the miss branch the new list is
+  inserted at groupsByKey[signature] first, so the later group.Add(word) mutates
+  the stored object and no write-back is required. ContainsKey followed by the
+  indexer would hash signature twice and read the same list twice.
 WATCH OUT
-  - Crashes on any character outside a-z (negative index). Same constraint
-    dependency as is-anagram/optimal.cs - check the problem statement.
-  - `new int[26]` inside the loop is a fresh zeroed array each word. Hoisting
-    it out and calling Array.Clear works too, and trades an allocation for a
-    clear; measure before assuming that is faster.
+  letter - 'a' hard-codes the lowercase a-z alphabet. An uppercase 'A' indexes
+  at -32 and throws IndexOutOfRangeException; digits and spaces are equally
+  unsafe. Confirm that constraint before writing the fixed array - if the input
+  can be arbitrary characters, switch to a Dictionary<char,int> emitted in
+  sorted key order, or fall back to sorting the word.
+  Also, groupsByKey.Values.ToList() yields groups in the dictionary's own
+  enumeration order and each group in first-seen order within strs. The problem
+  accepts any order, so this is fine, but do not build later code on that
+  ordering.
+INTERVIEW FOLLOW-UPS
+  Expect "what if the alphabet is Unicode" (the 26-slot array stops being
+  viable; a per-word map of only the characters present, canonicalized by
+  sorting its keys, keeps the counting idea) and "is the count key always better
+  than the sorted-string key". The honest answer from this code: the
+  key-building loop runs all 26 slots for every word regardless of length, so a
+  one-letter word still emits a 26-field signature, while sorting a one-letter
+  word does almost nothing. Counting pulls ahead as words get long; the fixed 26
+  fields are the price of admission.
+COMPLEXITY
+  Time  : O(n * k)
+  Space : O(n)
 ================================================================================
 */

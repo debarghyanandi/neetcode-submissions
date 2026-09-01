@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T23:17:36.266Z",
+  "updatedAt": "2026-09-01T23:31:38.574Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -46,6 +46,32 @@
           "codePrint": "a765bb90aa15",
           "renames": []
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5094eb7d7652\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"hash by 26-letter frequency-count signature\",\"approachKey\":\"frequency-signature-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n * k)\",\"algorithm\":\"hash by sorted-character canonical key\",\"approachKey\":\"sorted-key-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n * k)",
+          "space": "O(n)",
+          "algorithm": "hash by 26-letter frequency-count signature",
+          "approachKey": "frequency-signature-hashmap",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n * k log k)",
+          "space": "O(n * k)",
+          "algorithm": "hash by sorted-character canonical key",
+          "approachKey": "sorted-key-hashmap",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5094eb7d7652\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"hash by 26-letter frequency-count signature\",\"approachKey\":\"frequency-signature-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n * k)\",\"algorithm\":\"hash by sorted-character canonical key\",\"approachKey\":\"sorted-key-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       }
     },
     "buy-and-sell-crypto": {

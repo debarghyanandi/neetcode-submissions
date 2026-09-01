@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Group Anagrams — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -327,154 +327,206 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Group Anagrams',
-  note: 'sorted-string key vs. 26-slot frequency signature',
-  inputs: [{id:'words', label:'words', value:'act,pots,tops,cat,stop,hat', width:330}],
+  note: 'anagrams share a letter multiset — hash the multiset, not the string',
+  inputs: [{id:'w', label:'words', value:'eat,tea,tan,ate,nat,bat', width:300}],
   parse(raw){
-    const words = String(raw.words).split(',').map(s => s.trim().toLowerCase()).filter(s => s.length).slice(0, 8);
-    if (!words.length) return {ok:false, msg:'Enter a comma-separated list of words.'};
-    if (words.some(w => /[^a-z]/.test(w))) return {ok:false, msg:'Lowercase letters only — the optimal version indexes an int[26] directly.'};
-    return {ok:true, value:{words}, normalized:{words: words.join(',')}};
+    const parts = String(raw.w).split(',').map(s => s.trim().toLowerCase()).filter(s => s.length);
+    if (!parts.length) return {ok:false, msg:'Enter a comma-separated list of words.'};
+    if (parts.length < 2) return {ok:false, msg:'Needs at least two words to group.'};
+    if (parts.some(s => !/^[a-z]+$/.test(s))) return {ok:false, msg:'Words must use lowercase letters a–z only.'};
+    if (parts.some(s => s.length > 8)) return {ok:false, msg:'Keep each word to 8 letters or fewer.'};
+    const words = parts.slice(0, 7);
+    return {ok:true, value:{words}, normalized:{w: words.join(',')}};
   },
   shuffle(){
-    const pool = [['act','cat','tac'],['pots','stop','tops','opt'],['hat','tha'],['bat','tab'],['dog','god']];
+    const scramble = s => s.split('').sort(() => Math.random() - 0.5).join('');
+    const bases = [randWord(3, 'aet'), randWord(3, 'ant'), randWord(3, 'abt')];
     const out = [];
-    pool.forEach(g => g.slice(0, 1 + Math.floor(Math.random()*g.length)).forEach(w => out.push(w)));
-    for (let i = out.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [out[i],out[j]]=[out[j],out[i]]; }
-    return {words: out.slice(0, 7).join(',')};
+    bases.forEach(b => {
+      const copies = 2 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < copies; i++) out.push(scramble(b));
+    });
+    return {w: out.slice(0, 6).join(',')};
   },
   solutions: [
   {
-    label: 'Sorted-string key',
-    badge: 'O(n·m log m) · suboptimal.cs · any alphabet',
-    blurb: 'Two words are anagrams iff their <b>sorted characters</b> match. Sorting produces a canonical form — but it answers a stronger question than the problem asks, and you pay <code>log m</code> for the surplus.',
+    label: 'Count the letters',
+    badge: 'O(n · k) time · O(n) space · no sorting · optimal.cs',
+    blurb: 'Two words are anagrams exactly when their 26 letter counts match, so the counts <em>are</em> the identity of a word. Tallying is O(k) per word with no comparisons at all, and the 26 slots flatten into one dictionary key. Same grouping as sorting, without the log k.',
     legend: [
-      {cls:'hot', text:'word being keyed'},
-      {cls:'done', text:'already grouped'},
-      {cls:null, text:'each bucket is one dictionary entry: key → words'}
+      {cls:'hot', text:'current word / letter being counted'},
+      {cls:'win', text:'letters already tallied'},
+      {cls:'head', text:'group this word lands in'},
+      {cls:'dim', text:'not reached yet'}
     ],
     code: [
       'var groupsByKey = new Dictionary<string, List<string>>();',
       '',
-      'foreach (string word in strs) {',
-      '    char[] characters = word.ToCharArray();',
-      '    Array.Sort(characters);',
-      '    string sortedKey = new string(characters);',
-      '',
-      '    if (!groupsByKey.TryGetValue(sortedKey, out var group)) {',
-      '        group = new List<string>();',
-      '        groupsByKey[sortedKey] = group;',
-      '    }',
-      '    group.Add(word);',
-      '}',
-      'return groupsByKey.Values.ToList();'
-    ],
-    simulate(input){
-      const words = input.words, steps = [];
-      const groups = {};
-      const order = [];
-      let cost = 0;
-      const bucketRows = (hotKey) => Object.keys(groups).length
-        ? order.map(k => ({left: k, items: groups[k].map(w => ({text:w, cls: k === hotKey ? 'head' : ''})), empty:'—'}))
-        : [{left:'buckets:', items: [], empty:'no groups yet'}];
-      const panels = (i, key, sortedChars) => [
-        pTiles('Input words', words, (k) => ({v: words[k], cls: k === i ? 'hot is-current' : (k < i ? 'done' : ''), top:''}), {focus:i}),
-        pChips('Canonical key for this word', [{
-          left:'sorted:',
-          items: sortedChars ? sortedChars.map(c => ({text:c})) : [],
-          right: key ? '→ "' + key + '"' : '',
-          empty:'—'
-        }]),
-        pChips('Dictionary — key → words', bucketRows(key)),
-        pPills('', [{k:'sort steps paid', v: cost, cls:'accent'}, {k:'groups', v: order.length}])
-      ];
-      steps.push({lines:[1], msg:'Empty dictionary. The plan: turn "is an anagram of" into "has the same key as", so words are never compared with each other at all.', panels: panels(-1)});
-      words.forEach((w, i) => {
-        const sorted = w.split('').sort();
-        cost += Math.ceil(w.length * Math.log2(Math.max(w.length, 2)));
-        const key = sorted.join('');
-        steps.push({lines:[4,5,6], msg: 'Sort <code>' + w + '</code> → <code>' + key + '</code>. That costs <b>O(m log m)</b> for a word of length ' + w.length + ' — the whole reason this tab is the sub-optimal one.',
-          panels: panels(i, key, sorted)});
-        if (!groups[key]){ groups[key] = []; order.push(key);
-          steps.push({lines:[8,9,10], msg:'No bucket for <code>' + key + '</code> yet — create one. <code>TryGetValue</code> handed back the list reference, so this is one hash lookup, not three.',
-            panels: panels(i, key, sorted)});
-        }
-        groups[key].push(w);
-        steps.push({lines:[12], msg:'Add the <b>original</b> word <code>' + w + '</code> (not the sorted key) to bucket <code>' + key + '</code>. Bucket size: ' + groups[key].length + '.',
-          panels: panels(i, key, sorted)});
-      });
-      steps.push({lines:[14], msg:'Done: <b>' + order.length + '</b> group' + (order.length === 1 ? '' : 's') + ', ~' + cost + ' comparison-steps spent inside <code>Array.Sort</code> alone. The other tab spends none.',
-        panels: panels(words.length)});
-      return steps;
-    }
-  },
-  {
-    label: 'Frequency signature key',
-    badge: 'O(n·m) · optimal.cs · a–z only',
-    blurb: 'Anagrams have the same character <b>counts</b> — and counts need no ordering. Build an <code>int[26]</code>, flatten it to a delimited string, use that as the key. The comma is load-bearing: without it <code>1,11</code> and <code>11,1</code> collide.',
-    legend: [
-      {cls:'hot', text:'word being keyed'},
-      {cls:'done', text:'already grouped'},
-      {cls:null, text:'only the non-zero slots of int[26] are shown'}
-    ],
-    code: [
-      'var groupsByKey = new Dictionary<string, List<string>>();',
-      '',
-      'foreach (string word in strs) {',
+      'foreach (string word in strs)',
+      '{',
       '    int[] letterCounts = new int[26];',
-      '    foreach (char c in word) letterCounts[c - \'a\']++;',
+      '',
+      '    foreach (char letter in word)',
+      "        letterCounts[letter - 'a']++;",
       '',
       '    var keyBuilder = new StringBuilder();',
-      '    foreach (int count in letterCounts) {',
+      '    foreach (int count in letterCounts)',
+      '    {',
       '        keyBuilder.Append(count);',
-      '        keyBuilder.Append(\',\');',
+      "        keyBuilder.Append(',');   // \"1,11\" != \"11,1\"",
       '    }',
       '    string signature = keyBuilder.ToString();',
       '',
-      '    if (!groupsByKey.TryGetValue(signature, out var group)) {',
+      '    if (!groupsByKey.TryGetValue(signature, out var group))',
+      '    {',
       '        group = new List<string>();',
       '        groupsByKey[signature] = group;',
       '    }',
       '    group.Add(word);',
       '}',
+      '',
       'return groupsByKey.Values.ToList();'
     ],
     simulate(input){
       const words = input.words, steps = [];
-      const groups = {}, order = [], shortOf = {};
-      let cost = 0;
-      const shortKey = (counts) => Object.keys(counts).sort().map(c => c + ':' + counts[c]).join(' ');
-      const bucketRows = (hot) => order.length
-        ? order.map(k => ({left: shortOf[k], items: groups[k].map(w => ({text:w, cls: k === hot ? 'head' : ''})), empty:'—'}))
-        : [{left:'buckets:', items: [], empty:'no groups yet'}];
-      const panels = (i, counts, key) => [
-        pTiles('Input words', words, (k) => ({v: words[k], cls: k === i ? 'hot is-current' : (k < i ? 'done' : ''), top:''}), {focus:i}),
-        pChips('int[26] — non-zero slots only', [{
-          left:'counts:',
-          items: counts ? Object.keys(counts).sort().map(c => ({text:c, sub:String(counts[c])})) : [],
-          right: key ? '→ signature' : '',
-          empty:'—'
-        }]),
-        pChips('Dictionary — signature → words', bucketRows(key)),
-        pPills('', [{k:'character reads', v: cost, cls:'accent'}, {k:'groups', v: order.length}, {k:'sorting', v:'none', cls:'good'}])
-      ];
-      steps.push({lines:[1], msg:'Same canonical-form plan as the other tab, with a canonical form that costs <b>O(m)</b> instead of <b>O(m log m)</b>.', panels: panels(-1)});
-      words.forEach((w, i) => {
-        const counts = {};
-        for (const c of w) counts[c] = (counts[c] || 0) + 1;
-        cost += w.length;
-        const key = shortKey(counts);
-        shortOf[key] = key;
-        steps.push({lines:[4,5], msg: 'Count <code>' + w + '</code>: ' + Object.keys(counts).sort().map(c => c + '×' + counts[c]).join(', ') + '. One pass, no comparisons.',
-          panels: panels(i, counts, null)});
-        steps.push({lines:[7,8,9,10,12], msg: 'Flatten the 26 slots into a string — that string is the key. <code>StringBuilder</code>, not <code>+=</code>: repeated concatenation would be O(n²) in the key length, the classic accidental C# slowdown.',
-          panels: panels(i, counts, key)});
-        if (!groups[key]){ groups[key] = []; order.push(key); }
+      const order = [], groups = {};
+      let counted = 0;
+      const sigOf = c => c.join(',') + ',';
+      const shortSig = s => s.replace(/(?:0,)+$/, '…');
+      const nonZero = c => {
+        const m = {};
+        for (let i = 0; i < 26; i++) if (c[i]) m[String.fromCharCode(97 + i)] = c[i];
+        return m;
+      };
+      const groupRows = (hotKey) => {
+        if (!order.length) return [{empty:'dictionary is still empty', items: []}];
+        return order.map(k => ({
+          left: shortSig(k),
+          items: groups[k].map(x => ({text: x, cls: k === hotKey ? 'head' : ''})),
+          empty: groups[k].length ? '' : 'new — still empty'
+        }));
+      };
+      const panels = (wi, li, counts, sig, hotKey) => {
+        const out = [pTiles('Input words', words, (k) => ({cls: k === wi ? 'hot' : (wi >= 0 && k > wi) ? 'dim' : ''}))];
+        if (counts){
+          out.push(pTiles('"' + words[wi] + '" letter by letter', words[wi].split(''), (k) => ({
+            cls: k === li ? 'hot' : k < li ? 'in-window' : 'dim'
+          })));
+          const chips = mapChips(nonZero(counts), (li >= 0 && li < words[wi].length) ? words[wi][li] : null);
+          out.push(pChips('letterCounts — all 26 slots exist, zeros hidden',
+            chips.length ? [{items: chips}] : [{empty:'every slot is still 0', items: []}]));
+        }
+        if (sig) out.push(pNote('signature', '<code>' + sig + '</code>'));
+        out.push(pChips('groupsByKey', groupRows(hotKey)));
+        out.push(pPills('', [
+          {k:'word', v: wi >= 0 ? words[wi] : '–', cls:'hot'},
+          {k:'groups', v: order.length, cls:'accent'},
+          {k:'letters counted', v: counted}
+        ]));
+        return out;
+      };
+      steps.push({lines:[1], msg:'One dictionary, keyed by a string that every anagram of the same word produces. Nothing here ever compares two words to each other — each word is reduced to a key <em>independently</em>, and the dictionary does the matching.', panels: panels(-1, -1, null, null, null)});
+      for (let wi = 0; wi < words.length; wi++){
+        const w = words[wi], counts = new Array(26).fill(0);
+        steps.push({lines:[3,5], msg:'Word ' + wi + ' is <b>"' + w + '"</b>. Fresh 26-slot array, one slot per letter a–z, all zero. Whatever order the letters arrive in will not survive this — and that is exactly the point.', panels: panels(wi, -1, counts, null, null)});
+        if (wi === 0){
+          for (let j = 0; j < w.length; j++){
+            const idx = w.charCodeAt(j) - 97;
+            counts[idx]++; counted++;
+            steps.push({lines:[7,8], msg:"<code>'" + w[j] + "' - 'a'</code> = " + idx + ', so slot ' + idx + ' rises to <b>' + counts[idx] + '</b>. Position ' + j + ' is discarded; only the tally is kept.', panels: panels(wi, j, counts, null, null)});
+          }
+        } else {
+          for (let j = 0; j < w.length; j++){ counts[w.charCodeAt(j) - 97]++; counted++; }
+          steps.push({lines:[7,8], msg:'Tally all ' + w.length + ' letters of <b>"' + w + '"</b> in one pass — ' + w.length + ' increments, no comparisons, no sorting. That is the whole per-word cost.', panels: panels(wi, w.length, counts, null, null)});
+        }
+        const sig = sigOf(counts);
+        steps.push({lines:[10,11,13,14,16], msg:'Flatten the 26 counts into a string. An <code>int[]</code> hashes by <em>reference</em>, so two arrays holding identical numbers would still be two different dictionary keys — the string is what makes contents the identity. The commas are load-bearing: without them counts <code>1,11</code> and <code>11,1</code> would both read as <code>111</code>.', panels: panels(wi, w.length, counts, shortSig(sig), null)});
+        const seen = Object.prototype.hasOwnProperty.call(groups, sig);
+        if (!seen){ groups[sig] = []; order.push(sig); }
+        steps.push({lines: seen ? [18] : [18,20,21], msg: seen
+            ? 'This signature is already in the dictionary — some earlier word had the identical letter tally, so <b>"' + w + '"</b> is an anagram of it. One hash lookup settled that, with no word-to-word comparison.'
+            : 'No entry for this signature yet, so <b>"' + w + '"</b> starts a new group. <code>TryGetValue</code> hands back the list either way, which is why the add below is written once.',
+          panels: panels(wi, w.length, counts, shortSig(sig), sig)});
+        groups[sig].push(w);
+        steps.push({lines:[23], msg:'<b>"' + w + '"</b> joins its group. The list is stored by reference in the dictionary, so appending here updates the dictionary too — no write-back needed.', panels: panels(wi, w.length, counts, shortSig(sig), sig)});
+      }
+      steps.push({lines:[25], msg:'<b>' + order.length + '</b> group' + (order.length === 1 ? '' : 's') + ' from ' + words.length + ' words, built with <b>' + counted + '</b> letter increments total. The keys themselves are thrown away — only <code>Values</code> is returned.', panels: panels(-1, -1, null, null, null)});
+      return steps;
+    }
+  },
+  {
+    label: 'Sort each word into a canonical key',
+    badge: 'O(n · k log k) time · O(n · k) space · the sort is avoidable · suboptimal.cs',
+    blurb: 'Sorting a word erases order while keeping its multiset of letters, so anagrams collapse onto one key — <code>eat</code>, <code>tea</code> and <code>ate</code> all become <code>aet</code>. Correct and short, but each word pays k log k comparisons plus a copied char buffer to answer what a 26-slot tally answers in k.',
+    legend: [
+      {cls:'hot', text:'current word / its characters'},
+      {cls:'win', text:'sorted canonical key'},
+      {cls:'head', text:'group this word lands in'},
+      {cls:'dim', text:'not reached yet'}
+    ],
+    code: [
+      'var groupsByKey = new Dictionary<string, List<string>>();',
+      '',
+      'foreach (string word in strs)',
+      '{',
+      '    char[] characters = word.ToCharArray();',
+      '    Array.Sort(characters);',
+      '    string sortedKey = new string(characters);',
+      '',
+      '    if (!groupsByKey.TryGetValue(sortedKey, out var group))',
+      '    {',
+      '        group = new List<string>();',
+      '        groupsByKey[sortedKey] = group;',
+      '    }',
+      '    group.Add(word);',
+      '}',
+      '',
+      'return groupsByKey.Values.ToList();'
+    ],
+    simulate(input){
+      const words = input.words, steps = [];
+      const order = [], groups = {};
+      let work = 0;
+      const groupRows = (hotKey) => {
+        if (!order.length) return [{empty:'dictionary is still empty', items: []}];
+        return order.map(k => ({
+          left: k,
+          items: groups[k].map(x => ({text: x, cls: k === hotKey ? 'head' : ''})),
+          empty: groups[k].length ? '' : 'new — still empty'
+        }));
+      };
+      const panels = (wi, chars, sorted, key, hotKey) => {
+        const out = [pTiles('Input words', words, (k) => ({cls: k === wi ? 'hot' : (wi >= 0 && k > wi) ? 'dim' : ''}))];
+        if (chars) out.push(pTiles('characters (a copy of the word)', chars, () => ({cls:'hot'})));
+        if (sorted) out.push(pTiles('after Array.Sort', sorted, () => ({cls:'in-window'})));
+        out.push(pChips('groupsByKey', groupRows(hotKey)));
+        out.push(pPills('', [
+          {k:'word', v: wi >= 0 ? words[wi] : '–', cls:'hot'},
+          {k:'sortedKey', v: key || '–'},
+          {k:'groups', v: order.length, cls:'accent'},
+          {k:'≈ compares spent sorting', v: work}
+        ]));
+        return out;
+      };
+      steps.push({lines:[1], msg:'Same dictionary idea: reduce each word to a key that all of its anagrams share, then let hashing do the grouping. The only question is how that key is produced.', panels: panels(-1, null, null, null, null)});
+      for (let wi = 0; wi < words.length; wi++){
+        const w = words[wi], chars = w.split('');
+        steps.push({lines:[5], msg:'Strings are immutable in C#, so the sort cannot happen in place — <code>ToCharArray</code> copies all ' + w.length + ' characters of <b>"' + w + '"</b> into a fresh buffer. That copy is the extra O(k) space, and it is allocated once per word.', panels: panels(wi, chars, null, null, null)});
+        const sorted = chars.slice().sort();
+        const key = sorted.join('');
+        const cost = w.length < 2 ? 0 : Math.ceil(w.length * Math.log2(w.length));
+        work += cost;
+        steps.push({lines:[6,7], msg:'<code>Array.Sort</code> rearranges the buffer into <b>' + key + '</b>. Order is destroyed, the multiset of letters survives — and &ldquo;same multiset&rdquo; <em>is</em> the definition of anagram, so the sorted form is a valid canonical key. It costs about k log k ≈ <b>' + cost + '</b> comparisons, paid again for every single word.', panels: panels(wi, chars, sorted, key, null)});
+        const seen = Object.prototype.hasOwnProperty.call(groups, key);
+        if (!seen){ groups[key] = []; order.push(key); }
+        steps.push({lines: seen ? [9] : [9,11,12], msg: seen
+            ? 'Key <b>' + key + '</b> is already present — an earlier word sorted to the exact same string, so they are anagrams. The lookup is O(k) on the key length, not a scan of the groups.'
+            : 'Key <b>' + key + '</b> is new, so a fresh list is created and stored under it. <code>TryGetValue</code> returns the list through <code>out</code>, so the hit and miss paths converge on one <code>Add</code>.',
+          panels: panels(wi, chars, sorted, key, key)});
         groups[key].push(w);
-        steps.push({lines:[14,15,16,18], msg:'Bucket <code>' + key + '</code> now holds ' + groups[key].length + ' word' + (groups[key].length === 1 ? '' : 's') + '.',
-          panels: panels(i, counts, key)});
-      });
-      steps.push({lines:[20], msg:'<b>' + order.length + '</b> group' + (order.length === 1 ? '' : 's') + ' in <b>' + cost + '</b> character reads and zero sorting. Same shape as the other tab, cheaper key.',
-        panels: panels(words.length)});
+        steps.push({lines:[14], msg:'The <em>original</em> <b>"' + w + '"</b> is appended, not the sorted form — the key is only a routing device and never appears in the answer.', panels: panels(wi, chars, sorted, key, key)});
+      }
+      steps.push({lines:[17], msg:'<b>' + order.length + '</b> group' + (order.length === 1 ? '' : 's') + ', at a cost of roughly <b>' + work + '</b> comparisons of sorting. Every one of them was spent recovering a letter tally that could have been counted directly — which is the whole difference between this and the optimal version.', panels: panels(-1, null, null, null, null)});
       return steps;
     }
   }]
@@ -815,9 +867,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -841,8 +913,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;
