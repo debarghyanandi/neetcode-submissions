@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T01:57:31.410Z",
+  "updatedAt": "2026-09-01T22:08:05.894Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -69,6 +69,17 @@
           "bruteForce": false
         }
       }
+    },
+    "daily-temperatures": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "duplicate-integer": {
       "topic": "Data Structures & Algorithms",
