@@ -76,85 +76,88 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sort + Fix One + Two Pointers (k-sum reduction)
- SOURCE  : YOUR OWN SOLUTION (submission-0 '//My Solution.' and submission-2
-           '//Same My solution but used for loop.'), merged with submission-3
-           - the array-slicing helper and the manual index counter are gone;
-           your second attempt's helper-method form is kept, it is the
-           clearest of the three
+ PATTERN : Sort, anchor each index, two-pointer the suffix
+ SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  This is the general k-sum reduction: FIX ONE ELEMENT and the problem drops
-  to (k-1)-sum on the remaining suffix. 3-sum becomes n separate 2-sums.
-  Since the array is sorted, each 2-sum is the O(n) two-pointer scan from
-  two-integer-sum-ii - which is exactly why solving that one first matters.
-  4-sum is this same trick applied twice.
-
-BRUTE FORCE (and why it fails)
-  Three nested loops: O(n^3), plus a set to dedupe the results. At n = 3000
-  that is 2.7 * 10^10 iterations.
-
-WHY SORTING IS NOT A COST HERE
-  O(n log n) sorting is dominated by the O(n^2) scan, so it is free in Big-O
-  terms - and it buys two things at once: the two-pointer steering rule, and
-  adjacency of equal values, which is what makes deduping O(1) instead of
-  requiring a HashSet of triplets. Note the trade: sorting destroys the
-  original indices. This problem asks for VALUES, so that is acceptable;
-  two-integer-sum asks for indices, which is why it uses a hash map instead.
-
-THE THREE PRUNES, AND WHAT EACH IS FOR
-  1. `nums[i] > 0` -> break.  Speed only. Everything after is positive too.
-  2. `nums[i] == nums[i-1]` -> continue.  CORRECTNESS. Without it,
-     [-1,-1,0,1] emits [-1,0,1] twice.
-  3. Skipping duplicate left/right values after a hit.  CORRECTNESS. Without
-     it, [-2,0,0,2,2] emits [-2,0,2] more than once.
-  Prune 1 is optional; 2 and 3 are not. Know which is which.
-
+  Three unknowns is one too many to search directly. Fixing nums[i] as the
+  anchor turns the rest into a plain two-sum on a sorted array: find a pair in
+  [i+1, nums.Length-1] summing to -nums[i], which is exactly the target passed
+  into FindPairsWithSum. Sorting is what buys that reduction, and the code's own
+  comment names both payoffs - monotonic order for the pointer walk, and equal
+  values sitting adjacent so duplicates can be skipped by comparing neighbours
+  instead of hashing triplets into a set.
 INVARIANT
-  When the anchor is nums[i], every valid pair completing it lies in
-  [left, right], and triplets already contains no duplicates.
-
-ALGORITHM (NeetCode: "Two Pointers")
-  1. Sort ascending.
-  2. For each index i as the anchor:
-       - break once nums[i] > 0
-       - skip if nums[i] repeats the previous anchor
-       - two-pointer scan of (i+1 .. n-1) for a pair summing to -nums[i]
-       - on a hit, record the triplet and advance both pointers past their
-         duplicate blocks
-  3. Return all triplets.
-
-COMPLEXITY
-  Time  : O(n^2) - n anchors, each driving an O(n) two-pointer scan.
-          The O(n log n) sort is dominated.
-  Space : O(1) auxiliary if the output does not count (Array.Sort is in place).
-          O(number of triplets) for the result itself.
-
-TRIGGER
-  "Find all k-tuples summing to a target, no duplicate tuples, values not
-  indices." The moment DUPLICATE TUPLES MUST BE EXCLUDED and the input is
-  unsorted, reach for sort + fix + two pointers rather than hashing.
-
-C# NOTES
-  - Array.Sort(int[]) is introsort, in place, O(n log n), no allocation.
-  - The earlier attempt used `nums[(i + 1)..]` - range syntax on an ARRAY
-    ALLOCATES A COPY every iteration, turning O(1) space into O(n) per call.
-    `nums.AsSpan(i + 1)` would have been the zero-copy equivalent. This is
-    the single most useful C# performance fact in this file: ranges over
-    arrays copy, ranges over Span<T> do not.
-  - Passing `triplets` into the helper and appending in place avoids building
-    and merging intermediate lists.
-
+  Inside FindPairsWithSum, every valid pair that has not yet been emitted has
+  both of its indices inside the window [left, right]. Each branch of the loop
+  shrinks that window by one index only after proving the discarded index cannot
+  participate in any remaining answer. The outer loop carries its own invariant:
+  every triplet whose smallest element sits at an index < i has already been
+  emitted, so the search never needs to look backwards - which is why the window
+  starts at i+1 and never at 0.
+WHY THE DISCARD IS SAFE
+  This is the correctness argument an interviewer will push on. If sum > target,
+  then nums[right] is doomed: every remaining partner index k in [left, right-1]
+  has nums[k] >= nums[left] by sortedness, so nums[k] + nums[right] >=
+  nums[left] + nums[right] = sum > target. No pair using right can ever hit
+  target, so right-- discards it losslessly. The sum < target case is the mirror
+  image - every partner of nums[left] is <= nums[right], so left is the doomed
+  one. Neither branch is a heuristic; each eliminates a whole row or column of
+  the pair matrix with one proof.
+DEDUP IN THREE PLACES
+  There is no HashSet anywhere; uniqueness is structural, and it takes all three
+  skips.
+  1. The anchor skip: i > 0 && nums[i] == nums[i-1] continues, so a repeated
+  smallest value never re-runs the same suffix scan. The i > 0 guard exists only
+  because index 0 has no predecessor to read.
+  2 and 3. After a hit, left is walked past every copy of usedLeftValue and
+  right past every copy of usedRightValue. The snapshot into local variables
+  before moving matters: nums[left] changes as left advances, so comparing
+  against the live nums[left] would stop after one step.
+  Note that clearing only one side would already be enough to avoid re-emitting
+  the same value pair - once left leaves its block, nums[left] is strictly
+  larger and the pair is a different pair. Clearing both is the symmetric
+  version and skips the run of equal right values in one pass instead of
+  decrementing through them one comparison at a time. Both inner whiles keep the
+  left < right guard so the pointers cannot cross or run off the window.
+WHY THE ANCHOR SKIP KEEPS THE FIRST COPY
+  Easy to get backwards. The condition compares against nums[i-1] and continues,
+  which means the FIRST occurrence of each value is the one that runs. That is
+  required, not stylistic: for input like [-2,-2,0,4] the answer [-2,-2,4] needs
+  the second -2 to still be inside the scan window i+1..end. Anchoring on the
+  first -2 leaves it there; skipping to the last copy would drop that triplet.
+  Same reasoning is why nums[i] > 0 is a break and not a continue - once the
+  anchor is positive, so are the two larger values behind it in sorted order,
+  and no suffix can sum to zero for this or any later i.
 WATCH OUT
-  - The dedup while-loops need `left < right` in their own condition, not
-    just the outer loop's - otherwise a run of equal values walks past.
-  - `i > 0 &&` must come first in the anchor-dedup check; without it index 0
-    reads nums[-1].
-  - The earlier attempt incremented `i` by hand inside a foreach over the
-    same array. It happened to work, but a manual counter shadowing the
-    iteration variable is how silent off-by-ones get in. The for-loop version
-    has one source of truth for the index.
+  Array.Sort(nums) sorts the caller's array in place. The method has a visible
+  side effect on its argument; if the caller cares about original order, copy
+  first.
+  anchor and target are redundant parameters - target is always -anchor.
+  Harmless, but if you change one call site and not the other, the emitted
+  triplet and the pair it was matched against silently disagree.
+  sum is an int; this is safe only because 3Sum's constraints cap |nums[i]| at
+  10^5, so nums[left] + nums[right] cannot overflow. Loosen that constraint and
+  it needs a long.
+  The two inner skip loops must both use left < right, not left < nums.Length.
+  Without it, the left pointer can run past right and the outer while re-reads a
+  crossed window.
+FOLLOW-UPS
+  "Why not a HashSet of triplets?" It works but costs space proportional to the
+  output and forces a canonical ordering of each triplet to hash correctly;
+  sorting already gives that ordering for free and the skips make the set
+  unnecessary.
+  "Can you avoid sorting?" Only by paying for it elsewhere - a hash-based
+  approach hits the same time bound and then has to solve deduplication the hard
+  way, which is precisely the part sorting makes trivial.
+  "Extend to 4Sum." Add another outer anchor loop with the same neighbour-skip
+  guard and call the same two-pointer routine; the recursion generalizes to
+  k-sum with k-2 nested anchors.
+  "Return indices instead of values." This structure cannot - sorting destroys
+  the original indices, and the dedup rule is defined on values, not positions.
+COMPLEXITY
+  Time  : O(n^2)
+  Space : O(1)
 ================================================================================
 */

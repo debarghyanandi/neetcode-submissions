@@ -36,60 +36,59 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hashing - Complement Lookup (one pass)
- SOURCE  : NeetCode / other resource (submission-0, refactored: for-loop
-           index, TryGetValue)
+ PATTERN : Hash Map Complement Lookup - check before insert
+ SOURCE  : Reference solution - not one you solved yourself - your own
+           annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-
 WHY THIS PATTERN
-  The inner loop of the brute force asks the same question every time:
-  "does target - nums[i] exist somewhere else in the array?" That is a
-  LOOKUP, and a lookup belongs in a hash map, not in a loop.
-
-BRUTE FORCE (and why it fails)
-  for i, for j > i: check nums[i] + nums[j] == target. O(n^2) time, O(1)
-  space. Fine at n = 100, dead at n = 10^5. The rewrite is mechanical:
-  every time you catch an inner loop SEARCHING, replace it with a hash map.
-
-WHY NOT SORT + TWO POINTERS?
-  Sorting is O(n log n) - slower - and it destroys the original indices,
-  which is what this problem asks you to return. That approach IS correct
-  when the input arrives sorted, which is exactly problem two-integer-sum-ii.
-  Same problem, one changed constraint, completely different optimal tool.
-  Know why each is chosen, that is the actual interview question.
-
+  The nested-loop version asks, for every index, "does some other position hold
+  target - nums[index]?" That is a pure membership question over values already
+  seen, and a Dictionary answers it without rescanning. The only extra thing
+  needed beyond membership is the position, which is why valueToIndex stores
+  value -> index rather than being a HashSet.
+WHY ONE PASS SUFFICES
+  The usual doubt on re-reading: the loop only ever looks backward, so how does
+  it find a pair whose partner comes later? Take any valid pair (i, j) with i <
+  j. When index reaches j, nums[i] was already written into valueToIndex on
+  iteration i, and complement = target - nums[j] equals nums[i], so TryGetValue
+  hits. Every pair is discovered exactly once, at its larger index. Looking
+  forward would be redundant work.
 INVARIANT
-  Before handling index i, valueToIndex holds every value of nums[0..i-1]
-  mapped to its index. So a hit is always a genuinely different element.
-
-ALGORITHM (NeetCode: "Hash Map (One Pass)")
-  1. Empty dictionary value -> index.
-  2. For each index, compute complement = target - nums[index].
-  3. If complement is already in the map, the pair is (its index, index).
-  4. Otherwise store nums[index] -> index and continue.
-
+  At the top of each iteration, valueToIndex holds one entry per distinct value
+  in nums[0 .. index-1], each mapped to a position where that value actually
+  occurs. Nothing from index or beyond is ever in the map at the moment of the
+  lookup - that is the whole reason the returned pair has two distinct
+  positions.
+ORDER OF THE WRITE
+  The insert sits after the TryGetValue on purpose. Flip the two lines and the
+  self-pairing case breaks: with nums = [3, 4] and target = 6, index 0 would
+  write 3 -> 0, then find complement 3 in the map and return [0, 0], using one
+  element twice. Placing the write last makes the current element structurally
+  unreachable to its own lookup, so no explicit complementIndex != index guard
+  is needed.
+DUPLICATES AND OVERWRITES
+  valueToIndex[nums[index]] = index overwrites the stored position when a value
+  repeats, keeping only the most recent index. That is safe: any stored index
+  for a value v is as good as any other, since a later lookup for v only needs
+  some position holding v. nums = [3, 3], target 6 still works - index 0 records
+  3 -> 0, index 1 finds it and returns [0, 1] before the overwrite ever matters.
+RETURN CONTRACT
+  Indices come back as [complementIndex, index], always ascending, because
+  complementIndex was written on an earlier iteration. The fallthrough returns
+  Array.Empty<int>() rather than null, so a caller can check Length without a
+  null test; under the standard "exactly one solution" guarantee that line is
+  unreachable, but it keeps the method total if the guarantee is dropped.
+FOLLOW-UPS TO EXPECT
+  1. Sorted input: two pointers from both ends beat this on space, since no map
+  is needed. 2. Return all pairs, not the first: the early return has to go, and
+  valueToIndex must map value -> list of indices, since a repeated value can
+  complete several pairs. 3. Return values instead of indices: the map collapses
+  to a HashSet, and duplicate results need explicit dedup. 4. Why TryGetValue
+  instead of ContainsKey then indexer: one probe that also hands back
+  complementIndex, versus two probes for the same key.
 COMPLEXITY
-  Time  : O(n) - one pass, O(1) average lookup and insert.
-  Space : O(n) - worst case every element is stored before the pair is found.
-
-TRIGGER
-  "Find two elements that satisfy an ARITHMETIC RELATION" where one operand
-  determines the other exactly (a + b = k, b - a = k, a * b = k).
-  If the target relation is an INEQUALITY, hashing fails - sort instead.
-
-C# NOTES
-  - TryGetValue is one hash lookup; ContainsKey + indexer is two.
-  - `valueToIndex[key] = value` overwrites silently, Add() would throw on a
-    duplicate key. Overwriting is what we want here: for duplicate values the
-    later index is kept, and it still yields a valid answer.
-  - Array.Empty<int>() returns a cached singleton - zero allocation, better
-    than new int[0] when signalling "no result".
-
-WATCH OUT
-  - Order matters: check BEFORE inserting. Insert first and [3,x], target 6
-    would return [0,0], pairing the element with itself.
-  - Assumes exactly one valid answer (the problem guarantees it). If multiple
-    pairs were possible this returns the one that completes earliest.
+  Time  : O(n)
+  Space : O(n)
 ================================================================================
 */

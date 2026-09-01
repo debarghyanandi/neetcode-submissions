@@ -1,6 +1,12 @@
 // --------------------------------------------------------------------------
-//  Reference solution - from NeetCode / other resource (submission-0 + submission-2)
-//  Not one you solved yourself.
+// -  optimal.cs            O(n) time / O(1) space
+// -  two pointers converging on sorted array   [two-pointers-sorted]
+// -  the only solution in this folder
+// -
+// -  Reference solution - not one you solved yourself
+// -
+// -  exploits sortedness so left/right pointers move monotonically toward
+// -  the target sum, each step permanently eliminating one candidate
 // --------------------------------------------------------------------------
 
 public class Solution

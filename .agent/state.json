@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-08-31T22:56:29.119Z",
+  "updatedAt": "2026-09-01T01:57:31.410Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -892,7 +892,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic deque, index-based sliding window max\",\"approachKey\":\"monotonic-deque-sliding-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic deque, index-based sliding window max\",\"approachKey\":\"monotonic-deque-sliding-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic deque, index-based sliding window max with explicit l/r pointers\",\"approachKey\":\"monotonic-deque-sliding-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       }
     },
     "string-encode-and-decode": {
@@ -984,6 +985,9 @@
           "correct": true,
           "bruteForce": false
         }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"sort + fix anchor + two pointers\",\"approachKey\":\"sort-fix-two-pointers\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       }
     },
     "top-k-elements-in-list": {
@@ -1036,6 +1040,10 @@
           "correct": true,
           "bruteForce": false
         }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bucket sort by frequency\",\"approachKey\":\"bucket-sort-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"bounded min-heap of size k\",\"approachKey\":\"bounded-min-heap-topk\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
       }
     },
     "two-integer-sum": {
@@ -1073,6 +1081,9 @@
           "correct": true,
           "bruteForce": false
         }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map complement lookup, one pass\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
     },
     "two-integer-sum-ii": {
@@ -1095,6 +1106,19 @@
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers converging on sorted array\",\"approachKey\":\"two-pointers-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "two pointers converging on sorted array",
+          "approachKey": "two-pointers-sorted",
+          "correct": true,
+          "bruteForce": false
+        }
       }
     },
     "validate-parentheses": {
@@ -1116,6 +1140,19 @@
           "selfMarked": true,
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-lifo-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "stack-based bracket matching",
+          "approachKey": "stack-lifo-matching",
+          "correct": true,
+          "bruteForce": false
         }
       }
     }

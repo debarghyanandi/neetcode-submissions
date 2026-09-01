@@ -1,6 +1,12 @@
 // ##########################################################################
-// #  YOU SOLVED THIS YOURSELF  (submission-0, marked '//My solution')
-// #  the standard answer, reached first try - nothing to trade up to
+// #  optimal.cs            O(n) time / O(n) space
+// #  stack-based bracket matching   [stack-lifo-matching]
+// #  the only solution in this folder
+// #
+// #  YOU SOLVED THIS YOURSELF
+// #
+// #  pushes openers and pops/validates against the top of a stack on each
+// #  closer, so unmatched-order violations are caught in one linear pass
 // ##########################################################################
 
 public class Solution
