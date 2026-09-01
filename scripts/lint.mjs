@@ -27,9 +27,8 @@ import { stripHeader } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { sameShape } from './lib/csharp.mjs';
 import { shortPrint } from './lib/normalise.mjs';
+import { LINT_FORMAT } from './lib/lint-rules.mjs';
 
-/** Bump when the rules below change, so already-linted files are revisited. */
-export const LINT_FORMAT = 1;
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
