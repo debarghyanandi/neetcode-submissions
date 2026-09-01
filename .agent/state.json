@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T22:08:05.894Z",
+  "updatedAt": "2026-09-01T22:31:51.862Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -72,14 +72,41 @@
     },
     "daily-temperatures": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs"
+      },
+      "fingerprints": {
+        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs"
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "monotonic decreasing stack of indices",
+          "approachKey": "monotonic-stack",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      }
     },
     "duplicate-integer": {
       "topic": "Data Structures & Algorithms",
@@ -192,6 +219,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack simulation via doubly linked list splicing\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
         "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based evaluation with operator dictionary\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       }
+    },
+    "implement-queue-using-stacks": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "is-anagram": {
       "topic": "Data Structures & Algorithms",
