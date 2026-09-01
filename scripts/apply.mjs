@@ -227,6 +227,10 @@ console.log(`  curated                 ${problems.filter((p) => p.curatedFiles.l
 console.log(`  awaiting classification ${awaiting.reduce((n, p) => n + p.pending.length, 0)} file(s) in ${awaiting.length} folder(s)`);
 for (const p of awaiting) console.log(`      ${p.path}: ${p.pending.map((s) => s.file).join(', ')}`);
 console.log(`  README index            ${indexChanged ? 'updated' : 'unchanged'}`);
+// index.md was being rewritten without a word about it: the run reported
+// "README unchanged, state unchanged => CHANGES TO COMMIT", which reads as a
+// contradiction. Anything this script writes, it reports.
+console.log(`  index.md (Pages home)   ${pageChanged ? 'updated' : 'unchanged'}`);
 console.log(`  ${STATE_PATH.replace(REPO + '/', '')}       ${stateChanged ? 'updated' : 'unchanged'}`);
 console.log(`  => ${changed ? 'CHANGES TO COMMIT' : 'nothing to commit'}\n`);
 
