@@ -16,9 +16,9 @@ public class Solution
             // letterCounts[0] = number of 'a', ... letterCounts[25] = 'z'
             int[] letterCounts = new int[26];
 
-            foreach (char c in word)
+            foreach (char letter in word)
             {
-                letterCounts[c - 'a']++;
+                letterCounts[letter - 'a']++;
             }
 
             // Arrays hash by REFERENCE, not by contents, so int[] cannot be a
@@ -45,6 +45,7 @@ public class Solution
         return groupsByKey.Values.ToList();
     }
 }
+
 
 /*
 ================================================================================

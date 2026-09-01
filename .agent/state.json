@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T22:31:51.862Z",
+  "updatedAt": "2026-09-01T23:17:36.266Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -13,11 +13,13 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
-        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs"
+        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs",
+        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs"
       },
       "fingerprints": {
         "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
-        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs"
+        "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs",
+        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -29,6 +31,20 @@
           "selfMarked": false,
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
+        }
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "5094eb7d7652",
+          "renames": [
+            "c->letter"
+          ]
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "a765bb90aa15",
+          "renames": []
         }
       }
     },
