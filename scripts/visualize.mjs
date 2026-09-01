@@ -15,6 +15,7 @@
  *   node scripts/visualize.mjs --slug two-integer-sum          # dry run
  *   node scripts/visualize.mjs --slug two-integer-sum --apply
  *   node scripts/visualize.mjs --apply --limit 3
+ *   node scripts/visualize.mjs --apply --backfill --limit 3   # replaces existing ones
  */
 
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
@@ -33,6 +34,7 @@ const only = arg('--slug');
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const model = arg('--model', 'opus');
+const backfill = has('--backfill');
 
 const SCHEMA = {
   type: 'object',
@@ -135,11 +137,13 @@ const state = loadState();
 let targets = scanRepo(state);
 if (only) targets = targets.filter((p) => p.slug === only);
 targets = targets.filter((p) => {
-  if (existsSync(join(p.dir, `${p.slug}-visualizer.html`))) {
-    if (only) console.log(`\n${p.path} already has a visualizer - refusing to overwrite hand-checked work.\n`);
-    return false;
-  }
-  return true;
+  if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) return true;
+  // An existing visualizer is hand-checked work and is not overwritten on an
+  // ordinary run. A backfill is different: lint may have renamed the very
+  // variables the visualizer names, so leaving it would be leaving a lie.
+  if (backfill) return true;
+  if (only) console.log(`\n${p.path} already has a visualizer - refusing to overwrite. Use --backfill to replace it.\n`);
+  return false;
 });
 if (limit) targets = targets.slice(0, limit);
 

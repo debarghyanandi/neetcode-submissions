@@ -92,12 +92,16 @@ function standing(name, ranked) {
 // Bump when the rendered format changes. Without it a wording or layout fix
 // never reaches existing files: the signature only tracks the facts, so it
 // stays equal and every file politely declines to be rewritten.
-export const HEADER_FORMAT = 2;
+export const HEADER_FORMAT = 3;
 
 export function headerSignature(name, sol, selfMark, ranked) {
   return JSON.stringify({
     v: HEADER_FORMAT,
     name,
+    // A fingerprint of the code itself. Without it a lint rename leaves the
+    // header, and therefore the teaching block, describing variables that no
+    // longer exist - the facts are unchanged, so nothing would be rewritten.
+    codePrint: sol.codePrint ?? null,
     time: sol.time,
     space: sol.space,
     algorithm: sol.algorithm,

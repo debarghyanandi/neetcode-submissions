@@ -29,6 +29,7 @@ const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
 import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
+import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 
 const argv = process.argv.slice(2);
@@ -282,6 +283,10 @@ for (const p of targets) {
   // usually drops the marker, so re-deriving it later disowns your own work.
   // A recorded value always wins over detection.
   const recorded = state.problems[p.slug]?.provenance ?? {};
+  // Fingerprint the code as classified, so a later edit or lint rename shows up
+  // as a changed signature rather than as silence.
+  const prints = new Map(files.map((f) => [f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body)]));
+
   const marks = new Map(files.map((f) => [
     f,
     recorded[f] !== undefined ? recorded[f].selfMarked : markedInCode(readFileSync(join(p.dir, f), 'utf8')),
@@ -335,7 +340,7 @@ for (const p of targets) {
       const full = join(p.dir, finalName);
       const src = readFileSync(full, 'utf8');
       const sol = byFile.get(origin);
-      const sig = headerSignature(finalName, sol, marks.get(origin), ranked);
+      const sig = headerSignature(finalName, { ...sol, codePrint: prints.get(origin) }, marks.get(origin), ranked);
 
       // Rewrite only when the file has no header, or when something other than
       // the prose actually changed. Otherwise the nightly run rewords your

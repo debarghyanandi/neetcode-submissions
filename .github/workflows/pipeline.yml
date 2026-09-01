@@ -113,6 +113,27 @@ jobs:
         if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Lint - spacing and variable names
+        id: lint
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        continue-on-error: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: |
+          set -euo pipefail
+          # Lint runs BEFORE classify. The header, the teaching block and the
+          # visualizer all name variables, so renaming after they are written
+          # would leave every one of them describing code that no longer exists.
+          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          if [ -n "${{ github.event.inputs.backfill }}" ]; then
+            args+=(--backfill)
+          fi
+          if [ -n "$BEFORE_SHA" ]; then
+            args+=(--exclude-changed-since "$BEFORE_SHA")
+          fi
+          node scripts/lint.mjs "${args[@]}"
+
       - name: Classify, rename and write headers
         id: classify
         if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
@@ -163,7 +184,13 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        run: node scripts/visualize.mjs --apply --limit "${{ github.event.inputs.limit || '5' }}"
+        run: |
+          set -euo pipefail
+          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          if [ -n "${{ github.event.inputs.backfill }}" ]; then
+            args+=(--backfill)
+          fi
+          node scripts/visualize.mjs "${args[@]}"
 
       - name: Apply - refresh index and state
         id: apply
@@ -197,7 +224,7 @@ jobs:
             echo ""
             echo "- trigger: \`${{ github.event_name }}\`"
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
-            echo "- classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
+            echo "- lint: \`${{ steps.lint.outcome || 'skipped' }}\` · classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
             echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
             echo ""
             echo '```json'
