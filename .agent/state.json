@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-02T20:58:54.296Z",
+  "updatedAt": "2026-09-02T22:05:44.819Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -73,17 +73,6 @@
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5094eb7d7652\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"hash by 26-letter frequency-count signature\",\"approachKey\":\"frequency-signature-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)\"}",
         "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n * k)\",\"algorithm\":\"hash by sorted-character canonical key\",\"approachKey\":\"sorted-key-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       }
-    },
-    "binary-search": {
-      "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
-      ],
-      "knownFingerprints": {},
-      "fingerprints": {}
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",

@@ -1,13 +1,12 @@
 # NeetCode Solutions
 
-28 problems · every solution carries its complexity, a study block, and a step-through visualizer.
+27 problems · every solution carries its complexity, a study block, and a step-through visualizer.
 
 Use your browser find (Ctrl+F) to jump to a problem. Visualizers open in a new tab; source links open on GitHub.
 
 | Problem | Complexity | Solutions | Watch |
 |---|---|---|---|
 | [Anagram Groups](https://neetcode.io/problems/anagram-groups) | `O(n * k)` / `O(n)` | [optimal](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/optimal.cs) · [suboptimal](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/suboptimal.cs) | <a href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/anagram-groups/anagram-groups-visualizer.html" target="_blank" rel="noopener noreferrer">▶ run</a> |
-| [Binary Search](https://neetcode.io/problems/binary-search) | — | — | — |
 | [Buy And Sell Crypto](https://neetcode.io/problems/buy-and-sell-crypto) | `O(n)` / `O(1)` | [optimal](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/optimal.cs) | <a href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/buy-and-sell-crypto-visualizer.html" target="_blank" rel="noopener noreferrer">▶ run</a> |
 | [Daily Temperatures](https://neetcode.io/problems/daily-temperatures) | `O(n)` / `O(n)` | [optimal](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/daily-temperatures/optimal.cs) | <a href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/daily-temperatures/daily-temperatures-visualizer.html" target="_blank" rel="noopener noreferrer">▶ run</a> |
 | [Duplicate Integer](https://neetcode.io/problems/duplicate-integer) | `O(n)` / `O(n)` | [optimal](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal.cs) · [optimal-variant](https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal-variant.cs) | <a href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/duplicate-integer/duplicate-integer-visualizer.html" target="_blank" rel="noopener noreferrer">▶ run</a> |
