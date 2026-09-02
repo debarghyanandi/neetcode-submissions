@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-01T23:31:38.574Z",
+  "updatedAt": "2026-09-02T09:51:34.031Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -264,14 +264,41 @@
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs"
+      },
+      "fingerprints": {
+        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs"
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, transfer on demand\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "two stacks, transfer on demand",
+          "approachKey": "two-stack-queue",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, transfer on demand\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      }
     },
     "is-anagram": {
       "topic": "Data Structures & Algorithms",
