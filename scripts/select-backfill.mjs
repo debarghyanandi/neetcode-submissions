@@ -49,17 +49,23 @@ const reasons = (p) => {
   return why;
 };
 
-const pending = problems.map((p) => ({ p, why: reasons(p) })).filter((x) => x.why.length);
+// A folder with raw submissions is NOT backlog - it is work you just did, and
+// the push and cron runs own it. The push run deliberately holds back the folder
+// you just pushed to in case you are still submitting; the nightly run picks it
+// up. Backfill is for folders already curated under older rules, so it leaves
+// new submissions alone rather than racing the path that is meant to handle them.
+const fresh = problems.filter((p) => p.pending.length);
+const backlog = problems.filter((p) => !p.pending.length);
 
-// A folder with raw submissions is work you just did; the rest is old cleanup.
-// Alphabetical order alone starved new submissions behind twenty-odd folders of
-// backfill - search-2d-matrix sat unprocessed while binary-search was redone.
-pending.sort((a, b) => (b.p.pending.length > 0) - (a.p.pending.length > 0));
+const pending = backlog.map((p) => ({ p, why: reasons(p) })).filter((x) => x.why.length);
 const batch = pending.slice(0, limit);
 
-console.log(`\n${problems.length} folder(s) · ${problems.length - pending.length} already current · ${pending.length} remaining`);
+console.log(`\n${backlog.length} curated folder(s) · ${backlog.length - pending.length} already current · ${pending.length} remaining`);
+if (fresh.length) {
+  console.log(`${fresh.length} folder(s) have raw submissions and are left to the push/cron run: ${fresh.map((p) => p.slug).join(', ')}`);
+}
 console.log(`taking ${batch.length} this run:\n`);
-for (const { p, why } of batch) console.log(`  ${p.slug.padEnd(46)} ${p.pending.length ? '[NEW submissions] ' : ''}needs: ${why.join(', ')}`);
+for (const { p, why } of batch) console.log(`  ${p.slug.padEnd(46)} needs: ${why.join(', ')}`);
 if (pending.length > batch.length) console.log(`\n  ...and ${pending.length - batch.length} more after this.`);
 console.log('');
 
