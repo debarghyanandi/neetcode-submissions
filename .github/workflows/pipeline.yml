@@ -206,7 +206,14 @@ jobs:
         run: node scripts/apply.mjs
 
       - name: Commit and push
-        if: steps.apply.outputs.changed == 'true'
+        id: commit
+        # Deliberately ungated. It used to run only when apply.mjs reported a
+        # change, but that flag covers only README, index.md and state.json -
+        # the files apply itself writes. lint, teach and visualize write .cs and
+        # .html directly, so a run that linted a file, wrote a teaching block and
+        # built a visualizer could still be skipped here and have every one of
+        # them destroyed with the runner. The staged-changes check below is the
+        # correct no-op guard; this one was measuring the wrong thing.
         run: |
           set -euo pipefail
           git config user.name  'github-actions[bot]'
@@ -235,7 +242,7 @@ jobs:
             echo "- selected folders: **${{ steps.detect.outputs.count }}**"
             echo "- backfill batch: \`${{ steps.batch.outputs.slugs || 'n/a' }}\` (${{ steps.batch.outputs.remaining || '0' }} needed work before this run)"
             echo "- lint: \`${{ steps.lint.outcome || 'skipped' }}\` · classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
-            echo "- wrote a commit: **${{ steps.apply.outputs.changed == 'true' && 'yes' || 'no' }}**"
+            echo "- wrote a commit: **${{ steps.commit.outcome == 'success' && 'see the commit step' || 'no' }}**"
             echo ""
             echo '```json'
             cat "$RUNNER_TEMP/detect.json" 2>/dev/null || echo '{}'

@@ -50,11 +50,16 @@ const reasons = (p) => {
 };
 
 const pending = problems.map((p) => ({ p, why: reasons(p) })).filter((x) => x.why.length);
+
+// A folder with raw submissions is work you just did; the rest is old cleanup.
+// Alphabetical order alone starved new submissions behind twenty-odd folders of
+// backfill - search-2d-matrix sat unprocessed while binary-search was redone.
+pending.sort((a, b) => (b.p.pending.length > 0) - (a.p.pending.length > 0));
 const batch = pending.slice(0, limit);
 
 console.log(`\n${problems.length} folder(s) · ${problems.length - pending.length} already current · ${pending.length} remaining`);
 console.log(`taking ${batch.length} this run:\n`);
-for (const { p, why } of batch) console.log(`  ${p.slug.padEnd(46)} needs: ${why.join(', ')}`);
+for (const { p, why } of batch) console.log(`  ${p.slug.padEnd(46)} ${p.pending.length ? '[NEW submissions] ' : ''}needs: ${why.join(', ')}`);
 if (pending.length > batch.length) console.log(`\n  ...and ${pending.length - batch.length} more after this.`);
 console.log('');
 
