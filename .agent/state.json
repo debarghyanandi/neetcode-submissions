@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-02T22:06:18.136Z",
+  "updatedAt": "2026-09-02T22:52:43.336Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -76,14 +76,52 @@
     },
     "binary-search": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
+      },
+      "fingerprints": {
+        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
+      },
+      "lint": {
+        "submission-1.cs": {
+          "version": 1,
+          "codePrint": "6a2357968a06",
+          "renames": [
+            "l->left",
+            "r->right",
+            "t->searchTarget"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(log n)",
+          "space": "O(log n)",
+          "algorithm": "recursive binary search",
+          "approachKey": "binary-search-recursive",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      }
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",
@@ -968,6 +1006,17 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
+    },
+    "search-2d-matrix": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "sliding-window-maximum": {
       "topic": "Data Structures & Algorithms",
