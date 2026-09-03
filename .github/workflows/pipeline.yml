@@ -40,16 +40,24 @@ on:
     - cron: '11 6 * * *'   # 11:41 IST
   workflow_dispatch:
     inputs:
+      only:
+        description: 'Process ONLY these folders, comma-separated (e.g. binary-search,koko-eating-bananas). Overrides backfill.'
+        required: false
+        default: ''
+      force:
+        description: 'Redo work that is already current, and retry files lint gave up on. Empty = off.'
+        required: false
+        default: ''
       exclude:
         description: 'Comma-separated slugs to hold back (empty = process everything)'
         required: false
         default: ''
       backfill:
-        description: 'Backfill folders that already have solutions (classify + teach). Empty = off.'
+        description: 'Backfill folders that already have solutions. Ignored when "only" is set. Empty = off.'
         required: false
         default: ''
       limit:
-        description: 'Max folders to process this run'
+        description: 'Max folders to process this run. Ignored when "only" is set.'
         required: false
         default: '5'
 
@@ -124,6 +132,18 @@ jobs:
           fi
           [ "$bad" -eq 0 ] && echo "clean"
 
+      - name: Resolve the folders named in "only"
+        id: only
+        if: github.event.inputs.only != ''
+        env:
+          ONLY: ${{ github.event.inputs.only }}
+        run: |
+          set -euo pipefail
+          # Fail here rather than three steps later. A slug with a typo is not an
+          # error to any single script - classify just says "no folder with that
+          # slug" and exits 0 - so the run would go green having done nothing.
+          node scripts/resolve-slugs.mjs "$ONLY"
+
       - name: Guard - the lint safety check must still work
         run: |
           # sameShape() is the only thing standing between the lint model and
@@ -132,31 +152,42 @@ jobs:
           node scripts/lib/csharp.test.mjs
 
       - name: Install Claude Code
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Choose the backfill batch
         id: batch
-        if: github.event.inputs.backfill != ''
+        if: github.event.inputs.backfill != '' && github.event.inputs.only == ''
         run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs.limit || '5' }}"
 
       - name: Lint - spacing and variable names
         id: lint
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
-          BATCH: ${{ steps.batch.outputs.slugs }}
+          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
+          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
+          ONLY: ${{ github.event.inputs.only }}
+          LIMIT_IN: ${{ github.event.inputs.limit }}
+          FORCE: ${{ github.event.inputs.force }}
         run: |
           set -euo pipefail
           # Lint runs BEFORE classify. The header, the teaching block and the
           # visualizer all name variables, so renaming after they are written
           # would leave every one of them describing code that no longer exists.
-          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          # A named list is not a queue: process all of it, whatever --limit says.
+          limit="${LIMIT_IN:-5}"
+          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
+          fi
+          if [ -n "${FORCE:-}" ]; then
+            # Also the only way back for a file lint recorded as failed twice.
+            args+=(--force)
           fi
           if [ -n "$BEFORE_SHA" ]; then
             args+=(--exclude-changed-since "$BEFORE_SHA")
@@ -165,17 +196,23 @@ jobs:
 
       - name: Classify, rename and write headers
         id: classify
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
-          BATCH: ${{ steps.batch.outputs.slugs }}
+          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
+          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
+          ONLY: ${{ github.event.inputs.only }}
+          LIMIT_IN: ${{ github.event.inputs.limit }}
         run: |
           set -euo pipefail
-          args=(--apply --verbose --limit "${{ github.event.inputs.limit || '5' }}")
+          # A named list is not a queue: process all of it, whatever --limit says.
+          limit="${LIMIT_IN:-5}"
+          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          args=(--apply --verbose --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
           fi
@@ -189,7 +226,7 @@ jobs:
 
       - name: Write teaching blocks
         id: teach
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -197,12 +234,19 @@ jobs:
           # classify renames the raw submissions away, so teach cannot rediscover
           # what was just processed - it has to be told.
           APPLIED: ${{ steps.classify.outputs.applied }}
-          BATCH: ${{ steps.batch.outputs.slugs }}
+          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
+          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
+          ONLY: ${{ github.event.inputs.only }}
+          LIMIT_IN: ${{ github.event.inputs.limit }}
+          FORCE: ${{ github.event.inputs.force }}
         run: |
           set -euo pipefail
-          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          # A named list is not a queue: process all of it, whatever --limit says.
+          limit="${LIMIT_IN:-5}"
+          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
-            # No --force: headerSignature now carries a fingerprint of the code,
+            # No --force by default: headerSignature now carries a fingerprint of the code,
             # so a lint rename invalidates the block and it is rewritten anyway.
             # Forcing spent Opus rewriting blocks that were already correct.
             args+=(--slug "$BATCH")
@@ -212,22 +256,39 @@ jobs:
             echo "classify processed nothing - no teaching blocks to write"
             exit 0
           fi
+          if [ -n "${FORCE:-}" ]; then
+            args+=(--force)
+          fi
           node scripts/teach.mjs "${args[@]}"
 
       - name: Build visualizers for problems that have none
         id: visualize
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
-          BATCH: ${{ steps.batch.outputs.slugs }}
+          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
+          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
+          ONLY: ${{ github.event.inputs.only }}
+          LIMIT_IN: ${{ github.event.inputs.limit }}
           APPLIED: ${{ steps.classify.outputs.applied }}
+          FORCE: ${{ github.event.inputs.force }}
         run: |
           set -euo pipefail
-          args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
+          # A named list is not a queue: process all of it, whatever --limit says.
+          limit="${LIMIT_IN:-5}"
+          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
-            args+=(--backfill --slug "$BATCH")
+            args+=(--slug "$BATCH")
+            # --backfill here means "replace a visualizer that already exists",
+            # including the ones built by hand. That is the backfill queue's job.
+            # Naming a folder must not silently destroy a hand-built animation,
+            # so a named run only replaces one when force says to.
+            if [ -z "${ONLY:-}" ] || [ -n "${FORCE:-}" ]; then
+              args+=(--backfill)
+            fi
           elif [ -n "${APPLIED:-}" ]; then
             # Scope to what classify just processed. Unscoped, this step targets
             # ANY folder lacking a visualizer, so a run could spend Opus on an
@@ -277,6 +338,8 @@ jobs:
         env:
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           DETECT_JSON: ${{ runner.temp }}/detect.json
+          ONLY_BATCH: ${{ github.event.inputs.only }}
+          FORCED: ${{ github.event.inputs.force }}
           BACKFILL_BATCH: ${{ steps.batch.outputs.slugs }}
           BACKFILL_REMAINING: ${{ steps.batch.outputs.remaining }}
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}

@@ -111,6 +111,43 @@ before it touches the file. `--verbose` on `classify` adds the model's reasoning
 
 ---
 
+## "Just do these folders, nothing else"
+
+**Actions → NeetCode pipeline → Run workflow**, and put the folder names in `only`:
+
+| Field | Put this |
+|---|---|
+| `only` | `binary-search` — or `binary-search,eating-bananas` for several |
+| `force` | leave empty (see below) |
+| everything else | leave empty |
+
+That is the whole run. It does not look at new submissions, it does not touch the backfill
+queue, and it ignores `limit` — you named the list, so it does all of it.
+
+The names are the **folder names** under `Data Structures & Algorithms`. A typo stops the
+run immediately, before a single AI call, and tells you what you probably meant:
+
+```
+::error::no folder named "binry-search" - did you mean "binary-search"?
+```
+
+### `force`
+
+Leave it empty almost always. Empty means "bring this folder up to standard", so anything
+already correct is left alone — which is usually the whole point, since rewriting a correct
+teaching block just reworders it and costs Opus.
+
+Put anything in the box (`yes`) and the run instead means "do it again anyway":
+
+- lint retries a file it had given up on after two rejections
+- the teaching block is rewritten even though nothing about the code changed
+- **the visualizer is rebuilt, including one you built by hand**
+
+That last one is why `force` is a separate box. Without it, a named run will never
+overwrite a hand-built animation.
+
+---
+
 ## "Bring my old problems up to the current standard" (backfill)
 
 **Use the workflow for this**, not your laptop — it's the slowest and most expensive job.
@@ -121,7 +158,9 @@ before it touches the file. `--verbose` on `classify` adds the model's reasoning
 |---|---|
 | `backfill` | `yes` |
 | `limit` | `1` the first time. Raise it once you've read the result. |
-| `exclude` | leave empty |
+| `only`, `force`, `exclude` | leave empty |
+
+`only` and `backfill` are opposites: naming folders wins, and backfill is skipped entirely.
 
 ### How backfill knows what's left
 
