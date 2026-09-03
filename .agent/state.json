@@ -88,17 +88,7 @@
       "fingerprints": {
         "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
       },
-      "lint": {
-        "submission-1.cs": {
-          "version": 1,
-          "codePrint": "6a2357968a06",
-          "renames": [
-            "l->left",
-            "r->right",
-            "t->searchTarget"
-          ]
-        }
-      },
+      "lint": {},
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
@@ -276,17 +266,7 @@
       "fingerprints": {
         "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
       },
-      "lint": {
-        "submission-0.cs": {
-          "version": 1,
-          "codePrint": "a6ef6f5741d5",
-          "renames": [
-            "h->hoursLimit",
-            "l->low",
-            "r->high"
-          ]
-        }
-      },
+      "lint": {},
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer (eating speed), linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
@@ -1080,28 +1060,7 @@
         "1fe0243b4ec5bf9f183fa13fcb86060d967cde01ff4a368bc3d3e68a38a34492": "optimal.cs",
         "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs"
       },
-      "lint": {
-        "submission-0.cs": {
-          "version": 1,
-          "codePrint": "10e131c67162",
-          "renames": [
-            "arr->row",
-            "res->found",
-            "l->left",
-            "r->right"
-          ]
-        },
-        "submission-1.cs": {
-          "version": 1,
-          "codePrint": "1fe0243b4ec5",
-          "renames": [
-            "ROWS->rows",
-            "COLS->cols",
-            "l->left",
-            "r->right"
-          ]
-        }
-      },
+      "lint": {},
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"treat matrix as one flattened sorted array and binary search via index conversion\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
         "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"binary search each row independently\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"

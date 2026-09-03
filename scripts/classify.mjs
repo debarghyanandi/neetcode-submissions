@@ -404,6 +404,18 @@ for (const p of targets) {
       };
     }
     rec.classification = { ...(rec.classification ?? {}), ...nextClass };
+
+    // Lint records are keyed by filename too, and lint runs BEFORE this rename.
+    // Left alone they point at submission-N.cs, a name that no longer exists, so
+    // the curated file looks unlinted and every future backfill pays to lint it
+    // again while the dead key lingers forever.
+    if (rec.lint) {
+      const nextLint = {};
+      for (const [origin, finalName] of plan.names) {
+        if (rec.lint[origin]) nextLint[finalName] = rec.lint[origin];
+      }
+      rec.lint = nextLint;
+    }
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
     applied.push(p.slug);
