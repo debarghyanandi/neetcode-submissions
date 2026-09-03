@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-03T00:37:41.625Z",
+  "updatedAt": "2026-09-03T01:02:51.671Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -257,14 +257,52 @@
     },
     "eating-bananas": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
+      },
+      "fingerprints": {
+        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
+      },
+      "lint": {
+        "submission-0.cs": {
+          "version": 1,
+          "codePrint": "a6ef6f5741d5",
+          "renames": [
+            "h->hoursLimit",
+            "l->low",
+            "r->high"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer (eating speed), linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log k)",
+          "space": "O(1)",
+          "algorithm": "binary search on answer (eating speed), linear feasibility check",
+          "approachKey": "binary-search-on-speed",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer (eating speed), linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      }
     },
     "evaluate-reverse-polish-notation": {
       "topic": "Data Structures & Algorithms",
@@ -1020,15 +1058,21 @@
     },
     "search-2d-matrix": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {},
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1fe0243b4ec5bf9f183fa13fcb86060d967cde01ff4a368bc3d3e68a38a34492": "optimal.cs",
+        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "1fe0243b4ec5bf9f183fa13fcb86060d967cde01ff4a368bc3d3e68a38a34492": "optimal.cs",
+        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs"
+      },
       "lint": {
         "submission-0.cs": {
           "version": 1,
@@ -1050,6 +1094,44 @@
             "r->right"
           ]
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"treat matrix as one flattened sorted array and binary search via index conversion\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"binary search each row independently\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(log(m*n))",
+          "space": "O(1)",
+          "algorithm": "treat matrix as one flattened sorted array and binary search via index conversion",
+          "approachKey": "flattened-binary-search",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(m log n)",
+          "space": "O(log n)",
+          "algorithm": "binary search each row independently",
+          "approachKey": "row-wise-binary-search",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"treat matrix as one flattened sorted array and binary search via index conversion\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"binary search each row independently\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       }
     },
     "sliding-window-maximum": {
