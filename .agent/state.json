@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-02T23:15:04.852Z",
+  "updatedAt": "2026-09-03T00:37:41.625Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -254,6 +254,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
         "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, build full set then compare sizes\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       }
+    },
+    "eating-bananas": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "evaluate-reverse-polish-notation": {
       "topic": "Data Structures & Algorithms",
@@ -1017,7 +1028,29 @@
         "submission-1.cs"
       ],
       "knownFingerprints": {},
-      "fingerprints": {}
+      "fingerprints": {},
+      "lint": {
+        "submission-0.cs": {
+          "version": 1,
+          "codePrint": "10e131c67162",
+          "renames": [
+            "arr->row",
+            "res->found",
+            "l->left",
+            "r->right"
+          ]
+        },
+        "submission-1.cs": {
+          "version": 1,
+          "codePrint": "1fe0243b4ec5",
+          "renames": [
+            "ROWS->rows",
+            "COLS->cols",
+            "l->left",
+            "r->right"
+          ]
+        }
+      }
     },
     "sliding-window-maximum": {
       "topic": "Data Structures & Algorithms",

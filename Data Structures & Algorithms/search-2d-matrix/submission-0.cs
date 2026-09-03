@@ -1,31 +1,32 @@
-public class Solution {
-    public bool SearchMatrix(int[][] matrix, int target) {
-        //My solution
-        //this is good but mLogn
-        //we need log(m*n)
-        foreach (int[] arr in matrix)
+public class Solution
+{
+    public bool SearchMatrix(int[][] matrix, int target)
+    {
+        // My solution
+        // this is good but mLogn
+        // we need log(m*n)
+        foreach (int[] row in matrix)
         {
-            bool res = BinarySearch(0, arr.Length -1, target, arr);
-            if(res == true)
-            return res;
+            bool found = BinarySearch(0, row.Length - 1, target, row);
+            if (found == true)
+                return found;
         }
         return false;
     }
 
-    private bool BinarySearch(int l, int r, int target, int[] nums)
+    private bool BinarySearch(int left, int right, int target, int[] nums)
     {
-        if (l > r)
+        if (left > right)
             return false;
 
-        int mid = l + (r - l) / 2;
+        int mid = left + (right - left) / 2;
 
         if (nums[mid] == target)
             return true;
 
         if (nums[mid] < target)
-            return BinarySearch(mid + 1, r, target, nums);
+            return BinarySearch(mid + 1, right, target, nums);
 
-        return BinarySearch(l, mid - 1, target, nums);
+        return BinarySearch(left, mid - 1, target, nums);
     }
 }
-
