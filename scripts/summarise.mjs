@@ -20,8 +20,8 @@ const detectFile = env('DETECT_JSON');
 const trigger = env('GITHUB_EVENT_NAME');
 const actor = env('GITHUB_ACTOR');
 const batch = env('BACKFILL_BATCH');
-const only = env('ONLY_BATCH');
-const forced = env('FORCED');
+const named = env('NAMED_BATCH');
+const redo = env('REDO');
 const remaining = env('BACKFILL_REMAINING');
 const headMsg = env('HEAD_COMMIT_MESSAGE').split('\n')[0];
 
@@ -61,10 +61,12 @@ if (detect) {
   w();
 }
 
-if (only) {
-  w(`**You asked for these folders only:** ${only.split(',').map((s) => `\`${s.trim()}\``).join(', ')}`);
+if (named) {
+  w(`**You asked for these folders only:** ${named.split(',').map((s) => `\`${s.trim()}\``).join(', ')}`);
   w();
-  w('> Nothing else was looked at this run - not the backfill queue, not new submissions.');
+  w(redo
+    ? '> Redone from scratch. Nothing else was looked at - not the backlog, not new submissions.'
+    : '> Brought up to the current standard. Nothing else was looked at - not the backlog, not new submissions.');
   w();
 } else if (batch) {
   w(`**Backfill batch:** ${batch.split(',').map((s) => `\`${s}\``).join(', ')}`);
@@ -72,8 +74,8 @@ if (only) {
   w();
 }
 
-if (forced) {
-  w('**Force was on:** work that was already current was redone, and files lint had given up on were retried.');
+if (named && redo) {
+  w('Work already at the current standard was redone, files lint had given up on were retried, and the visualizer was rebuilt from scratch.');
   w();
 }
 

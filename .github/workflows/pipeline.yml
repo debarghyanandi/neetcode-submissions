@@ -39,25 +39,25 @@ on:
     - cron: '37 5 * * *'   # 11:07 IST
     - cron: '11 6 * * *'   # 11:41 IST
   workflow_dispatch:
+    # Three boxes, and the third only matters when the first is empty.
+    #
+    #   folders   backfill   what the run does
+    #   -------   --------   --------------------------------------------------
+    #   empty     empty      whatever is pending. The ordinary manual run.
+    #   set       empty      those folders, up to the current standard.
+    #   set       yes        those folders, redone from scratch.
+    #   empty     yes        the backlog, backfill_limit folders of it.
     inputs:
-      only:
-        description: 'Process ONLY these folders, comma-separated (e.g. binary-search,koko-eating-bananas). Overrides backfill.'
-        required: false
-        default: ''
-      force:
-        description: 'Redo work that is already current, and retry files lint gave up on. Empty = off.'
-        required: false
-        default: ''
-      exclude:
-        description: 'Comma-separated slugs to hold back (empty = process everything)'
+      folders:
+        description: 'Folders to process, comma-separated. Empty = whatever is pending.'
         required: false
         default: ''
       backfill:
-        description: 'Backfill folders that already have solutions. Ignored when "only" is set. Empty = off.'
+        description: 'yes = redo work that is already done. Empty = off.'
         required: false
         default: ''
-      limit:
-        description: 'Max folders to process this run. Ignored when "only" is set.'
+      backfill_limit:
+        description: 'How many backlog folders. Only used when Folders is empty.'
         required: false
         default: '5'
 
@@ -98,7 +98,6 @@ jobs:
           # Empty on cron and manual runs - which is what makes those drain
           # everything, including the folder a push would have held back.
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
-          MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
         run: |
           set -euo pipefail
           args=()
@@ -108,9 +107,6 @@ jobs:
           # up last in a step it becomes the step's exit code. Not worth the trap.
           if [ -n "$BEFORE_SHA" ]; then
             args+=(--exclude-changed-since "$BEFORE_SHA")
-          fi
-          if [ -n "${MANUAL_EXCLUDE:-}" ]; then
-            args+=(--exclude "$MANUAL_EXCLUDE")
           fi
           node scripts/detect.mjs "${args[@]}"
           node scripts/detect.mjs "${args[@]}" --json > "$RUNNER_TEMP/detect.json"
@@ -132,11 +128,11 @@ jobs:
           fi
           [ "$bad" -eq 0 ] && echo "clean"
 
-      - name: Resolve the folders named in "only"
-        id: only
-        if: github.event.inputs.only != ''
+      - name: Resolve the folders you named
+        id: named
+        if: github.event.inputs.folders != ''
         env:
-          ONLY: ${{ github.event.inputs.only }}
+          ONLY: ${{ github.event.inputs.folders }}
         run: |
           set -euo pipefail
           # Fail here rather than three steps later. A slug with a typo is not an
@@ -152,27 +148,28 @@ jobs:
           node scripts/lib/csharp.test.mjs
 
       - name: Install Claude Code
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Choose the backfill batch
         id: batch
-        if: github.event.inputs.backfill != '' && github.event.inputs.only == ''
-        run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs.limit || '5' }}"
+        if: github.event.inputs.backfill != '' && github.event.inputs.folders == ''
+        run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs.backfill_limit || '5' }}"
 
       - name: Lint - spacing and variable names
         id: lint
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
-          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
-          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
-          ONLY: ${{ github.event.inputs.only }}
-          LIMIT_IN: ${{ github.event.inputs.limit }}
-          FORCE: ${{ github.event.inputs.force }}
+          # A named folder is an explicit instruction; the backfill batch is a
+          # queue. Naming folders wins, and the queue is not consulted at all.
+          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs.folders }}
+          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
+          REDO: ${{ github.event.inputs.backfill }}
         run: |
           set -euo pipefail
           # Lint runs BEFORE classify. The header, the teaching block and the
@@ -180,12 +177,12 @@ jobs:
           # would leave every one of them describing code that no longer exists.
           # A named list is not a queue: process all of it, whatever --limit says.
           limit="${LIMIT_IN:-5}"
-          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          if [ -n "${NAMED:-}" ]; then limit=0; fi
           args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
           fi
-          if [ -n "${FORCE:-}" ]; then
+          if [ -n "${NAMED:-}" ] && [ -n "${REDO:-}" ]; then
             # Also the only way back for a file lint recorded as failed twice.
             args+=(--force)
           fi
@@ -196,22 +193,22 @@ jobs:
 
       - name: Classify, rename and write headers
         id: classify
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
-          MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
-          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
-          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
-          ONLY: ${{ github.event.inputs.only }}
-          LIMIT_IN: ${{ github.event.inputs.limit }}
+          # A named folder is an explicit instruction; the backfill batch is a
+          # queue. Naming folders wins, and the queue is not consulted at all.
+          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs.folders }}
+          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
           limit="${LIMIT_IN:-5}"
-          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          if [ -n "${NAMED:-}" ]; then limit=0; fi
           args=(--apply --verbose --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
@@ -219,14 +216,11 @@ jobs:
           if [ -n "$BEFORE_SHA" ]; then
             args+=(--exclude-changed-since "$BEFORE_SHA")
           fi
-          if [ -n "${MANUAL_EXCLUDE:-}" ]; then
-            args+=(--exclude "$MANUAL_EXCLUDE")
-          fi
           node scripts/classify.mjs "${args[@]}"
 
       - name: Write teaching blocks
         id: teach
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -234,16 +228,17 @@ jobs:
           # classify renames the raw submissions away, so teach cannot rediscover
           # what was just processed - it has to be told.
           APPLIED: ${{ steps.classify.outputs.applied }}
-          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
-          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
-          ONLY: ${{ github.event.inputs.only }}
-          LIMIT_IN: ${{ github.event.inputs.limit }}
-          FORCE: ${{ github.event.inputs.force }}
+          # A named folder is an explicit instruction; the backfill batch is a
+          # queue. Naming folders wins, and the queue is not consulted at all.
+          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs.folders }}
+          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
+          REDO: ${{ github.event.inputs.backfill }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
           limit="${LIMIT_IN:-5}"
-          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          if [ -n "${NAMED:-}" ]; then limit=0; fi
           args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             # No --force by default: headerSignature now carries a fingerprint of the code,
@@ -256,37 +251,40 @@ jobs:
             echo "classify processed nothing - no teaching blocks to write"
             exit 0
           fi
-          if [ -n "${FORCE:-}" ]; then
+          if [ -n "${NAMED:-}" ] && [ -n "${REDO:-}" ]; then
             args+=(--force)
           fi
           node scripts/teach.mjs "${args[@]}"
 
       - name: Build visualizers for problems that have none
         id: visualize
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.only != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
-          # "only" wins: a named folder is an explicit instruction, backfill is a queue.
-          BATCH: ${{ github.event.inputs.only || steps.batch.outputs.slugs }}
-          ONLY: ${{ github.event.inputs.only }}
-          LIMIT_IN: ${{ github.event.inputs.limit }}
+          # A named folder is an explicit instruction; the backfill batch is a
+          # queue. Naming folders wins, and the queue is not consulted at all.
+          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs.folders }}
+          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
           APPLIED: ${{ steps.classify.outputs.applied }}
-          FORCE: ${{ github.event.inputs.force }}
+          REDO: ${{ github.event.inputs.backfill }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
           limit="${LIMIT_IN:-5}"
-          if [ -n "${ONLY:-}" ]; then limit=0; fi
+          if [ -n "${NAMED:-}" ]; then limit=0; fi
           args=(--apply --limit "$limit")
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
             # --backfill here means "replace a visualizer that already exists",
-            # including the ones built by hand. That is the backfill queue's job.
-            # Naming a folder must not silently destroy a hand-built animation,
-            # so a named run only replaces one when force says to.
-            if [ -z "${ONLY:-}" ] || [ -n "${FORCE:-}" ]; then
+            # including the ones built by hand. Naming a folder must not silently
+            # destroy a hand-built animation, so a named run only replaces one
+            # when backfill says to redo. Without it, a visualizer is still
+            # rebuilt when lint changed the code it animates - that is the
+            # recorded code print's job, not this flag's.
+            if [ -n "${REDO:-}" ]; then
               args+=(--backfill)
             fi
           elif [ -n "${APPLIED:-}" ]; then
@@ -338,8 +336,8 @@ jobs:
         env:
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           DETECT_JSON: ${{ runner.temp }}/detect.json
-          ONLY_BATCH: ${{ github.event.inputs.only }}
-          FORCED: ${{ github.event.inputs.force }}
+          NAMED_BATCH: ${{ github.event.inputs.folders }}
+          REDO: ${{ github.event.inputs.backfill }}
           BACKFILL_BATCH: ${{ steps.batch.outputs.slugs }}
           BACKFILL_REMAINING: ${{ steps.batch.outputs.remaining }}
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
