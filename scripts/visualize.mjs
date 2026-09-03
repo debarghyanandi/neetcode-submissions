@@ -24,6 +24,7 @@ import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, REPO } from './lib/scan.mjs';
 import { stripHeader } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
+import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
 
@@ -138,14 +139,32 @@ function ask(prompt, code) {
 const state = loadState();
 let targets = scanRepo(state);
 if (only) targets = targets.filter((p) => only.includes(p.slug));
+/** What the code looks like now, ignoring comments and whitespace. */
+const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
+  f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body),
+]));
+
 targets = targets.filter((p) => {
   if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) return true;
-  // An existing visualizer is hand-checked work and is not overwritten on an
-  // ordinary run. A backfill is different: lint may have renamed the very
-  // variables the visualizer names, so leaving it would be leaving a lie.
   if (backfill) return true;
-  if (only) console.log(`\n${p.path} already has a visualizer - refusing to overwrite. Use --backfill to replace it.\n`);
-  return false;
+
+  // A visualizer names the variables in the code it animates. lint runs over
+  // EVERY file in a folder, curated ones included, so resubmitting to a problem
+  // you had already curated can rename variables the existing visualizer still
+  // shows. Refusing to overwrite would leave it describing code that is gone.
+  //
+  // So: rebuild when the code has changed since the visualizer was built. A
+  // visualizer with no record of what it was built from is one of the hand-made
+  // ones - left alone on an ordinary run, and backfill's job.
+  const rec = state.problems[p.slug]?.visualizer;
+  if (!rec?.prints) {
+    if (only) console.log(`\n${p.path} has a hand-built visualizer - not overwritten. Use --backfill to replace it.\n`);
+    return false;
+  }
+  const now = codePrints(p, Object.keys(rec.prints).filter((f) => existsSync(join(p.dir, f))));
+  const changed = JSON.stringify(now) !== JSON.stringify(rec.prints);
+  if (!changed && only) console.log(`\n${p.path} visualizer is current - the code it animates has not changed.\n`);
+  return changed;
 });
 if (limit) targets = targets.slice(0, limit);
 
@@ -200,6 +219,9 @@ for (const p of targets) {
   if (doApply) {
     const out = join(p.dir, `${p.slug}-visualizer.html`);
     writeFileSync(out, splice(result.src), 'utf8');
+    // Record what it was built from, so a later code change is detectable.
+    const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+    prec.visualizer = { files: chosen, prints: codePrints(p, chosen), builtAt: new Date().toISOString() };
     console.log(`  wrote ${p.slug}-visualizer.html`);
     report('visualize', p.slug, 'ok', `${chosen.join(' + ')}, validated`);
     wrote++;
