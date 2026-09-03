@@ -113,24 +113,26 @@ before it touches the file. `--verbose` on `classify` adds the model's reasoning
 
 ## The manual run: three boxes
 
-**Actions → NeetCode pipeline → Run workflow.** All three can be left empty.
+**Actions → NeetCode pipeline → Run workflow.** The labels are just the names — GitHub
+renders them as plain text above each box and has no way to show a hint inside one, so the
+explanation is here instead. This is the page to keep open the first few times.
 
-| Box | What it takes |
+| Box | What it is |
 |---|---|
-| **Folders** | Folder names, comma-separated. Empty = whatever is pending. |
-| **Backfill** | `yes` or empty. |
-| **Backfill limit** | A number. Only read when **Folders** is empty. |
+| **Process-Specific-folder** | A text box. Folder names, comma-separated. Empty = whatever is pending. |
+| **Back-Fill** | A checkbox. Ticked = redo work that is already done. |
+| **Back-Fill-Limit** | A number, default `5`. Only read when the first box is empty. |
 
 Between them they give you four runs, and that is the whole surface:
 
-| Folders | Backfill | What happens |
+| Process-Specific-folder | Back-Fill | What happens |
 |---|---|---|
-| *empty* | *empty* | Whatever is pending gets processed. Same as waiting for 11am. |
-| `binary-search` | *empty* | Just that folder, brought up to the current standard. Anything about it that is already correct is left alone. |
-| `binary-search` | `yes` | Just that folder, **redone from scratch** — even the parts that were already correct. |
-| *empty* | `yes` | The backlog, as many folders as **Backfill limit** says. |
+| *empty* | ☐ | Whatever is pending gets processed. Same as waiting for 11am. |
+| `binary-search` | ☐ | Just that folder, brought up to the current standard. Anything about it that is already correct is left alone. |
+| `binary-search` | ☑ | Just that folder, **redone from scratch** — even the parts that were already correct. |
+| *empty* | ☑ | The backlog, as many folders as **Back-Fill-Limit** says. |
 
-Names are the **folder names** under `Data Structures & Algorithms`, and `Folders` takes
+Names are the **folder names** under `Data Structures & Algorithms`, and the box takes
 several: `binary-search,eating-bananas`. A typo stops the run before a single AI call, and
 tells you what you probably meant:
 
@@ -138,21 +140,21 @@ tells you what you probably meant:
 ::error::no folder named "binry-search" - did you mean "binary-search"?
 ```
 
-**Backfill limit is ignored when you name folders.** You named the list, so it does all of
+**Back-Fill-Limit is ignored when you name folders.** You named the list, so it does all of
 it. The limit exists because the backlog is a queue of thirty; a named list is not.
 
-### What "redone from scratch" costs you
+### What ticking Back-Fill costs you
 
-Leave **Backfill** empty for a named folder unless you have a reason. Empty means "bring it
-up to standard", so a correct teaching block is left alone rather than reworded at Opus
-prices. `yes` means "do it again anyway":
+Leave it unticked for a named folder unless you have a reason. Unticked means "bring it up
+to standard", so a correct teaching block is left alone rather than reworded at Opus prices.
+Ticked means "do it again anyway":
 
 - lint retries a file it had given up on after two rejections
 - the teaching block is rewritten even though nothing about the code changed
 - **the visualizer is rebuilt, including one you built by hand**
 
-That last one is the reason the two are separate boxes. Naming a folder on its own will
-never overwrite a hand-built animation.
+That last one is the reason it is a separate box. Naming a folder on its own will never
+overwrite a hand-built animation.
 
 It will still rebuild a **pipeline-built** visualizer when lint changed the code it
 animates — renaming `t` to `target` leaves the animation labelling a variable that no longer
@@ -166,9 +168,9 @@ exists. Spacing-only changes don't count; the comparison ignores whitespace and 
 
 | Box | Put this |
 |---|---|
-| **Folders** | leave empty |
-| **Backfill** | `yes` |
-| **Backfill limit** | `1` the first time. Raise it once you've read the result. |
+| **Process-Specific-folder** | leave empty |
+| **Back-Fill** | tick it |
+| **Back-Fill-Limit** | `1` the first time. Raise it once you've read the result. |
 
 ### How backfill knows what's left
 
@@ -213,8 +215,9 @@ node scripts/visualize.mjs --slug two-integer-sum --apply
 
 Don't like the result? `git checkout -- .` brings the original straight back.
 
-From the workflow instead: **Folders** = the slug, **Backfill** = `yes`. That combination
-is the only thing that replaces a hand-built visualizer, which is why it takes two boxes.
+From the workflow instead: **Process-Specific-folder** = the slug, **Back-Fill** ticked.
+That combination is the only thing that replaces a hand-built visualizer, which is why it
+takes two boxes.
 
 ---
 

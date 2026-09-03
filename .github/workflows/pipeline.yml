@@ -41,23 +41,32 @@ on:
   workflow_dispatch:
     # Three boxes, and the third only matters when the first is empty.
     #
-    #   folders   backfill   what the run does
-    #   -------   --------   --------------------------------------------------
-    #   empty     empty      whatever is pending. The ordinary manual run.
-    #   set       empty      those folders, up to the current standard.
-    #   set       yes        those folders, redone from scratch.
-    #   empty     yes        the backlog, backfill_limit folders of it.
+    #   Process-Specific-folder   Back-Fill   what the run does
+    #   -----------------------   ---------   ---------------------------------
+    #   empty                     off         whatever is pending. The ordinary
+    #                                         manual run.
+    #   set                       off         those folders, brought up to the
+    #                                         current standard.
+    #   set                       on          those folders, redone from scratch.
+    #   empty                     on          the backlog, Back-Fill-Limit
+    #                                         folders of it.
+    #
+    # The labels are just the names. GitHub renders `description` as the label
+    # above the box and supports no placeholder, so an explanation here would
+    # sit on screen permanently, every run, for the life of the workflow. The
+    # explanation lives in COMMANDS.md, which is read once.
     inputs:
-      folders:
-        description: 'Folders to process, comma-separated. Empty = whatever is pending.'
+      Process-Specific-folder:
+        description: 'Process-Specific-folder'
         required: false
         default: ''
-      backfill:
-        description: 'yes = redo work that is already done. Empty = off.'
+      Back-Fill:
+        description: 'Back-Fill'
         required: false
-        default: ''
-      backfill_limit:
-        description: 'How many backlog folders. Only used when Folders is empty.'
+        type: boolean
+        default: false
+      Back-Fill-Limit:
+        description: 'Back-Fill-Limit'
         required: false
         default: '5'
 
@@ -130,9 +139,9 @@ jobs:
 
       - name: Resolve the folders you named
         id: named
-        if: github.event.inputs.folders != ''
+        if: github.event.inputs['Process-Specific-folder'] != ''
         env:
-          ONLY: ${{ github.event.inputs.folders }}
+          ONLY: ${{ github.event.inputs['Process-Specific-folder'] }}
         run: |
           set -euo pipefail
           # Fail here rather than three steps later. A slug with a typo is not an
@@ -148,17 +157,17 @@ jobs:
           node scripts/lib/csharp.test.mjs
 
       - name: Install Claude Code
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Choose the backfill batch
         id: batch
-        if: github.event.inputs.backfill != '' && github.event.inputs.folders == ''
-        run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs.backfill_limit || '5' }}"
+        if: github.event.inputs['Back-Fill'] == 'true' && github.event.inputs['Process-Specific-folder'] == ''
+        run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs['Back-Fill-Limit'] || '5' }}"
 
       - name: Lint - spacing and variable names
         id: lint
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -166,10 +175,10 @@ jobs:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           # A named folder is an explicit instruction; the backfill batch is a
           # queue. Naming folders wins, and the queue is not consulted at all.
-          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
-          NAMED: ${{ github.event.inputs.folders }}
-          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
-          REDO: ${{ github.event.inputs.backfill }}
+          BATCH: ${{ github.event.inputs['Process-Specific-folder'] || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs['Process-Specific-folder'] }}
+          LIMIT_IN: ${{ github.event.inputs['Back-Fill-Limit'] }}
+          REDO: ${{ github.event.inputs['Back-Fill'] == 'true' && 'yes' || '' }}
         run: |
           set -euo pipefail
           # Lint runs BEFORE classify. The header, the teaching block and the
@@ -193,7 +202,7 @@ jobs:
 
       - name: Classify, rename and write headers
         id: classify
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -201,9 +210,9 @@ jobs:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           # A named folder is an explicit instruction; the backfill batch is a
           # queue. Naming folders wins, and the queue is not consulted at all.
-          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
-          NAMED: ${{ github.event.inputs.folders }}
-          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
+          BATCH: ${{ github.event.inputs['Process-Specific-folder'] || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs['Process-Specific-folder'] }}
+          LIMIT_IN: ${{ github.event.inputs['Back-Fill-Limit'] }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
@@ -220,7 +229,7 @@ jobs:
 
       - name: Write teaching blocks
         id: teach
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -230,10 +239,10 @@ jobs:
           APPLIED: ${{ steps.classify.outputs.applied }}
           # A named folder is an explicit instruction; the backfill batch is a
           # queue. Naming folders wins, and the queue is not consulted at all.
-          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
-          NAMED: ${{ github.event.inputs.folders }}
-          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
-          REDO: ${{ github.event.inputs.backfill }}
+          BATCH: ${{ github.event.inputs['Process-Specific-folder'] || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs['Process-Specific-folder'] }}
+          LIMIT_IN: ${{ github.event.inputs['Back-Fill-Limit'] }}
+          REDO: ${{ github.event.inputs['Back-Fill'] == 'true' && 'yes' || '' }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
@@ -258,18 +267,18 @@ jobs:
 
       - name: Build visualizers for problems that have none
         id: visualize
-        if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != '' || github.event.inputs.folders != ''
+        if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           # A named folder is an explicit instruction; the backfill batch is a
           # queue. Naming folders wins, and the queue is not consulted at all.
-          BATCH: ${{ github.event.inputs.folders || steps.batch.outputs.slugs }}
-          NAMED: ${{ github.event.inputs.folders }}
-          LIMIT_IN: ${{ github.event.inputs.backfill_limit }}
+          BATCH: ${{ github.event.inputs['Process-Specific-folder'] || steps.batch.outputs.slugs }}
+          NAMED: ${{ github.event.inputs['Process-Specific-folder'] }}
+          LIMIT_IN: ${{ github.event.inputs['Back-Fill-Limit'] }}
           APPLIED: ${{ steps.classify.outputs.applied }}
-          REDO: ${{ github.event.inputs.backfill }}
+          REDO: ${{ github.event.inputs['Back-Fill'] == 'true' && 'yes' || '' }}
         run: |
           set -euo pipefail
           # A named list is not a queue: process all of it, whatever --limit says.
@@ -336,8 +345,8 @@ jobs:
         env:
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           DETECT_JSON: ${{ runner.temp }}/detect.json
-          NAMED_BATCH: ${{ github.event.inputs.folders }}
-          REDO: ${{ github.event.inputs.backfill }}
+          NAMED_BATCH: ${{ github.event.inputs['Process-Specific-folder'] }}
+          REDO: ${{ github.event.inputs['Back-Fill'] == 'true' && 'yes' || '' }}
           BACKFILL_BATCH: ${{ steps.batch.outputs.slugs }}
           BACKFILL_REMAINING: ${{ steps.batch.outputs.remaining }}
           HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
