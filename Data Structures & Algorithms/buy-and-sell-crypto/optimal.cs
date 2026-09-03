@@ -39,85 +39,81 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Single-pass greedy - running minimum as the buy pointer
+ PATTERN : Sliding Window / Greedy - track the running minimum
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The answer rewrites as: max over every sell day j of prices[j] -
-  min(prices[0..j-1]). Once you see that decomposition, one pass is forced. Each
-  day needs exactly one number from its past - the cheapest price before it -
-  not the whole prefix. So the entire prefix collapses into the single variable
-  buyIndex, and there is nothing left to store.
-BRUTE FORCE AND THE REDUNDANCY
-  The obvious version is two nested loops over all pairs i < j, taking Math.Max
-  over prices[j] - prices[i]. That is O(n^2), and the waste is specific: for
-  each sell day it re-scans the same prefix to rediscover the same minimum. The
-  prefix minimum is incrementally maintainable in O(1) per step, so the inner
-  loop is pure repetition.
+  Every candidate answer is a pair (buy, sell) with buy < sell. Fix the sell day
+  and the search collapses: the best profit ending at sellIndex is
+  prices[sellIndex] minus the smallest price anywhere strictly before it.
+  Nothing else about the prefix matters - not the order, not the second
+  smallest, not where the peaks were. So the whole left side of the array
+  compresses into one fact, the minimum so far, and that fact is maintained for
+  free as the loop walks right. buyIndex is that fact.
+BRUTE FORCE
+  Two nested loops over every i < j, taking the max of prices[j] - prices[i].
+  The waste is that the inner loop recomputes the same prefix minimum from
+  scratch for every j. buyIndex caches that prefix minimum across iterations,
+  and that single caching move is the entire difference between the two
+  solutions - the outer loop over sell days is unchanged.
 INVARIANT
-  At the top of every iteration: prices[buyIndex] ==
-  min(prices[0..sellIndex-1]), and maxProfit == the best profit over all pairs
-  that end strictly before sellIndex.
+  At the top of the iteration for sellIndex:
+  1. prices[buyIndex] is the minimum of prices[0 .. sellIndex-1].
+  2. maxProfit is the best profit over all pairs contained in prices[0 ..
+  sellIndex-1].
 
-  Base: sellIndex == 1, buyIndex == 0, and prices[0] is trivially the min of
-  prices[0..0]; maxProfit == 0 with no pairs yet.
+  The body restores both. The if branch extends (2) to pairs ending at
+  sellIndex; the else branch extends (1) to include sellIndex. On exit sellIndex
+  == prices.Length, so (2) is the answer over the whole array and gets returned
+  directly - there is no post-loop fixup.
+WHY THE BRANCHES ARE COMPLEMENTS
+  The guard prices[sellIndex] > prices[buyIndex] and its else are exact
+  complements, so exactly one fires per day and no day is skipped. A day can
+  never be both a profitable sell and a new low, which is why nothing is lost by
+  making them exclusive.
 
-  Step: if prices[sellIndex] > prices[buyIndex], the prefix minimum is
-  unchanged, so buyIndex correctly stays put and the pair (buyIndex, sellIndex)
-  - the best pair ending at sellIndex - folds into maxProfit. Otherwise
-  prices[sellIndex] <= prices[buyIndex], so prices[sellIndex] is the new prefix
-  minimum and buyIndex = sellIndex restores it. Both branches re-establish the
-  invariant, so at the end maxProfit is the max over all j, which is the answer.
-WHY MOVING BUYINDEX IS SAFE
-  This is the follow-up an interviewer actually asks: how do you know you are
-  not throwing away a good buy day? The else branch is reached only when
-  prices[sellIndex] <= prices[buyIndex]. So the pair (buyIndex, sellIndex) is
-  worth at most 0 and is already covered by the 0 floor on maxProfit -
-  abandoning the old buy day costs nothing today. And for every day after
-  sellIndex, the new buy price is less than or equal to the old one, so it is at
-  least as good. The move is never a gamble; it dominates.
+  In the if branch, Math.Max is still required: a positive profit is not
+  automatically the best profit seen so far. Note also that buyIndex is
+  deliberately NOT advanced here - no cheaper day can have appeared, and a
+  higher sell day may still be coming, so the same buy day is reused.
 
-  Same reason the day at sellIndex is not lost by being consumed as a buy: since
-  its price is a new prefix minimum, no pair ending at it could have been
-  profitable anyway.
-
-  Equal prices also take the else branch and slide the pointer forward. Harmless
-  - same price, later index, strictly fewer future days excluded is not even
-  needed, the profit is identical.
+  In the else branch, prices[sellIndex] - prices[buyIndex] is zero or negative,
+  so there is nothing worth recording, and every future sell day strictly
+  prefers buying at sellIndex over buyIndex. That is why the assignment jumps
+  straight to sellIndex in ONE step: no backward scan, no list of old buy days,
+  because an old buy day can never become useful again.
+WHY AN INDEX, NOT A PRICE
+  buyIndex stores a day rather than a price, so every comparison re-reads
+  prices[buyIndex]. Storing an int minPrice instead would be an equivalent
+  algorithm with the same invariant. Keeping the index is the version that can
+  answer the natural follow-up - which day do I buy, and which day do I sell -
+  by recording sellIndex alongside the maxProfit update.
 WATCH OUT
-  1. buyIndex at return time is NOT the buy day of the winning trade. It keeps
-  moving after the best pair is found. If the variant asks you to report the
-  actual days, snapshot bestBuy = buyIndex and bestSell = sellIndex inside the
-  Math.Max update, comparing explicitly instead of using Math.Max.
-
-  2. maxProfit = 0 encodes the rule "you may decline to trade." If a variant
-  forces exactly one transaction, the answer can be negative and this
-  initialization silently returns the wrong 0. Initialize to int.MinValue there.
-
-  3. Empty and single-element input work by construction: the loop starts at 1
-  and never runs, and prices[0] is never dereferenced outside the loop, so a
-  zero-length array returns 0 rather than throwing.
-
-  4. The if-guard prices[sellIndex] > prices[buyIndex] is not load-bearing for
-  the Math.Max - a non-positive difference would lose to maxProfit anyway. It is
-  load-bearing for the else, which is where the pointer update lives.
-TRIGGER
-  Ordered constraint (the buy must precede the sell) plus an objective that is a
-  difference of two elements. That combination means each right endpoint depends
-  on the min or max of everything to its left, which is a scalar you can carry.
-  When you catch yourself writing a second loop only to recompute a prefix
-  extreme, delete it and hoist the extreme into a variable.
+  - buy-before-sell is enforced by the loop shape, not by a check. buyIndex =
+  sellIndex runs at the end of day sellIndex, and the loop increments before
+  buyIndex is read again, so buyIndex < sellIndex always holds.
+  - Ties fall into the else branch, since the guard is a strict >. Moving
+  buyIndex onto an equally cheap later day changes no future profit, so this is
+  harmless either way, but state it out loud rather than leaving it to the
+  interviewer to ask.
+  - Length 0 or 1 never enters the loop and returns 0. An empty array is safe
+  because buyIndex = 0 is only an assignment - prices[0] is never evaluated.
+  - maxProfit starting at 0 rather than int.MinValue is a claim about the
+  problem, not a convenience: not trading is legal. On a strictly decreasing
+  array the if branch never fires and 0 comes back. If a trade were mandatory
+  and losses had to be reported, that initialization would be the bug.
 FOLLOW-UPS
-  Unlimited transactions: sum every positive prices[i] - prices[i-1]; the greedy
-  pointer disappears entirely. At most k transactions, or a cooldown day, or a
-  per-trade fee: none of these survive a single scalar - they become
-  state-machine DP over (day, transactions used, holding or not).
-
-  Worth knowing the equivalence: build the daily-delta array d[i] = prices[i] -
-  prices[i-1]; this problem is the maximum subarray sum of d, and Kadane's
-  running reset to 0 is exactly the buyIndex = sellIndex move seen from the
-  other side.
+  - "Isn't this Kadane's?" Yes, in disguise. maxProfit equals the maximum
+  subarray sum of the consecutive differences prices[i+1] - prices[i]. The
+  prefix sums of those differences are prices[j] - prices[0], and
+  max-subarray-via-prefix-sums is exactly max over j of P[j] - min of P[i] for i
+  < j - which is this loop, with buyIndex playing the running-minimum role.
+  - Unlimited transactions: the answer becomes the sum of every positive
+  consecutive difference. Still one pass, but a different state - the running
+  minimum stops being the right thing to carry.
+  - At most k transactions, or a cooldown day: greedy breaks and you move to DP
+  over (day, transactions used, holding or not).
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
