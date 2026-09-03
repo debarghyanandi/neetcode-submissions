@@ -175,11 +175,30 @@ for (const p of targets) {
       else {
         console.log(`  ${file.padEnd(22)} attempt ${attempt} REJECTED - the rewrite changed more than names:`);
         check.errors.slice(0, 3).forEach((e) => console.log(`      ${e}`));
-        feedback = check.errors;
+        feedback = [
+        ...check.errors,
+        'Every distinct variable must keep a distinct name. If two variables would end up with the same name, pick different names for both rather than merging them.',
+      ];
       }
     }
 
-    if (!result) { console.log(`  ${file.padEnd(22)} left untouched`); report('lint', p.slug, 'failed', `${file}: rewrite rejected twice`); failures++; continue; }
+    if (!result) {
+      console.log(`  ${file.padEnd(22)} left untouched`);
+      report('lint', p.slug, 'failed', `${file}: rewrite rejected twice - ${(feedback && feedback[0]) || 'unknown'}`);
+      // Record the attempt so the next backfill does not retry it. Two model
+      // calls that end in the same rejection will end in it again, and this
+      // file would otherwise be paid for on every run forever. --force retries.
+      if (doApply) {
+        const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+        (prec.lint ?? (prec.lint = {}))[file] = {
+          version: LINT_FORMAT,
+          failed: true,
+          reason: (feedback && feedback[0]) || 'rewrite rejected twice',
+        };
+      }
+      failures++;
+      continue;
+    }
 
     const same = result.code.trim() === body.trim();
     console.log(`  ${file.padEnd(22)} ${same ? 'nothing to change' : result.renames.length ? 'renames: ' + result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : 'spacing only'}  ·  $${(spend || 0).toFixed(4)}`);

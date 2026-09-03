@@ -31,7 +31,8 @@ const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 const has = (n) => argv.includes(n);
 
-const only = arg('--slug');
+const onlyRaw = arg('--slug');
+const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const model = arg('--model', 'opus');
@@ -136,7 +137,7 @@ function ask(prompt, code) {
 
 const state = loadState();
 let targets = scanRepo(state);
-if (only) targets = targets.filter((p) => p.slug === only);
+if (only) targets = targets.filter((p) => only.includes(p.slug));
 targets = targets.filter((p) => {
   if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) return true;
   // An existing visualizer is hand-checked work and is not overwritten on an

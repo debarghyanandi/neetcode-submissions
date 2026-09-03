@@ -37,7 +37,11 @@ const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 const has = (n) => argv.includes(n);
 
-const only = arg('--slug');
+// A comma-separated list: the backfill batch and classify's own applied list are
+// both handed over as one argument. Comparing with === silently matched nothing
+// and the step reported success having skipped every folder.
+const onlyRaw = arg('--slug');
+const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const verbose = has('--verbose');
 // Per-step model choice, not one global setting.
@@ -222,7 +226,7 @@ const atCurrentStandard = (p) => {
 // folders forever and never reached the rest.
 let targets;
 if (only) {
-  targets = everything.filter((p) => p.slug === only);
+  targets = everything.filter((p) => only.includes(p.slug));
 } else if (has('--backfill')) {
   const all = everything.filter((p) => p.curatedFiles.length);
   targets = has('--force') ? all : all.filter((p) => !atCurrentStandard(p));

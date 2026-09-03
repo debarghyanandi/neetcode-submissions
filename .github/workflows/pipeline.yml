@@ -195,7 +195,10 @@ jobs:
           set -euo pipefail
           args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
           if [ -n "${BATCH:-}" ]; then
-            args+=(--slug "$BATCH" --force)
+            # No --force: headerSignature now carries a fingerprint of the code,
+            # so a lint rename invalidates the block and it is rewritten anyway.
+            # Forcing spent Opus rewriting blocks that were already correct.
+            args+=(--slug "$BATCH")
           elif [ -n "${APPLIED:-}" ]; then
             args+=(--slug "$APPLIED")
           else
