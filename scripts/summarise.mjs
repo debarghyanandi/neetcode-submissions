@@ -49,10 +49,13 @@ if (detect) {
     w('> The daily run picks it up.');
     w();
   }
+  // Captured by detect, before anything ran - so this is what the run set out
+  // to do, not what is still outstanding. Saying "waiting" made finished work
+  // look stuck.
   const sel = detect.selected ?? [];
   w(sel.length
-    ? `**Raw submissions waiting:** ${sel.map((s) => `\`${s.slug}\``).join(', ')}`
-    : '**Raw submissions waiting:** none');
+    ? `**Raw submissions picked up:** ${sel.map((s) => `\`${s.slug}\``).join(', ')}`
+    : '**Raw submissions picked up:** none');
   w();
 }
 
@@ -86,15 +89,38 @@ if (reportFile && existsSync(reportFile)) {
 if (rows.size) {
   w('### What happened to each folder');
   w();
-  w('| Folder | ' + STEPS.map((s) => s[0].toUpperCase() + s.slice(1)).join(' | ') + ' | Notes |');
+  // The Notes column carries ONLY what needs a decision. Cramming every step's
+  // detail into one cell truncated it mid-word and buried the one line that
+  // mattered among five that did not; the rest goes in a foldout below.
+  w('| Folder | ' + STEPS.map((s) => s[0].toUpperCase() + s.slice(1)).join(' | ') + ' | Needs attention |');
   w('|---|' + STEPS.map(() => '---').join('|') + '|---|');
   for (const [slug, cells] of rows) {
     const cols = STEPS.map((s) => (cells[s] ? ICON[cells[s].status] ?? '·' : '·'));
-    const notes = STEPS.flatMap((s) => (cells[s]?.details ?? []).map((d) => d)).join('; ');
-    w(`| \`${slug}\` | ${cols.join(' | ')} | ${notes.slice(0, 160)} |`);
+    const problems = STEPS
+      .filter((s) => cells[s] && (cells[s].status === 'refused' || cells[s].status === 'failed'))
+      .flatMap((s) => cells[s].details.map((d) => `**${s}**: ${d}`))
+      .join('<br>');
+    w(`| \`${slug}\` | ${cols.join(' | ')} | ${problems || '—'} |`);
   }
   w();
   w('✅ done · ⏭️ already current · ⚠️ refused, needs a decision · ❌ failed · · not run');
+  w();
+
+  w('<details><summary>What each step did, folder by folder</summary>');
+  w();
+  for (const [slug, cells] of rows) {
+    w(`**${slug}**`);
+    w();
+    for (const step of STEPS) {
+      const c = cells[step];
+      if (!c) continue;
+      for (const d of (c.details.length ? c.details : ['(no detail recorded)'])) {
+        w(`- ${ICON[c.status] ?? '·'} \`${step}\` — ${d}`);
+      }
+    }
+    w();
+  }
+  w('</details>');
   w();
 } else {
   w('_No folder was processed this run._');

@@ -195,7 +195,7 @@ for (const p of targets) {
         codePrint: shortPrint(result.code),
         renames: result.renames.map(([a, b]) => `${a}->${b}`),
       };
-      report('lint', p.slug, 'ok', same ? `${file}: nothing to change` : `${file}: ${result.renames.length ? result.renames.map(([a,b])=>`${a}->${b}`).join(' ') : 'spacing'}`);
+      report('lint', p.slug, 'ok', `${file}: ${result.renames.length ? result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : same ? 'nothing to change' : 'spacing tidied'}`);
       if (!same) { changed++; touchedSlugs.add(p.slug); }
     }
   }

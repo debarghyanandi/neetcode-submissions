@@ -403,7 +403,9 @@ for (const p of targets) {
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
     applied.push(p.slug);
-    report('classify', p.slug, 'ok', `${moves.length} rename(s), ${wrote} header(s)`);
+    report('classify', p.slug, 'ok', moves.length
+      ? [...plan.names].filter(([f, t]) => f !== t).map(([f, t]) => `${f.replace(/\.cs$/, '')} -> ${t.replace(/\.cs$/, '')}`).join(', ')
+      : `${wrote} header(s) rewritten, no renames`);
 
     // Duplicates: recorded as handled so they stop showing up as pending.
     if (dupes.length) {

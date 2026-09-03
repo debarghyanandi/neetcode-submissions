@@ -200,7 +200,7 @@ for (const p of targets) {
     const out = join(p.dir, `${p.slug}-visualizer.html`);
     writeFileSync(out, splice(result.src), 'utf8');
     console.log(`  wrote ${p.slug}-visualizer.html`);
-    report('visualize', p.slug, 'ok', `${result.src.length} bytes, validated`);
+    report('visualize', p.slug, 'ok', `${chosen.join(' + ')}, validated`);
     wrote++;
   }
   endGroup();
