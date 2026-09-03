@@ -144,6 +144,7 @@ const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
   f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body),
 ]));
 
+const skipped = [];
 targets = targets.filter((p) => {
   if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) return true;
   if (backfill) return true;
@@ -158,14 +159,28 @@ targets = targets.filter((p) => {
   // ones - left alone on an ordinary run, and backfill's job.
   const rec = state.problems[p.slug]?.visualizer;
   if (!rec?.prints) {
-    if (only) console.log(`\n${p.path} has a hand-built visualizer - not overwritten. Use --backfill to replace it.\n`);
+    if (only) {
+      console.log(`\n${p.path} has a hand-built visualizer - not overwritten. --backfill replaces it (tick Back-Fill in the workflow).\n`);
+      skipped.push([p.slug, 'hand-built visualizer left alone - tick Back-Fill to replace it']);
+    }
     return false;
   }
   const now = codePrints(p, Object.keys(rec.prints).filter((f) => existsSync(join(p.dir, f))));
   const changed = JSON.stringify(now) !== JSON.stringify(rec.prints);
-  if (!changed && only) console.log(`\n${p.path} visualizer is current - the code it animates has not changed.\n`);
+  if (!changed && only) {
+    console.log(`\n${p.path} visualizer is current - the code it animates has not changed.\n`);
+    skipped.push([p.slug, 'current - the code it animates has not changed']);
+  }
   return changed;
 });
+
+// Deciding NOT to rebuild is a result, and the summary has a column for this
+// step. Without these the table showed "not run" for a folder the step had
+// looked at and made a correct call on - the one reading that most invites a
+// pointless second run. Only reported for folders you named: on an ordinary
+// run this filter drops every folder that is already fine, and thirty rows
+// saying "nothing needed" is not a summary.
+for (const [slug, why] of skipped) report('visualize', slug, 'skipped', why);
 if (limit) targets = targets.slice(0, limit);
 
 if (!targets.length) { console.log('\nNothing to build - every problem already has a visualizer.\n'); process.exit(0); }

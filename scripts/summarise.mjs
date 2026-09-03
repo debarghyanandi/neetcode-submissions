@@ -117,7 +117,7 @@ if (rows.size) {
     w(`| \`${slug}\` | ${cols.join(' | ')} | ${problems || '—'} |`);
   }
   w();
-  w('✅ done · ⏭️ already current · ⚠️ refused, needs a decision · ❌ failed · · not run');
+  w('✅ done · ⏭️ looked at, nothing needed · ⚠️ refused, needs a decision · ❌ failed · · not run');
   w();
 
   w('<details><summary>What each step did, folder by folder</summary>');
