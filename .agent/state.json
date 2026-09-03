@@ -88,13 +88,7 @@
       "fingerprints": {
         "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
       },
-      "lint": {
-        "optimal.cs": {
-          "version": 1,
-          "failed": true,
-          "reason": "token 45 changed kind (id -> kw) near: int right , int searchTarget , int ["
-        }
-      },
+      "lint": {},
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },

@@ -124,6 +124,13 @@ jobs:
           fi
           [ "$bad" -eq 0 ] && echo "clean"
 
+      - name: Guard - the lint safety check must still work
+        run: |
+          # sameShape() is the only thing standing between the lint model and
+          # the code. If its own test suite fails, the guard has a hole or a
+          # false alarm - stop before spending a single model call.
+          node scripts/lib/csharp.test.mjs
+
       - name: Install Claude Code
         if: steps.detect.outputs.count != '0' || github.event.inputs.backfill != ''
         run: npm install -g @anthropic-ai/claude-code

@@ -44,18 +44,22 @@ been dealt with yet. If it says `nothing to do`, the pipeline is idle.
 
 ## "Process one problem right now, don't wait for 11am"
 
-Three commands, in this order. Replace `two-integer-sum` with your problem's folder name.
+Four commands, in this order. Replace `two-integer-sum` with your problem's folder name.
 
 ```powershell
-node scripts/classify.mjs --slug two-integer-sum --apply
-node scripts/teach.mjs --slug two-integer-sum --apply
+node scripts/lint.mjs      --slug two-integer-sum --apply
+node scripts/classify.mjs  --slug two-integer-sum --apply
+node scripts/teach.mjs     --slug two-integer-sum --apply
 node scripts/visualize.mjs --slug two-integer-sum --apply
 ```
 
-1. **classify** — reads the code, works out the complexity, renames files to
+1. **lint** — tidies spacing and renames cryptic variables (`t` → `target`). Runs first
+   on purpose: everything after it describes your code by name, so the names have to be
+   final before anything is written about them.
+2. **classify** — reads the code, works out the complexity, renames files to
    `optimal.cs` / `suboptimal.cs`, writes the short header at the top.
-2. **teach** — writes the long study block at the bottom.
-3. **visualize** — builds the animation, but *only if this problem doesn't have one*.
+3. **teach** — writes the long study block at the bottom.
+4. **visualize** — builds the animation, but *only if this problem doesn't have one*.
 
 Then check and save:
 
@@ -67,7 +71,29 @@ git push
 ```
 
 **Order matters.** `teach` needs the complexity that `classify` records. If it says
-`no classification on record`, you skipped step 1.
+`no classification on record`, you skipped a step.
+
+### What lint is and isn't allowed to do
+
+Only three things: whitespace, comments, and the names of local variables and parameters.
+Every rewrite is compared to the original token by token before it is written, so a model
+that "improves" a comparison, drops a line, or renames a method has its whole file thrown
+away rather than saved. Your own comments are protected too — they can be reworded when a
+rename makes one name a variable that no longer exists, but deleting one fails the file.
+
+If a file is refused twice, lint records the failure and stops paying to retry it. Retry it
+by hand once the cause is fixed:
+
+```powershell
+node scripts/lint.mjs --slug two-integer-sum --apply --force
+```
+
+The guard itself has a test suite. It runs in the workflow before any model call, and you
+can run it locally any time — it costs nothing:
+
+```powershell
+node scripts/lib/csharp.test.mjs
+```
 
 ---
 
@@ -225,19 +251,19 @@ outcome.
 
 | Flag | Works on | Meaning |
 |---|---|---|
-| `--apply` | classify, teach, visualize | Actually change files. Without it, dry run. |
-| `--slug <name>` | classify, teach, visualize | Just this one problem folder. |
-| `--limit <n>` | classify, teach, visualize | Process at most this many folders. |
-| `--backfill` | classify, teach | Include old folders, skipping ones already done. |
-| `--force` | teach | Rewrite even if nothing changed. |
+| `--apply` | lint, classify, teach, visualize | Actually change files. Without it, dry run. |
+| `--slug <name>` | lint, classify, teach, visualize | Just this one problem folder. Comma-separated for several. |
+| `--limit <n>` | lint, classify, teach, visualize | Process at most this many folders. |
+| `--backfill` | lint, classify, teach | Include old folders, skipping ones already done. |
+| `--force` | lint, teach | Rewrite even if nothing changed, and retry a file lint gave up on. |
 | `--verbose` | classify | Show the model's reasoning. |
-| `--model <name>` | classify, teach, visualize | Override the model: `sonnet`, `opus`, `haiku`. |
-| `--exclude <slugs>` | detect, classify | Hold these back. Comma-separated. |
+| `--model <name>` | lint, classify, teach, visualize | Override the model: `sonnet`, `opus`, `haiku`. |
+| `--exclude <slugs>` | detect, lint, classify | Hold these back. Comma-separated. |
 | `--dry-run` | apply | Report without writing. |
 | `--json` | detect | Machine-readable output. |
 | `--delete-duplicates` | classify | Remove a resubmission identical to code you already have. |
 
-Defaults worth knowing: `classify` uses **Sonnet**, `teach` and `visualize` use **Opus**.
+Defaults worth knowing: `lint` and `classify` use **Sonnet**, `teach` and `visualize` use **Opus**.
 `--slug` works on any folder, whether or not it has new submissions.
 
 ---

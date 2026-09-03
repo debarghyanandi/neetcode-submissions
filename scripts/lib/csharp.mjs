@@ -20,7 +20,20 @@ const KEYWORDS = new Set([
   'params','private','protected','public','readonly','ref','return','sbyte','sealed','short',
   'sizeof','stackalloc','static','string','struct','switch','this','throw','true','try','typeof',
   'uint','ulong','unchecked','unsafe','ushort','using','var','virtual','void','volatile','while',
-  'yield','async','await','get','set','value','nameof','when','where',
+]);
+
+// C# contextual keywords are ordinary identifiers everywhere except the one
+// place each is special: `value` in a property setter, `await` in an async
+// method, `where` in a generic constraint. The tokenizer must NOT call them
+// keywords - doing so made a perfectly legal rename look like the model had
+// swapped an identifier for a keyword, and the file was refused. They are
+// still poor names, so a rename that lands on one is refused by its own rule
+// below, with a message that says what to do about it.
+const CONTEXTUAL = new Set([
+  'value','var','get','set','init','when','where','yield','async','await','nameof',
+  'record','dynamic','partial','from','select','into','orderby','join','let','on','equals',
+  'by','ascending','descending','global','alias','add','remove','args','managed','unmanaged',
+  'notnull','required','scoped','file','and','or','not','with',
 ]);
 
 /** Tokens: ws | comment | str | char | num | id | op */
@@ -97,6 +110,13 @@ export function sameShape(before, after) {
     const isDeclName = prev && prev.t === 'kw' && (prev.v === 'class' || prev.v === 'struct' || prev.v === 'interface' || prev.v === 'namespace');
     if ((isMember || isDeclName) && a.v !== b.v) {
       errors.push(`${isMember ? 'member' : 'type'} name changed: ${a.v} -> ${b.v} near: ${near}`);
+      continue;
+    }
+
+    // Landing on a contextual keyword is legal C# but a bad name, and in a
+    // property setter or an async method it is a compile error.
+    if (a.v !== b.v && CONTEXTUAL.has(b.v)) {
+      errors.push(`${a.v} renamed to ${b.v}, which is a C# contextual keyword - pick an ordinary name instead`);
       continue;
     }
 
