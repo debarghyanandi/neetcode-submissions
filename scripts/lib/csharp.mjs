@@ -105,6 +105,17 @@ export function sameShape(before, after) {
     fwd.set(a.v, b.v); rev.set(b.v, a.v);
   }
 
+  // Comments are exempt from the token comparison above, which means the model
+  // is free to rewrite them - and free to delete them. Notes you left for
+  // yourself are not the model's to discard, so losing one is a hard failure.
+  // Rewording is still allowed: a rename can make a comment name a variable
+  // that no longer exists.
+  const commentsBefore = tokenize(before).filter((t) => t.t === 'comment').length;
+  const commentsAfter = tokenize(after).filter((t) => t.t === 'comment').length;
+  if (commentsAfter < commentsBefore) {
+    errors.push(`${commentsBefore - commentsAfter} comment(s) deleted - comments may be reworded, never removed`);
+  }
+
   const renames = [...fwd].filter(([k, v]) => k !== v);
   return { ok: errors.length === 0, errors: [...new Set(errors)].slice(0, 12), renames };
 }

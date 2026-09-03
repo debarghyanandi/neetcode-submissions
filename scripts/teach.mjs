@@ -24,6 +24,7 @@ import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mj
 import { stripHeader } from './lib/header.mjs';
 import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
+import { report, group, endGroup } from './lib/report.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -116,7 +117,7 @@ console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - teaching blocks, model ${model
 let failures = 0, wrote = 0, skipped = 0;
 
 for (const p of targets) {
-  console.log(p.path);
+  group(p.path);
   // Read-only views. Creating rec.teachSignatures here would stamp an empty
   // object onto every folder merely looked at, which is a state.json diff and
   // therefore a commit for work that did not happen.
@@ -133,6 +134,7 @@ for (const p of targets) {
 
     if (!force && hasBlock && teach[file] && teach[file] === sig) {
       console.log(`  ${file.padEnd(22)} up to date`);
+      report('teach', p.slug, 'skipped', `${file}: up to date`);
       skipped++;
       continue;
     }
@@ -156,7 +158,7 @@ for (const p of targets) {
 
     let r;
     try { r = ask(p.dir, file, ctx); }
-    catch (e) { console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`); failures++; continue; }
+    catch (e) { console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`); report('teach', p.slug, 'failed', `${file}: ${e.message.slice(0,70)}`); failures++; continue; }
 
     const block = buildTeachingBlock(r.out, ctx);
     console.log(`  ${file.padEnd(22)} ${r.out.sections.length} section(s), ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
@@ -173,9 +175,10 @@ for (const p of targets) {
     // Materialise the record only now that there is something to record.
     const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
     (prec.teachSignatures ?? (prec.teachSignatures = {}))[file] = sig;
+    report('teach', p.slug, 'ok', `${file}: ${r.out.sections.length} sections`);
     wrote++;
   }
-  console.log('');
+  endGroup();
 }
 
 if (doApply && wrote) saveState(state);

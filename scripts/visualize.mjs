@@ -25,6 +25,7 @@ import { loadState, saveState, scanRepo, REPO } from './lib/scan.mjs';
 import { stripHeader } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
+import { report, group, endGroup } from './lib/report.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -153,12 +154,12 @@ console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, $
 let failures = 0, wrote = 0;
 
 for (const p of targets) {
-  console.log(p.path);
+  group(p.path);
   const cls = state.problems[p.slug]?.classification ?? {};
   const { chosen, dropped, unclassified } = selectForVisualizer(p.curatedFiles, cls);
   if (dropped.length) console.log(`  dropped (brute force, real solutions exist): ${dropped.join(', ')}`);
   if (unclassified.length) console.log(`  unclassified, run classify --apply first: ${unclassified.join(', ')}`);
-  if (!chosen.length) { console.log('  nothing to visualise\n'); failures++; continue; }
+  if (!chosen.length) { console.log('  nothing to visualise'); report('visualize', p.slug, 'failed', unclassified.length ? 'no classification on record' : 'nothing to visualise'); failures++; endGroup(); continue; }
   console.log(`  visualising: ${chosen.join(', ')}`);
 
   const sols = chosen.map((f) => ({ file: f, ...cls[f] }));
@@ -192,16 +193,17 @@ for (const p of targets) {
     }
   }
 
-  if (!result) { console.log(`  giving up on ${p.slug}\n`); failures++; continue; }
+  if (!result) { console.log(`  giving up on ${p.slug}`); report('visualize', p.slug, 'failed', 'validation rejected both attempts'); failures++; endGroup(); continue; }
   console.log(`  validated  ·  $${spend.toFixed(4)} · ${result.turns} turns`);
 
   if (doApply) {
     const out = join(p.dir, `${p.slug}-visualizer.html`);
     writeFileSync(out, splice(result.src), 'utf8');
     console.log(`  wrote ${p.slug}-visualizer.html`);
+    report('visualize', p.slug, 'ok', `${result.src.length} bytes, validated`);
     wrote++;
   }
-  console.log('');
+  endGroup();
 }
 
 if (doApply && wrote) saveState(state);

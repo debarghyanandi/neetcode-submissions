@@ -28,6 +28,7 @@ import { splitTrailingTeach } from './lib/teach.mjs';
 import { sameShape } from './lib/csharp.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { LINT_FORMAT } from './lib/lint-rules.mjs';
+import { report, group, endGroup } from './lib/report.mjs';
 
 
 const argv = process.argv.slice(2);
@@ -75,7 +76,18 @@ const INSTRUCTIONS = [
   '  - Two or three words at most. leftBoundaryIndexOfWindow is worse than left.',
   '  - Match the vocabulary of the problem: prices, window, seen, remaining.',
   '',
-  'Keep every comment that says something. Reword one only if a rename made it wrong.',
+  'COMMENTS. Every comment in this file was written by the author for their own use later.',
+  '  - Never delete one. Deleting a comment fails the check and the whole file is rejected.',
+  '  - Keep the wording. Do not tidy, shorten, formalise or merge them.',
+  '  - A note to self, a TODO, or an observation that another approach would be better',
+  '    ("this is good but mLogn - we need log(m*n)") is the most valuable thing in the file.',
+  '    Leave it exactly as written, even where it points out a flaw.',
+  '  - Change a comment ONLY when a rename made it name a variable that no longer exists,',
+  '    or when it states something the code plainly contradicts. Then make the smallest',
+  '    possible edit and keep the author\'s voice.',
+  '',
+  'Every file is processed on its merits. Nothing a comment says - not a TODO, not a note',
+  'that the solution is imperfect - is a reason to skip the file or leave it alone.',
   'Return the complete file.',
 ].join('\n');
 
@@ -138,7 +150,7 @@ let failures = 0, changed = 0, clean = 0;
 const touchedSlugs = new Set();
 
 for (const p of targets) {
-  console.log(p.path);
+  group(p.path);
   const files = [...p.curatedFiles, ...p.pending.map((s) => s.file)];
 
   for (const file of files) {
@@ -150,7 +162,7 @@ for (const p of targets) {
     const header = had ? withHeader.slice(0, withHeader.length - body.length) : '';
 
     const rec = state.problems[p.slug]?.lint?.[file];
-    if (!force && rec && rec.version === LINT_FORMAT) { console.log(`  ${file.padEnd(22)} already linted`); clean++; continue; }
+    if (!force && rec && rec.version === LINT_FORMAT) { console.log(`  ${file.padEnd(22)} already linted`); report('lint', p.slug, 'skipped', `${file}: already linted`); clean++; continue; }
 
     let result = null, feedback = null, spend = 0;
     for (let attempt = 1; attempt <= 2 && !result; attempt++) {
@@ -167,7 +179,7 @@ for (const p of targets) {
       }
     }
 
-    if (!result) { console.log(`  ${file.padEnd(22)} left untouched`); failures++; continue; }
+    if (!result) { console.log(`  ${file.padEnd(22)} left untouched`); report('lint', p.slug, 'failed', `${file}: rewrite rejected twice`); failures++; continue; }
 
     const same = result.code.trim() === body.trim();
     console.log(`  ${file.padEnd(22)} ${same ? 'nothing to change' : result.renames.length ? 'renames: ' + result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : 'spacing only'}  ·  $${(spend || 0).toFixed(4)}`);
@@ -183,10 +195,11 @@ for (const p of targets) {
         codePrint: shortPrint(result.code),
         renames: result.renames.map(([a, b]) => `${a}->${b}`),
       };
+      report('lint', p.slug, 'ok', same ? `${file}: nothing to change` : `${file}: ${result.renames.length ? result.renames.map(([a,b])=>`${a}->${b}`).join(' ') : 'spacing'}`);
       if (!same) { changed++; touchedSlugs.add(p.slug); }
     }
   }
-  console.log('');
+  endGroup();
 }
 
 if (doApply) saveState(state);

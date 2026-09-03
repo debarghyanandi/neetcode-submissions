@@ -139,6 +139,7 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           BATCH: ${{ steps.batch.outputs.slugs }}
         run: |
@@ -161,6 +162,7 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           MANUAL_EXCLUDE: ${{ github.event.inputs.exclude }}
           BATCH: ${{ steps.batch.outputs.slugs }}
@@ -184,6 +186,7 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           # classify renames the raw submissions away, so teach cannot rediscover
           # what was just processed - it has to be told.
           APPLIED: ${{ steps.classify.outputs.applied }}
@@ -207,6 +210,7 @@ jobs:
         continue-on-error: true
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BATCH: ${{ steps.batch.outputs.slugs }}
         run: |
           set -euo pipefail
@@ -249,17 +253,10 @@ jobs:
 
       - name: Summarise
         if: always()
-        run: |
-          {
-            echo "### NeetCode pipeline"
-            echo ""
-            echo "- trigger: \`${{ github.event_name }}\`"
-            echo "- selected folders: **${{ steps.detect.outputs.count }}**"
-            echo "- backfill batch: \`${{ steps.batch.outputs.slugs || 'n/a' }}\` (${{ steps.batch.outputs.remaining || '0' }} needed work before this run)"
-            echo "- lint: \`${{ steps.lint.outcome || 'skipped' }}\` · classify: \`${{ steps.classify.outcome || 'skipped' }}\` · teach: \`${{ steps.teach.outcome || 'skipped' }}\` · visualize: \`${{ steps.visualize.outcome || 'skipped' }}\`"
-            echo "- wrote a commit: **${{ steps.commit.outcome == 'success' && 'see the commit step' || 'no' }}**"
-            echo ""
-            echo '```json'
-            cat "$RUNNER_TEMP/detect.json" 2>/dev/null || echo '{}'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
+          DETECT_JSON: ${{ runner.temp }}/detect.json
+          BACKFILL_BATCH: ${{ steps.batch.outputs.slugs }}
+          BACKFILL_REMAINING: ${{ steps.batch.outputs.remaining }}
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: node scripts/summarise.mjs

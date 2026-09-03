@@ -31,6 +31,7 @@ import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT }
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
+import { report, group, endGroup } from './lib/report.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -261,7 +262,7 @@ let touched = 0;
 const applied = [];
 
 for (const p of targets) {
-  console.log(`${p.path}`);
+  group(p.path);
 
   // A raw submission identical to code already curated here has no destination
   // name - naming it optimal-variant.cs would enshrine a copy. Take it out of
@@ -279,7 +280,9 @@ for (const p of targets) {
     res = classify(p.dir, files);
   } catch (e) {
     console.log(`  FAILED: ${e.message}\n`);
+    report('classify', p.slug, 'failed', e.message.split('\n')[0].slice(0, 90));
     failures++;
+    endGroup();
     continue;
   }
 
@@ -318,7 +321,9 @@ for (const p of targets) {
       for (const g of gaps) console.log(`        ${g.file}: ${g.actualComplexity}  <- add this to lib/complexity.mjs`);
     }
     console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
+    report('classify', p.slug, 'refused', gaps.length ? `ladder missing: ${gaps.map((g)=>g.actualComplexity).join(', ')}` : plan.reason);
     failures++;
+    endGroup();
     continue;
   }
   for (const [from, to] of plan.names) {
@@ -398,6 +403,7 @@ for (const p of targets) {
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
     applied.push(p.slug);
+    report('classify', p.slug, 'ok', `${moves.length} rename(s), ${wrote} header(s)`);
 
     // Duplicates: recorded as handled so they stop showing up as pending.
     if (dupes.length) {
@@ -412,7 +418,8 @@ for (const p of targets) {
     }
   }
 
-  console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
+  console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}`);
+  endGroup();
 }
 
 if (doApply) saveState(state);
