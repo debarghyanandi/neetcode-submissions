@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-03T01:19:51.958Z",
+  "updatedAt": "2026-09-03T01:29:48.530Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -88,7 +88,13 @@
       "fingerprints": {
         "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
       },
-      "lint": {},
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "failed": true,
+          "reason": "token 45 changed kind (id -> kw) near: int right , int searchTarget , int ["
+        }
+      },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
@@ -128,10 +134,10 @@
         "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {

@@ -327,45 +327,39 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Binary Search',
-  note: 'one comparison in the middle retires an entire half — permanently',
+  note: 'one comparison eliminates half the array',
   inputs: [
-    {id:'a', label:'nums (sorted, ascending)', value:'-2,0,3,5,9,12,15,20', width:260},
-    {id:'t', label:'target', value:'9', width:90}
+    {id:'nums', label:'nums (sorted)', value:'1,3,5,7,9,11,13,15', width:260},
+    {id:'t', label:'target', value:'13', width:90}
   ],
   parse(raw){
-    const a = parseInts(raw.a, 16);
-    if (!a) return {ok:false, msg:'Enter a valid comma-separated list of numbers.'};
-    if (a.length < 2) return {ok:false, msg:'Needs at least two numbers.'};
-    for (let i = 1; i < a.length; i++){
-      if (a[i] <= a[i-1]) return {ok:false, msg:'nums must be strictly increasing — binary search needs a sorted array.'};
-    }
-    const tv = parseInts(raw.t, 1);
-    if (!tv) return {ok:false, msg:'Enter a single numeric target.'};
-    return {ok:true, value:{a: a, t: tv[0]}, normalized:{a: a.join(','), t: String(tv[0])}};
+    const nums = parseInts(raw.nums, 12);
+    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of numbers.'};
+    for (let i = 1; i < nums.length; i++)
+      if (nums[i] <= nums[i-1]) return {ok:false, msg:'Binary search needs a sorted, strictly increasing list.'};
+    const tArr = parseInts(raw.t, 1);
+    if (!tArr) return {ok:false, msg:'Enter a single target number.'};
+    return {ok:true, value:{nums, t: tArr[0]}, normalized:{nums: nums.join(','), t: String(tArr[0])}};
   },
   shuffle(){
-    const n = 7 + Math.floor(Math.random() * 3);
-    const a = [];
-    let v = -4 + Math.floor(Math.random() * 6);
-    for (let i = 0; i < n; i++){ a.push(v); v += 1 + Math.floor(Math.random() * 4); }
-    let t;
-    if (Math.random() < 0.7){
-      t = a[Math.floor(Math.random() * a.length)];
-    } else {
-      const g = Math.floor(Math.random() * (a.length - 1));
-      t = (a[g+1] - a[g] > 1) ? a[g] + 1 : a[a.length - 1] + 1;
-    }
-    return {a: a.join(','), t: String(t)};
+    const n = 7 + Math.floor(Math.random()*3);
+    const set = [];
+    let v = -3 + Math.floor(Math.random()*6);
+    for (let i = 0; i < n; i++){ set.push(v); v += 1 + Math.floor(Math.random()*4); }
+    const hit = Math.random() < 0.75;
+    const t = hit ? set[Math.floor(Math.random()*set.length)] : set[0] - 1 - Math.floor(Math.random()*3);
+    return {nums: set.join(','), t: String(t)};
   },
   solutions: [
   {
-    label: 'Recursive halving',
-    badge: 'O(log n) time · O(log n) space (call stack) · optimal.cs · your solution',
-    blurb: 'Because the array is sorted, one comparison against the middle element settles a whole half: if the target is below <code>nums[mid]</code>, nothing at or right of mid can match. Each call recurses on only the surviving side, so the live range goes n → n/2 → n/4 and dies out after about log₂n comparisons. The bounds ride on the call stack, hence O(log n) space.',
+    label: 'Halve the window, recursively',
+    badge: 'O(log n) time · O(log n) space · optimal.cs · your solution',
+    blurb: 'The list is sorted, so a single comparison against the middle answers a question about an entire half: if the target is smaller than <code>nums[mid]</code>, nothing at mid or to its right can ever match. Each call discards half the live window — n → n/2 → n/4 — so the search ends in about log₂n comparisons, paid for with log₂n stack frames.',
     legend: [
-      {cls:'hot', text:'mid — the element being compared'},
-      {cls:'win', text:'live range [left, right]'},
-      {cls:'dim', text:'eliminated — can never hold the target'}
+      {cls:'hot', text:'mid — the only element compared this call'},
+      {cls:'win', text:'live window [left, right]'},
+      {cls:'dim', text:'eliminated — never looked at again'},
+      {cls:'good', text:'recursion depth'}
     ],
     code: [
       'public int Search(int[] nums, int target)',
@@ -391,63 +385,67 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const a = input.a, t = input.t, steps = [];
+      const nums = input.nums, t = input.t, steps = [];
       const stack = [];
-      let cmp = 0, found = -1;
       const panels = (l, r, mid) => [
-        pTiles('nums (sorted)', a, (k) => ({
-          cls: k === mid ? 'hot'
-             : (l >= 0 && r >= l && k >= l && k <= r) ? 'in-window'
-             : 'dim'
+        pTiles('nums — sorted, index 0…' + (nums.length - 1), nums, (k) => ({
+          cls: k === mid ? 'hot' : (k >= l && k <= r) ? 'in-window' : 'dim'
         })),
-        pSlots('Call stack (deepest last)', stack.length
-          ? stack.map((f, i) => ({text:'Search(' + f.l + ', ' + f.r + ')', cls: i === stack.length - 1 ? 'hot' : ''}))
-          : [{text:'(empty)', cls:'dim'}]),
+        pSlots('Call stack — this is the O(log n) space', stack.length
+          ? stack.map((f, i) => ({text: 'Search(' + f.l + ', ' + f.r + ')', cls: i === stack.length - 1 ? 'hot' : ''}))
+          : [{text: 'returned to caller', cls: 'dim'}]),
         pPills('', [
           {k:'target', v: t, cls:'accent'},
-          {k:'left', v: l >= 0 ? l : '–'},
-          {k:'right', v: r >= 0 ? r : '–'},
+          {k:'left', v: l},
+          {k:'right', v: r},
           {k:'mid', v: mid >= 0 ? mid : '–', cls:'hot'},
-          {k:'nums[mid]', v: mid >= 0 ? a[mid] : '–'},
-          {k:'still live', v: (l >= 0 && r >= l) ? (r - l + 1) : 0},
-          {k:'comparisons', v: cmp, cls:'good'}
+          {k:'nums[mid]', v: mid >= 0 ? nums[mid] : '–'},
+          {k:'window', v: Math.max(0, r - l + 1) + ' of ' + nums.length},
+          {k:'depth', v: stack.length, cls:'good'}
         ])
       ];
 
-      steps.push({lines:[1,3], msg:'The public method is just a launcher: it hands the recursion the <b>whole</b> array as the inclusive range [0, ' + (a.length - 1) + ']. Inclusive matters — <code>right</code> is a real index that is still a candidate, which is why the base case below is <code>left &gt; right</code> and not <code>left == right</code>.', panels: panels(0, a.length - 1, -1)});
+      steps.push({lines:[1,3], msg:'The public method is only a launcher: it hands the recursive helper the <b>whole</b> array as the window, <code>left = 0</code> and <code>right = ' + (nums.length - 1) + '</code>. Every frame below it works on nothing but a sub-range of indices.', panels: panels(0, nums.length - 1, -1)});
 
-      let l = 0, r = a.length - 1;
-      while (true){
-        stack.push({l:l, r:r});
+      const go = (l, r) => {
+        stack.push({l: l, r: r});
+        steps.push({lines:[6,7], msg:'Enter <code>Search(' + l + ', ' + r + ')</code> at depth <b>' + stack.length + '</b>. Only the lit indices are still candidates — the dimmed ones were ruled out by comparisons already made, and sortedness guarantees they can never come back.', panels: panels(l, r, -1)});
+
         if (l > r){
-          steps.push({lines:[9,10], msg:'<code>left (' + l + ') &gt; right (' + r + ')</code> — the range is now <b>empty</b>. Every index was either compared or eliminated by a comparison that proved the target could not be on that side, so the target is not in the array: return <b>-1</b>.', panels: panels(l, r, -1)});
-          break;
+          steps.push({lines:[9,10], msg:'<code>left ' + l + ' &gt; right ' + r + '</code> — the window is empty. Every index has been eliminated, so <b>' + t + '</b> is not in the array. Return <b>-1</b>. This is the base case that stops the recursion on a miss.', panels: panels(l, r, -1)});
+          stack.pop();
+          return -1;
         }
-        steps.push({lines:[9], msg:'Range <b>[' + l + ', ' + r + ']</b> still holds ' + (r - l + 1) + ' candidate' + (r - l === 0 ? '' : 's') + '. Everything greyed out has already been ruled out by an earlier comparison — the recursion never looks at it again.', panels: panels(l, r, -1)});
 
         const mid = l + Math.floor((r - l) / 2);
-        stack[stack.length - 1].l = l; stack[stack.length - 1].r = r;
-        steps.push({lines:[12], msg:'<code>mid = ' + l + ' + (' + r + ' − ' + l + ') / 2 = <b>' + mid + '</b></code>, holding <b>' + a[mid] + '</b>. Written this way instead of <code>(left + right) / 2</code> so the sum can never overflow <code>int</code> on a huge array. Testing the middle is what guarantees the discarded half is at least as big as the kept one.', panels: panels(l, r, mid)});
+        steps.push({lines:[12], msg:'<code>mid = left + (right - left) / 2</code> = <b>' + mid + '</b>. Written this way rather than <code>(left + right) / 2</code> so the sum can never overflow <code>int</code> on a huge array — the difference is always in range.', panels: panels(l, r, mid)});
 
-        cmp++;
-        if (a[mid] === t){
-          found = mid;
-          steps.push({lines:[14,15], msg:'<code>nums[' + mid + '] == ' + t + '</code> — found at index <b>' + mid + '</b>. This value returns straight back down the call stack untouched; no frame does any work on the way out.', panels: panels(l, r, mid)});
-          break;
+        if (nums[mid] === t){
+          steps.push({lines:[14,15], msg:'<code>nums[' + mid + ']</code> is <b>' + t + '</b> — hit. Return index <b>' + mid + '</b>, and every waiting frame will pass it straight up untouched.', panels: panels(l, r, mid)});
+          stack.pop();
+          return mid;
         }
-        if (t < a[mid]){
-          steps.push({lines:[17,18], msg:'<b>' + t + ' &lt; ' + a[mid] + '</b>. The array ascends, so <em>every</em> index ≥ ' + mid + ' holds a value ≥ ' + a[mid] + ' &gt; target — ' + (r - mid + 1) + ' cells eliminated by this single comparison. Recurse on <code>[' + l + ', ' + (mid - 1) + ']</code>; <code>mid − 1</code> because mid itself was just disproved.', panels: panels(l, r, mid)});
-          r = mid - 1;
+
+        const goLeft = t < nums[mid];
+        let res;
+        if (goLeft){
+          steps.push({lines:[17,18], msg:'<b>' + t + '</b> &lt; <code>nums[' + mid + '] = ' + nums[mid] + '</code>. Because the list is sorted, <em>everything</em> from ' + mid + ' rightward is ≥ ' + nums[mid] + ' and so too big — ' + (r - mid + 1) + ' index' + ((r - mid + 1) === 1 ? '' : 'es') + ' gone on one comparison. Recurse on [' + l + ', ' + (mid - 1) + '].', panels: panels(l, r, mid)});
+          res = go(l, mid - 1);
         } else {
-          steps.push({lines:[20], msg:'<b>' + t + ' &gt; ' + a[mid] + '</b>. Ascending order means every index ≤ ' + mid + ' holds a value ≤ ' + a[mid] + ' &lt; target — ' + (mid - l + 1) + ' cells eliminated at once. Recurse on <code>[' + (mid + 1) + ', ' + r + ']</code>.', panels: panels(l, r, mid)});
-          l = mid + 1;
+          steps.push({lines:[17,20], msg:'<b>' + t + '</b> &gt; <code>nums[' + mid + '] = ' + nums[mid] + '</code>. Everything from ' + mid + ' leftward is ≤ ' + nums[mid] + ' and so too small — ' + (mid - l + 1) + ' index' + ((mid - l + 1) === 1 ? '' : 'es') + ' gone. Recurse on [' + (mid + 1) + ', ' + r + '].', panels: panels(l, r, mid)});
+          res = go(mid + 1, r);
         }
-      }
 
-      steps.push({lines:[3], msg: (found >= 0
-          ? 'Answer <b>' + found + '</b>'
-          : 'Answer <b>-1</b>') + ' after <b>' + cmp + '</b> comparison' + (cmp === 1 ? '' : 's') + ' over ' + a.length + ' elements — a scan would have taken up to ' + a.length + '. The call stack reached depth ' + stack.length + ', which is the O(log n) space: each frame stores nothing but its own <code>left</code>, <code>right</code> and <code>mid</code>.',
-        panels: panels(found >= 0 ? found : -1, found, found)});
+        steps.push({lines:[goLeft ? 18 : 20], msg:'Back in <code>Search(' + l + ', ' + r + ')</code>: the child returned <b>' + res + '</b> and this frame returns it unchanged. The recursion carries an answer upward, never an accumulator — which is why no work happens on the way back.', panels: panels(l, r, mid)});
+        stack.pop();
+        return res;
+      };
+
+      const ans = go(0, nums.length - 1);
+      steps.push({lines:[3], msg: ans >= 0
+        ? 'Result <b>' + ans + '</b> — <code>nums[' + ans + '] = ' + t + '</code>, found after touching only <b>' + (steps.filter(s => s.lines[0] === 12).length) + '</b> of ' + nums.length + ' elements.'
+        : 'Result <b>-1</b> — <b>' + t + '</b> is absent. The window shrank to nothing after just <b>' + (steps.filter(s => s.lines[0] === 12).length) + '</b> comparisons.',
+        panels: panels(ans >= 0 ? ans : 0, ans >= 0 ? ans : nums.length - 1, ans)});
       return steps;
     }
   }]

@@ -326,8 +326,8 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Best Time to Buy and Sell',
-  note: 'only one number from the past matters — the minimum',
+  title: 'Buy and Sell Crypto',
+  note: 'the only fact worth remembering about the past is the cheapest day',
   inputs: [{id:'p', label:'prices', value:'10,1,5,6,7,1,8,3', width:260}],
   parse(raw){
     const p = parseInts(raw.p, 12);
@@ -336,87 +336,43 @@ const PROBLEM = {
     if (p.some(v => v < 0)) return {ok:false, msg:'Prices must be non-negative.'};
     return {ok:true, value:{p}, normalized:{p: p.join(',')}};
   },
-  shuffle(){ return {p: randInts(8 + Math.floor(Math.random()*3), 1, 12).join(',')}; },
+  shuffle(){ return {p: randInts(7 + Math.floor(Math.random()*3), 1, 14).join(',')}; },
   solutions: [
   {
-    label: 'Every buy/sell pair',
-    badge: 'O(n²) · not in repo · the inner loop is redundant',
-    blurb: 'For each sell day, look back at every earlier buy day. Correct — and the inner loop recomputes “what was the cheapest earlier day” from scratch every single time. That is always the sign a running accumulator can replace it.',
-    legend: [
-      {cls:'hot', text:'sell day'},
-      {cls:'win', text:'buy day being tried'},
-      {cls:'good', text:'best trade so far'},
-      {cls:'dim', text:'future — not yet reachable'}
-    ],
-    code: [
-      'int maxProfit = 0;',
-      'for (int sell = 1; sell < prices.Length; sell++)',
-      '    for (int buy = 0; buy < sell; buy++)',
-      '        maxProfit = Math.Max(maxProfit,',
-      '                             prices[sell] - prices[buy]);',
-      'return maxProfit;'
-    ],
-    simulate(input){
-      const p = input.p, steps = [];
-      let best = 0, bb = -1, bs = -1, count = 0;
-      const panels = (sell, buy) => [
-        pBars('Prices by day', p, (k) => ({
-          cls: k === sell ? 'hot' : k === buy ? 'in-window' : (k === bb || k === bs) ? 'in-window' : (k > sell ? 'dim' : '')
-        })),
-        pPills('', [
-          {k:'buy', v: buy >= 0 ? p[buy] : '–'},
-          {k:'sell', v: sell >= 0 ? p[sell] : '–', cls:'hot'},
-          {k:'profit', v: (sell >= 0 && buy >= 0) ? p[sell] - p[buy] : '–'},
-          {k:'best', v: best, cls:'good'},
-          {k:'pairs tried', v: count, cls:'accent'}
-        ])
-      ];
-      steps.push({lines:[1], msg:'Profit 0 is always achievable — simply never trade. That is why <code>maxProfit</code> starts at 0 and not <code>int.MinValue</code>.', panels: panels(-1, -1)});
-      for (let sell = 1; sell < p.length; sell++){
-        for (let buy = 0; buy < sell; buy++){
-          count++;
-          const profit = p[sell] - p[buy];
-          const better = profit > best;
-          if (better){ best = profit; bb = buy; bs = sell; }
-          steps.push({lines:[4,5], msg:'Buy day ' + buy + ' at ' + p[buy] + ', sell day ' + sell + ' at ' + p[sell] + ' → <b>' + profit + '</b>' + (better ? ' — new best.' : '. Best stays ' + best + '.'),
-            panels: panels(sell, buy)});
-        }
-      }
-      steps.push({lines:[6], msg:'Best profit <b>' + best + '</b> (buy day ' + bb + ', sell day ' + bs + ') after <b>' + count + '</b> pairs. Notice how many of those inner passes re-answered the same question.',
-        panels: panels(bs, bb)});
-      return steps;
-    }
-  },
-  {
     label: 'Track the running minimum',
-    badge: 'O(n) time · O(1) space · optimal.cs · your solution',
-    blurb: 'The best sale on day <b>d</b> is always <code>price[d] − cheapest day so far</code>. So only <b>one</b> number from the past matters, and it is maintainable in O(1). If today is a new low, every future purchase should start here instead — jump the buy day in one move.',
+    badge: 'O(n) time · O(1) space · greedy · optimal.cs',
+    blurb: 'Selling on day <b>d</b> is only ever worth <code>price[d] − cheapest earlier day</code>, so exactly <b>one</b> number from the past matters. Walk forward once: a higher price is a candidate sale, a lower price replaces the buy day outright, because from then on nothing before it can ever be the better purchase.',
     legend: [
       {cls:'hot', text:'today (sell candidate)'},
-      {cls:'win', text:'current buy day — the running minimum'},
+      {cls:'win', text:'buyIndex — cheapest day so far'},
       {cls:'good', text:'best trade found'},
       {cls:'dim', text:'not yet reached'}
     ],
     code: [
-      'int buyIndex = 0;',
-      'int maxProfit = 0;',
+      'int buyIndex = 0;      // the cheapest day seen so far',
+      'int maxProfit = 0;     // 0 is always achievable',
       '',
       'for (int sellIndex = 1; sellIndex < prices.Length; sellIndex++)',
       '{',
       '    if (prices[sellIndex] > prices[buyIndex])',
+      '    {',
       '        maxProfit = Math.Max(maxProfit,',
-      '                   prices[sellIndex] - prices[buyIndex]);',
+      '            prices[sellIndex] - prices[buyIndex]);',
+      '    }',
       '    else',
-      '        buyIndex = sellIndex;    // a new all-time low',
+      '    {',
+      '        buyIndex = sellIndex;   // a new all-time low',
+      '    }',
       '}',
+      '',
       'return maxProfit;'
     ],
     simulate(input){
       const p = input.p, steps = [];
       let buy = 0, best = 0, bb = -1, bs = -1;
-      const panels = (sell, cls) => [
+      const panels = (sell) => [
         pBars('Prices by day', p, (k) => ({
-          cls: k === sell ? (cls === 'low' ? 'hot' : 'hot')
+          cls: k === sell ? 'hot'
              : k === buy ? 'in-window'
              : (k === bb || k === bs) ? 'in-window'
              : (sell >= 0 && k > sell) ? 'dim' : ''
@@ -425,24 +381,25 @@ const PROBLEM = {
           {k:'buyIndex', v: buy, cls:'accent'},
           {k:'buy price', v: p[buy]},
           {k:'today', v: sell >= 0 ? p[sell] : '–', cls:'hot'},
+          {k:'profit today', v: sell >= 0 ? Math.max(0, p[sell] - p[buy]) : '–'},
           {k:'maxProfit', v: best, cls:'good'}
         ])
       ];
-      steps.push({lines:[1,2], msg:'Day 0 is the only possible buy day so far. <code>sellIndex</code> starts at 1 — day 0 cannot be both buy and sell.', panels: panels(-1)});
+      steps.push({lines:[1,2], msg:'Day 0 is the only day available to buy so far, so <code>buyIndex</code> starts there. <code>maxProfit</code> starts at <b>0</b> rather than <code>int.MinValue</code> because doing nothing is always a legal outcome — a losing trade is never forced.', panels: panels(-1)});
       for (let s = 1; s < p.length; s++){
         if (p[s] > p[buy]){
           const profit = p[s] - p[buy];
           const better = profit > best;
           if (better){ best = profit; bb = buy; bs = s; }
-          steps.push({lines:[6,7,8], msg:'Day ' + s + ' at <b>' + p[s] + '</b> beats the buy price ' + p[buy] + ' → profit <b>' + profit + '</b>' + (better ? ', a new best.' : '; best stays ' + best + '.') + ' The buy day <b>stays put</b> — a later day could be higher still.',
+          steps.push({lines:[6,8,9], msg:'Day ' + s + ' at <b>' + p[s] + '</b> is above the buy price ' + p[buy] + ' → profit <b>' + profit + '</b>' + (better ? ', a new best.' : '; best stays ' + best + '.') + ' <code>buyIndex</code> does <b>not</b> move — day ' + buy + ' is still the cheapest past day, and a later price could be higher still.',
             panels: panels(s)});
         } else {
-          steps.push({lines:[6,10], msg:'Day ' + s + ' at <b>' + p[s] + '</b> is a new all-time low (≤ ' + p[buy] + '). For <i>every</i> day after this, buying here is at least as good as buying at ' + buy + ' — same or cheaper, and still in the past. So day ' + buy + ' can be discarded <b>permanently</b>. That exchange argument is what makes the greedy provably correct.',
-            panels: panels(s, 'low')});
+          steps.push({lines:[6,13], msg:'Day ' + s + ' at <b>' + p[s] + '</b> is no higher than ' + p[buy] + ', so there is no sale here. But for <em>every</em> later day, buying here is at least as good as buying at day ' + buy + ' — same or cheaper, and still in the past. Day ' + buy + ' can be dropped <b>permanently</b>, which is why one assignment replaces a whole inner loop.',
+            panels: panels(s)});
           buy = s;
         }
       }
-      steps.push({lines:[12], msg:'Best profit <b>' + best + '</b>' + (bb >= 0 ? ' (buy day ' + bb + ', sell day ' + bs + ')' : ' — prices only fell, so no trade') + '. One pass, two ints, no inner loop.',
+      steps.push({lines:[17], msg:'Best profit <b>' + best + '</b>' + (bb >= 0 ? ' (buy day ' + bb + ' at ' + p[bb] + ', sell day ' + bs + ' at ' + p[bs] + ')' : ' — prices never rose above a past low, so the answer is “never trade”') + '. One pass, two ints, nothing stored.',
         panels: panels(-1)});
       return steps;
     }
@@ -784,9 +741,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -810,8 +787,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;
