@@ -85,8 +85,12 @@ const SCHEMA = {
             description: 'true only for exhaustive enumeration with no insight - nested loops over all pairs, trying every subset, recomputing from scratch. A slower but genuinely different technique (prefix sums, sorting, a heap) is NOT brute force.',
           },
           note: { type: 'string', description: 'one sentence on the mechanism that makes the complexity what it is' },
+          actualComplexity: {
+            type: 'string',
+            description: 'Only when time or space is "other": the complexity you would have written, e.g. "O(m log n)". Empty otherwise. This is how a missing rung gets reported instead of guessed at.',
+          },
         },
-        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note'],
+        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity'],
       },
     },
   },
@@ -97,7 +101,8 @@ const INSTRUCTIONS = [
   'You are given several C# solutions to one coding problem, on stdin, each delimited by a ===== FILE: <name> ===== banner.',
   '',
   'For every file, report its worst-case time and space complexity, the technique it uses, and a short approachKey.',
-  'Choose time and space ONLY from the allowed enum values. If a solution genuinely does not fit any of them, answer "other" - do not round to the nearest.',
+  'Choose time and space ONLY from the allowed enum values. If a solution genuinely does not fit any of them, answer "other" - do not round to the nearest - and put what you WOULD have written in actualComplexity, so the missing value can be added.',
+  'For a matrix, m is the number of rows and n the number of columns.',
   'Space complexity means auxiliary space, excluding the input and excluding the output where the problem requires building one.',
   'Two files that implement the same idea must share an approachKey. Two files with the same complexity but genuinely different mechanisms must not.',
   'Set correct=false only when the code is actually wrong. Slow is not wrong.',
@@ -307,6 +312,11 @@ for (const p of targets) {
     // nothing to work from and failed for reasons that looked unrelated.
     console.log(`    REFUSED - ${plan.reason}. Left untouched for you to decide.`);
     console.log(`      complexities returned: ${res.solutions.map((s) => `${s.file}=${s.time}/${s.space}`).join(', ')}`);
+    const gaps = res.solutions.filter((s) => s.actualComplexity && (s.time === 'other' || s.space === 'other'));
+    if (gaps.length) {
+      console.log('      the ladder has no rung for:');
+      for (const g of gaps) console.log(`        ${g.file}: ${g.actualComplexity}  <- add this to lib/complexity.mjs`);
+    }
     console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
     failures++;
     continue;
