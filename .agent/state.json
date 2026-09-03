@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-03T01:29:48.530Z",
+  "updatedAt": "2026-09-03T02:09:26.136Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -88,7 +88,13 @@
       "fingerprints": {
         "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
       },
-      "lint": {},
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "6a2357968a06",
+          "renames": []
+        }
+      },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },

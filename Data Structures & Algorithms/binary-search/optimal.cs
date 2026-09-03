@@ -9,7 +9,8 @@
 // #  since it's not tail-call optimized in C#.
 // ##########################################################################
 
-public class Solution {
+public class Solution
+{
     public int Search(int[] nums, int target)
     {
         // My Solution
@@ -32,6 +33,7 @@ public class Solution {
         return Search(mid + 1, right, searchTarget, nums);
     }
 }
+
 
 /*
 ================================================================================
