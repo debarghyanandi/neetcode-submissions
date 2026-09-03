@@ -74,13 +74,13 @@ jobs:
 
     steps:
       - name: Check out full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # detect.mjs diffs against the pre-push SHA; a shallow clone cannot.
           fetch-depth: 0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
 
@@ -212,11 +212,22 @@ jobs:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BATCH: ${{ steps.batch.outputs.slugs }}
+          APPLIED: ${{ steps.classify.outputs.applied }}
         run: |
           set -euo pipefail
           args=(--apply --limit "${{ github.event.inputs.limit || '5' }}")
           if [ -n "${BATCH:-}" ]; then
             args+=(--backfill --slug "$BATCH")
+          elif [ -n "${APPLIED:-}" ]; then
+            # Scope to what classify just processed. Unscoped, this step targets
+            # ANY folder lacking a visualizer, so a run could spend Opus on an
+            # unrelated folder and, under a small --limit, skip the problem you
+            # actually just solved. Folders missing a visualizer for other
+            # reasons are backfill's job - select-backfill already counts them.
+            args+=(--slug "$APPLIED")
+          else
+            echo "classify processed nothing - no visualizers to build"
+            exit 0
           fi
           node scripts/visualize.mjs "${args[@]}"
 
