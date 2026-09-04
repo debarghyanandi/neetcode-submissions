@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-03T02:09:26.136Z",
+  "updatedAt": "2026-09-04T01:33:41.063Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -352,6 +352,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack simulation via doubly linked list splicing\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
         "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based evaluation with operator dictionary\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       }
+    },
+    "find-minimum-in-rotated-sorted-array": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
