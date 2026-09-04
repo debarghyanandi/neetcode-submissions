@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-04T01:33:41.063Z",
+  "updatedAt": "2026-09-04T09:54:45.826Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -355,14 +355,60 @@
     },
     "find-minimum-in-rotated-sorted-array": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs"
+      },
+      "fingerprints": {
+        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "b1ff48e1959d",
+          "renames": [
+            "l->left",
+            "r->right"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"b1ff48e1959d\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"binary search comparing mid to right\",\"approachKey\":\"binary-search-rotated-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(log n)",
+          "space": "O(1)",
+          "algorithm": "binary search comparing mid to right",
+          "approachKey": "binary-search-rotated-min",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"b1ff48e1959d\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"binary search comparing mid to right\",\"approachKey\":\"binary-search-rotated-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "b1ff48e1959d"
+        },
+        "builtAt": "2026-09-04T09:54:45.665Z"
+      }
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
