@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T18:09:28.610Z",
+  "updatedAt": "2026-09-05T20:27:31.818Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -910,6 +910,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
     },
+    "merge-two-sorted-linked-lists": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "minimum-size-subarray-sum": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -1194,14 +1205,57 @@
     },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs"
+      },
+      "fingerprints": {
+        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "failed": true,
+          "reason": "two different names both became next: temp and next"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "iterative pointer reversal",
+          "approachKey": "iterative-pointer-reversal",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "e1f52fa2f5d4"
+        },
+        "builtAt": "2026-09-05T20:27:31.682Z"
+      }
     },
     "search-2d-matrix": {
       "topic": "Data Structures & Algorithms",
