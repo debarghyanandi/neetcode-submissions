@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-04T09:54:45.826Z",
+  "updatedAt": "2026-09-05T17:34:36.603Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -409,6 +409,17 @@
         },
         "builtAt": "2026-09-04T09:54:45.665Z"
       }
+    },
+    "find-target-in-rotated-sorted-array": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
