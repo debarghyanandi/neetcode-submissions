@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T17:36:46.438Z",
+  "updatedAt": "2026-09-05T18:09:28.610Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -412,15 +412,89 @@
     },
     "find-target-in-rotated-sorted-array": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1282d32997d6a4b98335919ebda497991db5f16ba471df9872211f42b9d82910": "optimal.cs",
+        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "1282d32997d6a4b98335919ebda497991db5f16ba471df9872211f42b9d82910": "optimal.cs",
+        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "1282d32997d6",
+          "renames": [
+            "l->left",
+            "r->right"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "01e24d50d94e",
+          "renames": [
+            "l->low",
+            "r->high",
+            "m->center"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1282d32997d6\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"single-pass modified binary search, sorted-half detection\",\"approachKey\":\"rotated-binary-search-single-pass\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(log n) time / O(1) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"01e24d50d94e\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"find pivot via binary search, then binary search correct half\",\"approachKey\":\"rotated-binary-search-find-pivot-then-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(log n)",
+          "space": "O(1)",
+          "algorithm": "single-pass modified binary search, sorted-half detection",
+          "approachKey": "rotated-binary-search-single-pass",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(log n)",
+          "space": "O(1)",
+          "algorithm": "find pivot via binary search, then binary search correct half",
+          "approachKey": "rotated-binary-search-find-pivot-then-search",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1282d32997d6\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"single-pass modified binary search, sorted-half detection\",\"approachKey\":\"rotated-binary-search-single-pass\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(log n) time / O(1) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"01e24d50d94e\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"find pivot via binary search, then binary search correct half\",\"approachKey\":\"rotated-binary-search-find-pivot-then-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "1282d32997d6",
+          "optimal-variant.cs": "01e24d50d94e"
+        },
+        "builtAt": "2026-09-05T18:09:28.495Z"
+      }
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
@@ -1117,6 +1191,17 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
+    },
+    "reverse-a-linked-list": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "search-2d-matrix": {
       "topic": "Data Structures & Algorithms",
