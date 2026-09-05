@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T20:27:31.818Z",
+  "updatedAt": "2026-09-05T21:17:08.647Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -628,6 +628,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers converging inward, skipping non-alphanumerics\",\"approachKey\":\"two-pointer-inplace-palindrome\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
     },
+    "linked-list-cycle-detection": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "longest-consecutive-sequence": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -912,14 +923,59 @@
     },
     "merge-two-sorted-linked-lists": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs"
+      },
+      "fingerprints": {
+        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "4924c078b78b",
+          "renames": [
+            "node->tail"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"4924c078b78b\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"iterative merge with dummy head\",\"approachKey\":\"iterative-merge-dummy-head\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(1)",
+          "algorithm": "iterative merge with dummy head",
+          "approachKey": "iterative-merge-dummy-head",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"4924c078b78b\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"iterative merge with dummy head\",\"approachKey\":\"iterative-merge-dummy-head\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "4924c078b78b"
+        },
+        "builtAt": "2026-09-05T21:17:08.486Z"
+      }
     },
     "minimum-size-subarray-sum": {
       "topic": "Data Structures & Algorithms",
