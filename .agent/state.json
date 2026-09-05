@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T21:17:08.647Z",
+  "updatedAt": "2026-09-05T23:23:49.818Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -630,14 +630,57 @@
     },
     "linked-list-cycle-detection": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs"
+      },
+      "fingerprints": {
+        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "bab210c59bb3",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bab210c59bb3\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Floyd's slow/fast pointer cycle detection\",\"approachKey\":\"floyd-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Floyd's slow/fast pointer cycle detection",
+          "approachKey": "floyd-cycle-detection",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bab210c59bb3\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Floyd's slow/fast pointer cycle detection\",\"approachKey\":\"floyd-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "bab210c59bb3"
+        },
+        "builtAt": "2026-09-05T23:23:49.653Z"
+      }
     },
     "longest-consecutive-sequence": {
       "topic": "Data Structures & Algorithms",
@@ -1258,6 +1301,17 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
+    },
+    "remove-node-from-end-of-linked-list": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
