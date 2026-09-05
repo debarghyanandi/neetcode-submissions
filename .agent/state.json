@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T23:35:13.399Z",
+  "updatedAt": "2026-09-05T23:58:53.166Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -1304,14 +1304,57 @@
     },
     "remove-node-from-end-of-linked-list": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs"
+      },
+      "fingerprints": {
+        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "1e262d2b762f",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1e262d2b762f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer gap technique\",\"approachKey\":\"two-pointer-gap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "two-pointer gap technique",
+          "approachKey": "two-pointer-gap",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1e262d2b762f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer gap technique\",\"approachKey\":\"two-pointer-gap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "1e262d2b762f"
+        },
+        "builtAt": "2026-09-05T23:58:53.002Z"
+      }
     },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
@@ -1320,7 +1363,9 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
       "knownFingerprints": {
         "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs"
       },
