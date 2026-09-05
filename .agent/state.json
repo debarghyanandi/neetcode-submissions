@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T23:23:49.818Z",
+  "updatedAt": "2026-09-05T23:24:06.311Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -1301,17 +1301,6 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
-    },
-    "remove-node-from-end-of-linked-list": {
-      "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
-      ],
-      "knownFingerprints": {},
-      "fingerprints": {}
     },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
