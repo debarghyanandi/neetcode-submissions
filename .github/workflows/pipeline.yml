@@ -18,26 +18,23 @@ on:
     paths:
       - '**/submission-*'
   schedule:
-    # Target window 11:00-12:00 IST: the study session runs 23:00-06:00, so by
-    # 11:00 the subscription usage window has reset and the run competes with
-    # nothing.
+    # Twice a day, morning and evening IST. These are two separate runs, not a
+    # run and a catch-up: whatever the morning one leaves - a folder held back
+    # by a push, a folder whose classify was refused - the evening one picks up,
+    # and vice versa. An idle run finds nothing pending, calls no model, and
+    # costs a runner start.
     #
-    # Two entries, both at odd minutes. GitHub queues scheduled workflows at low
-    # priority and runs them late under load - a run scheduled for 05:30 UTC
-    # actually fired at 09:51 UTC, four and a half hours adrift. Round times
-    # like :00, :15, :30 and :45 are where everyone else's schedules pile up, so
-    # :37 and :11 sit in the quieter gaps.
+    # Cron here is UTC and IST is UTC+5:30, so subtract 5h30m from the time you
+    # want. Both land on odd minutes on purpose: GitHub queues scheduled
+    # workflows at low priority, and :00, :15, :30 and :45 are where everyone
+    # else's schedules pile up.
     #
-    # The second entry is a catch-up, not a duplicate: if the first is delayed
-    # out of the window the second gets another chance, and if the first ran
-    # normally the second finds nothing pending and exits without calling a
-    # model. An idle run costs a runner start and nothing else.
-    #
-    # None of this can guarantee the window. GitHub makes no timing promise for
-    # scheduled workflows on hosted runners, and a late run does the same work
-    # correctly - it is only later. Trigger it by hand if you need it now.
-    - cron: '37 5 * * *'   # 11:07 IST
-    - cron: '11 6 * * *'   # 11:41 IST
+    # None of this is a promise. GitHub makes no timing guarantee for scheduled
+    # workflows on hosted runners - one of these was once four and a half hours
+    # adrift - and a late run does the same work correctly, only later. Trigger
+    # it by hand if you need it now.
+    - cron: '37 1 * * *'    # 07:07 IST
+    - cron: '39 13 * * *'   # 19:09 IST
   workflow_dispatch:
     # Three boxes, and the third only matters when the first is empty.
     #

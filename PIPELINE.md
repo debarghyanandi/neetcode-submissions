@@ -62,9 +62,10 @@ computer away. It's free for public repos within generous limits.
 **A workflow trigger** — the event that starts a run. Ours has three: someone pushes code,
 a scheduled time arrives, or I click a button.
 
-**cron** — the standard way to write a repeating schedule. `30 5 * * *` means
-"minute 30, hour 5, every day of month, every month, every day of week" — i.e. 05:30, daily.
-**Cron in GitHub Actions is always in UTC**, so our 05:30 UTC is 11:00 in India (UTC+5:30).
+**cron** — the standard way to write a repeating schedule. `37 1 * * *` means
+"minute 37, hour 1, every day of month, every month, every day of week" — i.e. 01:37, daily.
+**Cron in GitHub Actions is always in UTC**, so subtract 5h30m from the IST time you want:
+01:37 UTC is 07:07 in India (UTC+5:30).
 
 **Node.js / `.mjs` files** — Node is a program that runs JavaScript outside a browser.
 The pipeline's scripts are JavaScript. The `.mjs` extension just tells Node "this file uses
@@ -96,7 +97,7 @@ Here is the entire pipeline, in order:
 ```
    ┌─────────────────────────────────────────────────────────────┐
    │  TRIGGER                                                    │
-   │  • I push a submission     • 11:00 IST daily   • I click Run │
+   │  • I push a submission     • 07:07 / 19:09 IST  • I click Run │
    └───────────────────────────┬─────────────────────────────────┘
                                ▼
    1. DETECT      Which folders have submission-N.cs files that
@@ -511,10 +512,13 @@ Nothing. Solve problems on NeetCode. The pipeline handles the rest.
 
 - **When I push a submission:** every *other* pending folder gets processed. The one I just
   touched is left alone in case I'm still working on it.
-- **11:00 IST daily:** everything left over gets processed, including that folder.
+- **07:07 and 19:09 IST, daily:** everything left over gets processed, including that folder.
 
-The 11:00 timing is deliberate. I study 23:00–06:00, so a 02:00 run would have competed with
-me for the same subscription usage. By 11:00 the window has reset.
+Two runs, twelve hours apart — not a run and a backup. Whatever the morning one leaves, the
+evening one picks up, and vice versa. Both sit outside 23:00–06:00, when I study, so neither
+competes with me for the same subscription usage. The odd minutes are deliberate too: GitHub
+queues scheduled workflows at low priority, and :00, :15, :30 and :45 are where everyone
+else's schedules pile up.
 
 ### Running it by hand
 

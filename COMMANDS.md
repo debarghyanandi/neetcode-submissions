@@ -23,7 +23,7 @@ Solve problems on NeetCode. That's it.
 | When | What happens |
 |---|---|
 | You push a submission | Every *other* pending problem gets processed. The one you just pushed to is left alone, in case you're still working on it. |
-| 11:00 IST, every day | Everything left over gets processed — including that one. |
+| 07:07 and 19:09 IST, every day | Everything left over gets processed — including that one. |
 
 You only need the commands below when you want to do something out of the ordinary.
 
@@ -42,7 +42,7 @@ been dealt with yet. If it says `nothing to do`, the pipeline is idle.
 
 ---
 
-## "Process one problem right now, don't wait for 11am"
+## "Process one problem right now, don't wait for the schedule"
 
 Four commands, in this order. Replace `two-integer-sum` with your problem's folder name.
 
@@ -127,7 +127,7 @@ Between them they give you four runs, and that is the whole surface:
 
 | Process-Specific-folder | Back-Fill | What happens |
 |---|---|---|
-| *empty* | ☐ | Whatever is pending gets processed. Same as waiting for 11am. |
+| *empty* | ☐ | Whatever is pending gets processed. Same as waiting for the next scheduled run. |
 | `binary-search` | ☐ | Just that folder, brought up to the current standard. Anything about it that is already correct is left alone. |
 | `binary-search` | ☑ | Just that folder, **redone from scratch** — even the parts that were already correct. |
 | *empty* | ☑ | The backlog, as many folders as **Back-Fill-Limit** says. |
