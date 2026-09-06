@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-05T23:58:53.166Z",
+  "updatedAt": "2026-09-06T01:18:24.651Z",
   "problems": {
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
@@ -1356,36 +1356,59 @@
         "builtAt": "2026-09-05T23:58:53.002Z"
       }
     },
+    "reorder-linked-list": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
-        "optimal.cs"
+        "optimal.cs",
+        "suboptimal.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
-        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs"
+        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs",
+        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs"
       },
       "fingerprints": {
-        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs"
+        "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs",
+        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 1,
           "failed": true,
           "reason": "two different names both became next: temp and next"
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "cc7b45fbbcf2",
+          "renames": []
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal, prev/curr/temp walk\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive reversal, fix links on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
           "selfMarked": false,
           "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -1393,14 +1416,23 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "iterative pointer reversal",
+          "algorithm": "iterative pointer reversal, prev/curr/temp walk",
           "approachKey": "iterative-pointer-reversal",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive reversal, fix links on unwind",
+          "approachKey": "recursive-reversal",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal, prev/curr/temp walk\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive reversal, fix links on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
         "files": [
