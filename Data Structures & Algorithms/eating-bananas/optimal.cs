@@ -1,16 +1,17 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n log k) time / O(1) space
-// -  binary search on answer (eating speed), linear feasibility check
+// -  binary search on eating speed, linear feasibility check
 // -  [binary-search-on-speed]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  binary searches the speed range [1, max(piles)] and for each candidate
-// -  does an O(n) pass to sum ceiling division hours
+// -  binary searches speed in [1, max(pile)] and for each candidate does an
+// -  O(n) pass summing ceil(pile/speed) hours
 // --------------------------------------------------------------------------
 
-public class Solution {
+public class Solution
+{
     public int MinEatingSpeed(int[] piles, int hoursLimit)
     {
         // low and high is the range of speed
@@ -36,8 +37,8 @@ public class Solution {
             }
         }
         return low;
-
     }
+
     private bool CanFinish(int[] piles, int speed, int targetHour)
     {
         int hour = 0;
@@ -52,64 +53,76 @@ public class Solution {
 
 /*
 ================================================================================
- PATTERN : Binary search on the answer - monotone feasibility test
+ PATTERN : Binary search on the answer - monotone feasibility
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The unknown is a speed, not a position. Nothing here is sorted - piles arrives
-  in any order and the code never sorts it, and no branch depends on where a
-  pile sits. What is sorted is the implicit array of candidate answers: the
-  speeds 1..max(pile), indexed by themselves. So the search runs over the value
-  range and CanFinish plays the role of the comparison. That piles is only ever
-  touched by the max scan and by each full CanFinish pass is the tell that this
-  is a search on the answer rather than a search in the input.
-THE MONOTONE PREDICATE
-  CanFinish(piles, speed, hoursLimit) is monotone in speed: raising speed can
-  only shrink each ceil(pile / speed) term, so hour is non-increasing in speed,
-  and once hour <= targetHour holds it holds for every larger speed. Read across
-  speed = 1..high the predicate is false,false,...,false,true,true, and the
-  answer is the first true. That step shape is what licenses halving the range -
-  it is the correctness argument to give an interviewer, not the loop mechanics.
-WHY CEIL PER PILE, AND WHY HIGH = MAX(PILE)
-  hour accumulates ceil(pile / speed) pile by pile, never ceil(total / speed).
-  Koko eats from one pile in an hour and throws away the remainder of that hour,
-  so a partial hour does not carry into the next pile; summing first and
-  dividing once would silently model a different, easier problem and
-  under-count. The same rounding fixes the ceiling: at any speed above
-  max(pile), every pile still costs one full hour, so faster speeds buy nothing.
-  high = max(pile) is therefore a legal upper bound, and given the problem's
-  guarantee that hoursLimit >= piles.Length it is also a feasible one - which
-  the invariant below depends on.
-INVARIANT AND TERMINATION
-  Invariant: the minimum feasible speed lies in [low, high], high is always a
-  feasible speed, and every value below low has been proven infeasible. Feasible
-  mid -> high = mid, because mid is still a candidate and must not be discarded.
-  Infeasible mid -> low = mid + 1, because mid itself is ruled out. mid = low +
-  (high - low) / 2 floors toward low, so when high == low + 1 you get mid == low
-  and the branch either pulls high down to low or pushes low up to high; the
-  interval strictly shrinks every pass and the loop cannot spin. The classic
-  hang is pairing high = mid with low = mid on the other side - it stalls at
-  exactly this two-element state. return low needs no final re-check: low ==
-  high, and high was feasible by the invariant.
-WATCH OUT
-  CanFinish has no early exit - hour keeps summing across all piles long after
-  it has passed targetHour. speed == 1 is genuinely reachable (once low == 1 and
-  high == 2, mid == 1), and there hour equals the full sum of piles, the largest
-  value the accumulator can ever hold. Nothing in the code bounds that int
-  against overflow; either declare hour as long or break the moment hour >
-  targetHour, both free. The commented-out (pile + speed - 1) / speed is the
-  same ceiling without routing through double - that is the form to write if
-  asked to avoid floating point, and the one to reach for if the operands ever
-  grow.
+  piles is never sorted and never needs to be. The binary search runs over the
+  candidate answers - eating speeds - not over the array. What makes that legal
+  is monotonicity of the predicate: ceil(pile/speed) is non-increasing as speed
+  grows, so if CanFinish(piles, s, hoursLimit) is true it is true for every
+  speed above s. The boolean sequence over speeds 1, 2, ..., max(piles) is
+  therefore F F F ... T T T, and the task is to find the first T.
+SEARCH BOUNDS
+  low = 1 because speed 0 never finishes any pile, so it can never be the
+  answer.
+
+  high = max(piles) because at that speed every pile takes exactly one hour and
+  the total is piles.Length hours - the smallest total achievable. No speed
+  above max(piles) buys anything, so the answer cannot live past it.
+
+  high is seeded to 1 rather than 0 before the foreach, which keeps low <= high
+  even before any pile is examined.
+INVARIANT AND WHY IT RETURNS LOW
+  The invariant is: the answer is always inside [low, high].
+
+  When CanFinish(mid) is true, mid is still a live candidate - it may be the
+  minimum - so the code writes high = mid, not high = mid - 1. When it is false,
+  mid is definitely too slow, so low = mid + 1 discards it safely.
+
+  The loop exits at low == high, a single surviving candidate, which is why
+  returning low needs no separate best variable and why CanFinish is never
+  called on the returned value.
+WHY IT TERMINATES
+  mid = low + (high - low) / 2 floors toward low, so whenever low < high the
+  result satisfies low <= mid < high. The high = mid branch therefore strictly
+  shrinks the range rather than parking on the same value, and the low = mid + 1
+  branch obviously advances. Writing mid = (low + high + 1) / 2 with this pair
+  of updates would hang.
+WATCH OUT - THE TWO CEILINGS
+  Math.Ceiling((double)pile / speed) is exact here: any int converts to double
+  losslessly (doubles are exact through 2^53), so the division cannot round its
+  way into an off-by-one hour.
+
+  The commented-out integer form (pile + speed - 1) / speed is the usual
+  substitution, but it is not a free swap - with pile and speed both near 1e9,
+  pile + speed - 1 exceeds int.MaxValue and wraps negative. Check the
+  constraints before uncommenting it.
+WATCH OUT - THE ACCUMULATOR
+  hour is an int and CanFinish has no early exit, so it always sums across all
+  of piles. At a small speed the sum approaches sum(piles): with 1e4 piles of
+  1e9 that overflows int, and a wrapped negative makes hour <= targetHour
+  spuriously true, which would return a speed that is too slow.
+
+  Either fix closes it: declare hour as long, or return false the moment hour >
+  targetHour - the second also stops wasting work on hopeless speeds.
+BRUTE FORCE
+  Scan speed = 1, 2, 3, ... and return the first one CanFinish accepts. Correct,
+  and it uses the identical predicate - the only difference is that it walks
+  1..max(piles) linearly instead of halving it, giving O(n * max(piles)). That
+  framing is the point: binary search on the answer replaces the scan over the
+  answer range, and leaves the feasibility check untouched.
 TRIGGER
-  "Smallest X such that some cost fits inside a budget", where a candidate X can
-  be checked cheaply with one pass and the cost moves monotonically in X. Ship
-  capacity within D days, split-array-largest-sum, and minimum days to make m
-  bouquets are the identical skeleton: bracket the answer with a
-  trivially-infeasible low and a trivially-feasible high, write the predicate,
-  then it is only boundary discipline.
+  Reach for this when the question asks for a minimum or maximum value such that
+  some condition holds, the value lives in a contiguous integer range with
+  obvious bounds, and the condition flips exactly once across that range. The
+  habit worth keeping from this file is the shape: push the condition into its
+  own predicate that takes the candidate and the threshold (CanFinish(piles,
+  mid, hoursLimit)), so the search body stays three lines and the correctness
+  argument splits cleanly into "is the predicate monotone" and "is the range
+  right".
 COMPLEXITY
   Time  : O(n log k)
   Space : O(1)

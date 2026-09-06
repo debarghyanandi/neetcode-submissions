@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T11:19:01.502Z",
+  "updatedAt": "2026-09-06T12:24:31.835Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -405,9 +405,15 @@
       "fingerprints": {
         "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
       },
-      "lint": {},
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "a6ef6f5741d5",
+          "renames": []
+        }
+      },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer (eating speed), linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on eating speed, linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -420,14 +426,23 @@
         "optimal.cs": {
           "time": "O(n log k)",
           "space": "O(1)",
-          "algorithm": "binary search on answer (eating speed), linear feasibility check",
+          "algorithm": "binary search on eating speed, linear feasibility check",
           "approachKey": "binary-search-on-speed",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer (eating speed), linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on eating speed, linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "a6ef6f5741d5"
+        },
+        "builtAt": "2026-09-06T12:16:24.367Z"
       }
     },
     "evaluate-reverse-polish-notation": {
@@ -441,15 +456,19 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "3424e5a4dc18568a833436b0984554a9506874097b0aad4a2ddd78092d6d3df6": "optimal.cs",
-        "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs"
+        "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
+        "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
+        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs"
       },
       "fingerprints": {
         "3424e5a4dc18568a833436b0984554a9506874097b0aad4a2ddd78092d6d3df6": "optimal.cs",
-        "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs"
+        "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
+        "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
+        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack simulation via doubly linked list splicing\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based evaluation with operator dictionary\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit Stack<int> with dictionary-dispatched operators\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -467,7 +486,7 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "stack simulation via doubly linked list splicing",
+          "algorithm": "doubly linked list splicing as implicit stack",
           "approachKey": "linked-list-simulated-stack",
           "correct": true,
           "bruteForce": false
@@ -475,15 +494,47 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "stack-based evaluation with operator dictionary",
+          "algorithm": "explicit Stack<int> with dictionary-dispatched operators",
           "approachKey": "stack-eval",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack simulation via doubly linked list splicing\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based evaluation with operator dictionary\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit Stack<int> with dictionary-dispatched operators\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "bec0fbf9463a",
+          "renames": [
+            "l->left",
+            "r->right",
+            "res->result"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "be3260b08c07",
+          "renames": [
+            "a->left",
+            "b->right",
+            "c->token",
+            "op->result"
+          ]
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "bec0fbf9463a",
+          "optimal-variant.cs": "be3260b08c07"
+        },
+        "builtAt": "2026-09-06T12:22:01.106Z"
       }
     },
     "find-minimum-in-rotated-sorted-array": {
@@ -638,13 +689,15 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs"
+        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs",
+        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs"
       },
       "fingerprints": {
-        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs"
+        "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs",
+        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, transfer on demand\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"836a01808be1\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, lazy transfer for amortized FIFO\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -657,14 +710,32 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "two stacks, transfer on demand",
+          "algorithm": "two stacks, lazy transfer for amortized FIFO",
           "approachKey": "two-stack-queue",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, transfer on demand\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"836a01808be1\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, lazy transfer for amortized FIFO\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "836a01808be1",
+          "renames": [
+            "x->item"
+          ]
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "836a01808be1"
+        },
+        "builtAt": "2026-09-06T12:24:31.660Z"
       }
     },
     "is-anagram": {

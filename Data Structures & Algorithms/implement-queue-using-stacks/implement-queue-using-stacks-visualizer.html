@@ -327,175 +327,172 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Implement Queue Using Stacks',
-  note: 'a stack poured into another stack comes out in queue order',
-  inputs: [{id:'ops', label:'operations', value:'push 1, push 2, peek, pop, push 3, pop, pop, empty', width:360}],
+  note: 'a stack reversed twice is a queue',
+  inputs: [{id:'ops', label:'operations', value:'push 1,push 2,peek,pop,push 3,pop,pop,empty', width:420}],
   parse(raw){
     const parts = String(raw.ops).split(',').map(s => s.trim()).filter(s => s.length).slice(0, 14);
-    if (!parts.length) return {ok:false, msg:'Enter at least one operation, e.g. push 1, pop.'};
+    if (!parts.length) return {ok:false, msg:'Enter operations like: push 1, push 2, pop, peek, empty.'};
     const ops = [];
+    let size = 0;
     for (let i = 0; i < parts.length; i++){
       const bits = parts[i].split(/\s+/);
       const name = bits[0].toLowerCase();
       if (name === 'push'){
-        const v = Number(bits[1]);
-        if (bits.length !== 2 || !Number.isFinite(v)) return {ok:false, msg:'“push” needs one number, e.g. push 7.'};
-        ops.push({op:'push', v: v});
-      } else if (name === 'pop' || name === 'peek' || name === 'empty'){
-        if (bits.length !== 1) return {ok:false, msg:'“' + name + '” takes no argument.'};
+        const n = Number(bits[1]);
+        if (bits.length !== 2 || !Number.isFinite(n)) return {ok:false, msg:'Write a push as "push 7".'};
+        ops.push({op:'push', v:n});
+        size++;
+      } else if (name === 'pop' || name === 'peek'){
+        if (bits.length !== 1) return {ok:false, msg:'"' + name + '" takes no argument.'};
+        if (size === 0) return {ok:false, msg:'"' + name + '" on an empty queue — the C# code would throw there.'};
         ops.push({op:name});
+        if (name === 'pop') size--;
+      } else if (name === 'empty'){
+        if (bits.length !== 1) return {ok:false, msg:'"empty" takes no argument.'};
+        ops.push({op:'empty'});
       } else {
-        return {ok:false, msg:'Unknown operation “' + parts[i] + '”. Use push n, pop, peek or empty.'};
-      }
-    }
-    let size = 0;
-    for (let i = 0; i < ops.length; i++){
-      if (ops[i].op === 'push') size++;
-      else if (ops[i].op === 'pop'){
-        if (!size) return {ok:false, msg:'Operation ' + (i + 1) + ': pop on an empty queue.'};
-        size--;
-      } else if (ops[i].op === 'peek' && !size){
-        return {ok:false, msg:'Operation ' + (i + 1) + ': peek on an empty queue.'};
+        return {ok:false, msg:'Unknown operation "' + parts[i] + '". Use push N, pop, peek or empty.'};
       }
     }
     return {ok:true, value:{ops}, normalized:{ops: ops.map(o => o.op === 'push' ? 'push ' + o.v : o.op).join(', ')}};
   },
   shuffle(){
     const out = [];
-    let size = 0;
+    let size = 0, next = 1 + Math.floor(Math.random() * 5);
     const n = 7 + Math.floor(Math.random() * 3);
-    while (out.length < n){
+    for (let i = 0; i < n; i++){
       const r = Math.random();
-      if (size === 0 || r < 0.45){ out.push('push ' + (1 + Math.floor(Math.random() * 9))); size++; }
-      else if (r < 0.78){ out.push('pop'); size--; }
-      else out.push('peek');
+      if (size === 0 || r < 0.45){ out.push('push ' + next); next += 1 + Math.floor(Math.random() * 4); size++; }
+      else if (r < 0.75){ out.push('pop'); size--; }
+      else if (r < 0.90){ out.push('peek'); }
+      else out.push('empty');
     }
     out.push('empty');
-    return {ops: out.join(', ')};
+    return {ops: out.join(',')};
   },
   solutions: [
   {
-    label: 'Two stacks, flip only when the out-box runs dry',
-    badge: 'O(n) over n ops · O(n) space · transfer on demand · optimal.cs',
-    blurb: 'Pouring one stack into another reverses it, so a stack poured out <b>is</b> a queue. The trick is <em>when</em> to pour: only when <code>reverse</code> is empty. That way each value crosses at most once in its life, and the rare expensive <code>Pop</code> pays for the cheap ones — O(1) amortized.',
+    label: 'Two stacks, lazy transfer',
+    badge: 'amortized O(1) per call · O(n) space · two stacks · optimal.cs',
+    blurb: 'A stack hands things back in reverse, so reversing a second time restores arrival order. Arrivals pile up on <code>stack</code>; the first time a read finds <code>reverse</code> empty, the whole pile is tipped across and the oldest item lands on top. The tip only ever happens onto an <b>empty</b> <code>reverse</code>, so each element moves at most once — amortized O(1).',
     legend: [
-      {cls:'hot', text:'item just pushed or being carried across'},
-      {cls:'win', text:'front of the queue — top of reverse'},
-      {cls:'good', text:'value returned'},
-      {cls:'dim', text:'empty stack · finished operations'}
+      {cls:'hot', text:'element being pushed or moved'},
+      {cls:'accent', text:'top of stack — newest arrival'},
+      {cls:'win', text:'top of reverse — front of the queue'},
+      {cls:'dim', text:'empty stack'}
     ],
     code: [
-      'Stack<int> stack, reverse;      // in-box, out-box',
-      '',
-      'public void Push(int x) {',
-      '    stack.Push(x);',
+      'public void Push(int item)',
+      '{',
+      '    stack.Push(item);            // always O(1)',
       '}',
       '',
-      'public int Pop() {',
-      '    if (reverse.Count == 0) {',
+      'public int Pop()',
+      '{',
+      '    if (reverse.Count == 0)',
+      '    {',
       '        while (stack.Count != 0)',
-      '            reverse.Push(stack.Pop());',
+      '        {',
+      '            reverse.Push(stack.Pop());   // tip the pile over',
+      '        }',
       '        return reverse.Pop();',
       '    }',
       '    else return reverse.Pop();',
       '}',
       '',
-      'public int Peek() {',
-      '    if (reverse.Count == 0) {',
+      'public int Peek()',
+      '{',
+      '    if (reverse.Count == 0)',
+      '    {',
       '        while (stack.Count != 0)',
+      '        {',
       '            reverse.Push(stack.Pop());',
+      '        }',
       '        return reverse.Peek();',
       '    }',
       '    else return reverse.Peek();',
       '}',
       '',
-      'public bool Empty() {',
-      '    return reverse.Count == 0 && stack.Count == 0;',
+      'public bool Empty()',
+      '{',
+      '    return (reverse.Count == 0 && stack.Count == 0);',
       '}'
     ],
     simulate(input){
       const ops = input.ops, steps = [];
-      const inS = [], outS = [];
-      let cur = -1, ret = '–', moved = 0, pushes = 0;
+      const stack = [], rev = [], log = [];
+      let moves = 0;
+      const inPanel = (hot) => pTiles('stack — arrivals (bottom → top)',
+        stack.length ? stack.slice() : ['empty'],
+        (k) => ({cls: !stack.length ? 'dim' : (k === hot ? 'hot' : (k === stack.length - 1 ? 'accent' : ''))}));
+      const outPanel = (hot) => pTiles('reverse — departures (bottom → top)',
+        rev.length ? rev.slice() : ['empty'],
+        (k) => ({cls: !rev.length ? 'dim' : (k === hot ? 'hot' : (k === rev.length - 1 ? 'win' : ''))}));
+      const panels = (call, ret, hotIn, hotOut) => [
+        inPanel(hotIn),
+        outPanel(hotOut),
+        pPills('', [
+          {k:'call', v: call, cls:'hot'},
+          {k:'returns', v: ret, cls:'good'},
+          {k:'stack', v: stack.length},
+          {k:'reverse', v: rev.length}
+        ]),
+        pSlots('returned so far', log.length ? log.slice() : [{text:'nothing yet', cls:'dim'}])
+      ];
 
-      const panels = (hi) => {
-        hi = hi || {};
-        const inVals = inS.length ? inS : ['·'];
-        const outVals = outS.length ? outS.slice().reverse() : ['·'];
-        const front = outS.length ? outS[outS.length - 1] : (inS.length ? inS[0] : '–');
-        return [
-          pSlots('Operations', ops.map((o, i) => ({
-            text: o.op === 'push' ? 'push ' + o.v : o.op,
-            cls: i === cur ? 'hot' : (i < cur ? 'dim' : '')
-          }))),
-          pTiles('stack — the in-box (bottom ▸ top)', inVals, (k) => ({
-            cls: !inS.length ? 'dim' : (hi.inHot && k === inS.length - 1 ? 'hot' : '')
-          })),
-          pTiles('reverse — the out-box (top ▸ bottom, top = queue front)', outVals, (k) => ({
-            cls: !outS.length ? 'dim' : (k === 0 ? (hi.outHot ? 'hot' : 'in-window') : '')
-          })),
-          pPills('', [
-            {k:'queue front', v: front, cls:'accent'},
-            {k:'returned', v: ret, cls:'good'},
-            {k:'items moved', v: moved}
-          ])
-        ];
-      };
-
-      steps.push({lines:[1], msg:'Two stacks with different jobs. <code>stack</code> catches arrivals; <code>reverse</code> hands out departures. Nothing else is needed, because a stack emptied into another stack comes out in the opposite order — and the opposite of LIFO is FIFO.', panels: panels()});
+      steps.push({lines:[1,6,19,32], msg:'Two stacks, each with one job. <code>stack</code> takes every arrival; <code>reverse</code> hands out departures. A single stack can never be a queue because its newest item is the only reachable one — but pouring one stack into another inverts it, and the <em>inverse of newest-first is oldest-first</em>. That is the whole trick.', panels: panels('new MyQueue()', '–', -1, -1)});
 
       for (let i = 0; i < ops.length; i++){
         const o = ops[i];
-        cur = i;
 
         if (o.op === 'push'){
-          inS.push(o.v);
-          pushes++;
-          steps.push({lines:[3,4], msg:'Push <b>' + o.v + '</b> onto <code>stack</code> and stop there — O(1), no flipping. A new arrival must wait <em>behind</em> everyone already queued, and the in-box is exactly where “behind” lives.', panels: panels({inHot:true})});
+          stack.push(o.v);
+          steps.push({lines:[1,3], msg:'<code>Push(' + o.v + ')</code> never looks at <code>reverse</code> — it just drops <b>' + o.v + '</b> on top of the arrival pile. Ordering is deliberately <em>not</em> fixed here: no read has asked for the front yet, so paying to reorder now could be wasted work.', panels: panels('Push(' + o.v + ')', '–', stack.length - 1, -1)});
           continue;
         }
 
         if (o.op === 'empty'){
-          const e = (outS.length === 0 && inS.length === 0);
-          ret = e ? 'true' : 'false';
-          steps.push({lines:[25,26], msg:'An item can be waiting in <i>either</i> box, so both counts must be zero. Here stack holds <b>' + inS.length + '</b> and reverse holds <b>' + outS.length + '</b> → <b>' + ret + '</b>.', panels: panels()});
+          const e = (rev.length === 0 && stack.length === 0);
+          log.push({text:'empty → ' + e, cls:'good'});
+          steps.push({lines:[34], msg:'Both piles must be checked. An element nobody has read yet is still on <code>stack</code>; an element that survived an earlier tip sits in <code>reverse</code>. stack holds ' + stack.length + ', reverse holds ' + rev.length + ' → <b>' + e + '</b>.', panels: panels('Empty()', String(e), -1, -1)});
           continue;
         }
 
         const isPop = (o.op === 'pop');
-        const off = isPop ? 0 : 9;   // Peek is the same block, nine lines lower
+        const call = isPop ? 'Pop()' : 'Peek()';
 
-        if (outS.length === 0){
-          steps.push({lines:[8 + off], msg:'<code>reverse</code> is empty, so the oldest item is buried at the <em>bottom</em> of <code>stack</code> — unreachable from the top. Pour the whole in-box over: that single flip puts the bottom on top.', panels: panels()});
-          while (inS.length){
-            const x = inS.pop();
-            outS.push(x);
-            moved++;
-            steps.push({lines:[9 + off, 10 + off], msg:'Carry <b>' + x + '</b> off the top of <code>stack</code> onto <code>reverse</code>. The newest item moves first and ends up buried; the oldest moves last and ends up on top — the order inverts for free.', panels: panels({outHot:true})});
+        if (rev.length === 0){
+          steps.push({lines:[isPop ? 8 : 21], msg:'<code>reverse</code> is empty, so nothing is currently in queue order — the ' + stack.length + ' waiting element(s) are on <code>stack</code> newest-on-top. The oldest one is buried at the bottom, and the only way to reach a stack bottom is to remove everything above it, so the loop moves <b>all</b> of them, not just one.', panels: panels(call, '–', stack.length - 1, -1)});
+          while (stack.length){
+            const v = stack.pop();
+            rev.push(v);
+            moves++;
+            steps.push({lines: isPop ? [10,12] : [23,25], msg:'<code>stack.Pop()</code> hands over <b>' + v + '</b> and <code>reverse.Push</code> lands it on top. Because the newest item crosses first, it ends up buried deepest — the pile arrives inverted, which is exactly queue order. ' + (stack.length ? stack.length + ' still to move.' : 'The arrival pile is now empty.'), panels: panels(call, '–', stack.length - 1, rev.length - 1)});
           }
-          const v = outS[outS.length - 1];
           if (isPop){
-            outS.pop();
-            ret = v;
-            steps.push({lines:[11], msg:'<code>reverse.Pop()</code> returns <b>' + v + '</b>, the value pushed earliest — correct queue order. This one call was expensive, but it left <b>' + outS.length + '</b> items pre-flipped for the next calls.', panels: panels()});
+            const v = rev.pop();
+            log.push({text:'pop → ' + v, cls:'good'});
+            steps.push({lines:[14], msg:'The top of <code>reverse</code> is <b>' + v + '</b> — the oldest still-unserved element. Pop it. The rest stay put, already ordered, so the next ' + rev.length + ' read(s) cost O(1) each with no transfer at all.', panels: panels(call, String(v), -1, -1)});
           } else {
-            ret = v;
-            steps.push({lines:[20], msg:'<code>reverse.Peek()</code> reads <b>' + v + '</b> without removing it. The flip still happened, so the work is done once and the next <code>Pop</code> inherits it.', panels: panels({outHot:true})});
+            const v = rev[rev.length - 1];
+            log.push({text:'peek → ' + v, cls:'good'});
+            steps.push({lines:[27], msg:'<code>Peek</code> reads the top of <code>reverse</code> — <b>' + v + '</b>, the front of the queue — and leaves it in place. The transfer was still worth doing: it is remembered, so a later <code>Pop</code> gets it for free.', panels: panels(call, String(v), -1, rev.length - 1)});
           }
+          continue;
+        }
+
+        if (isPop){
+          const v = rev.pop();
+          log.push({text:'pop → ' + v, cls:'good'});
+          steps.push({lines:[8,16], msg:'<code>reverse</code> is <b>not</b> empty, so its top <b>' + v + '</b> is already the front of the queue — return it directly, O(1). Tipping <code>stack</code> in now would be a bug as well as a waste: newer arrivals would land <em>on top of</em> older ones and jump the line.', panels: panels(call, String(v), -1, -1)});
         } else {
-          const v = outS[outS.length - 1];
-          if (isPop){
-            outS.pop();
-            ret = v;
-            steps.push({lines:[8, 13], msg:'<code>reverse</code> is <b>not</b> empty, so no transfer — and that guard is the whole algorithm. Flipping now would drop newer items <em>on top of</em> older ones still waiting and break FIFO. Return <b>' + v + '</b> in O(1).', panels: panels()});
-          } else {
-            ret = v;
-            steps.push({lines:[17, 22], msg:'<code>reverse</code> already has the front on top, so peek is a plain O(1) read: <b>' + v + '</b>. Items sitting in <code>stack</code> are all younger and cannot be the front.', panels: panels({outHot:true})});
-          }
+          const v = rev[rev.length - 1];
+          log.push({text:'peek → ' + v, cls:'good'});
+          steps.push({lines:[21,29], msg:'<code>reverse</code> already holds ' + rev.length + ' ordered element(s), so the front is just its top: <b>' + v + '</b>, read without removing. No transfer, no scan.', panels: panels(call, String(v), -1, rev.length - 1)});
         }
       }
 
-      cur = ops.length;
-      steps.push({lines:[9,10], msg:'Finished. <b>' + pushes + '</b> pushes caused <b>' + moved + '</b> transfers — every value crossed at most once, ever. Charge that one crossing to the push that created it and each operation costs O(1) amortized, even though a single <code>Pop</code> can be O(n).', panels: panels()});
+      steps.push({lines:[3,12,14], msg:'Done. Each element takes the same four constant-time moves in its lifetime — pushed onto <code>stack</code>, popped off it, pushed onto <code>reverse</code>, popped off that — and ' + moves + ' transfer(s) happened here in total. One <code>Pop</code> can cost O(n), but that cost is charged once per element and never again, so n calls cost O(n) overall. That is the meaning of <b>amortized O(1)</b>.', panels: panels('–', '–', -1, -1)});
       return steps;
     }
   }]

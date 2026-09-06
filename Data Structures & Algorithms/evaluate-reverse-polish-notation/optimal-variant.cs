@@ -1,13 +1,13 @@
 // ##########################################################################
 // #  optimal-variant.cs    O(n) time / O(n) space
-// #  stack-based evaluation with operator dictionary   [stack-eval]
+// #  explicit Stack<int> with dictionary-dispatched operators
+// #  [stack-eval]
 // #  ties with optimal.cs on O(n) time / O(n) space
 // #
-// #  YOU SOLVED THIS YOURSELF (from submission-1)
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  pushes operands onto a Stack<int> and pops two operands per operator
-// #  using a Func lookup table, single pass O(n) time with O(n) worst-case
-// #  stack space.
+// #  single pass pushing operands and popping two per operator via a Func
+// #  lookup table, worst-case stack depth O(n)
 // ##########################################################################
 
 public class Solution {
@@ -16,23 +16,23 @@ public class Solution {
         var stack = new Stack<int>();
         var operations = new Dictionary<string, Func<int, int, int>>
         {
-            ["+"] = (a, b) => a + b,
-            ["-"] = (a, b) => a - b,
-            ["*"] = (a, b) => a * b,
-            ["/"] = (a, b) => a / b
+            ["+"] = (left, right) => left + right,
+            ["-"] = (left, right) => left - right,
+            ["*"] = (left, right) => left * right,
+            ["/"] = (left, right) => left / right
         };
 
-        foreach(string c in tokens)
+        foreach (string token in tokens)
         {
-            if (operations.ContainsKey(c))
+            if (operations.ContainsKey(token))
             {
-                int b = stack.Pop(); // current num
-                int a = stack.Pop(); // Prev result is this.
-                int op = operations[c](a, b); 
-                stack.Push(op);
+                int right = stack.Pop(); // current num
+                int left = stack.Pop(); // Prev result is this.
+                int result = operations[token](left, right);
+                stack.Push(result);
             }
             else
-            stack.Push( int.Parse(c));
+                stack.Push(int.Parse(token));
         }
 
         return stack.Pop();
@@ -41,80 +41,72 @@ public class Solution {
 
 /*
 ================================================================================
- PATTERN : Stack simulation - delegate table for operator dispatch
+ PATTERN : Stack fold over postfix tokens - operator lookup table
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
            first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
-WHY THIS PATTERN
-  RPN has no parentheses and no precedence: an operator always applies to the
-  two most recently completed subexpressions immediately to its left. "Most
-  recent two, then replace with one" is LIFO by definition, so a stack is not a
-  clever choice here, it is the direct transcription of the notation. The
-  Dictionary<string, Func<int,int,int>> named operations is just the dispatch
-  half of that: it turns the token string into the binary function to apply, so
-  the loop body has one shape for all four operators instead of a four-way
-  branch.
+WHY THIS WORKS
+  Postfix notation encodes the parse tree without parentheses: an operator's two
+  operands are always the two most recently completed subexpressions to its
+  left. "Most recent, not yet consumed" is the definition of LIFO, so a
+  Stack<int> is not a convenience here - it is the exact data structure the
+  grammar asks for. Every token is touched once, and each operator both removes
+  two entries and adds one, so the stack shrinks by exactly one per operator.
 INVARIANT
-  After processing any prefix of tokens, stack holds the integer values of the
-  maximal complete subexpressions of that prefix, ordered so the top is the
-  rightmost one.
-
-  Induction: a number token pushes a complete subexpression of size 1. An
-  operator token pops the two rightmost complete subexpressions, and by the
-  grammar of RPN those two are exactly its operands, so pushing their combined
-  value keeps the property. Operands add 1 to the depth, operators net -1 (two
-  pops, one push). A well-formed expression therefore ends at depth exactly 1,
-  which is why the bare return stack.Pop() is safe with no emptiness check.
-POP ORDER - THE TRAP
-  b = stack.Pop() runs FIRST and is the RIGHT operand; a = stack.Pop() runs
-  second and is the LEFT operand. The comments in the file say the same thing in
-  different words ("current num" then "prev result"). Swapping the two lines
-  silently passes every test built only from + and *, and breaks every - and /
-  case.
-
-  Concrete check: ["4","13","-"] pushes 4 then 13, so b=13, a=4, and
-  operations["-"](4, 13) = -9. Reversed it would yield 9. This is the single
-  most likely thing to get wrong from memory weeks later, and the first thing an
-  interviewer probes.
-WHY CONTAINSKEY IS THE RIGHT OPERATOR TEST
-  The branch condition is operations.ContainsKey(c), not a character or length
-  test. That matters because the token list can contain negative numbers: "-9"
-  is an operand, "-" is an operator. A test like c[0] == '-' or
-  !char.IsDigit(c[0]) classifies "-9" as subtraction and corrupts the stack.
-  Membership in the four-key table is exact - only the one-character strings
-  "+", "-", "*", "/" hit it - so "-9" falls through to int.Parse and pushes -9
-  correctly. Keying on the same dictionary that supplies the operation is what
-  makes the test and the dispatch impossible to drift apart.
-INTEGER DIVISION SEMANTICS
-  The problem requires division to truncate toward zero, and C# int division
-  does exactly that: -7 / 2 is -3, not -4. So the plain a / b inside the ["/"]
-  lambda already matches the spec with no Math.Truncate or cast to double
-  wrapping it. Do not "fix" it into (int)((double)a / b) - that adds a
-  rounding-mode question the int path never had. The problem statement also
-  guarantees no division by zero, which is why there is no guard; say so out
-  loud if asked rather than letting it look like an oversight.
-WHAT THIS VARIANT COSTS
-  Two things, both visible in the code and neither asymptotic.
-
-  1. Double lookup: operations.ContainsKey(c) hashes c, then operations[c]
-  hashes it again. operations.TryGetValue(c, out var fn) does it in one and
-  reads cleaner.
-
-  2. The dictionary and its four closures are constructed inside EvalRPN, so
-  they are rebuilt on every call. A static readonly field would build them once;
-  nothing in the lambdas captures per-call state, so the hoist is safe.
-
-  The switch-on-string version avoids both and needs no delegate at all. This
-  version's argument is uniformity, not speed: adding an operator is one
-  dictionary entry rather than a new case arm.
-TRIGGER
-  Reach for this shape when input is a linear token stream where each element
-  either produces a value or consumes a fixed number of the most recent values.
-  RPN, but also: expression evaluation after shunting-yard, simplify-path, and
-  basic-calculator style problems. The tell is postfix or "apply to the last k
-  results" - if the notation needed parentheses to disambiguate, you are in a
-  different problem and the plain stack is not enough.
+  After processing any prefix of tokens, stack holds - bottom to top, in
+  left-to-right source order - the integer values of every maximal complete
+  subexpression seen so far. Nothing partially evaluated is ever on the stack;
+  an int only gets pushed once its whole subtree is collapsed. For well-formed
+  input the operand count exceeds the operator count by exactly one, so when the
+  loop ends the stack has exactly one entry, which is why the bare stack.Pop()
+  at the bottom is safe without a Count check.
+THE POP ORDER TRAP
+  right = stack.Pop() comes first, left = stack.Pop() second. This is the single
+  most common bug in this problem and the thing to re-derive rather than
+  memorize: the right operand was pushed last, so it comes off first. Swap those
+  two lines and "+" and "*" still pass while "-" and "/" silently produce
+  negated / reciprocal-ish garbage. The comments in the file ("current num" for
+  right, "Prev result is this" for left) are the mnemonic - the accumulated left
+  side has been sitting deeper in the stack.
+WHY THE ELSE BRANCH IS SAFE
+  The dispatch is operations.ContainsKey(token), matching the whole string, not
+  a character scan. So the negative literal "-11" does not collide with the "-"
+  operator key: it misses the dictionary, falls to the else, and int.Parse
+  handles the leading minus. If you had instead tested token[0] == '-' or
+  checked token.Length, negative operands would be misread as subtraction. Worth
+  being able to say out loud when asked "what about negative numbers?"
+TRUNCATION IS LOAD-BEARING
+  C# int / int truncates toward zero, which is exactly the semantics RPN
+  evaluation requires: 6 / -132 must be 0, not -1. The lambda ["/"] = (left,
+  right) => left / right inherits that for free. Port this to Python and a // b
+  floors toward negative infinity and quietly breaks on mixed signs - you would
+  need int(a / b) or math.trunc. Same trap in any language whose division rounds
+  down.
+WHAT THE TABLE COSTS
+  The Dictionary<string, Func<int,int,int>> replaces a switch on token. Two
+  things follow from the code as written. First, ContainsKey(token) then
+  operations[token] hashes the same string twice; a single TryGetValue(token,
+  out var op) collapses that into one probe and reads cleaner. Second, the
+  dictionary and its four lambdas are constructed inside EvalRPN, so they are
+  rebuilt on every call - hoisting to a static readonly field makes it one-time.
+  Neither changes the asymptotics, and the table pays for itself the moment you
+  need to extend the operator set or make it data-driven.
+WHEN IT BREAKS
+  Every guarantee above rests on the input being valid RPN. Feed it "1 +" and
+  stack.Pop() throws InvalidOperationException on an empty stack; feed it "1 2
+  3" and the trailing Pop returns 3, silently ignoring the leftovers. Division
+  by zero throws DivideByZeroException. If an interviewer asks you to harden it:
+  check stack.Count >= 2 before each operator, use int.TryParse instead of Parse
+  for the operand branch, and assert stack.Count == 1 at the end.
+FOLLOW-UPS TO EXPECT
+  1) Build the RPN from infix - that is shunting-yard, same operator table plus
+  precedence. 2) Return the expression tree instead of the value - push TreeNode
+  instead of int, identical control flow. 3) Overflow - all intermediates are
+  stated to fit in a signed 32-bit int, so int suffices; otherwise switch to
+  long. 4) Do it with O(1) extra space - reuse the tokens array itself as the
+  stack by writing results back at a write index, since the stack never grows
+  past the number of tokens already consumed.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
