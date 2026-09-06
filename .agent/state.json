@@ -1,18 +1,94 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T01:51:26.573Z",
+  "updatedAt": "2026-09-06T06:35:01.872Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ccc44cc9d3c8f785b25553a89777f10305fa2e0232076f1d37cddd592f0693d4": "optimal.cs",
+        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "ccc44cc9d3c8f785b25553a89777f10305fa2e0232076f1d37cddd592f0693d4": "optimal.cs",
+        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "ccc44cc9d3c8",
+          "renames": [
+            "res->current",
+            "x->digit1",
+            "y->digit2"
+          ]
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "342190939269",
+          "renames": [
+            "l1->first",
+            "l2->second",
+            "v1->firstValue",
+            "v2->secondValue"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ccc44cc9d3c8\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative digit-by-digit addition with carry using dummy head\",\"approachKey\":\"iterative-carry-addition\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"342190939269\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive digit-by-digit addition with carry\",\"approachKey\":\"recursive-carry-addition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "iterative digit-by-digit addition with carry using dummy head",
+          "approachKey": "iterative-carry-addition",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive digit-by-digit addition with carry",
+          "approachKey": "recursive-carry-addition",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ccc44cc9d3c8\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative digit-by-digit addition with carry using dummy head\",\"approachKey\":\"iterative-carry-addition\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"342190939269\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive digit-by-digit addition with carry\",\"approachKey\":\"recursive-carry-addition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ccc44cc9d3c8",
+          "suboptimal.cs": "342190939269"
+        },
+        "builtAt": "2026-09-06T06:35:01.698Z"
+      }
     },
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
