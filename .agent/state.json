@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T08:56:02.094Z",
+  "updatedAt": "2026-09-06T10:13:55.770Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -964,6 +964,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, jump left via last-seen index\",\"approachKey\":\"sliding-window-jump-index\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
         "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, shrink left one step at a time\",\"approachKey\":\"sliding-window-shrink-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       }
+    },
+    "lru-cache": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "max-water-container": {
       "topic": "Data Structures & Algorithms",
