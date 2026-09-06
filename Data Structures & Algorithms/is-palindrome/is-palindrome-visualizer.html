@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Valid Palindrome — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -327,146 +327,112 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Valid Palindrome',
-  note: 'clean-and-reverse vs. two pointers converging in place',
-  inputs: [{id:'s', label:'string', value:'A man, a plan, a canal: Panama', width:330}],
+  note: 'the two ends must agree — check them, then throw them both away',
+  inputs: [{id:'s', label:'text', value:'rAce, car!', width:260}],
   parse(raw){
     const s = String(raw.s);
-    if (!s.length) return {ok:false, msg:'Enter a string.'};
-    if (s.length > 34) return {ok:false, msg:'Keep it to 34 characters or fewer so every tile stays readable.'};
+    if (!s.length) return {ok:false, msg:'Enter some text to check.'};
+    if (s.length > 16) return {ok:false, msg:'Keep it to 16 characters so the walk stays watchable.'};
     return {ok:true, value:{s}, normalized:{s}};
   },
   shuffle(){
-    const pool = ['Was it a car or a cat I saw?', 'No lemon, no melon', 'race a car', 'Madam, I\'m Adam', 'hello world', '.,;', 'Step on no pets!'];
-    return {s: pool[Math.floor(Math.random()*pool.length)]};
+    const pool = ['rAce, car!', 'Ab@ba', 'tab a, {cat}', 'No lemon!', 'a.', 'X#x', 'abc, cbA', ' ,.'];
+    return {s: pool[Math.floor(Math.random() * pool.length)]};
   },
   solutions: [
   {
-    label: 'Clean, reverse, compare',
-    badge: 'O(n) time · O(n) space · not in repo · the honest first answer',
-    blurb: 'Strip the non-alphanumerics, lowercase, reverse, compare. Correct and three lines — and it allocates <b>two more strings</b>. The improvement the two-pointer version buys is <b>memory</b>, not time.',
+    label: 'Two pointers converging inward',
+    badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
+    blurb: 'Reading the same forwards and backwards means the first surviving character must equal the last. Two pointers walk inward: non-alphanumerics are stepped over <b>in place</b>, each matching pair retires both ends at once, and one mismatch settles the whole answer — no cleaned copy of the string is ever built.',
     legend: [
-      {cls:'hot', text:'character being examined'},
-      {cls:'good', text:'kept'},
-      {cls:'dim', text:'discarded — punctuation or space'},
-      {cls:'rem', text:'mismatch'}
+      {cls:'hot', text:'left / right'},
+      {cls:'good', text:'pair already matched'},
+      {cls:'dim', text:'skipped — not a letter or digit'},
+      {cls:'bad', text:'mismatch'}
     ],
     code: [
-      'var cleaned = new string(s',
-      '    .Where(char.IsLetterOrDigit)',
-      '    .Select(char.ToLowerInvariant)',
-      '    .ToArray());                      // allocation #1',
+      'int left = 0;',
+      'int right = text.Length - 1;',
       '',
-      'var reversed = new string(cleaned',
-      '    .Reverse().ToArray());            // allocation #2',
-      '',
-      'return cleaned == reversed;'
-    ],
-    simulate(input){
-      const s = input.s, steps = [];
-      const keep = [];
-      const isAn = c => /[a-z0-9]/i.test(c);
-      const panels = (i, cls, rev) => [
-        pTiles('Input string', s.split(''), (k) => ({
-          v: s[k] === ' ' ? '␣' : s[k],
-          cls: k === i ? (cls || 'hot') + ' is-current' : (k < i ? (isAn(s[k]) ? 'good' : 'dim') : '')
-        }), {narrow:true, focus:i}),
-        pChips('cleaned — a brand-new string', [{left:'', items: keep.map(c => ({text:c})), empty:'empty'}]),
-        pChips('reversed — a second brand-new string', [{left:'', items: rev ? rev.map(c => ({text:c})) : [], empty:'not built yet'}]),
-        pPills('', [{k:'kept', v: keep.length}, {k:'extra strings', v: rev ? 2 : 1, cls:'accent'}])
-      ];
-      steps.push({lines:[1], msg:'Build a cleaned copy first. Every character of the original gets a decision.', panels: panels(-1)});
-      for (let i = 0; i < s.length; i++){
-        if (isAn(s[i])){
-          keep.push(s[i].toLowerCase());
-          steps.push({lines:[2,3], msg:'<code>' + s[i] + '</code> is alphanumeric — keep it, lowercased.', panels: panels(i, 'good')});
-        } else {
-          steps.push({lines:[2], msg:'<code>' + (s[i] === ' ' ? 'space' : s[i]) + '</code> is not alphanumeric — dropped.', panels: panels(i, 'dim')});
-        }
-      }
-      const rev = [...keep].reverse();
-      steps.push({lines:[6,7], msg:'Now reverse it. That is a <b>second</b> full-length allocation, on top of the first.', panels: panels(-1, null, rev)});
-      const eq = keep.join('') === rev.join('');
-      steps.push({lines:[9], msg: eq
-        ? 'The two strings are identical — <b>palindrome</b>. O(n) time, but O(n) memory for something the original string could answer in place.'
-        : 'The strings differ — <b>not a palindrome</b>. O(n) time, O(n) memory.',
-        panels: panels(-1, null, rev)});
-      return steps;
-    }
-  },
-  {
-    label: 'Two pointers converging',
-    badge: 'O(n) time · O(1) space · optimal.cs · reference solution',
-    blurb: 'A palindrome is a symmetry claim: position <b>i</b> must match position <b>n−1−i</b>. Two pointers test exactly that relation and meet after n/2 comparisons — reading the original string, copying nothing.',
-    legend: [
-      {cls:'hot', text:'the pair being compared'},
-      {cls:'dim', text:'skipped — not alphanumeric'},
-      {cls:'good', text:'verified symmetric'},
-      {cls:'rem', text:'mismatch — not a palindrome'}
-    ],
-    code: [
-      'int left = 0, right = s.Length - 1;',
-      '',
-      'while (left < right) {',
-      '    while (left < right && !char.IsLetterOrDigit(s[left]))',
+      'while (left < right)',
+      '{',
+      '    // Skip anything that is not part of the comparison.',
+      '    while (left < right && !char.IsLetterOrDigit(text[left]))',
       '        left++;',
-      '    while (right > left && !char.IsLetterOrDigit(s[right]))',
+      '',
+      '    while (right > left && !char.IsLetterOrDigit(text[right]))',
       '        right--;',
       '',
-      '    if (char.ToLower(s[left]) != char.ToLower(s[right]))',
+      '    if (char.ToLower(text[left]) != char.ToLower(text[right]))',
       '        return false;',
       '',
       '    left++;',
       '    right--;',
       '}',
+      '',
       'return true;'
     ],
     simulate(input){
-      const s = input.s, steps = [];
-      const isAn = c => /[a-z0-9]/i.test(c);
-      let left = 0, right = s.length - 1;
-      const verified = {};
-      const panels = (cls) => [
-        pTiles('The original string — no copies made', s.split(''), (k) => ({
-          v: s[k] === ' ' ? '␣' : s[k],
-          cls: (k === left || k === right) ? (cls || 'hot') + ' is-current'
-             : verified[k] ? 'good'
+      const t = input.s, n = t.length, steps = [];
+      const isAlnum = (c) => /[a-z0-9]/i.test(c);
+      const show = (c) => c === ' ' ? '␣' : c;
+      const matched = {}, skipped = {};
+      let left = 0, right = n - 1, badL = -1, badR = -1, done = false, answer = null;
+      const at = (i) => (i >= 0 && i < n) ? show(t[i]) : '–';
+      const panels = () => [
+        pTiles('text', t.split('').map(show), (k) => ({
+          cls: (k === badL || k === badR) ? 'bad'
+             : (!done && (k === left || k === right)) ? 'hot'
+             : matched[k] ? 'good'
+             : skipped[k] ? 'dim'
              : (k < left || k > right) ? 'dim' : ''
-        }), {narrow:true, bracket: left <= right ? {from:left, to:right, dashed:true} : null,
-             ptrs:[{name:'left', idx:left, cls:'accent'}, {name:'right', idx:right}]}),
+        })),
         pPills('', [
-          {k:'left', v:left, cls:'accent'},
-          {k:'right', v:right},
-          {k:'unverified span', v: Math.max(right - left + 1, 0)},
-          {k:'extra memory', v:'0', cls:'good'}
+          {k:'left', v: left, cls:'hot'},
+          {k:'text[left]', v: at(left)},
+          {k:'right', v: right, cls:'hot'},
+          {k:'text[right]', v: at(right)},
+          {k:'result', v: answer === null ? 'still checking' : (answer ? 'true' : 'false'), cls: answer === false ? 'bad' : 'good'}
         ])
       ];
-      steps.push({lines:[1], msg:'Pointers at both ends. Everything strictly outside <code>[left, right]</code> has already been verified symmetric.', panels: panels()});
+      steps.push({lines:[1,2], msg:'The definition forces the outermost surviving characters to be equal, so <code>left</code> starts at <b>0</b> and <code>right</code> at the last index <b>' + (n - 1) + '</b>. Nothing is copied or lowercased up front — building a cleaned string would cost O(n) extra space, so instead the junk gets stepped over where it stands.', panels: panels()});
       while (left < right){
-        let skipped = false;
-        while (left < right && !isAn(s[left])){
-          steps.push({lines:[4,5], msg:'<code>' + (s[left] === ' ' ? 'space' : s[left]) + '</code> at ' + left + ' is not alphanumeric — step <code>left</code> past it. The <code>left &lt; right</code> guard in this inner loop is <b>correctness</b>, not tidiness: an all-punctuation string would otherwise run straight off the end.',
-            panels: panels('dim')});
-          left++; skipped = true;
+        steps.push({lines:[4], msg:'<code>left</code> = ' + left + ' is still strictly left of <code>right</code> = ' + right + ', so at least one unchecked pair remains. Once they meet or cross, every character has already been accounted for.', panels: panels()});
+        let movedL = false;
+        while (left < right && !isAlnum(t[left])){
+          const c = t[left];
+          skipped[left] = 1;
+          left++;
+          movedL = true;
+          steps.push({lines:[7,8], msg:'<code>text[' + (left - 1) + ']</code> is <b>' + show(c) + '</b> — not a letter or digit, so it plays no part in the palindrome and <code>left</code> simply steps past it. The <code>left &lt; right</code> guard is what stops this loop from walking off the end of an all-punctuation string.', panels: panels()});
         }
-        while (right > left && !isAn(s[right])){
-          steps.push({lines:[6,7], msg:'<code>' + (s[right] === ' ' ? 'space' : s[right]) + '</code> at ' + right + ' is not alphanumeric — step <code>right</code> past it.',
-            panels: panels('dim')});
-          right--; skipped = true;
+        if (!movedL) steps.push({lines:[7], msg:'<code>text[' + left + ']</code> is <b>' + at(left) + '</b>, already a letter or digit, so the skip loop body never runs and <code>left</code> stays at ' + left + '.', panels: panels()});
+        let movedR = false;
+        while (right > left && !isAlnum(t[right])){
+          const c = t[right];
+          skipped[right] = 1;
+          right--;
+          movedR = true;
+          steps.push({lines:[10,11], msg:'<code>text[' + (right + 1) + ']</code> is <b>' + show(c) + '</b>, ignorable too, so <code>right</code> walks inward.' + (right === left ? ' Its guard is <code>right &gt; left</code>, so it halts exactly here rather than crossing below <code>left</code>.' : ''), panels: panels()});
         }
-        if (left >= right) break;
-        const a = s[left].toLowerCase(), b = s[right].toLowerCase();
+        if (!movedR) steps.push({lines:[10], msg:'<code>text[' + right + ']</code> is <b>' + at(right) + '</b>, a real character, so <code>right</code> holds at ' + right + '.', panels: panels()});
+        const a = String(t[left]).toLowerCase(), b = String(t[right]).toLowerCase();
         if (a !== b){
-          steps.push({lines:[9,10], msg:'<code>' + s[left] + '</code> vs <code>' + s[right] + '</code> — <b>mismatch</b>. Not a palindrome, and the answer is known without reading the middle.',
-            panels: panels('rem')});
+          badL = left; badR = right; answer = false; done = true;
+          steps.push({lines:[13,14], msg:'Comparing lowercased <b>' + show(a) + '</b> against <b>' + show(b) + '</b> — they differ. A single disagreeing pair rules the whole string out; nothing further inside could ever repair it, so the method returns <b>false</b> right away.', panels: panels()});
           return steps;
         }
-        steps.push({lines:[9], msg:'<code>' + s[left] + '</code> = <code>' + s[right] + '</code> once case-folded. Symmetric so far.' + (skipped ? '' : ''), panels: panels('good')});
-        verified[left] = true; verified[right] = true;
+        matched[left] = 1; matched[right] = 1;
+        if (left === right){
+          steps.push({lines:[13], msg:'The pointers have landed on the same index ' + left + ', so this compares <b>' + show(a) + '</b> with itself — trivially equal. That is the centre of an odd-length palindrome, and letting it compare costs less than adding another guard for it.', panels: panels()});
+        } else {
+          steps.push({lines:[13], msg:'Comparing lowercased <b>' + show(a) + '</b> against <b>' + show(b) + '</b> — equal, so this pair is consistent with a palindrome. <code>char.ToLower</code> on both sides is what makes the check case-insensitive without allocating a lowercased copy.', panels: panels()});
+        }
+        steps.push({lines:[16,17], msg:'That pair is settled, so <em>both</em> ends retire together: <code>left</code> → ' + (left + 1) + ', <code>right</code> → ' + (right - 1) + '. Every iteration eliminates two characters, which is why a single inward pass is enough.', panels: panels()});
         left++; right--;
-        steps.push({lines:[12,13], msg:'Step both inward. The unverified span shrinks by two — which is why the two nested loops together are still <b>O(n)</b>: each pointer only ever moves toward the other.',
-          panels: panels()});
       }
-      steps.push({lines:[15], msg:'The pointers met. Every mirrored pair matched — <b>palindrome</b>, using two ints and nothing else.', panels: panels('good')});
+      done = true; answer = true;
+      steps.push({lines:[4,20], msg:'<code>left</code> = ' + left + ' is no longer left of <code>right</code> = ' + right + ' — the pointers have met or crossed, meaning every pair was compared and every one agreed. Falling out of the loop <em>is</em> the proof, so the answer is <b>true</b>. Two ints of memory, one pass over the text.', panels: panels()});
       return steps;
     }
   }]
@@ -807,9 +773,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -833,8 +819,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;

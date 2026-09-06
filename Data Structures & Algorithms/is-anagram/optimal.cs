@@ -1,31 +1,31 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  fixed-size array as perfect hash, balance counting
+// -  fixed 26-slot array, signed balance counting
 // -  [array-frequency-balance]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  single pass increments/decrements a 26-slot array keyed by char-'a',
-// -  then checks all slots are zero, giving constant extra space since the
-// -  alphabet is fixed.
+// -  single pass increments/decrements a fixed-size 26-element array keyed
+// -  by char-'a', then checks all slots are zero, giving constant space
+// -  since the alphabet is bounded
 // --------------------------------------------------------------------------
 
 public class Solution
 {
-    public bool IsAnagram(string s, string t)
+    public bool IsAnagram(string original, string candidate)
     {
-        if (s.Length != t.Length)
+        if (original.Length != candidate.Length)
             return false;
 
         // One slot per lowercase letter. Index 0 = 'a', index 25 = 'z'.
         int[] letterBalance = new int[26];
 
         // Single pass over both strings at once: credit for s, debit for t.
-        for (int i = 0; i < s.Length; i++)
+        for (int i = 0; i < original.Length; i++)
         {
-            letterBalance[s[i] - 'a']++;
-            letterBalance[t[i] - 'a']--;
+            letterBalance[original[i] - 'a']++;
+            letterBalance[candidate[i] - 'a']--;
         }
 
         // Anagrams cancel out exactly, so every slot must be back to zero.
@@ -41,61 +41,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fixed counting array - one signed balance pass
+ PATTERN : Fixed counting array - balances must cancel to zero
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  Anagram is multiset equality over characters. The alphabet here is fixed and
-  known (26 lowercase letters), so the whole multiset fits in an int[26]
-  addressed by c - 'a', and "compare two multisets" collapses to "compare 26
-  integers". The signed trick folds both counts into one table: s credits (++),
-  t debits (--). That is why there is no second array and no table-vs-table
-  comparison at the end - only a scan for a nonzero slot.
+  Anagram means "same multiset of characters, order irrelevant." The alphabet
+  here is bounded and contiguous, so original[i] - 'a' is a perfect hash: every
+  letter gets its own dense slot in letterBalance, no hashing, no collisions, no
+  resizing. The array IS the multiset. Once you see "bounded alphabet + multiset
+  equality," reach for the count array before you reach for a Dictionary.
+BRUTE FORCE
+  Two obvious alternatives, both worse here:
+  1. Sort both strings and compare - correct, but n log n and it allocates two
+  char arrays.
+  2. For each character of original, scan candidate for a match and cross it off
+  - quadratic.
+  Counting collapses multiset equality into a single tally pass, and the tally
+  is what the final zero-check reads.
 INVARIANT
-  After the loop body runs for index i, letterBalance[c - 'a'] equals
-  (occurrences of c in s[0..i]) minus (occurrences of c in t[0..i]). Slots are
-  fully independent: a surplus in one letter can never cancel a deficit in
-  another, because they live at different indices. Combined with the
-  equal-length precondition, "every slot is zero at the end" is exactly "every
-  letter appears the same number of times in both" - which is the definition of
-  anagram. That is the whole correctness argument.
+  After iteration i of the loop, for every letter c:
+    letterBalance[c - 'a'] == (occurrences of c in original[0..i]) -
+    (occurrences of c in candidate[0..i])
+  The increment credits original, the decrement debits candidate. When the loop
+  ends, that difference is over the whole strings, so "every slot is 0" is
+  literally the statement "the two letter multisets are identical" - which is
+  the definition of anagram. Nothing else needs proving.
+
+  A corollary worth having ready: since the lengths are equal, the balances sum
+  to zero. So a mismatch can never be a single nonzero slot - any surplus letter
+  is paid for by a deficit somewhere else.
 THE LENGTH GUARD IS LOAD-BEARING
-  The early return on s.Length != t.Length is not a shortcut, it is a
-  precondition for the loop. The single pass indexes t[i] while i is bounded
-  only by s.Length, so with s = "ab" and t = "a" you get an
-  IndexOutOfRangeException, not a wrong answer. Contrast with the two-loop shape
-  (count all of s, then decount all of t): there, unequal lengths would
-  necessarily leave some slot nonzero and the guard would be a pure
-  optimization. This version trades that safety for the fused pass, so the guard
-  has to stay.
+  The early return on original.Length != candidate.Length is not a fast-path
+  optimization; delete it and the method breaks two different ways.
+  Candidate longer: the loop is bounded by original.Length, so candidate's tail
+  is never read. "ab" vs "abab" would leave every slot at zero and return true.
+  Candidate shorter: candidate[i] runs off the end and throws
+  IndexOutOfRangeException.
+  The single fused loop over both strings is only legal because the guard
+  already established the lengths match.
+NO EARLY EXIT INSIDE THE LOOP
+  Tempting instinct: bail out the moment a slot goes negative or nonzero. It is
+  wrong. Take original = "ba", candidate = "ab". After i = 0, letterBalance['b']
+  is +1 and letterBalance['a'] is -1 - two nonzero slots - yet these are
+  anagrams; i = 1 cancels both. A slot can wander away from zero and come back
+  at any point. Only the state after the final iteration carries information,
+  which is why the zero-check is a separate foreach over all 26 slots.
 WATCH OUT
-  1. c - 'a' silently assumes every character is in 'a'..'z'. An uppercase 'A'
-  produces index -32 and a space produces -65, so bad input throws rather than
-  lying - loud, but still a crash. If the interviewer widens the input, this is
-  the first thing to fix.
-  2. Do not "optimize" by returning false the moment a slot goes negative inside
-  the loop. Negative only means t has led on that letter so far, and s can still
-  catch up. Concretely, s = "ba" and t = "ab": at i = 0 letterBalance['a' - 'a']
-  is already -1, yet the strings are anagrams. Only the final values carry
-  meaning.
-THE OBVIOUS FOLLOW-UP
-  "What if the input is Unicode, or the alphabet is unbounded?" Swap int[26] for
-  Dictionary<char, int> with the same +1 / -1 balance, then verify every value
-  is zero - or maintain a running count of nonzero entries so the final check is
-  O(1). Space then scales with the number of distinct characters instead of a
-  flat 26. Mention too that iterating char by char breaks on surrogate pairs and
-  combining marks; a truly correct Unicode version compares text elements, not
-  chars. The alphabet-free alternative is sorting both strings and comparing,
-  which needs no counting table but pays n log n.
-RECALL TRIGGER
-  Reach for a fixed counting array whenever the question is "same contents,
-  order irrelevant" over a small known symbol set: anagram grouping,
-  permutation-in-a-string sliding windows, character frequency checks. The tell
-  is a bounded alphabet plus an answer that depends only on counts. The signed
-  single-array variant specifically applies when you are comparing exactly two
-  sequences of equal length.
+  The subtraction original[i] - 'a' is an unchecked contract that the input is
+  lowercase a-z. It has no validation behind it:
+  - 'A' is 65 and 'a' is 97, so an uppercase input indexes at -32 and throws
+  IndexOutOfRangeException.
+  - Any non-ASCII char (an accented letter, a digit, a space) indexes far past
+  25 and throws too.
+  This is a hard crash, not a wrong answer, so it will surface - but say the
+  assumption out loud in an interview rather than letting them find it. To
+  generalize: swap the array for Dictionary<char, int> keyed on the raw char
+  (same increment/decrement/zero-check structure), and if full Unicode is in
+  play, iterate runes rather than chars so surrogate pairs are not split.
+TRIGGER
+  Bounded alphabet plus a permutation or multiset-equality question. The same
+  letterBalance idea is the engine underneath the sliding-window family - find
+  all anagrams in a string, permutation in string - where you add the entering
+  char, remove the leaving char, and keep a running count of how many slots are
+  nonzero so the window check is constant work instead of a 26-slot rescan.
+  Learn the balance array here and those problems become bookkeeping.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

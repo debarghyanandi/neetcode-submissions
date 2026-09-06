@@ -1,43 +1,43 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  dictionary frequency map with budget consumption
+// -  hash map frequency count, build then drain
 // -  [hashmap-frequency-consume]
 // -  ranks below optimal.cs (O(n) time / O(1) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  builds a Dictionary<char,int> counting s (up to O(n) distinct keys in
-// -  the worst case for an unbounded alphabet), then decrements per
-// -  character of t, failing on missing/zero counts.
+// -  builds a Dictionary<char,int> from the first string (up to O(n)
+// -  distinct keys for an unbounded alphabet), then decrements per
+// -  character of the second, failing on missing or zero counts
 // --------------------------------------------------------------------------
 
 public class Solution
 {
-    public bool IsAnagram(string s, string t)
+    public bool IsAnagram(string first, string second)
     {
         // Different lengths can never be anagrams. O(1) rejection.
-        if (s.Length != t.Length)
+        if (first.Length != second.Length)
             return false;
 
         // Build the frequency map of the first string.
         var charFrequency = new Dictionary<char, int>();
 
-        foreach (char c in s)
+        foreach (char letter in first)
         {
-            charFrequency.TryGetValue(c, out int currentCount);
-            charFrequency[c] = currentCount + 1;
+            charFrequency.TryGetValue(letter, out int currentCount);
+            charFrequency[letter] = currentCount + 1;
         }
 
         // Walk the second string and spend one unit of each character's budget.
-        foreach (char c in t)
+        foreach (char letter in second)
         {
-            if (!charFrequency.TryGetValue(c, out int remaining))
-                return false;              // character not in s at all
+            if (!charFrequency.TryGetValue(letter, out int remaining))
+                return false;              // character not in first at all
 
             if (remaining == 0)
-                return false;              // t uses this character more often than s
+                return false;              // second uses this character more often than first
 
-            charFrequency[c] = remaining - 1;
+            charFrequency[letter] = remaining - 1;
         }
 
         // Lengths matched and every character in t was covered by s's budget,
@@ -48,70 +48,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Map Frequency Budget - build then drain
+ PATTERN : Hash map frequency budget - count first, spend on second
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
-WHY THIS PATTERN
-  Anagram is multiset equality: the two strings are equal as bags of characters,
-  order discarded. A Dictionary<char,int> is the direct encoding of a bag. The
-  build loop over s turns s into counts; the loop over t spends those counts.
-  Sorting both strings and comparing also decides multiset equality, but pays
-  O(n log n) for an ordering nobody looks at. Counting is the cheaper route to
-  the same fact.
-THE INVARIANT
-  At every point during the second loop, charFrequency[c] equals (occurrences of
-  c in s) minus (occurrences of c consumed so far from t), and it is never
-  negative. The two guards are exactly what maintain non-negativity: the
-  TryGetValue miss rejects a character s never had, and the remaining == 0 test
-  rejects spending a budget already drained to zero. Every surviving iteration
-  decrements exactly one unit.
-WHY NO SECOND SWEEP
-  The closing comment is the load-bearing part of the argument, so make it
-  explicit. Let n = s.Length. The build loop deposits exactly n units total
-  across all keys. If the t loop runs to completion it withdraws exactly
-  t.Length units, and the guard at the top proved t.Length == n. Withdrawing n
-  units from a pool of n without any balance going negative forces every balance
-  to zero, so no leftover scan is needed. Delete the length check and the
-  argument collapses: s = "aab", t = "ab" drains cleanly and wrongly returns
-  true.
+INVARIANT
+  Read charFrequency[c] as the budget of c that second has not yet claimed. The
+  first loop sets budget(c) to the count of c in first, so the total budget
+  across all entries is exactly first.Length. The second loop spends one unit
+  per character of second and refuses to spend from an absent or zero budget, so
+  it either bails early or spends exactly second.Length units, each from a
+  genuinely available count. Because first.Length == second.Length was already
+  established, total spent equals total budget, which forces every entry to sit
+  at exactly 0 when the loop ends. That is why the closing comment holds: there
+  is no leftover positive count to find, so no verification sweep over the
+  dictionary is needed.
+WHY THE LENGTH CHECK IS LOAD-BEARING
+  Delete the first two lines and the method becomes wrong, not merely slower.
+  Take first = "aab", second = "ab": every character of second finds a positive
+  budget, the loop runs to completion, and true is returned while one 'a' is
+  still unspent. The guard is what upgrades "second is covered by first" into
+  "second equals first as a multiset", by pinning the two totals together. It is
+  labelled as an O(1) rejection, but its real job is correctness. Say that out
+  loud if an interviewer asks why the code never re-scans the map.
+THE TWO REJECTIONS
+  There are two distinct false exits and both are required because entries are
+  never removed. TryGetValue returning false means the character never occurred
+  in first at all. remaining == 0 means it did occur, but second has now used it
+  more times than first had. If instead you called charFrequency.Remove(letter)
+  once its budget hits its last unit, the zero test would become dead code and
+  the missing-key branch would cover both cases - one fewer conditional, at the
+  cost of a removal per exhausted key. Note also that the build loop relies on
+  out int currentCount defaulting to 0 on a miss, which is what lets a single
+  line serve as both insert and increment; each update in either loop is a probe
+  plus an indexer store, i.e. the key is hashed twice.
 WHY THIS LOSES
-  When the alphabet is bounded - the usual lowercase-English constraint - an
-  int[26] indexed by c - 'a' does the same job. Increment on s, decrement on t,
-  early-exit the moment a slot would go negative, and the same
-  n-units-from-n-units argument still closes it. That version is O(1) space
-  instead of space proportional to the distinct characters of s, and each of the
-  2n operations is a bounds-checked array index rather than a hash, bucket probe
-  and possible resize. This file is the right answer only when the character
-  domain is unbounded (full Unicode, arbitrary symbols), where a 26-slot array
-  is not an option.
+  Valid Anagram constrains both inputs to lowercase English letters, and this
+  file ignores that constraint. A single int[26] indexed by letter - 'a' carries
+  the same information in fixed space with no hashing and no dictionary
+  allocation: increment while walking first, decrement while walking second, and
+  the same length guard plus a went-negative check reproduces the budget
+  argument word for word. That is the intended solution. The dictionary buys
+  generality over arbitrary char values that the problem never asks for. The
+  other common answer - sort both strings and compare - is strictly worse on
+  time and only earns its place when you cannot afford any counting structure.
 WATCH OUT
-  1. TryGetValue(c, out int currentCount) writes 0 into currentCount on a miss,
-  which is why the build loop needs no ContainsKey branch. That is the
-  documented behavior of the out parameter, not an accident.
-  2. Keys are never removed. A character fully spent stays in the map with value
-  0, so the missing-key check and the remaining == 0 check are two different
-  failures and you need both. Drop the zero check and "aab" vs "abb" is
-  accepted.
-  3. foreach over a string yields UTF-16 code units, not code points. Surrogate
-  pairs are counted as two unrelated chars and combining-mark or normalization
-  differences are invisible. Fine for the stated constraints; say so out loud
-  before an interviewer asks.
-THE FOLLOW-UP
-  "Now the input is arbitrary Unicode" is the question this file already answers
-  - point at it and note the int[26] version breaks. "Make it one pass": since
-  the lengths are equal you can walk both strings in a single loop, incrementing
-  for s[i] and decrementing for t[i], but you then lose the early exit reasoning
-  and must scan the map at the end, because a temporarily negative balance may
-  be repaid later. "Case-insensitive or ignore whitespace" is a normalization
-  step before counting, not a change to the algorithm.
+  foreach over a string yields char, that is UTF-16 code units, so this compares
+  multisets of code units rather than of code points. Two strings assembled from
+  different astral-plane characters that happen to reuse the same surrogate
+  halves will be declared anagrams. Irrelevant under the lowercase-only
+  constraint, but worth naming if pushed on Unicode; the honest fix is to
+  enumerate runes and key the map on int. Empty inputs need no special case:
+  lengths match, neither loop body executes, true is returned.
 TRIGGER
-  Reach for build-then-drain whenever the question is whether two sequences hold
-  the same items in any order. The same budget map, kept over a moving window
-  instead of a whole string, is what permutation-in-string and minimum-window
-  need - recognizing that this is the fixed-window degenerate case of those is
-  most of the transfer value here.
+  Reach for count-then-spend whenever the question is multiset equality - same
+  characters in any order, permutation check, rearrangement. The decrement half
+  is the reusable piece: freeze the budget map and slide a window over the
+  second string and you have the answer to find-all-anagrams-in-a-string and
+  permutation-in-string, where budget is handed back as characters leave the
+  window instead of being rebuilt from scratch.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
