@@ -1,7 +1,19 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T01:18:24.651Z",
+  "updatedAt": "2026-09-06T01:51:26.573Z",
   "problems": {
+    "add-two-numbers": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs",
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "anagram-groups": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -1358,14 +1370,57 @@
     },
     "reorder-linked-list": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs"
+      },
+      "fingerprints": {
+        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "dbb7370936f4",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"find middle (slow/fast), reverse second half, merge alternately\",\"approachKey\":\"middle-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "find middle (slow/fast), reverse second half, merge alternately",
+          "approachKey": "middle-reverse-merge",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"find middle (slow/fast), reverse second half, merge alternately\",\"approachKey\":\"middle-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "dbb7370936f4"
+        },
+        "builtAt": "2026-09-06T01:51:26.444Z"
+      }
     },
     "reverse-a-linked-list": {
       "topic": "Data Structures & Algorithms",
