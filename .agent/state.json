@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T10:13:55.770Z",
+  "updatedAt": "2026-09-06T11:19:01.502Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -967,14 +967,60 @@
     },
     "lru-cache": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs"
+      },
+      "fingerprints": {
+        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "a3971da329d8",
+          "renames": [
+            "nxt->afterNode",
+            "lru->lruNode"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a3971da329d8\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list + hash map\",\"approachKey\":\"dll-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(1)",
+          "space": "O(n)",
+          "algorithm": "doubly linked list + hash map",
+          "approachKey": "dll-hashmap",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a3971da329d8\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list + hash map\",\"approachKey\":\"dll-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "a3971da329d8"
+        },
+        "builtAt": "2026-09-06T11:19:01.308Z"
+      }
     },
     "max-water-container": {
       "topic": "Data Structures & Algorithms",
