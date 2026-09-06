@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-06T06:35:01.872Z",
+  "updatedAt": "2026-09-06T08:56:02.094Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -261,13 +261,15 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs"
+        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs",
+        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs"
       },
       "fingerprints": {
-        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs"
+        "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs",
+        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"afc63c826dba\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -287,7 +289,27 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"afc63c826dba\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "afc63c826dba",
+          "renames": [
+            "res->result",
+            "curr->currentTemp",
+            "val->index"
+          ]
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "afc63c826dba"
+        },
+        "builtAt": "2026-09-06T08:54:45.863Z"
       }
     },
     "duplicate-integer": {
@@ -320,14 +342,14 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, build full set then compare sizes\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, add-and-check, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, build full set then compare cardinality to length\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash set membership, early exit on repeat",
+          "algorithm": "hash set, add-and-check, early exit on repeat",
           "approachKey": "hashset-membership",
           "correct": true,
           "bruteForce": false
@@ -335,15 +357,38 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash set membership, build full set then compare sizes",
+          "algorithm": "hash set, build full set then compare cardinality to length",
           "approachKey": "hashset-membership",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set membership, build full set then compare sizes\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, add-and-check, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, build full set then compare cardinality to length\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "04893c3ee615",
+          "renames": []
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "256ee4307930",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "04893c3ee615",
+          "optimal-variant.cs": "256ee4307930"
+        },
+        "builtAt": "2026-09-06T08:56:01.926Z"
       }
     },
     "eating-bananas": {
