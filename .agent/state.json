@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T03:44:05.967Z",
+  "updatedAt": "2026-09-07T03:58:55.673Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -311,6 +311,17 @@
         },
         "builtAt": "2026-09-06T08:54:45.863Z"
       }
+    },
+    "depth-of-binary-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "duplicate-integer": {
       "topic": "Data Structures & Algorithms",
@@ -740,16 +751,112 @@
     },
     "invert-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs",
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant-2.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "eb5f76e2a52e8656bef29849f97313484ee98a58e32365509d143ed414d913fe": "optimal.cs",
+        "9b65703a785f965edb402d716d35260745806d51643c72968a46720d80eb3e70": "optimal-variant-2.cs",
+        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "eb5f76e2a52e8656bef29849f97313484ee98a58e32365509d143ed414d913fe": "optimal.cs",
+        "9b65703a785f965edb402d716d35260745806d51643c72968a46720d80eb3e70": "optimal-variant-2.cs",
+        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "eb5f76e2a52e",
+          "renames": []
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "ba5240d320be",
+          "renames": [
+            "node->current",
+            "temp->leftChild"
+          ]
+        },
+        "optimal-variant-2.cs": {
+          "version": 1,
+          "codePrint": "9b65703a785f",
+          "renames": [
+            "temp->leftChild"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, swap children\",\"approachKey\":\"recursive-dfs-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"ba5240d320be\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, swap children\",\"approachKey\":\"iterative-dfs-stack-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant-2.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive DFS, swap children",
+          "approachKey": "recursive-dfs-swap",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "BFS with queue, swap children",
+          "approachKey": "bfs-queue-swap",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant-2.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "iterative DFS with explicit stack, swap children",
+          "approachKey": "iterative-dfs-stack-swap",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, swap children\",\"approachKey\":\"recursive-dfs-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, swap children\",\"approachKey\":\"iterative-dfs-stack-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"ba5240d320be\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant-2.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "eb5f76e2a52e",
+          "optimal-variant-2.cs": "9b65703a785f",
+          "optimal-variant.cs": "ba5240d320be"
+        },
+        "builtAt": "2026-09-07T03:58:55.500Z"
+      }
     },
     "is-anagram": {
       "topic": "Data Structures & Algorithms",
