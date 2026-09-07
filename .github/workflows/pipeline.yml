@@ -146,12 +146,15 @@ jobs:
           # slug" and exits 0 - so the run would go green having done nothing.
           node scripts/resolve-slugs.mjs "$ONLY"
 
-      - name: Guard - the lint safety check must still work
+      - name: Guard - the deterministic half must still work
         run: |
           # sameShape() is the only thing standing between the lint model and
-          # the code. If its own test suite fails, the guard has a hole or a
-          # false alarm - stop before spending a single model call.
+          # the code, and standing() is the one header line that makes a claim
+          # about a file other than its own. Both are pure functions with tests,
+          # and both are cheap to run - so run them before spending a model call
+          # rather than finding out from a header that contradicts its neighbour.
           node scripts/lib/csharp.test.mjs
+          node scripts/lib/header.test.mjs
 
       - name: Install Claude Code
         if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''

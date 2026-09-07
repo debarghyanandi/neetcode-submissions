@@ -67,15 +67,24 @@ const wrap = (text, width) => {
  * Where this solution sits relative to its siblings. Deterministic - derived
  * from the ranked list, never asked of the model.
  */
-function standing(name, ranked) {
+export function standing(name, ranked) {
   if (ranked.length === 1) return 'the only solution in this folder';
   const me = ranked.findIndex((r) => r.name === name);
   const best = ranked[0];
+  const tied = (a, b) => a.time === b.time && a.space === b.space;
+
   if (me === 0) {
     const next = ranked[1];
-    return `ranks above ${next.name} (${next.time} time / ${next.space} space)`;
+    // Index 0 is not automatically "above" anything. When the next one ties on
+    // both axes the order between them is arbitrary - assignNames breaks the
+    // tie on filename - and claiming to rank above it produced two headers in
+    // one folder flatly contradicting each other: optimal.cs saying it ranked
+    // above the variant while the variant said the two were tied.
+    return tied(ranked[0], next)
+      ? `ties with ${next.name} on ${next.time} time / ${next.space} space`
+      : `ranks above ${next.name} (${next.time} time / ${next.space} space)`;
   }
-  if (ranked[me].time === best.time && ranked[me].space === best.space) {
+  if (tied(ranked[me], best)) {
     return `ties with ${best.name} on ${best.time} time / ${best.space} space`;
   }
   return `ranks below ${best.name} (${best.time} time / ${best.space} space)`;
