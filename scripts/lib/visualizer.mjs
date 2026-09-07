@@ -190,3 +190,43 @@ export function selectForVisualizer(curatedFiles, classification) {
 
   return { chosen, dropped, unclassified: unknown };
 }
+
+/**
+ * Follow a rename into the visualizer's own text.
+ *
+ * A visualizer names the file each panel animates, in a badge the reader can
+ * see. classify renames curated files - a tie now goes to the solution you
+ * wrote, so two panels can swap - and the HTML does not follow on its own.
+ *
+ * It used to, by accident: a rename invalidated the recorded code prints, so
+ * the next run rebuilt the whole animation and wrote fresh labels. Re-keying
+ * those prints stopped that Opus call and, with it, the only thing keeping the
+ * labels honest. The animation was never wrong - just the caption - so this
+ * fixes the caption and leaves the rest alone.
+ *
+ * One pass with the old names longest-first, so a straight swap between two
+ * names cannot be applied twice.
+ *
+ * @param {string} html
+ * @param {Map<string,string>|Record<string,string>} renames old name -> new name
+ * @returns {{html: string, changed: number}}
+ */
+export function renameInVisualizer(html, renames) {
+  const map = new Map(renames instanceof Map ? renames : Object.entries(renames));
+  const moved = [...map].filter(([from, to]) => from !== to);
+  if (!moved.length) return { html, changed: 0 };
+
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const alternation = moved
+    .map(([from]) => from)
+    .sort((a, b) => b.length - a.length)
+    .map(esc)
+    .join('|');
+
+  let changed = 0;
+  const out = html.replace(
+    new RegExp(`(?<![A-Za-z0-9_.\\-])(${alternation})(?![A-Za-z0-9_\\-])`, 'g'),
+    (m) => { changed++; return map.get(m) ?? m; },
+  );
+  return { html: out, changed };
+}

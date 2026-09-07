@@ -19,7 +19,7 @@
  *   node scripts/classify.mjs --apply --exclude-changed-since <sha> --limit 5
  */
 
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './lib/scan.mjs';
@@ -32,6 +32,7 @@ import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
+import { renameInVisualizer } from './lib/visualizer.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -453,6 +454,20 @@ for (const p of targets) {
         prints: nextPrints,
         files: (rec.visualizer.files ?? []).map((f) => plan.names.get(f) ?? f),
       };
+    }
+
+    // And into the visualizer's own text. Each panel's badge names the file it
+    // animates, and a rename leaves every one of them pointing at the wrong
+    // solution - most visibly when two panels swap. Re-keying the prints above
+    // is what stopped the rebuild that used to refresh these by accident, so
+    // the caption has to be corrected here instead. Deterministic: no model.
+    const vizPath = join(p.dir, `${p.slug}-visualizer.html`);
+    if (moves.length && existsSync(vizPath)) {
+      const { html, changed } = renameInVisualizer(readFileSync(vizPath, 'utf8'), plan.names);
+      if (changed) {
+        writeFileSync(vizPath, html, 'utf8');
+        console.log(`    visualizer: ${changed} filename reference(s) updated`);
+      }
     }
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;

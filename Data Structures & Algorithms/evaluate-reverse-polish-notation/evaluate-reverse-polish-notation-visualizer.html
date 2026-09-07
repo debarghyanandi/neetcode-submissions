@@ -372,7 +372,7 @@ const PROBLEM = {
   solutions: [
   {
     label: 'Doubly linked tokens, spliced in place',
-    badge: 'O(n) time · O(n) space · list as implicit stack · optimal.cs',
+    badge: 'O(n) time · O(n) space · list as implicit stack · optimal-variant.cs',
     blurb: 'A doubly linked list of the tokens <em>already is</em> the stack: everything reachable backwards from the current node is exactly the operands still waiting. So an operator reads <code>prev.prev</code> and <code>prev</code>, overwrites itself with the result, then jumps its own <code>prev</code> back past both — the two operands drop out of the chain and no stack object is ever allocated.',
     legend: [
       {cls:'hot', text:'head — the node being read'},
@@ -490,7 +490,7 @@ const PROBLEM = {
   },
   {
     label: 'Explicit stack with a dictionary of operators',
-    badge: 'O(n) time · O(n) space · Stack + Func table · optimal-variant.cs',
+    badge: 'O(n) time · O(n) space · Stack + Func table · optimal.cs',
     blurb: 'Scan left to right. A number means nothing until its operator arrives, so it waits on the stack; an operator\'s operands are always the two most recent values, which is exactly what two <code>Pop</code>s return — first pop is the <b>right</b> operand. A dictionary of <code>Func&lt;int,int,int&gt;</code> makes <code>ContainsKey</code> the “is this an operator?” test and collapses the four-way branch into one lookup.',
     legend: [
       {cls:'hot', text:'token being processed'},

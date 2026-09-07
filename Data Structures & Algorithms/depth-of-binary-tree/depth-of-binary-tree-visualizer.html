@@ -388,7 +388,7 @@ const PROBLEM = {
   solutions: [
   {
     label: 'Count the levels with a queue',
-    badge: 'O(n) time · O(n) space · level-order BFS · optimal.cs',
+    badge: 'O(n) time · O(n) space · level-order BFS · optimal-variant.cs',
     blurb: 'Depth is the number of levels, so count them directly. The whole trick is <code>levelSize</code>: snapshot how many nodes are queued <em>before</em> draining them, and the inner loop consumes exactly the current level even as children pile up behind it. Every complete drain is one more level, so <code>level</code> is the answer once the queue runs dry.',
     legend: [
       {cls:'head', text:'node being dequeued'},
@@ -503,7 +503,7 @@ const PROBLEM = {
   },
   {
     label: 'Ask each subtree its own depth',
-    badge: 'O(n) time · O(n) space · recursive DFS · optimal-variant.cs',
+    badge: 'O(n) time · O(n) space · recursive DFS · optimal.cs',
     blurb: 'The depth of a tree is defined in terms of its subtrees: the deeper of the two children, plus one for the node itself. An absent tree has depth <b>0</b>, which both stops the recursion and makes a missing child free — it can never win the <code>Math.Max</code>. A leaf therefore gets <code>max(0, 0) + 1 = 1</code> with no special case written for it.',
     legend: [
       {cls:'head', text:'call currently executing'},
