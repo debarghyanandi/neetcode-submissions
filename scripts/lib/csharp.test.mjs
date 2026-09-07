@@ -12,7 +12,7 @@
  * will refuse honest rewrites. Both are worth stopping for.
  */
 
-import { sameShape } from './csharp.mjs';
+import { sameShape, shapeForm } from './csharp.mjs';
 
 let pass = 0, fail = 0;
 
@@ -82,6 +82,11 @@ accepts('property accessors are not renames',
   'public class S { public int Count { get; set; } public int F(int count) { return count; } }',
   ['q->count']);
 
+accepts('renaming a variable whose type is a custom class',
+  'public class S { public int F(TreeNode root) { TreeNode node = root; return node.val; } }',
+  'public class S { public int F(TreeNode root) { TreeNode current = root; return current.val; } }',
+  ['node->current']);
+
 // ---- sabotage that must be caught --------------------------------------
 refuses('flipped comparison', BASE, BASE.replace('l <= r', 'l >= r'), 'op changed');
 refuses('shortened comparison', BASE, BASE.replace('l <= r', 'l < r'), 'token count changed');
@@ -93,9 +98,35 @@ refuses('renamed the class', BASE, BASE.replace('class Solution', 'class BinaryS
 refuses('two variables collapsed into one', BASE, ren(BASE, [['t', 'target'], ['m', 'target']]), 'both became');
 refuses('deleted a comment', BASE, BASE.replace('   // avoid overflow', ''), 'comment(s) deleted');
 refuses('renamed onto a contextual keyword', BASE, ren(BASE, [['t', 'value']]), 'contextual keyword');
+// A collection swap is a complexity change wearing a rename's clothes: seen
+// maps one-to-one onto seen, List onto HashSet, and every other token matches.
+const CONTAINS = 'public class S { public bool F(int[] nums) { List<int> seen = new List<int>(); foreach (var n in nums) { if (seen.Contains(n)) return true; seen.Add(n); } return false; } }';
+refuses('List swapped for HashSet', CONTAINS, CONTAINS.split('List').join('HashSet'), 'type name changed');
+refuses('constructed type swapped',
+  'public class S { public void F() { Queue<int> q = new Queue<int>(); } }',
+  'public class S { public void F() { Queue<int> q = new Stack<int>(); } }', 'type name changed');
+
 refuses('var swapped for an explicit type',
   'public class S { public void F() { var x = 1; } }',
   'public class S { public void F() { int x = 1; } }', 'kw changed');
+
+// ---- shapeForm: the same solution, however it is written ---------------
+
+function same(name, a, b, want = true) {
+  const got = shapeForm(a) === shapeForm(b);
+  if (got === want) { pass++; console.log(`ok    ${name}`); }
+  else { fail++; console.log(`FAIL  ${name}\n      shapes ${got ? 'matched' : 'differed'}, expected ${want ? 'a match' : 'a difference'}`); }
+}
+
+same('renamed variables are the same solution', BASE, ren(BASE, [['t', 'target'], ['l', 'left'], ['r', 'right'], ['m', 'mid']]));
+same('recommented is the same solution', BASE, BASE.replace('// avoid overflow', '// NOTE: mid, computed safely'));
+same('reindented is the same solution', BASE, BASE.replace(/\n    /g, '\n\t'));
+same('a flipped comparison is NOT the same solution', BASE, BASE.replace('l <= r', 'l >= r'), false);
+same('a different literal is NOT the same solution', BASE, BASE.replace('return -1;', 'return -2;'), false);
+same('List and HashSet are NOT the same solution', CONTAINS, CONTAINS.split('List').join('HashSet'), false);
+same('a queue and a stack are NOT the same solution',
+  'public class S { void F() { Queue<int> q = new Queue<int>(); q.Enqueue(1); } }',
+  'public class S { void F() { Stack<int> q = new Stack<int>(); q.Push(1); } }', false);
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { shapeForm } from './csharp.mjs';
 
 /**
  * Strip C#/C-family comments from source, respecting string and char literals.
@@ -85,4 +86,26 @@ export function fingerprint(src) {
 /** Short form for logs and state files. Collision risk is irrelevant at this scale. */
 export function shortPrint(src) {
   return fingerprint(src).slice(0, 12);
+}
+
+/**
+ * The identity of a SOLUTION, as opposed to the identity of a file.
+ *
+ * Two submissions are the same solution when they are the same logic - the
+ * same technique, the same structure - whatever the variables are called and
+ * whatever you wrote in the comments. That has to be the test rather than a
+ * hash of the text, because lint itself renames variables: without this, a
+ * resubmission of code lint had already tidied would read as a brand new
+ * solution and be filed as optimal-variant.cs alongside its own original.
+ *
+ * C# only. Anything else falls back to the text hash, which is strictly safer:
+ * it can miss a duplicate, never invent one.
+ */
+export function solutionPrint(src, ext = 'cs') {
+  if (String(ext).toLowerCase() !== 'cs') return fingerprint(src);
+  try {
+    return createHash('sha256').update('shape1|' + shapeForm(src), 'utf8').digest('hex');
+  } catch {
+    return fingerprint(src);
+  }
 }

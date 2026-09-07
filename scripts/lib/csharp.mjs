@@ -79,6 +79,71 @@ export function tokenize(src) {
 const significant = (toks) => toks.filter((t) => t.t !== 'ws' && t.t !== 'comment');
 
 /**
+ * Is the identifier at `i` one that must NOT be renamed?
+ *
+ * Shared by sameShape and shapeForm so the comparison and the hash can never
+ * drift apart. Fixed means: renaming it makes a different program, not a
+ * tidier one.
+ *
+ *   x.Length          a member name belongs to somebody else's API
+ *   class Solution    the declared type
+ *   new Queue<..>     the type being constructed
+ *   TreeNode node     the type in a declaration - an identifier directly
+ *                     followed by another identifier is `Type name` in C#
+ *
+ * Deliberately NOT "followed by <": the tokenizer emits `<` one character at a
+ * time, so `l < = r` and `t < nums[m]` both look like the start of a generic
+ * argument list. `Queue<TreeNode>` is pinned anyway by the `new Queue<..>` that
+ * has to construct it, and by consistency across the two.
+ *
+ * The last three matter more than they look. Without them `List<int> seen`
+ * and `HashSet<int> seen` are a consistent one-to-one rename of each other,
+ * so the guard would wave through a lint rewrite that turned an O(n) Contains
+ * into an O(1) one - a complexity change, dressed as tidier naming.
+ */
+function fixedIdentifier(toks, i) {
+  const prev = toks[i - 1], next = toks[i + 1];
+  if (prev && prev.t === 'op' && prev.v === '.') return 'member';
+  if (prev && prev.t === 'kw' &&
+      (prev.v === 'class' || prev.v === 'struct' || prev.v === 'interface' || prev.v === 'namespace')) return 'type';
+  if (prev && prev.t === 'kw' && prev.v === 'new') return 'type';
+  if (next && next.t === 'id') return 'type';
+  return null;
+}
+
+/**
+ * A canonical form in which two files that are the same solution collapse to
+ * the same string, whatever the variables are called.
+ *
+ * Every identifier is replaced by the order in which it first appears, so
+ * `left/right/mid` and `l/r/m` come out identical. Comments and whitespace are
+ * gone with them. Held literal, because renaming one of these is a different
+ * program rather than a tidier one: keywords, operators, literals, a member
+ * name after a dot, and a declared type name. That is the same set sameShape()
+ * refuses to see renamed, deliberately - the two answer the same question, one
+ * as a comparison and one as a hash.
+ *
+ * Rare false collapse worth knowing about: two files differing ONLY by swapping
+ * the roles of two variables in a non-commutative spot, with nothing earlier to
+ * pin which is which, canonicalise the same. `l - r` fixed to `r - l` on the
+ * first line either name appears is the shape of it.
+ */
+export function shapeForm(src) {
+  const toks = significant(tokenize(src));
+  const seen = new Map();
+  const out = [];
+
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t.t !== 'id') { out.push(t.v); continue; }
+    if (fixedIdentifier(toks, i)) { out.push(t.v); continue; }
+    if (!seen.has(t.v)) seen.set(t.v, `$${seen.size}`);
+    out.push(seen.get(t.v));
+  }
+  return out.join(' ');
+}
+
+/**
  * @returns {{ok: boolean, errors: string[], renames: Array<[string,string]>}}
  */
 export function sameShape(before, after) {
@@ -103,13 +168,11 @@ export function sameShape(before, after) {
       continue;
     }
 
-    // A member name after a dot belongs to some other API - renaming it is a
-    // different program, not a tidier one. Same for a declared type or method.
-    const prev = A[i - 1];
-    const isMember = prev && prev.t === 'op' && prev.v === '.';
-    const isDeclName = prev && prev.t === 'kw' && (prev.v === 'class' || prev.v === 'struct' || prev.v === 'interface' || prev.v === 'namespace');
-    if ((isMember || isDeclName) && a.v !== b.v) {
-      errors.push(`${isMember ? 'member' : 'type'} name changed: ${a.v} -> ${b.v} near: ${near}`);
+    // A member name belongs to some other API, and a type name decides what the
+    // program costs. Renaming either is a different program, not a tidier one.
+    const fixed = fixedIdentifier(A, i);
+    if (fixed && a.v !== b.v) {
+      errors.push(`${fixed} name changed: ${a.v} -> ${b.v} near: ${near}`);
       continue;
     }
 

@@ -272,8 +272,27 @@ for (const p of targets) {
   // name - naming it optimal-variant.cs would enshrine a copy. Take it out of
   // the classification set and record it as dealt with.
   const dupes = p.pending.filter((s) => s.duplicateOfCurated).map((s) => s.file);
-  const fresh = p.pending.filter((s) => !s.duplicateOfCurated).map((s) => s.file);
+  const fresh = p.pending.filter((s) => !s.duplicateOfCurated && !s.supersededBy).map((s) => s.file);
   if (dupes.length) console.log(`  duplicates of curated code (not classified): ${dupes.join(', ')}`);
+
+  // Two raw submissions of the same solution - a comment added, a variable
+  // renamed, a retry - used to become optimal.cs AND optimal-variant.cs. The
+  // newest is the one you meant to keep; the older ones go, here, before a
+  // model is asked to classify a file that is about to be deleted.
+  const superseded = p.pending.filter((s) => s.supersededBy);
+  if (superseded.length) {
+    for (const s of superseded) console.log(`  ${s.file} is the same solution as ${s.supersededBy} - superseded`);
+    if (doApply) {
+      const rec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+      rec.processedSubmissions = [...new Set([
+        ...(rec.processedSubmissions ?? []), ...superseded.map((s) => s.file),
+      ])].sort();
+      for (const s of superseded) git(p.dir, 'rm', '-q', '--', s.file);
+      console.log(`    deleted ${superseded.length} superseded submission(s)`);
+    }
+    report('classify', p.slug, 'ok',
+      superseded.map((s) => `${s.file} superseded by ${s.supersededBy}`).join('; '));
+  }
 
   const files = [...p.curatedFiles, ...fresh];
   if (files.length === 0) { console.log('  nothing to classify\n'); continue; }

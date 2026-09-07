@@ -73,7 +73,7 @@ if (opts.json) {
     console.log(`  ${p.path}`);
     console.log(`      ${p.curatedFiles.length ? `already curated: ${p.curatedFiles.join(', ')}` : 'never curated'}${p.hasVisualizer ? ' + visualizer.html' : ''}`);
     for (const s of p.pending) {
-      console.log(`      ${s.file.padEnd(18)} ${String(s.bytes).padStart(6)}B  ${s.fingerprint}${s.duplicateOfCurated ? '   [DUPLICATE of curated code]' : ''}`);
+      console.log(`      ${s.file.padEnd(18)} ${String(s.bytes).padStart(6)}B  ${s.fingerprint}${s.duplicateOfCurated ? '   [DUPLICATE of curated code]' : s.supersededBy ? `   [SAME SOLUTION as ${s.supersededBy} - will be deleted]` : ''}`);
     }
     console.log('');
   }

@@ -97,6 +97,39 @@ node scripts/lib/csharp.test.mjs
 
 ---
 
+## Submitting the same problem twice
+
+NeetCode syncs every submission, so solving once and submitting twice — you added a comment,
+you renamed a variable, the first attempt timed out — leaves two raw files in the folder.
+
+**The newest one wins.** The older ones are deleted before anything is classified, so one
+solution produces one curated file. Before this, both were classified and you got
+`optimal.cs` *and* `optimal-variant.cs` holding the same code — `optimal-variant.cs` is for a
+genuinely different technique at the same complexity, not a reprint.
+
+"Same" means the same *logic*, not the same text:
+
+| Difference between two submissions | Same solution? |
+|---|---|
+| Comments added, changed, removed | Yes — the newer wins, and its comments are the ones kept |
+| Variables renamed (`t` → `target`) | Yes. This one matters: lint renames variables, so text matching would call tidied code a new solution |
+| Spacing, indentation, brace style | Yes |
+| `List<int>` swapped for `HashSet<int>` | **No** — that is an O(n) lookup becoming O(1) |
+| A queue swapped for a stack | **No** — BFS and DFS are different solutions |
+| Any changed comparison, literal or statement | **No** |
+
+`node scripts/detect.mjs` tells you before anything runs:
+
+```
+submission-0.cs   352B  3c5001625f76   [SAME SOLUTION as submission-1.cs - will be deleted]
+submission-1.cs   447B  c7376e2389de
+```
+
+**The one thing to know:** if you commented on the first attempt and not the second, that
+comment goes with the deleted file. Put your notes in the submission you send last.
+
+---
+
 ## "Show me what it would do, without changing anything"
 
 Drop `--apply` off any command.

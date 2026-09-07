@@ -10,7 +10,7 @@ import { readdirSync, readFileSync, writeFileSync, existsSync, statSync, mkdirSy
 import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { fingerprint, shortPrint } from './normalise.mjs';
+import { solutionPrint, shortPrint } from './normalise.mjs';
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const STATE_PATH = join(REPO, '.agent', 'state.json');
@@ -130,22 +130,42 @@ export function scanRepo(state = loadState()) {
       // Fingerprint what we already curated here, so a resubmitted identical
       // idea is recognised rather than reprocessed.
       const curatedPrints = {};
-      for (const f of curated) curatedPrints[fingerprint(readFileSync(join(dir, f), 'utf8'))] = f;
+      for (const f of curated) curatedPrints[solutionPrint(readFileSync(join(dir, f), 'utf8'), 'cs')] = f;
       const known = new Set([...Object.keys(curatedPrints), ...Object.keys(rec.fingerprints ?? {})]);
 
       const pending = [];
       for (const name of submissions) {
         if (done.has(name)) continue;
         const src = readFileSync(join(dir, name), 'utf8');
-        const print = fingerprint(src);
+        const ext = name.match(SUBMISSION_RE)[2];
+        const print = solutionPrint(src, ext);
         pending.push({
           file: name,
           index: Number(name.match(SUBMISSION_RE)[1]),
-          ext: name.match(SUBMISSION_RE)[2],
+          ext,
           bytes: statSync(join(dir, name)).size,
+          print,
           fingerprint: shortPrint(src),
           duplicateOfCurated: known.has(print),
+          supersededBy: null,
         });
+      }
+
+      // Submitting the same solution twice - a comment added, a variable
+      // renamed, a retry after a timeout - used to produce TWO curated files,
+      // optimal.cs and optimal-variant.cs, holding one solution. The check
+      // above never caught it because it compares each submission against the
+      // CURATED code and never against the other submissions.
+      //
+      // So: walk them newest first and let the newest claim each shape. An
+      // older submission with a shape already claimed is superseded - the
+      // newest attempt is the one you meant to keep, and it carries whatever
+      // you last wrote in it.
+      const claimedBy = new Map();
+      for (const sub of [...pending].sort((a, b) => b.index - a.index)) {
+        if (sub.duplicateOfCurated) continue;
+        if (claimedBy.has(sub.print)) sub.supersededBy = claimedBy.get(sub.print);
+        else claimedBy.set(sub.print, sub.file);
       }
 
       problems.push({
