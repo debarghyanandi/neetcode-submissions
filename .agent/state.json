@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T21:26:55.698Z",
+  "updatedAt": "2026-09-07T22:50:03.237Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1123,6 +1123,18 @@
         "builtAt": "2026-09-06T12:33:29.066Z"
       }
     },
+    "level-order-traversal-of-binary-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs",
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "linked-list-cycle-detection": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -1341,15 +1353,84 @@
     },
     "lowest-common-ancestor-in-binary-search-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d92cfe01ae1b2e87d2fef17eb1ef5914fb41391ca38fb653dbe12ef1446e5658": "optimal.cs",
+        "46995617d2e5431ef42775664b3872d9ee27224dcaac0cad759e100d05643714": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "d92cfe01ae1b2e87d2fef17eb1ef5914fb41391ca38fb653dbe12ef1446e5658": "optimal.cs",
+        "46995617d2e5431ef42775664b3872d9ee27224dcaac0cad759e100d05643714": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "6b934e271ac0",
+          "renames": [
+            "cur->node"
+          ]
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "5ba2247c9f92",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "iterative BST binary search on value range",
+          "approachKey": "bst-property-navigate",
+          "correct": true,
+          "bruteForce": false
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive BST binary search on value range",
+          "approachKey": "bst-property-navigate",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "6b934e271ac0",
+          "suboptimal.cs": "5ba2247c9f92"
+        },
+        "builtAt": "2026-09-07T22:50:03.071Z"
+      }
     },
     "lru-cache": {
       "topic": "Data Structures & Algorithms",
