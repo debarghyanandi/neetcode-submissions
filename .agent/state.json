@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T04:38:55.597Z",
+  "updatedAt": "2026-09-07T04:58:58.475Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2088,6 +2088,17 @@
         },
         "builtAt": "2026-09-05T20:27:31.682Z"
       }
+    },
+    "same-binary-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "search-2d-matrix": {
       "topic": "Data Structures & Algorithms",
