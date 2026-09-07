@@ -148,13 +148,13 @@ jobs:
 
       - name: Guard - the deterministic half must still work
         run: |
-          # sameShape() is the only thing standing between the lint model and
-          # the code, and standing() is the one header line that makes a claim
-          # about a file other than its own. Both are pure functions with tests,
-          # and both are cheap to run - so run them before spending a model call
-          # rather than finding out from a header that contradicts its neighbour.
-          node scripts/lib/csharp.test.mjs
-          node scripts/lib/header.test.mjs
+          # The decisions the pipeline makes for itself - what lint may rewrite,
+          # which file is called optimal.cs, what a header claims about its
+          # neighbour - are pure functions with tests. They cost nothing to run
+          # and they are where the expensive mistakes live, so run every one
+          # before spending a model call. Anything matching the glob is picked
+          # up, so a new test file needs no change here.
+          for t in scripts/lib/*.test.mjs; do echo "--- $t"; node "$t"; done
 
       - name: Install Claude Code
         if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''

@@ -36,6 +36,18 @@ export const rank = (c) => {
 export const isUnrankable = (c) => c === 'other' || rank(c) >= COMPLEXITY.length - 1;
 
 /**
+ * Which position in the optimal sequence a filename already holds:
+ * optimal.cs is 0, optimal-variant.cs is 1, optimal-variant-N.cs is N.
+ * Anything else - a raw submission - has no claim on a slot and sorts last.
+ */
+const slot = (file) => {
+  if (file === 'optimal.cs') return 0;
+  if (file === 'optimal-variant.cs') return 1;
+  const m = file.match(/^optimal-variant-(\d+)\.cs$/);
+  return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
+};
+
+/**
  * Turn classified solutions into filenames.
  *
  * Rules, from the repo owner:
@@ -74,11 +86,27 @@ export function assignNames(solutions) {
   const bestTier = sorted.filter((s) => rank(s.time) === bt && rank(s.space) === bs);
   const rest = sorted.filter((s) => !(rank(s.time) === bt && rank(s.space) === bs));
 
-  const incumbent = bestTier.find((s) => s.file === 'optimal.cs');
-  const others = bestTier
-    .filter((s) => s !== incumbent)
-    .sort((a, b) => a.file.localeCompare(b.file, undefined, { numeric: true }));
-  const tierOrder = incumbent ? [incumbent, ...others] : others;
+  // Order within the best tier, most-deserving of `optimal.cs` first.
+  //
+  // 1. A solution you solved yourself. Equal on both axes means nothing else
+  //    separates them, and this is a study log: when two answers are equally
+  //    good the one you wrote is the one worth opening first. It outranks the
+  //    incumbent deliberately, so a folder that got this wrong before is
+  //    corrected the next time it is processed rather than frozen that way.
+  //    The swap happens once - afterwards the self-marked file IS optimal.cs,
+  //    and both rules agree.
+  // 2. Whichever file is already called optimal.cs. Renaming for no reason
+  //    churns the repo and every link into it.
+  // 3. The slot the file already occupies, so a curated folder keeps the names
+  //    it has. This used to be a plain numeric filename sort, and numeric
+  //    collation puts optimal-variant-2.cs BEFORE optimal-variant.cs - so a
+  //    three-way tie renamed those two past each other on every single run,
+  //    invalidating the header, the teaching block and the visualizer each
+  //    time. Raw submissions have no slot and sort after, by number.
+  const tierOrder = [...bestTier].sort((a, b) =>
+    (a.selfMarked ? 0 : 1) - (b.selfMarked ? 0 : 1) ||
+    slot(a.file) - slot(b.file) ||
+    a.file.localeCompare(b.file, undefined, { numeric: true }));
 
   const names = new Map();
   tierOrder.forEach((s, i) => {

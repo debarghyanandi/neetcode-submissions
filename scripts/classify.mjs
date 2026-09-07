@@ -329,7 +329,10 @@ for (const p of targets) {
     if (verbose) console.log(`        ${s.note}`);
   }
 
-  const plan = assignNames(res.solutions);
+  // assignNames breaks a tie in your favour, so it has to be told which are
+  // yours. The model is never asked - provenance is recorded once, from the
+  // marker in the raw submission, and never re-derived.
+  const plan = assignNames(res.solutions.map((s) => ({ ...s, selfMarked: !!marks.get(s.file) })));
   console.log('  proposed names:');
   if (!plan.ok) {
     // Counted as a failure on purpose. A refusal is a legitimate outcome - the
@@ -434,6 +437,22 @@ for (const p of targets) {
         if (rec.lint[origin]) nextLint[finalName] = rec.lint[origin];
       }
       rec.lint = nextLint;
+    }
+
+    // The visualizer record is keyed by filename for the same reason and needs
+    // the same treatment. Left alone, a rename makes every recorded print point
+    // at a name that no longer exists, the code looks changed, and visualize
+    // spends Opus rebuilding an animation that was already correct.
+    if (rec.visualizer?.prints) {
+      const nextPrints = {};
+      for (const [origin, finalName] of plan.names) {
+        if (rec.visualizer.prints[origin] !== undefined) nextPrints[finalName] = rec.visualizer.prints[origin];
+      }
+      rec.visualizer = {
+        ...rec.visualizer,
+        prints: nextPrints,
+        files: (rec.visualizer.files ?? []).map((f) => plan.names.get(f) ?? f),
+      };
     }
     console.log(`    applied: ${moves.length} rename(s), ${wrote} header(s) written, ${kept} left as-is`);
     touched++;
