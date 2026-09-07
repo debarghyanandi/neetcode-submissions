@@ -156,7 +156,13 @@ const touchedSlugs = new Set();
 
 for (const p of targets) {
   group(p.path);
-  const files = [...p.curatedFiles, ...p.pending.map((s) => s.file)];
+  // Superseded submissions are deleted by classify, which runs next. Linting
+  // one costs a model call on a file that will not exist in a minute, and
+  // leaves a lint record keyed to a filename nothing will ever re-key.
+  const files = [...p.curatedFiles, ...p.pending.filter((s) => !s.supersededBy).map((s) => s.file)];
+  for (const s of p.pending.filter((x) => x.supersededBy)) {
+    console.log(`  ${s.file.padEnd(22)} skipped - superseded by ${s.supersededBy}`);
+  }
 
   for (const file of files) {
     const full = join(p.dir, file);
