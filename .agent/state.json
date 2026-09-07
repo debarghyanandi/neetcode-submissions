@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T04:24:16.289Z",
+  "updatedAt": "2026-09-07T04:38:55.597Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -338,41 +338,41 @@
       ],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal.cs",
-        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal-variant.cs"
+        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal-variant.cs",
+        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal.cs"
       },
       "fingerprints": {
-        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal.cs",
-        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal-variant.cs"
+        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal-variant.cs",
+        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
+          "version": 1,
+          "codePrint": "fc6a6c822bc6",
+          "renames": []
+        },
+        "optimal-variant.cs": {
           "version": 1,
           "codePrint": "e63c1520fd78",
           "renames": [
             "q->queue",
             "size->levelSize"
           ]
-        },
-        "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "fc6a6c822bc6",
-          "renames": []
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal counting levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal, count levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
-          "selfMarked": false,
-          "evidence": "marker check on submission-1.cs when it was first processed",
+          "selfMarked": true,
+          "evidence": "marker check on submission-2.cs when it was first processed",
           "recordedFrom": "classify"
         },
         "optimal-variant.cs": {
-          "selfMarked": true,
-          "evidence": "marker check on submission-2.cs when it was first processed",
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -380,32 +380,32 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS level-order traversal counting levels",
-          "approachKey": "bfs-level-order",
+          "algorithm": "recursive post-order DFS computing max depth",
+          "approachKey": "dfs-recursive",
           "correct": true,
           "bruteForce": false
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive DFS computing max depth",
-          "approachKey": "dfs-recursive",
+          "algorithm": "BFS level-order traversal, count levels",
+          "approachKey": "bfs-level-order",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal counting levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal, count levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
         "files": [
-          "optimal.cs",
-          "optimal-variant.cs"
+          "optimal-variant.cs",
+          "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "e63c1520fd78",
-          "optimal-variant.cs": "fc6a6c822bc6"
+          "optimal.cs": "fc6a6c822bc6",
+          "optimal-variant.cs": "e63c1520fd78"
         },
         "builtAt": "2026-09-07T04:24:16.103Z"
       }
@@ -563,30 +563,30 @@
         "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
         "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
         "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs",
-        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal.cs",
-        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal-variant.cs"
+        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal-variant.cs",
+        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal.cs"
       },
       "fingerprints": {
         "3424e5a4dc18568a833436b0984554a9506874097b0aad4a2ddd78092d6d3df6": "optimal.cs",
         "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
         "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
         "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs",
-        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal.cs",
-        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal-variant.cs"
+        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal-variant.cs",
+        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit Stack<int> with dictionary-dispatched operators\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit stack fold with operator dispatch table\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
-          "selfMarked": false,
-          "evidence": "marker check on submission-0.cs when it was first processed",
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
           "recordedFrom": "classify"
         },
         "optimal-variant.cs": {
-          "selfMarked": true,
-          "evidence": "marker check on submission-1.cs when it was first processed",
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -594,35 +594,26 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "doubly linked list splicing as implicit stack",
-          "approachKey": "linked-list-simulated-stack",
+          "algorithm": "explicit stack fold with operator dispatch table",
+          "approachKey": "stack-eval",
           "correct": true,
           "bruteForce": false
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "explicit Stack<int> with dictionary-dispatched operators",
-          "approachKey": "stack-eval",
+          "algorithm": "doubly linked list splicing as implicit stack",
+          "approachKey": "linked-list-simulated-stack",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit Stack<int> with dictionary-dispatched operators\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"be3260b08c07\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit stack fold with operator dispatch table\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "bec0fbf9463a",
-          "renames": [
-            "l->left",
-            "r->right",
-            "res->result"
-          ]
-        },
-        "optimal-variant.cs": {
           "version": 1,
           "codePrint": "be3260b08c07",
           "renames": [
@@ -631,16 +622,25 @@
             "c->token",
             "op->result"
           ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "bec0fbf9463a",
+          "renames": [
+            "l->left",
+            "r->right",
+            "res->result"
+          ]
         }
       },
       "visualizer": {
         "files": [
-          "optimal.cs",
-          "optimal-variant.cs"
+          "optimal-variant.cs",
+          "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "bec0fbf9463a",
-          "optimal-variant.cs": "be3260b08c07"
+          "optimal.cs": "be3260b08c07",
+          "optimal-variant.cs": "bec0fbf9463a"
         },
         "builtAt": "2026-09-06T12:22:01.106Z"
       }

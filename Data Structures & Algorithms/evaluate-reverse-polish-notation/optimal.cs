@@ -1,139 +1,108 @@
-// --------------------------------------------------------------------------
-// -  optimal.cs            O(n) time / O(n) space
-// -  doubly linked list splicing as implicit stack
-// -  [linked-list-simulated-stack]
-// -  ranks above optimal-variant.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  walks a linked list of tokens, rewriting operator nodes in place and
-// -  splicing out consumed operand nodes to mimic pop-pop-push
-// --------------------------------------------------------------------------
+// ##########################################################################
+// #  optimal.cs            O(n) time / O(n) space
+// #  explicit stack fold with operator dispatch table   [stack-eval]
+// #  ties with optimal-variant.cs on O(n) time / O(n) space
+// #
+// #  YOU SOLVED THIS YOURSELF (was optimal-variant.cs)
+// #
+// #  single pass pushing operands and popping two per operator via a
+// #  dictionary of lambdas, worst-case stack depth O(n)
+// ##########################################################################
 
-public class DoublyLinkedList
-{
-    public string val;
-    public DoublyLinkedList next;
-    public DoublyLinkedList prev;
-
-    public DoublyLinkedList(string val, DoublyLinkedList next = null,
-                            DoublyLinkedList prev = null)
-    {
-        this.val = val;
-        this.next = next;
-        this.prev = prev;
-    }
-}
-
-public class Solution
-{
-    public int EvalRPN(string[] tokens)
-    {
-        DoublyLinkedList head = new DoublyLinkedList(tokens[0]);
-        DoublyLinkedList curr = head;
-
-        for (int i = 1; i < tokens.Length; i++)
+public class Solution {
+    public int EvalRPN(string[] tokens) {
+        // My Solution
+        var stack = new Stack<int>();
+        var operations = new Dictionary<string, Func<int, int, int>>
         {
-            curr.next = new DoublyLinkedList(tokens[i], null, curr);
-            curr = curr.next;
-        }
+            ["+"] = (left, right) => left + right,
+            ["-"] = (left, right) => left - right,
+            ["*"] = (left, right) => left * right,
+            ["/"] = (left, right) => left / right
+        };
 
-        int ans = 0;
-        while (head != null)
+        foreach (string token in tokens)
         {
-            if ("+-*/".Contains(head.val))
+            if (operations.ContainsKey(token))
             {
-                int left = int.Parse(head.prev.prev.val);
-                int right = int.Parse(head.prev.val);
-                int result = 0;
-                if (head.val == "+")
-                {
-                    result = left + right;
-                }
-                else if (head.val == "-")
-                {
-                    result = left - right;
-                }
-                else if (head.val == "*")
-                {
-                    result = left * right;
-                }
-                else
-                {
-                    result = left / right;
-                }
-
-                head.val = result.ToString();
-                head.prev = head.prev.prev.prev;
-                if (head.prev != null)
-                {
-                    head.prev.next = head;
-                }
+                int right = stack.Pop(); // current num
+                int left = stack.Pop(); // Prev result is this.
+                int result = operations[token](left, right);
+                stack.Push(result);
             }
-
-            ans = int.Parse(head.val);
-            head = head.next;
+            else
+                stack.Push(int.Parse(token));
         }
 
-        return ans;
+        return stack.Pop();
     }
 }
 
 /*
 ================================================================================
- PATTERN : Doubly linked list used as an in-place stack
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
+ PATTERN : Stack - operator pops the two most recent values
+ SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
+           first processed
  STATUS  : Optimal
 ================================================================================
-MENTAL MODEL
-  The prev chain hanging off the cursor IS the operand stack. Every token
-  becomes a node up front, then a single forward sweep drives head through them.
-  When head lands on an operator, head.prev is the top of stack (the right
-  operand) and head.prev.prev is the one below it (the left operand) - exactly
-  the two pops an RPN evaluator performs. Nothing is ever pushed as a new
-  object: the operator node itself is recycled into the value it produces.
-THE SPLICE
-  Two lines do the whole stack transaction. head.val = result.ToString()
-  converts the operator node into a number node - that is the push. head.prev =
-  head.prev.prev.prev unlinks right operand, left operand, and lands on whatever
-  was beneath them - that is the two pops, in one assignment. The invariant
-  restored after every operator: walking prev from the cursor enumerates the
-  current stack, top down. If the new head.prev is null the stack is empty below
-  this node, which is why the back-link fix sits behind a guard.
-WHY ANS IS THE ANSWER
-  ans = int.Parse(head.val) runs on EVERY node, operand or operator, so it
-  simply remembers the last node visited. That is the result only because a
-  well-formed RPN expression ends in an operator (or is a lone number like
-  ["18"], which the loop handles by falling straight through), and by the time
-  the cursor leaves that final node its val has already been overwritten. There
-  is no "exactly one value remains" check anywhere - the code trusts the input
-  shape. tokens[0] also assumes a non-empty array.
-OPERATOR TEST - THE TRAP
-  "+-* /".Contains(head.val) is a SUBSTRING test on a string, not membership in
-  a set of chars. It is correct here because "-3" is not a substring of "+-* /",
-  so negative operands classify as numbers. But it would call the empty string
-  an operator, and it is precisely why you cannot shortcut to "inspect the first
-  character": "-" and "-3" share one.
-INTEGER DIVISION
-  The final else does left / right on int, and C# truncates toward zero: -7 / 2
-  is -3, not -4. That is the semantics these problems ask for; a floor-dividing
-  language (Python's //) needs an explicit truncation to match. No guard on
-  right == 0.
-DEAD BOOKKEEPING
-  if (head.prev != null) head.prev.next = head; repairs the forward pointer
-  behind the cursor - but no such pointer is ever read again. The sweep only
-  ever does head = head.next from the current node forward, and those next
-  fields were never modified. Delete the whole if and the answer is unchanged.
-  Keep it only to leave the structure a genuinely valid doubly linked list; know
-  that it is not load-bearing.
-WHAT A PLAIN STACK BUYS
-  Stack<int> matches this on both resource counts and does strictly less work:
-  this version round-trips each computed value through a string
-  (result.ToString(), then re-parsed on the next visit) and allocates a node per
-  token. Nothing here is asymptotically worse - if an interviewer probes, the
-  honest framing is that the doubly linked list is a stack written out by hand,
-  with the operator node standing in for the push slot.
+WHY THIS PATTERN
+  Postfix notation has no parentheses and no precedence rules, because position
+  already encodes grouping: an operator always applies to the two most recently
+  completed values to its left. "Most recently completed, taken first" is the
+  definition of a stack, so a single left-to-right pass over tokens is enough.
+  No tokenizer pass, no precedence table, no recursion.
+INVARIANT
+  After processing any prefix of tokens, stack holds - bottom to top, in
+  left-to-right order - the value of every complete subexpression seen so far.
+
+  An operand token pushes one value (+1 depth). An operator token pops two and
+  pushes one (net -1 depth). A well-formed RPN string guarantees depth is at
+  least 2 whenever an operator arrives and is exactly 1 after the last token.
+  That guarantee is why the code never inspects stack.Count and why the trailing
+  stack.Pop() is the answer rather than a leftover.
+POP ORDER IS THE WHOLE BUG SURFACE
+  right is popped first and left second, because the top of the stack is the
+  operand that appeared later in the input. Only then is operations[token](left,
+  right) applied.
+
+  Swap those two Pop lines and "+" and "*" still pass every test while "-" and
+  "/" quietly compute left-right reversed. This is the single most likely place
+  to lose the problem.
+
+  The comment "Prev result is this" on left is loose - left is whatever
+  subexpression finished immediately before right, which is often a raw operand.
+  In ["2","1","+"], left is 2, not a prior result.
+WHY THE CONTAINSKEY TEST COMES FIRST
+  Dispatch is exact string equality against the four keys "+", "-", "*", "/". A
+  token like "-11" is not one of those keys, so it falls through to int.Parse,
+  which consumes the leading minus itself.
+
+  That ordering is the only thing separating an operator from a negative
+  operand. Classifying by first character instead (char.IsDigit(token[0]), or
+  token == "-" checked after a digit test) is where negative literals break.
+WATCH OUT
+  1. int division in C# truncates toward zero: -7 / 2 is -3, not -4. That
+  matches what the problem asks for, so do not reach for Math.Floor or double.
+  2. operations[token] is a second hash lookup after ContainsKey already did
+  one; TryGetValue collapses them into one. Correctness is unchanged - this is a
+  tidiness note.
+  3. The Dictionary of Func<int,int,int> is constructed fresh on every EvalRPN
+  call even though the lambdas capture nothing. Hoisting it to a static readonly
+  field is the natural cleanup.
+  4. There is no guard for division by zero, a malformed token, or an empty
+  stack; each would throw (DivideByZeroException, FormatException,
+  InvalidOperationException). Acceptable under the problem's validity guarantee,
+  but say that out loud rather than letting an interviewer find it.
+TRIGGER
+  Reach for this shape whenever the answer depends on the most recent unresolved
+  item: postfix or prefix evaluation, bracket matching, undo histories,
+  nested-structure decoding.
+
+  The natural follow-up is infix input, where position no longer encodes
+  grouping - that needs shunting-yard, or two stacks (values and operators) with
+  a precedence comparison on push. A second follow-up is operands or
+  intermediate results exceeding 32 bits, which is a Stack<long> and long
+  arithmetic, nothing structural.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

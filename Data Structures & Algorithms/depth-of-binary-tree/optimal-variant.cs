@@ -1,83 +1,111 @@
-// ##########################################################################
-// #  optimal-variant.cs    O(n) time / O(n) space
-// #  recursive DFS computing max depth   [dfs-recursive]
-// #  ties with optimal.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF (from submission-2)
-// #
-// #  visits each node once; recursion stack depth equals tree height,
-// #  worst-case O(n) for a skewed tree
-// ##########################################################################
+// --------------------------------------------------------------------------
+// -  optimal-variant.cs    O(n) time / O(n) space
+// -  BFS level-order traversal, count levels   [bfs-level-order]
+// -  ties with optimal.cs on O(n) time / O(n) space
+// -
+// -  Reference solution - not one you solved yourself (was optimal.cs)
+// -
+// -  queue visits each node once; worst-case queue size scales with the
+// -  widest level, up to O(n)
+// --------------------------------------------------------------------------
 
+//Breadth-First Search (BFS) find level.
 public class Solution
 {
-    // my solution
     public int MaxDepth(TreeNode root)
     {
-        if (root == null)
-            return 0;
-        return Math.Max(MaxDepth(root.left), MaxDepth(root.right)) + 1;
+        Queue<TreeNode> queue = new Queue<TreeNode>();
+        if (root != null)
+        {
+            queue.Enqueue(root);
+        }
+
+        int level = 0;
+        while (queue.Count > 0)
+        {
+            int levelSize = queue.Count;
+            for (int i = 0; i < levelSize; i++)
+            {
+                TreeNode node = queue.Dequeue();
+                if (node.left != null)
+                {
+                    queue.Enqueue(node.left);
+                }
+                if (node.right != null)
+                {
+                    queue.Enqueue(node.right);
+                }
+            }
+            level++;
+        }
+        return level;
     }
 }
 
 /*
 ================================================================================
- PATTERN : Post-order DFS - height = 1 + max(child heights)
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
-           first processed
+ PATTERN : BFS level-order - count levels, not depths
+ SOURCE  : Reference solution - not one you solved yourself - marker check on
+           submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 WHY THIS PATTERN
-  Depth is defined recursively, so the code is the definition. Each node needs
-  exactly two numbers from below and nothing from above, and there is no
-  information that has to cross between the left and right subtrees. That is why
-  there is no accumulator parameter and no shared max field anywhere in this
-  file - the answer rides up on the return value alone.
+  Max depth is the number of levels in the tree, so you never need a per-node
+  depth value at all. If you can drain the queue one full level at a time, the
+  answer is just how many times you drained it. That reframing is the whole
+  solution: level is a counter of completed drains, not a maximum of anything.
 INVARIANT
-  MaxDepth(x) returns the number of nodes on the longest path from x down to a
-  leaf, counting x itself, and 0 for an empty subtree. That single contract is
-  what makes it legal to call MaxDepth(root.left) and MaxDepth(root.right) with
-  no extra state. Note it counts nodes, not edges - a one-node tree answers 1,
-  not 0.
-CORRECTNESS
-  Induction on subtree height. Base: root == null returns 0, which is the
-  contract for empty. Step: assume both child calls satisfy the contract. The
-  longest downward path through root is root itself plus the longest path in
-  whichever child subtree is deeper, which is exactly
-  Math.Max(MaxDepth(root.left), MaxDepth(root.right)) + 1. A leaf falls out of
-  the same line: both children are null, so max(0, 0) + 1 = 1. Every node is
-  entered exactly once, because a node is reachable only through its unique
-  parent link.
-THE TRAP - BASE CASE ON NULL, NOT ON LEAF
-  The tempting rewrite is if (root.left == null && root.right == null) return 1.
-  It breaks on a node with exactly one child: the missing side still owes the
-  recursion a 0, so you end up special-casing each side, and the top-level call
-  with root == null now dereferences null. Recursing into null and returning 0
-  handles the empty tree, the one-child spine, and the leaf with one branch.
-WATCH OUT - STACK DEPTH
-  The extra space here is the call stack: one frame per node on the current
-  root-to-leaf path. A degenerate chain where every node has only a left child
-  pushes that to n frames; a balanced tree keeps it near log n. Neither
-  recursive call sits in tail position - Math.Max consumes both results and adds
-  1 after they return - so this cannot be flattened into a loop without
-  introducing an explicit stack. Blowing the stack on a deep skewed input is the
-  reason to switch routes, not the running time.
-INTERVIEWER FOLLOW-UP
-  The other route to the same bound is iterative: BFS with a queue, draining one
-  full level per outer iteration and incrementing a counter, or DFS with an
-  explicit stack of (node, depth) pairs. Both move the frames onto the heap -
-  BFS peaks at the widest level rather than the deepest path, which is the
-  better trade on a broad shallow tree and the worse one on a complete tree's
-  bottom row. Expect the two extensions that reuse this exact skeleton: diameter
-  (at each node also consider left + right and update a field, but still return
-  max + 1) and balanced-check (return -1 as a sentinel so an unbalanced subtree
-  aborts every caller above it).
-TRIGGER
-  Reach for return-the-height post-order whenever a node's answer is a pure
-  function of its children's answers. If the recursion instead needs something
-  about its ancestors - remaining path sum, depth so far, a valid-BST range -
-  that value goes down as a parameter and the shape flips to pre-order with a
-  void or bool return.
+  At the top of each while iteration, queue holds exactly the nodes at depth
+  level+1 (1-indexed), and nothing else.
+
+  Base: before the first iteration queue holds root alone (depth 1) and level ==
+  0.
+  Step: the inner for loop runs exactly levelSize times, dequeuing every node of
+  the current level and enqueuing every non-null child. Those children are
+  precisely the next level, so after level++ the invariant holds again.
+  Exit: queue empties only when the last level produced no children, so level
+  equals the count of levels, which is the max depth.
+ALGORITHM
+  1. Enqueue root, but only if it is non-null. level starts at 0.
+  2. While queue is non-empty: capture levelSize = queue.Count BEFORE touching
+  the queue.
+  3. Loop i from 0 to levelSize-1: dequeue node, enqueue node.left and
+  node.right if each is non-null.
+  4. level++ once per outer iteration, after the level is fully drained.
+  5. Return level.
+WATCH OUT
+  levelSize must be snapshotted. Writing for (int i = 0; i < queue.Count; i++)
+  instead reads a Count that shrinks by one dequeue and grows by up to two
+  enqueues on every pass, so the loop bleeds into the next level and level stops
+  counting levels. This is the single line the whole correctness argument rests
+  on.
+
+  The null guards on enqueue are load-bearing too, not defensive noise. If nulls
+  entered the queue, queue.Count would no longer be a count of real nodes,
+  levelSize would overcount, and the final drain of an all-null level would add
+  a phantom level to the answer.
+
+  The root == null guard is what makes the empty tree return 0: skip the
+  enqueue, the while loop never runs, level stays 0. Enqueuing an unchecked root
+  would instead crash on node.left.
+DFS TRADE-OFF
+  The recursive form, 1 + Max(MaxDepth(root.left), MaxDepth(root.right)), ties
+  this on time and is shorter. What it holds is different: the call stack grows
+  with the tree's height, while this queue grows with the tree's widest level.
+  On a degenerate list-shaped tree of 10^5 nodes, recursion risks a stack
+  overflow and this queue never holds more than one node. On a perfect tree the
+  positions flip - the queue holds roughly half the nodes at the bottom level
+  while the stack stays at log n. Pick by the shape you expect, and say so when
+  asked.
+FOLLOW-UP HOOK
+  You can also do BFS with (node, depth) pairs and track a running max, skipping
+  levelSize entirely. Same asymptotics, but it stores a depth alongside every
+  queued node and loses the level boundary. Keep the levelSize form: the moment
+  a question asks for anything per level - level order lists, right side view,
+  minimum depth via early return at the first leaf - the boundary is already
+  there. Minimum depth in particular is where BFS beats DFS outright, since you
+  can return level as soon as you dequeue a node with no children instead of
+  exploring the whole tree.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

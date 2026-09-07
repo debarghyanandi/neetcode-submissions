@@ -1,110 +1,87 @@
-// --------------------------------------------------------------------------
-// -  optimal.cs            O(n) time / O(n) space
-// -  BFS level-order traversal counting levels   [bfs-level-order]
-// -  ranks above optimal-variant.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-1)
-// -
-// -  visits each node once via queue; queue can hold up to O(n) nodes in
-// -  the worst-case (widest level)
-// --------------------------------------------------------------------------
+// ##########################################################################
+// #  optimal.cs            O(n) time / O(n) space
+// #  recursive post-order DFS computing max depth   [dfs-recursive]
+// #  ties with optimal-variant.cs on O(n) time / O(n) space
+// #
+// #  YOU SOLVED THIS YOURSELF (was optimal-variant.cs)
+// #
+// #  visits each node once; recursion call stack depth equals tree height,
+// #  worst-case O(n) for a skewed tree
+// ##########################################################################
 
-//Breadth-First Search (BFS) find level.
 public class Solution
 {
+    // my solution
     public int MaxDepth(TreeNode root)
     {
-        Queue<TreeNode> queue = new Queue<TreeNode>();
-        if (root != null)
-        {
-            queue.Enqueue(root);
-        }
-
-        int level = 0;
-        while (queue.Count > 0)
-        {
-            int levelSize = queue.Count;
-            for (int i = 0; i < levelSize; i++)
-            {
-                TreeNode node = queue.Dequeue();
-                if (node.left != null)
-                {
-                    queue.Enqueue(node.left);
-                }
-                if (node.right != null)
-                {
-                    queue.Enqueue(node.right);
-                }
-            }
-            level++;
-        }
-        return level;
+        if (root == null)
+            return 0;
+        return Math.Max(MaxDepth(root.left), MaxDepth(root.right)) + 1;
     }
 }
 
 /*
 ================================================================================
- PATTERN : BFS level-order - count levels via frontier snapshot
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
+ PATTERN : DFS post-order fold - depth = 1 + max(child depths)
+ SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
+           first processed
  STATUS  : Optimal
 ================================================================================
-WHY THIS SHAPE
-  Depth is a property of levels, not of individual nodes, so the traversal that
-  materializes one level at a time answers it directly: the answer is just how
-  many times you drained the frontier. Nothing here inspects a node's value or
-  identity - node is dequeued only to harvest its two children. That is the tell
-  that this is a counting problem riding on top of a traversal, and it is why no
-  depth is ever stored per node.
-THE ONE LINE THAT MATTERS
-  int levelSize = queue.Count; taken BEFORE the inner for loop. The inner loop
-  enqueues children into the same queue it is draining, so queue.Count is moving
-  the whole time. Hoisting it into levelSize freezes the boundary between the
-  current level and the next one. Everything else in the method is bookkeeping
-  around that snapshot.
+WHY THIS PATTERN
+  Depth is defined recursively, so the code can be the definition. The answer at
+  root needs exactly two numbers from below - the depth of root.left and the
+  depth of root.right - and nothing about the left subtree changes what the
+  right subtree returns. That independence is why there is no accumulator
+  parameter, no depth argument threaded down, no visited set: the value flows up
+  only, on the return path. Any tree quantity with that shape collapses to this
+  three-line body.
+CORRECTNESS
+  Induction on the height of the subtree.
+  1. Base: root == null returns 0. An empty subtree contributes no nodes to any
+  root-to-leaf path, so 0 is the identity the parent's +1 builds on.
+  2. Step: assume MaxDepth(root.left) and MaxDepth(root.right) are correct for
+  the strictly shorter subtrees. Every root-to-leaf path from root starts with
+  root and then lies entirely inside one child subtree - it cannot straddle
+  both. So the longest such path has length 1 + max over the two children, which
+  is exactly Math.Max(...) + 1.
+  3. Termination: each call recurses only on strict descendants, and the null
+  check is reached at the bottom of every branch.
 INVARIANT
-  At the top of every while iteration: the queue contains exactly the nodes at
-  depth level+1 (1-indexed), left to right, and nothing else; level holds the
-  number of levels already fully drained. The inner for restores the invariant
-  by removing all levelSize nodes of the current level and appending precisely
-  their children, which are the entire next level. level++ then re-syncs the
-  counter to the new queue contents. When the queue empties, the last level had
-  no children, so level is the count of levels on the deepest root-to-leaf path.
-NULL HANDLING
-  Two separate guards, both load-bearing. The root != null check means an empty
-  tree never enqueues anything, the while body never runs, and 0 is returned by
-  fallthrough rather than by a special case. Inside the loop, children are
-  null-tested before Enqueue, so the queue holds only real nodes and node.left /
-  node.right are always safe to touch. If nulls were enqueued instead, levelSize
-  would count phantom slots and the dequeued null would fault on node.left.
+  MaxDepth(x) returns the number of nodes on the longest path from x down to a
+  leaf in x's subtree, and reads nothing outside that subtree. The function is
+  pure - no field writes, no shared counter - which is why the evaluation order
+  of the two calls is irrelevant and why the same routine can be called on any
+  node, not just the real root. There is no leaf check because a leaf is just a
+  node whose two calls both hit the null base and return 0, giving Math.Max(0,
+  0) + 1 = 1.
 WATCH OUT
-  1. Writing for (int i = 0; i < queue.Count; i++) instead of using levelSize.
-  The loop then chases a queue that grows as it shrinks, swallows the entire
-  tree in one pass, and returns 1 for any non-empty tree. This is the classic
-  mutation of the exact bug this template exists to prevent.
-  2. Incrementing level inside the inner for. That counts nodes, not levels.
-  3. Moving level++ before the drain while also seeding the queue
-  unconditionally - an empty root would then report 1.
-INTERVIEWER FOLLOW-UPS
-  Q: why not the three-line recursion 1 + Max(MaxDepth(root.left),
-  MaxDepth(root.right))? Both visit every node once. The difference is what the
-  auxiliary memory scales with: the recursion's call stack scales with tree
-  height, this queue scales with the widest level. A degenerate chain of n nodes
-  keeps at most one node in this queue but n frames on the stack, which is where
-  the recursion risks a StackOverflowException; a complete tree inverts that,
-  since the bottom level alone is about half the nodes. BFS is the safe pick
-  when depth is unbounded and the tree may be skewed.
-  Q: adapt this to minimum depth? Then the level structure pays off properly -
-  inside the inner loop, return level + 1 the moment a dequeued node has neither
-  child, because BFS reaches the shallowest leaf first and can stop early. Here
-  there is no early exit to be had: max depth requires seeing the whole tree
-  either way.
+  The +1 sits outside Math.Max, applied once to the winner. The classic
+  corruption is attaching it to one operand - Math.Max(MaxDepth(root.left),
+  MaxDepth(root.right) + 1) - which silently biases every comparison toward the
+  right child and reports a wrong depth on unbalanced trees.
+  Also pin down the convention before writing the base case: returning 0 for
+  null counts NODES, so a single-node tree answers 1. If a variant of the
+  problem counts EDGES, a single node must answer 0 and the base case has to
+  become -1 for null (or a leaf check returning 0). Same skeleton, different
+  constant - and this is the first thing to re-derive rather than recall.
+THE SCALE TRAP
+  This is not tail recursive: Math.Max and the +1 both run after the two calls
+  return, so every ancestor's frame stays live while the deepest node is being
+  evaluated. The call chain is as long as the tree is tall, and a degenerate
+  chain of nodes (a sorted-insert BST, a linked-list-shaped tree) makes that the
+  node count. On tens of thousands of nodes that is a real
+  StackOverflowException, which in .NET cannot be caught. If asked to harden it:
+  BFS with a Queue<TreeNode>, counting levels as you drain each level's Count,
+  or an explicit Stack of (node, depth) pairs. Both move the frames to the heap
+  and are otherwise the same traversal.
 TRIGGER
-  Reach for the levelSize snapshot whenever the question says level, depth, row,
-  or width - level averages, right-side view, zigzag order, widest level, min
-  depth. The queue plus hoisted count plus per-level for loop is one reusable
-  skeleton; only the work done inside the inner loop and the value returned
-  change.
+  Reach for this shape whenever the parent's answer is a pure function of its
+  children's answers and nothing else. Only the combine line changes: max + 1
+  here, Math.Abs(l - r) <= 1 plus the two subtrees for balanced-tree, l + r + 1
+  with a side channel for diameter, l + r + node.val for path sums. If you catch
+  yourself wanting to pass information DOWN the tree (a running prefix, a valid
+  range for BST validation), this template no longer fits - add a parameter or a
+  helper, because the return value alone cannot carry it.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
