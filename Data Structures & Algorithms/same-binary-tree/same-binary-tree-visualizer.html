@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Time to Buy and Sell — visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
+
+/* "Lemonade & Sweet Tea" (Designing Digitals) is a paid font, so it can't be bundled here.
+   If it's installed on your machine, local() below picks it up automatically. */
+@font-face{
+  font-family:'Lemonade Sweet Tea';
+  src: local('Lemonade & Sweet Tea'), local('Lemonade Sweet Tea'), local('LemonadeSweetTea');
+  font-display: swap;
+}
+
+:root{
+  --paper:#FBF5E9;
+  --ink:#211E1A;
+  --pencil:#8A8175;
+  --pencil-light:#C9C0AF;
+  --orange:#F5A93F;
+  --orange-soft:#FBE3BC;
+  --red:#C94F2E;
+  --green:#5E8C61;
+  --tile:72px;
+  --hand:'Lemonade Sweet Tea','Patrick Hand',cursive;
+  --mono:'Courier Prime', ui-monospace, 'Courier New', monospace;
+  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
+  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
+  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--hand);
+  min-height:100vh;
+  padding:32px clamp(18px, 3vw, 56px) 48px;
+}
+.app{width:100%;max-width:1760px;margin:0 auto;}
+
+/* ---------- header ---------- */
+.topbar{
+  display:flex; flex-wrap:wrap; gap:24px 40px;
+  justify-content:space-between; align-items:flex-end;
+  margin-bottom:18px; padding-bottom:18px;
+  border-bottom:2px solid var(--ink);
+}
+.brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
+.brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
+.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
+.brand-sub code, .status code, .note-text code{
+  font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
+}
+.brand-sub b{font-weight:700;}
+
+.config{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:2px;}
+.field span{font-size:14px;color:var(--pencil);line-height:1;}
+.field input{
+  font-family:var(--mono);font-size:14px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-md);color:var(--ink);padding:9px 12px;
+}
+.field input:focus-visible, button:focus-visible, input[type=range]:focus-visible{
+  outline:3px solid var(--orange);outline-offset:2px;
+}
+button{
+  font-family:var(--hand);font-weight:700;font-size:15px;line-height:1;cursor:pointer;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);color:var(--ink);
+  padding:9px 16px 11px;transition:transform .1s ease, background .15s ease;
+}
+button:hover{background:var(--orange-soft);}
+button:active{transform:translate(1px,1px);}
+button.primary{background:var(--orange);}
+button.primary:hover{background:#F7B85F;}
+
+/* ---------- solution tabs ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.tab{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:9px 18px 11px;text-align:left;background:var(--paper);
+}
+.tab b{font-size:17px;font-weight:700;line-height:1.1;}
+.tab span{font-family:var(--mono);font-size:11px;color:var(--pencil);line-height:1.1;}
+.tab.active{background:var(--orange);box-shadow:3px 3px 0 var(--ink);}
+.tab.active span{color:var(--ink);}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
+.legend span{display:inline-flex;align-items:center;gap:9px;}
+.swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
+.swatch.win{background:var(--orange-soft);}
+.swatch.hot{background:var(--orange);}
+.swatch.done{background:var(--ink);}
+.swatch.good{background:var(--green);}
+.swatch.dim{opacity:.42;}
+.swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
+.col-left{display:flex;flex-direction:column;gap:20px;min-width:0;}
+@media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
+
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
+
+/* ---------- tiles ---------- */
+.array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.array-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
+.array-row.no-ptrs{padding-bottom:8px;}
+.tile{
+  min-width:var(--tile);height:var(--tile);padding:0 6px;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
+}
+.tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
+.tile .val{font-size:24px;font-weight:700;margin-top:6px;white-space:nowrap;}
+.tile .sub{font-size:12px;line-height:1;color:var(--pencil);margin-top:2px;}
+.tile.narrow{min-width:56px;}
+.tile.in-window{background:var(--orange-soft);}
+.tile.hot{background:var(--orange);}
+.tile.good{background:var(--green);color:var(--paper);}
+.tile.good .idx,.tile.good .sub{color:var(--paper);}
+.tile.dim{opacity:.42;}
+.tile.done{background:var(--ink);color:var(--paper);}
+.tile.done .idx,.tile.done .sub{color:var(--pencil-light);}
+.tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.tile.just-popped{animation:pop-fade .55s ease;}
+.tile.just-popped::after{
+  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
+}
+@keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
+@keyframes x-fade{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+
+.window-bracket{
+  position:absolute;top:2px;height:calc(var(--tile) + 16px);
+  border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;
+  transition:left .3s ease, width .3s ease, opacity .2s ease;opacity:0;
+}
+.window-bracket.visible{opacity:1;}
+.window-bracket.dashed{border-style:dashed;border-color:var(--pencil);}
+
+.ptr-marker{
+  position:absolute;bottom:0;transform:translateX(-50%);
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
+}
+.ptr-marker.visible{opacity:1;}
+.ptr-marker::before{content:'↑';display:block;font-size:15px;line-height:1;}
+.ptr-marker.accent{color:var(--orange);text-shadow:0.5px 0 var(--ink);}
+.ptr-marker.accent::before{color:var(--orange);}
+.ptr-marker.red{color:var(--red);}
+.ptr-marker.red::before{color:var(--red);}
+
+/* ---------- chip rows ---------- */
+.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
+.row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
+.chip{
+  font-size:18px;font-weight:600;line-height:1;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.chip small{font-family:var(--mono);font-size:11px;color:var(--pencil);}
+.chip.head{background:var(--orange);}
+.chip.head small{color:var(--ink);}
+.chip.good{background:var(--green);color:var(--paper);}
+.chip.good small{color:var(--paper);}
+.chip.done{background:var(--ink);color:var(--paper);}
+.chip.done small{color:var(--pencil-light);}
+.chip.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.chip.fresh{animation:fill-flash .5s ease;}
+.chips-empty{font-size:16px;color:var(--pencil);}
+
+/* ---------- slots (result row) ---------- */
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;}
+.slot{
+  min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
+  transition:background .3s ease, color .3s ease, border-color .3s;
+}
+.slot.filled{background:var(--ink);border:2px solid var(--ink);color:var(--paper);}
+.slot.fresh{animation:fill-flash .5s ease;}
+@keyframes fill-flash{0%{transform:scale(1.18) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+
+/* ---------- bars ---------- */
+.bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
+.bar{
+  width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  transition:height .3s ease, background .25s ease;
+}
+.bar-wrap.hot .bar{background:var(--orange);}
+.bar-wrap.in-window .bar{background:var(--orange-soft);}
+.bar-wrap.dim{opacity:.35;}
+.bar-wrap .cap{font-size:14px;line-height:1;margin-bottom:4px;}
+.bar-wrap .foot{position:absolute;bottom:-22px;font-size:12px;color:var(--pencil);line-height:1;}
+.water{
+  position:absolute;border:2px dashed var(--orange);background:rgba(245,169,63,.22);
+  border-radius:var(--sk-sm);pointer-events:none;
+  transition:left .3s ease, width .3s ease, height .3s ease, bottom .3s ease, opacity .2s;
+}
+
+/* ---------- ranges (intervals) ---------- */
+.ranges{display:flex;flex-direction:column;gap:8px;}
+.range-line{position:relative;height:34px;}
+.range-bar{
+  position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;white-space:nowrap;
+  transition:left .3s ease, width .3s ease, background .25s ease;
+}
+.range-bar.hot{background:var(--orange);}
+.range-bar.done{background:var(--ink);color:var(--paper);}
+.range-bar.dim{opacity:.4;}
+.range-bar.ghost{border-style:dashed;color:var(--pencil);}
+
+/* ---------- pills ---------- */
+.pills{display:flex;gap:14px;flex-wrap:wrap;font-size:18px;}
+.pill{display:inline-flex;align-items:baseline;gap:8px;padding:3px 16px 6px;border:2px solid var(--ink);border-radius:var(--sk-md);}
+.pill b{font-size:20px;font-family:var(--mono);}
+.pill.accent{background:var(--orange-soft);}
+.pill.hot{background:var(--orange);}
+.pill.good{background:var(--green);color:var(--paper);}
+.note-text{font-size:17px;line-height:1.45;}
+
+/* ---------- code panel ---------- */
+.code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+.code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+.code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
+.status{margin-top:16px;padding-top:14px;border-top:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
+
+/* ---------- transport ---------- */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:16px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
+#playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
+.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed input{accent-color:var(--orange);}
+.speed .hint{font-size:13px;}
+.progress{margin-left:auto;font-size:17px;color:var(--pencil);}
+.shortcut-note{width:100%;font-size:14px;color:var(--pencil);margin:2px 0 0;}
+.shortcut-note kbd{font-size:11px;border:1.5px solid var(--pencil);padding:0 5px;}
+
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important;transition-duration:.001ms !important;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <p class="brand-note" id="brandNote"></p>
+      <h1 class="brand-title" id="brandTitle"></h1>
+      <p class="brand-sub" id="brandSub"></p>
+    </div>
+    <form class="config" id="configForm"></form>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="legend" id="legend"></div>
+
+  <div class="stage">
+    <div class="col-left" id="colLeft"></div>
+    <aside class="panel">
+      <p class="panel-title">Algorithm</p>
+      <pre class="code" id="codeBlock"></pre>
+      <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+    </aside>
+  </div>
+
+  <div class="transport">
+    <button id="resetBtn" title="Reset" aria-label="Reset">⟲</button>
+    <button id="backBtn" title="Step back" aria-label="Step back">◂</button>
+    <button id="playBtn" title="Play / Pause" aria-label="Play or pause">▶</button>
+    <button id="fwdBtn" title="Step forward" aria-label="Step forward">▸</button>
+    <label class="speed">speed
+      <span class="hint">slow</span>
+      <input type="range" id="speedInput" min="150" max="1800" value="1250" step="50" aria-label="Playback speed, right is faster">
+      <span class="hint">fast</span>
+    </label>
+    <div class="progress" id="progressLabel">0 / 0</div>
+    <p class="shortcut-note">shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step · <kbd>R</kbd> reset</p>
+  </div>
+</div>
+<script>
+/* ---- panel constructors shared by every problem definition ---- */
+function pTiles(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: String(v)}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'tiles', title: title, items: items}, extra || {});
+}
+function pChips(title, rows){ return {t:'chips', title: title, rows: rows}; }
+function pSlots(title, items){ return {t:'slots', title: title, items: items}; }
+function pPills(title, items){ return {t:'pills', title: title, items: items}; }
+function pBars(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: v}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'bars', title: title, items: items}, extra || {});
+}
+function pRanges(title, items, min, max){ return {t:'ranges', title: title, items: items, min: min, max: max}; }
+function pNote(title, html){ return {t:'note', title: title, html: html}; }
+function mapChips(map, hot){
+  return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+}
+/* ---- input parsing ---- */
+function parseInts(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+  if (!parts.length) return null;
+  const nums = parts.map(Number);
+  if (nums.some(n => !Number.isFinite(n))) return null;
+  return cap ? nums.slice(0, cap) : nums;
+}
+function randInts(n, lo, hi){
+  return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+}
+function randWord(len, alphabet){
+  const a = alphabet || 'abc';
+  return Array.from({length: len}, () => a[Math.floor(Math.random() * a.length)]).join('');
+}
+
+const PROBLEM = {
+  title: 'Same Binary Tree',
+  note: 'two trees match only if their holes line up too, not just their values',
+  inputs: [
+    {id:'p', label:'tree p (heap order, x = missing)', value:'1,2,3,4,5', width:200},
+    {id:'q', label:'tree q', value:'1,2,3,4,6', width:200}
+  ],
+  parse(raw){
+    const build = (s) => {
+      const parts = String(s).split(',').map(t => t.trim()).filter(t => t.length).slice(0, 7);
+      if (!parts.length) return 'bad';
+      const out = parts.map(t => (/^(x|n|null|\.|-)$/i.test(t) ? null : Number(t)));
+      if (out.some(v => v !== null && !Number.isFinite(v))) return 'bad';
+      for (let i = 1; i < out.length; i++){
+        if (out[i] !== null && out[(i - 1) >> 1] === null) return 'orphan';
+      }
+      return out;
+    };
+    const P = build(raw.p), Q = build(raw.q);
+    if (P === 'bad') return {ok:false, msg:'Tree p: comma-separated values in heap order, with x for a missing node.'};
+    if (P === 'orphan') return {ok:false, msg:'Tree p: a node cannot hang under a missing parent — slot i sits below slot (i−1)/2.'};
+    if (Q === 'bad') return {ok:false, msg:'Tree q: comma-separated values in heap order, with x for a missing node.'};
+    if (Q === 'orphan') return {ok:false, msg:'Tree q: a node cannot hang under a missing parent — slot i sits below slot (i−1)/2.'};
+    const fmt = a => a.map(v => (v === null ? 'x' : v)).join(',');
+    return {ok:true, value:{p:P, q:Q}, normalized:{p: fmt(P), q: fmt(Q)}};
+  },
+  shuffle(){
+    const t = [];
+    for (let i = 0; i < 7; i++){
+      if (i > 0 && (t[(i - 1) >> 1] === null || Math.random() < 0.25)) t.push(null);
+      else t.push(1 + Math.floor(Math.random() * 9));
+    }
+    const u = t.slice();
+    const live = [];
+    for (let i = 1; i < 7; i++) if (t[i] !== null) live.push(i);
+    if (live.length && Math.random() < 0.7){
+      const j = live[Math.floor(Math.random() * live.length)];
+      if (Math.random() < 0.5){ u[j] = 1 + Math.floor(Math.random() * 9); }
+      else {
+        for (let k = 0; k < 7; k++){ let a = k; while (a > j) a = (a - 1) >> 1; if (a === j) u[k] = null; }
+      }
+    }
+    const fmt = a => a.map(v => (v === null ? 'x' : v)).join(',');
+    return {p: fmt(t), q: fmt(u)};
+  },
+  solutions: [
+  {
+    label: 'Recursive DFS, one pair at a time',
+    badge: 'O(n) time · O(h) stack · recursion · optimal.cs',
+    blurb: 'The definition is already recursive: two trees are the same exactly when the roots agree <em>and</em> the left subtrees agree <em>and</em> the right subtrees agree. So each call decides one pair of nodes and hands the rest to two smaller calls, with <code>&&</code> abandoning the right subtree the instant the left disagrees.',
+    legend: [
+      {cls:'hot', text:'pair being compared now'},
+      {cls:'win', text:'on the call stack, undecided'},
+      {cls:'good', text:'settled — this pair matched'},
+      {cls:'dim', text:'not visited'}
+    ],
+    code: [
+      'bool IsSameTree(TreeNode first, TreeNode second)',
+      '{',
+      '    if (first == null && second == null)',
+      '    {',
+      '        return true;',
+      '    }',
+      '    if (first != null && second != null && first.val == second.val)',
+      '    {',
+      '        return IsSameTree(first.left, second.left)',
+      '            && IsSameTree(first.right, second.right);',
+      '    }',
+      '    return false;',
+      '}'
+    ],
+    simulate(input){
+      const P = input.p, Q = input.q, steps = [];
+      let deepest = 0;
+      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
+      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
+      let n = 1; while (n <= deepest) n = n * 2 + 1;
+      const vp = i => (i < P.length ? P[i] : null);
+      const vq = i => (i < Q.length ? Q[i] : null);
+      const show = v => (v === null ? 'null' : String(v));
+      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
+      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
+      const done = {}, active = {}, frames = [];
+      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (active[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
+      const panels = (cur) => [
+        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
+        pTiles('Tree q — same slots', cells(vq), cls(cur)),
+        pSlots('Call stack (outermost → current)', frames.length ? frames.map((f, k) => ({text: path(f), cls: k === frames.length - 1 ? 'hot' : 'win'})) : [{text:'empty', cls:'dim'}]),
+        pPills('', [
+          {k:'first', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
+          {k:'second', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
+          {k:'depth', v: frames.length, cls:'accent'}
+        ])
+      ];
+      const go = (i) => {
+        frames.push(i); active[i] = true;
+        const a = vp(i), b = vq(i);
+        steps.push({lines:[3], msg:'Call on <b>' + path(i) + '</b>: first = <code>' + show(a) + '</code>, second = <code>' + show(b) + '</code>. The null test comes first because it is the only way the recursion can succeed — two absent children are a legitimate match, so a passing walk always runs <em>off</em> the bottom of the tree.', panels: panels(i)});
+        if (a === null && b === null){
+          delete active[i]; done[i] = true;
+          steps.push({lines:[3,5], msg:'Both sides are null → <b>true</b>. There is no value to compare and nothing below to descend into, so this branch is settled without touching the trees again.', panels: panels(i)});
+          frames.pop(); return true;
+        }
+        if (a !== null && b !== null && a === b){
+          steps.push({lines:[7,9], msg:'Both nodes exist and <code>' + a + ' == ' + b + '</code>, so this slot agrees. Equal values here say nothing about the shape underneath, though, so the verdict is deferred to two smaller calls — left children first.', panels: panels(i)});
+          const okL = go(2 * i + 1);
+          if (!okL){
+            delete active[i];
+            steps.push({lines:[9,10], msg:'The left call returned <b>false</b>, so <code>&&</code> short-circuits: the right child of <b>' + path(i) + '</b> is never even examined. One disagreement anywhere sinks the whole tree, so there is nothing left to learn.', panels: panels(i)});
+            frames.pop(); return false;
+          }
+          steps.push({lines:[10], msg:'The left subtree of <b>' + path(i) + '</b> matched, so <code>&&</code> moves on and asks the same question of the right children.', panels: panels(i)});
+          const okR = go(2 * i + 2);
+          delete active[i]; if (okR) done[i] = true;
+          steps.push({lines:[9,10], msg:'Both children of <b>' + path(i) + '</b> have reported back: this subtree is <b>' + (okR ? 'identical' : 'different') + '</b>, and that single boolean is everything the caller needs.', panels: panels(i)});
+          frames.pop(); return okR;
+        }
+        const why = (a === null || b === null)
+          ? 'one tree has a node in this slot and the other does not, so the <em>shapes</em> differ'
+          : 'both nodes exist but ' + a + ' ≠ ' + b;
+        delete active[i];
+        steps.push({lines:[7,12], msg:'The guard fails: ' + why + '. Falling past it lands on <code>return false</code> — the one exit shared by “wrong value” and “wrong shape”, which is why no separate null bookkeeping is needed.', panels: panels(i)});
+        frames.pop(); return false;
+      };
+      const ans = go(0);
+      steps.push({lines:[ans ? 5 : 12], msg:'The root call returns <b>' + ans + '</b>. Each pair of slots is visited at most once, so the time is O(n); the only extra space is the call stack, one frame per level still open.', panels: panels(-1)});
+      return steps;
+    }
+  },
+  {
+    label: 'Iterative BFS, two queues in lockstep',
+    badge: 'O(n) time · O(n) queues · level order · optimal-variant-2.cs',
+    blurb: 'Same rule, breadth-first. Both queues receive children in the same order, so a dequeue from each always pairs up the <em>same</em> slot of the two trees. Enqueuing <code>null</code> children is the load-bearing detail: a missing node still occupies its place, so a tree that is merely shifted can never line up value-for-value.',
+    legend: [
+      {cls:'hot', text:'pair just dequeued'},
+      {cls:'win', text:'sitting in the queues'},
+      {cls:'good', text:'compared and equal'},
+      {cls:'dim', text:'not enqueued yet'}
+    ],
+    code: [
+      'var queueP = new Queue<TreeNode>(new[] { p });',
+      'var queueQ = new Queue<TreeNode>(new[] { q });',
+      '',
+      'while (queueP.Count > 0 && queueQ.Count > 0)',
+      '{',
+      '    for (int i = queueP.Count; i > 0; i--)',
+      '    {',
+      '        var nodeP = queueP.Dequeue();',
+      '        var nodeQ = queueQ.Dequeue();',
+      '',
+      '        if (nodeP == null && nodeQ == null) continue;',
+      '        if (nodeP == null || nodeQ == null || nodeP.val != nodeQ.val)',
+      '        {',
+      '            return false;',
+      '        }',
+      '',
+      '        queueP.Enqueue(nodeP.left);',
+      '        queueP.Enqueue(nodeP.right);',
+      '        queueQ.Enqueue(nodeQ.left);',
+      '        queueQ.Enqueue(nodeQ.right);',
+      '    }',
+      '}',
+      '',
+      'return true;'
+    ],
+    simulate(input){
+      const P = input.p, Q = input.q, steps = [];
+      let deepest = 0;
+      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
+      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
+      let n = 1; while (n <= deepest) n = n * 2 + 1;
+      const vp = i => (i < P.length ? P[i] : null);
+      const vq = i => (i < Q.length ? Q[i] : null);
+      const show = v => (v === null ? 'null' : String(v));
+      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
+      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
+      const done = {}, front = {0:true};
+      const qidx = [0];
+      let level = 0;
+      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (front[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
+      const panels = (cur) => [
+        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
+        pTiles('Tree q — same slots', cells(vq), cls(cur)),
+        pChips('Queues, front → back', [
+          {left:'queueP', items: qidx.map((i, k) => ({text: show(vp(i)), sub: path(i), cls: k === 0 ? 'head' : ''})), empty:'(empty)'},
+          {left:'queueQ', items: qidx.map((i, k) => ({text: show(vq(i)), sub: path(i), cls: k === 0 ? 'head' : ''})), empty:'(empty)'}
+        ]),
+        pPills('', [
+          {k:'level', v: level, cls:'accent'},
+          {k:'nodeP', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
+          {k:'nodeQ', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
+          {k:'queued', v: qidx.length}
+        ])
+      ];
+      steps.push({lines:[1,2], msg:'Each queue is seeded with its own root. Two queues rather than one pair-queue, but they are filled and drained in exactly the same order, so position <b>k</b> of <code>queueP</code> always describes the same slot as position <b>k</b> of <code>queueQ</code>.', panels: panels(-1)});
+      let dead = false, ans = true;
+      while (qidx.length && !dead){
+        const count = qidx.length;
+        steps.push({lines:[4,6], msg:'Level ' + level + ' holds <b>' + count + '</b> pair' + (count === 1 ? '' : 's') + '. The <code>for</code> loop snapshots that count up front, so the children enqueued during this pass are processed as the <em>next</em> level instead of being swept into this one. The <code>while</code> checks both counts, but they can never diverge — every step enqueues to both queues or to neither.', panels: panels(-1)});
+        for (let t = 0; t < count; t++){
+          const i = qidx.shift(); delete front[i];
+          const a = vp(i), b = vq(i);
+          if (a === null && b === null){
+            done[i] = true;
+            steps.push({lines:[8,9,11], msg:'Dequeued slot <b>' + path(i) + '</b>: null on both sides. <code>continue</code> skips the enqueues, so nothing below a shared gap is ever queued — that is what stops the queues from growing forever.', panels: panels(i)});
+            continue;
+          }
+          if (a === null || b === null || a !== b){
+            const why = (a === null || b === null)
+              ? 'one tree has a node here and the other has a gap, so the shapes differ'
+              : 'both exist but ' + a + ' ≠ ' + b;
+            ans = false; dead = true;
+            steps.push({lines:[8,9,12,14], msg:'Dequeued slot <b>' + path(i) + '</b>: ' + why + '. Return <b>false</b> at once — the ' + qidx.length + ' pair' + (qidx.length === 1 ? '' : 's') + ' still queued cannot undo a disagreement.', panels: panels(i)});
+            break;
+          }
+          done[i] = true;
+          steps.push({lines:[8,9,12], msg:'Dequeued slot <b>' + path(i) + '</b>: both nodes present and <code>' + a + ' == ' + b + '</code>, so the guard lets it through and this position is confirmed.', panels: panels(i)});
+          qidx.push(2 * i + 1, 2 * i + 2);
+          front[2 * i + 1] = true; front[2 * i + 2] = true;
+          steps.push({lines:[17,18,19,20], msg:'Push both children of <b>' + path(i) + '</b> onto each queue — <code>null</code> children included, unconditionally. Skipping nulls would let a value slide into a neighbour’s slot and two differently shaped trees would compare as equal.', panels: panels(i)});
+        }
+        if (!dead) level++;
+      }
+      steps.push({lines:[ans ? 24 : 14], msg: ans
+        ? 'The queues drained together with no disagreement, so every slot of both trees was checked → <b>true</b>. Time O(n); the queues hold at most one level at a time, which for a wide tree is O(n).'
+        : 'The answer is <b>false</b>, decided at level ' + level + ' without touching the rest of the trees. Time is still O(n) worst case, and the space is whatever the widest level reached.',
+        panels: panels(-1)});
+      return steps;
+    }
+  },
+  {
+    label: 'Iterative DFS with an explicit stack of pairs',
+    badge: 'O(n) time · O(h) stack · explicit stack · optimal-variant.cs',
+    blurb: 'The recursion’s call stack, written out by hand as a stack of node <em>pairs</em>. Right is pushed before left so left pops first, which reproduces the recursive version’s preorder exactly. When a pair disagrees, the function returns with entries still on the stack — that leftover is precisely the work <code>&&</code> short-circuits away.',
+    legend: [
+      {cls:'hot', text:'pair just popped'},
+      {cls:'win', text:'waiting on the stack'},
+      {cls:'good', text:'compared and equal'},
+      {cls:'dim', text:'never pushed'}
+    ],
+    code: [
+      'var stack = new Stack<(TreeNode, TreeNode)>();',
+      'stack.Push((root1, root2));',
+      '',
+      'while (stack.Count > 0)',
+      '{',
+      '    var (node1, node2) = stack.Pop();',
+      '',
+      '    if (node1 == null && node2 == null) continue;',
+      '    if (node1 == null || node2 == null || node1.val != node2.val)',
+      '    {',
+      '        return false;',
+      '    }',
+      '    stack.Push((node1.right, node2.right));',
+      '    stack.Push((node1.left, node2.left));',
+      '}',
+      '',
+      'return true;'
+    ],
+    simulate(input){
+      const P = input.p, Q = input.q, steps = [];
+      let deepest = 0;
+      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
+      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
+      let n = 1; while (n <= deepest) n = n * 2 + 1;
+      const vp = i => (i < P.length ? P[i] : null);
+      const vq = i => (i < Q.length ? Q[i] : null);
+      const show = v => (v === null ? 'null' : String(v));
+      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
+      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
+      const done = {}, front = {0:true};
+      const st = [0];
+      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (front[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
+      const panels = (cur) => [
+        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
+        pTiles('Tree q — same slots', cells(vq), cls(cur)),
+        pChips('Stack of pairs, bottom → top', [
+          {left:'stack', right:'top is rightmost', items: st.map((i, k) => ({text: show(vp(i)) + ' / ' + show(vq(i)), sub: path(i), cls: k === st.length - 1 ? 'head' : ''})), empty:'(empty)'}
+        ]),
+        pPills('', [
+          {k:'node1', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
+          {k:'node2', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
+          {k:'stack size', v: st.length, cls:'accent'}
+        ])
+      ];
+      steps.push({lines:[1,2], msg:'One stack of <b>tuples</b>, seeded with the two roots. Pairing the nodes inside a single stack entry is what keeps the two walks aligned — there is no way for one tree to advance a step ahead of the other.', panels: panels(-1)});
+      let dead = false, ans = true;
+      while (st.length && !dead){
+        const i = st.pop(); delete front[i];
+        steps.push({lines:[4,6], msg:'Pop <b>' + path(i) + '</b>: <code>node1 = ' + show(vp(i)) + '</code>, <code>node2 = ' + show(vq(i)) + '</code>. Because the stack is LIFO, this is the deepest-left pair outstanding — the same node the recursive version would be sitting on right now.', panels: panels(i)});
+        const a = vp(i), b = vq(i);
+        if (a === null && b === null){
+          done[i] = true;
+          steps.push({lines:[8], msg:'Both null: agreement by absence. <code>continue</code> pushes no children, which is this version’s equivalent of the recursion hitting its base case and returning true.', panels: panels(i)});
+          continue;
+        }
+        if (a === null || b === null || a !== b){
+          const why = (a === null || b === null)
+            ? 'one side is a node and the other is a gap — the shapes disagree'
+            : 'both are present but ' + a + ' ≠ ' + b;
+          ans = false; dead = true;
+          steps.push({lines:[9,11], msg:'The guard fires: ' + why + '. Return <b>false</b> with <b>' + st.length + '</b> pair' + (st.length === 1 ? '' : 's') + ' still on the stack — abandoned work, exactly what <code>&&</code> short-circuits past in the recursive form.', panels: panels(i)});
+          break;
+        }
+        done[i] = true;
+        st.push(2 * i + 2, 2 * i + 1);
+        front[2 * i + 2] = true; front[2 * i + 1] = true;
+        steps.push({lines:[9,13,14], msg:'<code>' + a + ' == ' + b + '</code> with both nodes present, so this slot is settled and the children of <b>' + path(i) + '</b> go on the stack. Right is pushed <em>first</em> so left ends up on top and is popped next — reverse the two pushes and the traversal order changes, though the final true/false answer would not.', panels: panels(i)});
+      }
+      steps.push({lines:[ans ? 17 : 11], msg: ans
+        ? 'The stack emptied without a single guard failing, so every reachable pair of slots matched → <b>true</b>. Time O(n), and the stack never holds more than about one entry per level of depth.'
+        : 'The answer is <b>false</b>. Same verdict and same visiting order as the recursion, with the frames stored on the heap instead of the call stack — which is what makes this version safe on a tree deep enough to overflow it.',
+        panels: panels(-1)});
+      return steps;
+    }
+  }]
+};
+
+/* ==========================================================================
+   Shared visualizer engine.
+   A problem file defines PROBLEM = { title, note, inputs, parse, shuffle,
+   solutions:[{ label, badge, blurb, legend, code, simulate }] }.
+   simulate(input) returns an array of steps:
+     { lines:[1-based], msg:'html', panels:[ ...panel descriptors... ] }
+   Panel descriptors are declarative; everything below is generic rendering.
+   ========================================================================== */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let solIdx = 0, sol = null, steps = [], stepIndex = -1, playing = false, timer = null;
+
+/* ---------------- header + config form ---------------- */
+function buildHeader(){
+  document.title = PROBLEM.title + ' — visualizer';
+  $('brandTitle').textContent = PROBLEM.title;
+  $('brandNote').textContent = PROBLEM.note || '';
+  const f = $('configForm');
+  f.innerHTML = '';
+  PROBLEM.inputs.forEach(inp => {
+    const d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = '<span>' + esc(inp.label) + '</span>' +
+      '<input id="in_' + inp.id + '" type="' + (inp.type || 'text') + '" value="' + esc(inp.value) +
+      '" spellcheck="false" style="width:' + (inp.width || 210) + 'px" aria-label="' + esc(inp.label) + '">';
+    f.appendChild(d);
+  });
+  const run = document.createElement('button');
+  run.type = 'submit'; run.className = 'primary'; run.textContent = 'Run';
+  f.appendChild(run);
+  if (PROBLEM.shuffle){
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Shuffle';
+    b.addEventListener('click', () => {
+      const vals = PROBLEM.shuffle();
+      PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+      rebuild();
+    });
+    f.appendChild(b);
+  }
+  f.addEventListener('submit', e => { e.preventDefault(); rebuild(); });
+}
+
+function readRaw(){
+  const o = {};
+  PROBLEM.inputs.forEach(i => { o[i.id] = $('in_' + i.id).value; });
+  return o;
+}
+function writeBack(vals){
+  PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+}
+
+/* ---------------- solution tabs ---------------- */
+function buildTabs(){
+  const t = $('tabs');
+  t.innerHTML = '';
+  PROBLEM.solutions.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (i === solIdx ? ' active' : '');
+    b.innerHTML = '<b>' + esc(s.label) + '</b><span>' + esc(s.badge) + '</span>';
+    b.addEventListener('click', () => { if (i === solIdx) return; solIdx = i; buildTabs(); loadSolution(); rebuild(); });
+    t.appendChild(b);
+  });
+}
+
+function loadSolution(){
+  sol = PROBLEM.solutions[solIdx];
+  $('brandSub').innerHTML = sol.blurb;
+  $('legend').innerHTML = (sol.legend || []).map(l =>
+    l.cls === null ? '<span>' + l.text + '</span>'
+                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
+  $('codeBlock').innerHTML = sol.code.map((l, i) =>
+    '<div class="line" data-line="' + (i + 1) + '">' + (l.length ? esc(l) : '&nbsp;') + '</div>').join('');
+}
+
+/* ---------------- panel rendering ---------------- */
+const host = () => $('colLeft');
+
+function panelShell(p){
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.dataset.t = p.t;
+  el.innerHTML = '<p class="panel-title"></p><div class="body"></div>';
+  return el;
+}
+
+function renderPanels(panels, animate){
+  const h = host();
+  while (h.children.length > panels.length) h.removeChild(h.lastChild);
+  panels.forEach((p, i) => {
+    let el = h.children[i];
+    if (!el || el.dataset.t !== p.t){
+      const fresh = panelShell(p);
+      if (el) h.replaceChild(fresh, el); else h.appendChild(fresh);
+      el = fresh;
+    }
+    el.querySelector('.panel-title').innerHTML = p.title || '';
+    el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    RENDER[p.t](el.querySelector('.body'), p, animate);
+  });
+}
+
+const RENDER = {};
+
+/* --- tiles: an array or string laid out as boxes, with optional bracket + pointers --- */
+RENDER.tiles = function(body, p, animate){
+  let scroll = body.querySelector('.array-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="array-scroll"><div class="array-row">' +
+      '<div class="window-bracket"></div></div></div>';
+    scroll = body.querySelector('.array-scroll');
+  }
+  const row = scroll.querySelector('.array-row');
+  const bracket = row.querySelector('.window-bracket');
+  const ptrs = p.ptrs || [];
+  row.classList.toggle('no-ptrs', ptrs.length === 0);
+
+  let tiles = [...row.querySelectorAll('.tile')];
+  if (tiles.length !== p.items.length){
+    tiles.forEach(t => t.remove());
+    p.items.forEach(() => {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.innerHTML = '<span class="idx"></span><span class="val"></span><span class="sub"></span>';
+      row.appendChild(t);
+    });
+    tiles = [...row.querySelectorAll('.tile')];
+  }
+  p.items.forEach((it, i) => {
+    const t = tiles[i];
+    t.className = 'tile ' + (it.cls || '') + (p.narrow ? ' narrow' : '') +
+                  (animate && it.flash ? ' just-popped' : '');
+    const idx = t.querySelector('.idx'), val = t.querySelector('.val'), sub = t.querySelector('.sub');
+    const top = it.top !== undefined ? it.top : i;
+    idx.textContent = top === '' ? '' : top;
+    val.textContent = it.v;
+    sub.textContent = it.sub || '';
+    sub.style.display = it.sub ? '' : 'none';
+  });
+
+  // window bracket
+  if (p.bracket && tiles[p.bracket.from] && tiles[p.bracket.to] && p.bracket.from <= p.bracket.to){
+    const a = tiles[p.bracket.from], b = tiles[p.bracket.to];
+    bracket.className = 'window-bracket visible' + (p.bracket.dashed ? ' dashed' : '');
+    bracket.style.left = (a.offsetLeft - 4) + 'px';
+    bracket.style.width = (b.offsetLeft + b.offsetWidth - a.offsetLeft + 8) + 'px';
+  } else {
+    bracket.className = 'window-bracket';
+  }
+
+  // pointer markers
+  let marks = [...row.querySelectorAll('.ptr-marker')];
+  if (marks.length !== ptrs.length){
+    marks.forEach(m => m.remove());
+    ptrs.forEach(() => {
+      const m = document.createElement('div');
+      m.className = 'ptr-marker';
+      row.appendChild(m);
+    });
+    marks = [...row.querySelectorAll('.ptr-marker')];
+  }
+  const seen = {};
+  ptrs.forEach((pt, i) => {
+    const m = marks[i];
+    m.textContent = pt.name;
+    const tile = tiles[pt.idx];
+    if (!tile || pt.idx < 0){ m.className = 'ptr-marker ' + (pt.cls || ''); return; }
+    m.className = 'ptr-marker visible ' + (pt.cls || '');
+    const n = (seen[pt.idx] = (seen[pt.idx] || 0) + 1);
+    const nudge = n === 1 ? 0 : (n === 2 ? 20 : -20);
+    m.style.left = (tile.offsetLeft + tile.offsetWidth / 2 + nudge) + 'px';
+  });
+
+  // keep the focused tile in view
+  if (p.focus !== undefined && tiles[p.focus] && scroll.scrollWidth > scroll.clientWidth){
+    const t = tiles[p.focus], left = t.offsetLeft, right = left + t.offsetWidth;
+    if (left < scroll.scrollLeft + 12) scroll.scrollTo({left: Math.max(left - 24, 0), behavior:'smooth'});
+    else if (right > scroll.scrollLeft + scroll.clientWidth - 12)
+      scroll.scrollTo({left: right - scroll.clientWidth + 24, behavior:'smooth'});
+  }
+};
+
+/* --- chips: one or more labelled rows of small boxes (deque, stack, map, heap) --- */
+RENDER.chips = function(body, p, animate){
+  const rows = p.rows;
+  let els = [...body.querySelectorAll('.chip-row')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="chip-row"><span class="row-label left"></span><div class="chips"></div><span class="row-label right"></span></div>').join('');
+    els = [...body.querySelectorAll('.chip-row')];
+  }
+  rows.forEach((r, i) => {
+    const el = els[i];
+    const L = el.querySelector('.left'), R = el.querySelector('.right'), box = el.querySelector('.chips');
+    L.textContent = r.left || ''; L.style.display = r.left ? '' : 'none';
+    R.textContent = r.right || ''; R.style.display = r.right ? '' : 'none';
+    if (!r.items.length){
+      box.innerHTML = '<span class="chips-empty">' + esc(r.empty || 'empty') + '</span>';
+    } else {
+      box.innerHTML = r.items.map(c =>
+        '<span class="chip ' + (c.cls || '') + (animate && c.fresh ? ' fresh' : '') + '">' +
+        esc(c.text) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
+    }
+  });
+};
+
+/* --- slots: the output array, dashes until written --- */
+RENDER.slots = function(body, p, animate){
+  let row = body.querySelector('.slot-row');
+  if (!row){ body.innerHTML = '<div class="slot-row"></div>'; row = body.querySelector('.slot-row'); }
+  let slots = [...row.children];
+  if (slots.length !== p.items.length){
+    row.innerHTML = p.items.map(() => '<div class="slot"></div>').join('');
+    slots = [...row.children];
+  }
+  p.items.forEach((it, i) => {
+    const s = slots[i];
+    const wasFilled = s.classList.contains('filled');
+    const filled = it.text !== null && it.text !== undefined && it.text !== '';
+    s.textContent = filled ? it.text : '—';
+    s.className = 'slot' + (filled ? ' filled' : '') + (it.cls ? ' ' + it.cls : '') +
+                  (filled && !wasFilled && animate ? ' fresh' : '');
+  });
+};
+
+/* --- pills: scalar readouts (l, r, sum, best...) --- */
+RENDER.pills = function(body, p){
+  let box = body.querySelector('.pills');
+  if (!box){ body.innerHTML = '<div class="pills"></div>'; box = body.querySelector('.pills'); }
+  box.innerHTML = p.items.map(it =>
+    '<span class="pill ' + (it.cls || '') + '">' + esc(it.k) + ' = <b>' + esc(it.v) + '</b></span>').join('');
+};
+
+/* --- bars: a histogram, for height/price style problems --- */
+RENDER.bars = function(body, p){
+  let box = body.querySelector('.bars');
+  if (!box){ body.innerHTML = '<div class="bars"><div class="water"></div></div>'; box = body.querySelector('.bars'); }
+  const water = box.querySelector('.water');
+  let wraps = [...box.querySelectorAll('.bar-wrap')];
+  if (wraps.length !== p.items.length){
+    wraps.forEach(w => w.remove());
+    p.items.forEach(() => {
+      const w = document.createElement('div');
+      w.className = 'bar-wrap';
+      w.innerHTML = '<span class="cap"></span><div class="bar"></div><span class="foot"></span>';
+      box.appendChild(w);
+    });
+    wraps = [...box.querySelectorAll('.bar-wrap')];
+  }
+  const max = Math.max(1, ...p.items.map(i => Math.abs(i.v)));
+  p.items.forEach((it, i) => {
+    const w = wraps[i];
+    w.className = 'bar-wrap ' + (it.cls || '');
+    w.querySelector('.cap').textContent = it.v;
+    w.querySelector('.foot').textContent = it.foot !== undefined ? it.foot : i;
+    w.querySelector('.bar').style.height = Math.max(3, (Math.abs(it.v) / max) * 165) + 'px';
+  });
+  if (p.fill && wraps[p.fill.from] && wraps[p.fill.to]){
+    const a = wraps[p.fill.from], b = wraps[p.fill.to];
+    water.style.opacity = 1;
+    water.style.left = (a.offsetLeft + a.offsetWidth * 0.5) + 'px';
+    water.style.width = (b.offsetLeft + b.offsetWidth * 0.5 - a.offsetLeft - a.offsetWidth * 0.5) + 'px';
+    water.style.bottom = '26px';
+    water.style.height = Math.max(3, (p.fill.level / max) * 165) + 'px';
+  } else {
+    water.style.opacity = 0;
+  }
+};
+
+/* --- ranges: intervals on a shared timeline --- */
+RENDER.ranges = function(body, p){
+  let box = body.querySelector('.ranges');
+  if (!box){ body.innerHTML = '<div class="ranges"></div>'; box = body.querySelector('.ranges'); }
+  let lines = [...box.children];
+  if (lines.length !== p.items.length){
+    box.innerHTML = p.items.map(() => '<div class="range-line"><div class="range-bar"></div></div>').join('');
+    lines = [...box.children];
+  }
+  const lo = p.min, hi = Math.max(p.max, p.min + 1);
+  p.items.forEach((it, i) => {
+    const bar = lines[i].querySelector('.range-bar');
+    bar.className = 'range-bar ' + (it.cls || '');
+    bar.textContent = it.label;
+    bar.style.left = ((it.from - lo) / (hi - lo) * 100) + '%';
+    bar.style.width = 'max(72px, ' + ((it.to - it.from) / (hi - lo) * 100) + '%)';
+  });
+};
+
+/* --- note: a free-text panel --- */
+RENDER.note = function(body, p){
+  let n = body.querySelector('.note-text');
+  if (!n){ body.innerHTML = '<div class="note-text"></div>'; n = body.querySelector('.note-text'); }
+  n.innerHTML = p.html;
+};
+
+/* ---------------- playback ---------------- */
+function render(animate){
+  if (animate === undefined) animate = true;
+  $('progressLabel').textContent = Math.max(stepIndex + 1, 0) + ' / ' + steps.length;
+  const codeLines = document.querySelectorAll('.code .line');
+  if (stepIndex < 0){
+    codeLines.forEach(l => l.classList.remove('active'));
+    $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
+    renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
+    return;
+  }
+  const step = steps[stepIndex];
+  const active = step.lines || [];
+  codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  $('statusMsg').innerHTML = step.msg;
+  renderPanels(step.panels, animate);
+}
+
+// step -1 shows the first step's shape with all highlighting stripped
+function blankPanels(panels){
+  return JSON.parse(JSON.stringify(panels)).map(p => {
+    if (p.t === 'tiles'){ p.items.forEach(i => { i.cls = ''; i.flash = false; }); p.bracket = null; p.ptrs = []; }
+    if (p.t === 'bars'){ p.items.forEach(i => { i.cls = ''; }); p.fill = null; }
+    if (p.t === 'ranges'){ p.items.forEach(i => { i.cls = 'ghost'; }); }
+    if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+    if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+    if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    return p;
+  });
+}
+
+function stepForward(){ if (stepIndex >= steps.length - 1){ pause(); return; } stepIndex++; render(); if (stepIndex >= steps.length - 1) pause(); }
+function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
+function resetAll(){ pause(); stepIndex = -1; render(false); }
+function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
+function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
+function tick(){
+  if (!playing) return;
+  if (!guard(stepForward)) return;
+  if (stepIndex >= steps.length - 1){ pause(); return; }
+  const s = $('speedInput');
+  timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
+}
+
+function rebuild(){
+  const parsed = PROBLEM.parse(readRaw());
+  if (!parsed.ok){
+    pause(); steps = []; stepIndex = -1;
+    host().innerHTML = '';
+    $('statusMsg').innerHTML = parsed.msg;
+    $('progressLabel').textContent = '0 / 0';
+    return;
+  }
+  if (parsed.normalized) writeBack(parsed.normalized);
+  steps = sol.simulate(parsed.value);
+  stepIndex = -1;
+  pause();
+  host().innerHTML = '';
+  requestAnimationFrame(() => { render(false); requestAnimationFrame(() => render(false)); });
+}
+
+$('playBtn').addEventListener('click', () => playing ? pause() : play());
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
+$('resetBtn').addEventListener('click', resetAll);
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, button')) return;
+  if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); pause(); stepForward(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); pause(); stepBack(); }
+  else if (e.key === 'r' || e.key === 'R'){ resetAll(); }
+});
+window.addEventListener('resize', () => render(false));
+
+buildHeader();
+buildTabs();
+loadSolution();
+rebuild();
+})();
+</script>
+</body>
+</html>

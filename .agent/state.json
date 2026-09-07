@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T04:59:58.461Z",
+  "updatedAt": "2026-09-07T05:10:27.298Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2091,16 +2091,116 @@
     },
     "same-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs",
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant-2.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "979a2dc58eecdea45f49e810010b9d3634a46449906f0ceb605209107360bc5d": "optimal.cs",
+        "9f5583a38285d3f5d9ab7d7f5ed2af7746e72f5e0099423c18112ed83c620649": "optimal-variant-2.cs",
+        "c7fe0630c2de57a730232e2bfc84a14674051bd3ebd2ba5221611164ddde0b69": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "979a2dc58eecdea45f49e810010b9d3634a46449906f0ceb605209107360bc5d": "optimal.cs",
+        "9f5583a38285d3f5d9ab7d7f5ed2af7746e72f5e0099423c18112ed83c620649": "optimal-variant-2.cs",
+        "c7fe0630c2de57a730232e2bfc84a14674051bd3ebd2ba5221611164ddde0b69": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "06a6c0453e9e",
+          "renames": [
+            "p->first",
+            "q->second"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "0801c6b09dbf",
+          "renames": [
+            "p->root1",
+            "q->root2"
+          ]
+        },
+        "optimal-variant-2.cs": {
+          "version": 1,
+          "codePrint": "689324c4e7fa",
+          "renames": [
+            "q1->queueP",
+            "q2->queueQ"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant-2.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive DFS, pairwise compare",
+          "approachKey": "dfs-compare",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "iterative DFS with explicit stack, pairwise compare",
+          "approachKey": "dfs-compare",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant-2.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "iterative BFS with two queues, level-by-level compare",
+          "approachKey": "bfs-compare",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant-2.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "06a6c0453e9e",
+          "optimal-variant-2.cs": "689324c4e7fa",
+          "optimal-variant.cs": "0801c6b09dbf"
+        },
+        "builtAt": "2026-09-07T05:10:27.113Z"
+      }
     },
     "search-2d-matrix": {
       "topic": "Data Structures & Algorithms",
