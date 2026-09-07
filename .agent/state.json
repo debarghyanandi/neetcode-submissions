@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T04:02:58.451Z",
+  "updatedAt": "2026-09-07T04:09:45.413Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -13,11 +13,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "ccc44cc9d3c8f785b25553a89777f10305fa2e0232076f1d37cddd592f0693d4": "optimal.cs",
-        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs"
+        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs",
+        "a64f2662549eace2e453039705fad7780114f8f6345a3ae118891f73ae33d711": "optimal.cs",
+        "c22e6f255fc994c208d61651cfeec7513550e7a6903effe9a1347202fd9f8f5a": "suboptimal.cs"
       },
       "fingerprints": {
         "ccc44cc9d3c8f785b25553a89777f10305fa2e0232076f1d37cddd592f0693d4": "optimal.cs",
-        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs"
+        "3421909392697d514eedb0e9731d43c4dcc8e6807e960d3494f4d520bf5e23b2": "suboptimal.cs",
+        "a64f2662549eace2e453039705fad7780114f8f6345a3ae118891f73ae33d711": "optimal.cs",
+        "c22e6f255fc994c208d61651cfeec7513550e7a6903effe9a1347202fd9f8f5a": "suboptimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -102,12 +106,16 @@
       "knownFingerprints": {
         "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
         "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs",
-        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs"
+        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs",
+        "1951f1149738fe12592fad30d945a18f0f6b8ccf02332c66465af9cc7027dafd": "optimal.cs",
+        "7a4ac594e6318987af6c34ba1f21358adcdfd7fa795ec4576900b9961bd3fee5": "suboptimal.cs"
       },
       "fingerprints": {
         "83ca03147a9c1e66ab43e3473361ba3cc7a4b53cdc6ff7787bfe8539d7e02007": "optimal.cs",
         "a765bb90aa15a9f5da490d4408795128640ae62c3826cd141c30319c84692ab5": "suboptimal.cs",
-        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs"
+        "5094eb7d76527e9a34c3276f157c237e5bbd52494b0c2a51fb341473c7a4554f": "optimal.cs",
+        "1951f1149738fe12592fad30d945a18f0f6b8ccf02332c66465af9cc7027dafd": "optimal.cs",
+        "7a4ac594e6318987af6c34ba1f21358adcdfd7fa795ec4576900b9961bd3fee5": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -171,10 +179,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
+        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs",
+        "f8ccd0629a76f1e676dced6c6b7086307ec76b9d234b3873dc7f9f17132490de": "optimal.cs"
       },
       "fingerprints": {
-        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs"
+        "6a2357968a068454d7cc6ffb21187bf01346dd72775b0890230f7e632ffad9bb": "optimal.cs",
+        "f8ccd0629a76f1e676dced6c6b7086307ec76b9d234b3873dc7f9f17132490de": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -216,10 +226,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
+        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs",
+        "8a712ffa8e26ea310d169db6654b040d632a4cb5fa2f75fd7c0aadddd240d10a": "optimal.cs"
       },
       "fingerprints": {
-        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs"
+        "6e67c7355596e10f7755df8bd5114a33527d09e8b0f508d549431c6388e63414": "optimal.cs",
+        "8a712ffa8e26ea310d169db6654b040d632a4cb5fa2f75fd7c0aadddd240d10a": "optimal.cs"
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"one-pass running minimum, greedy\",\"approachKey\":\"running-min-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
@@ -262,11 +274,13 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs",
-        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs"
+        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs",
+        "b45b91acd6482e93aa3e979166246dee4aac668c658ae558764ff4a4616d2898": "optimal.cs"
       },
       "fingerprints": {
         "618bc1836acbcaeb32fb43ff659e25a3249280df93dbff0daf46461eb7e3674a": "optimal.cs",
-        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs"
+        "afc63c826dbabcc6efb4e3ac9b5dd0c51d94a57085b4942490e3d81f37d113ae": "optimal.cs",
+        "b45b91acd6482e93aa3e979166246dee4aac668c658ae558764ff4a4616d2898": "optimal.cs"
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"afc63c826dba\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
@@ -319,7 +333,8 @@
       "processedSubmissions": [],
       "awaitingClassification": [
         "submission-0.cs",
-        "submission-1.cs"
+        "submission-1.cs",
+        "submission-2.cs"
       ],
       "knownFingerprints": {},
       "fingerprints": {}
@@ -335,11 +350,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "04893c3ee615e8eaa83dbf0704ead5706cee0fdd4dd83788ba4c6a67fbaf2f0d": "optimal.cs",
-        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "optimal-variant.cs"
+        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "optimal-variant.cs",
+        "ede0f840aa79b9607c5cc5797849e5735ad40819062ec3c61e7a8c8a2c50dd41": "optimal.cs",
+        "fc672a6b56231a2dee92266fed7f048a69aadb88a17701805b41ab5c111e0075": "optimal-variant.cs"
       },
       "fingerprints": {
         "04893c3ee615e8eaa83dbf0704ead5706cee0fdd4dd83788ba4c6a67fbaf2f0d": "optimal.cs",
-        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "optimal-variant.cs"
+        "256ee4307930b23cac2b38c9582ff814e3639d4f4a26bb8d4f8edee99a3f1091": "optimal-variant.cs",
+        "ede0f840aa79b9607c5cc5797849e5735ad40819062ec3c61e7a8c8a2c50dd41": "optimal.cs",
+        "fc672a6b56231a2dee92266fed7f048a69aadb88a17701805b41ab5c111e0075": "optimal-variant.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -412,10 +431,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
+        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs",
+        "7c299c987eb89ddb3da5edf78e0abd5ac6a9908cc83feff4fe9db1536544eb16": "optimal.cs"
       },
       "fingerprints": {
-        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs"
+        "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs",
+        "7c299c987eb89ddb3da5edf78e0abd5ac6a9908cc83feff4fe9db1536544eb16": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -470,13 +491,17 @@
         "3424e5a4dc18568a833436b0984554a9506874097b0aad4a2ddd78092d6d3df6": "optimal.cs",
         "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
         "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
-        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs"
+        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs",
+        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal.cs",
+        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal-variant.cs"
       },
       "fingerprints": {
         "3424e5a4dc18568a833436b0984554a9506874097b0aad4a2ddd78092d6d3df6": "optimal.cs",
         "8705b4e069445a0d49c1b8f938b85155bf83c92c4e59c4a873d92d0c4af9af00": "optimal-variant.cs",
         "bec0fbf9463a87f75cabb92578e9fa365af2bcbd416650691f3e3412fe718e5d": "optimal.cs",
-        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs"
+        "be3260b08c075af0c7aa2cec7c92b3649031d8cc0f41d1fdf39c708a0c26df2e": "optimal-variant.cs",
+        "de233095d235f5feaaf501ec813b1131400f96a0c0457efb384dbd68f6b6eb64": "optimal.cs",
+        "3d2256dfef322243d356bcaca7588766bc7c7201b359826ad434c86b981b19f1": "optimal-variant.cs"
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bec0fbf9463a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
@@ -558,10 +583,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs"
+        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs",
+        "00eb8829720b241e58810162b9c78c2c0b75f7394f01e6bbe8e73d6bc6dbfe7c": "optimal.cs"
       },
       "fingerprints": {
-        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs"
+        "b1ff48e1959dd474fbdb0254db0629500deaf62552fa6460a135bb026d4ea6c1": "optimal.cs",
+        "00eb8829720b241e58810162b9c78c2c0b75f7394f01e6bbe8e73d6bc6dbfe7c": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -617,11 +644,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "1282d32997d6a4b98335919ebda497991db5f16ba471df9872211f42b9d82910": "optimal.cs",
-        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs"
+        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs",
+        "5513c3404133aaa395f370199d6f458e9e367d63d62c3554278b722cf5b91b83": "optimal.cs",
+        "119134c23c0f8e44594defe7106c20c01d82ecdfdcaf301519e2960117690bb6": "optimal-variant.cs"
       },
       "fingerprints": {
         "1282d32997d6a4b98335919ebda497991db5f16ba471df9872211f42b9d82910": "optimal.cs",
-        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs"
+        "01e24d50d94e3016b3fdc7114583377dad9737063d07f67fc2ea73a7f06b828d": "optimal-variant.cs",
+        "5513c3404133aaa395f370199d6f458e9e367d63d62c3554278b722cf5b91b83": "optimal.cs",
+        "119134c23c0f8e44594defe7106c20c01d82ecdfdcaf301519e2960117690bb6": "optimal-variant.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -702,11 +733,13 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs",
-        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs"
+        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs",
+        "c8f1b702e2299bedd0ad25aa26a935b1f49194e5c80a558bae38ee07aec8552f": "optimal.cs"
       },
       "fingerprints": {
         "fe742774dbb506f569be08f43348b37985ba439cbe048aa5dfd9e40f5f1df92c": "optimal.cs",
-        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs"
+        "836a01808be1798fe39865e9c2ebfa12f5df37d5e1771faa13a342bf4540ec7b": "optimal.cs",
+        "c8f1b702e2299bedd0ad25aa26a935b1f49194e5c80a558bae38ee07aec8552f": "optimal.cs"
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"836a01808be1\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, lazy transfer for amortized FIFO\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
@@ -763,12 +796,18 @@
       "knownFingerprints": {
         "eb5f76e2a52e8656bef29849f97313484ee98a58e32365509d143ed414d913fe": "optimal.cs",
         "9b65703a785f965edb402d716d35260745806d51643c72968a46720d80eb3e70": "optimal-variant-2.cs",
-        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs"
+        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs",
+        "1330bc0baf36af623855d3455caa48dba825d3dc1ef598c0a8253b3a8ca61c67": "optimal.cs",
+        "c676ddcf129a2ccd5449f3767f98fab4db88affde1be9bf4d4012115858e2e8e": "optimal-variant-2.cs",
+        "1c277db9573dd78222c292d7d5951acea12f2f9b964d4d2a27130565ecfea62d": "optimal-variant.cs"
       },
       "fingerprints": {
         "eb5f76e2a52e8656bef29849f97313484ee98a58e32365509d143ed414d913fe": "optimal.cs",
         "9b65703a785f965edb402d716d35260745806d51643c72968a46720d80eb3e70": "optimal-variant-2.cs",
-        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs"
+        "ba5240d320be0c855480041eda85d0db8bd5225577d43718e97acd2f3b53d20e": "optimal-variant.cs",
+        "1330bc0baf36af623855d3455caa48dba825d3dc1ef598c0a8253b3a8ca61c67": "optimal.cs",
+        "c676ddcf129a2ccd5449f3767f98fab4db88affde1be9bf4d4012115858e2e8e": "optimal-variant-2.cs",
+        "1c277db9573dd78222c292d7d5951acea12f2f9b964d4d2a27130565ecfea62d": "optimal-variant.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -872,13 +911,17 @@
         "ddf7058904455fc82f9ef0a1f6b5a2c48b7c78aa0d1b61064625a2e1e548a583": "optimal.cs",
         "36e22936a298fdb6ed399942207751c12e6f97e0688c274b01850f6e612003dc": "suboptimal.cs",
         "ef821088828ddeeb43d2786d8dc73b5047721187bf109ae1fcdd98f9a421f5da": "optimal.cs",
-        "8fcafdc73c38bf256259f0ce1f56c1662539fb635b503fad2d65aec9ccac985e": "suboptimal.cs"
+        "8fcafdc73c38bf256259f0ce1f56c1662539fb635b503fad2d65aec9ccac985e": "suboptimal.cs",
+        "ce350477d38e4b8dd9744e9ad37c0e8253f18d6607a8b465d981e9a17986ea7f": "optimal.cs",
+        "f36d27a2e93aa7ddeba3fbc7b0883d7081eed1dfa95a2430a803c159d62c4dfd": "suboptimal.cs"
       },
       "fingerprints": {
         "ddf7058904455fc82f9ef0a1f6b5a2c48b7c78aa0d1b61064625a2e1e548a583": "optimal.cs",
         "36e22936a298fdb6ed399942207751c12e6f97e0688c274b01850f6e612003dc": "suboptimal.cs",
         "ef821088828ddeeb43d2786d8dc73b5047721187bf109ae1fcdd98f9a421f5da": "optimal.cs",
-        "8fcafdc73c38bf256259f0ce1f56c1662539fb635b503fad2d65aec9ccac985e": "suboptimal.cs"
+        "8fcafdc73c38bf256259f0ce1f56c1662539fb635b503fad2d65aec9ccac985e": "suboptimal.cs",
+        "ce350477d38e4b8dd9744e9ad37c0e8253f18d6607a8b465d981e9a17986ea7f": "optimal.cs",
+        "f36d27a2e93aa7ddeba3fbc7b0883d7081eed1dfa95a2430a803c159d62c4dfd": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -959,11 +1002,13 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "5a0fe1057baf1085e68c595c8919a07cc1941d850ca16b6c2fc43a5036b0e931": "optimal.cs",
-        "c79477a6b5ada40026290d9302b1a191356ab28cc9f04fcaf5af25f86bfa8b35": "optimal.cs"
+        "c79477a6b5ada40026290d9302b1a191356ab28cc9f04fcaf5af25f86bfa8b35": "optimal.cs",
+        "a781bbc1f72241116dc13e34a2f60647d87eca66313e0589b38e459a0935b604": "optimal.cs"
       },
       "fingerprints": {
         "5a0fe1057baf1085e68c595c8919a07cc1941d850ca16b6c2fc43a5036b0e931": "optimal.cs",
-        "c79477a6b5ada40026290d9302b1a191356ab28cc9f04fcaf5af25f86bfa8b35": "optimal.cs"
+        "c79477a6b5ada40026290d9302b1a191356ab28cc9f04fcaf5af25f86bfa8b35": "optimal.cs",
+        "a781bbc1f72241116dc13e34a2f60647d87eca66313e0589b38e459a0935b604": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1016,10 +1061,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs"
+        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs",
+        "f9ad2fd40f7aff5659aa270ae53b2fa29db6b57964dfcb88abc003d56aa969a2": "optimal.cs"
       },
       "fingerprints": {
-        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs"
+        "bab210c59bb3df3eb91298e359e534aeb5b8f4a1fff3d633f102d2023beb6599": "optimal.cs",
+        "f9ad2fd40f7aff5659aa270ae53b2fa29db6b57964dfcb88abc003d56aa969a2": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1070,10 +1117,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs"
+        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs",
+        "c1ca2102a1be67f26987ddcd563df77bcd562373991dd41ac7c197aae228b22e": "optimal.cs"
       },
       "fingerprints": {
-        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs"
+        "711ff7adff418c4827dfc63e38e33c773913bd825251c4f049228c9335e5fbac": "optimal.cs",
+        "c1ca2102a1be67f26987ddcd563df77bcd562373991dd41ac7c197aae228b22e": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1110,11 +1159,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "bf1a8a6b1e829e0fb68aa4ba87e37a356334607ea54210acd635af3a715a7458": "optimal.cs",
-        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs"
+        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs",
+        "636f2afd834e51e75e1502d42fcee609ce446e8c196dcf5915c8b2ff8e5bcf0e": "optimal.cs",
+        "2a545726c5fb386b2b0ee3e85c873493a60af68b11e3c98cdf743dc1c3ec8365": "suboptimal.cs"
       },
       "fingerprints": {
         "bf1a8a6b1e829e0fb68aa4ba87e37a356334607ea54210acd635af3a715a7458": "optimal.cs",
-        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs"
+        "696e4b6c8adafdcca7a1c7f7ddba9d900d87263cd97bb134a16f485b6c23ce5b": "suboptimal.cs",
+        "636f2afd834e51e75e1502d42fcee609ce446e8c196dcf5915c8b2ff8e5bcf0e": "optimal.cs",
+        "2a545726c5fb386b2b0ee3e85c873493a60af68b11e3c98cdf743dc1c3ec8365": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1166,11 +1219,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "d051b5e92c816bd219e03835283ff27a47c9dd74992cd3e3ce58cde462555351": "optimal.cs",
-        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "optimal-variant.cs"
+        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "optimal-variant.cs",
+        "41d07f57ddad19175dbce04ec8c2dc021f44e336ae0450decc3a2b771fcd42b0": "optimal.cs",
+        "bd076c1d8af8ba9a28ad9f883dbf6781f0783916cc7fd4d5bdaa0946d87b12ab": "optimal-variant.cs"
       },
       "fingerprints": {
         "d051b5e92c816bd219e03835283ff27a47c9dd74992cd3e3ce58cde462555351": "optimal.cs",
-        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "optimal-variant.cs"
+        "529409e826f5edbc99c4a35799ebaab1a40543c1723b76f510c529c9ce0f040c": "optimal-variant.cs",
+        "41d07f57ddad19175dbce04ec8c2dc021f44e336ae0450decc3a2b771fcd42b0": "optimal.cs",
+        "bd076c1d8af8ba9a28ad9f883dbf6781f0783916cc7fd4d5bdaa0946d87b12ab": "optimal-variant.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1220,10 +1277,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs"
+        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs",
+        "b0b43a67f1406868d09ad531759badb9d924a420945af38e204169304406e04d": "optimal.cs"
       },
       "fingerprints": {
-        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs"
+        "a3971da329d8a4cbd60964b303c659ca5af4b3867ad0346a2fe634ecc685a979": "optimal.cs",
+        "b0b43a67f1406868d09ad531759badb9d924a420945af38e204169304406e04d": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1277,10 +1336,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs"
+        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs",
+        "c92f90b5ae8b53c64c809f4ebec230d6d477ae7f14e4a0d521821396e60750d4": "optimal.cs"
       },
       "fingerprints": {
-        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs"
+        "d6040c070cce5c68601a94e7c7b3512b8d3be5f5ab187fa44c2fa05ce7a40d8b": "optimal.cs",
+        "c92f90b5ae8b53c64c809f4ebec230d6d477ae7f14e4a0d521821396e60750d4": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1317,11 +1378,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "66de7d2dfc7c5b0dc4b5f9cbef584801d2927b83d7ca4d3b4910fe32abdef575": "optimal.cs",
-        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs"
+        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs",
+        "bdc996d5aba6f968176f3b6a81a9cf2931200d1e304d1bfdd13d51b4684f725f": "optimal.cs",
+        "59b5e03db907c88485055fc7e34f1310a89c385acd9a87e9a135f708f8aaa50f": "suboptimal.cs"
       },
       "fingerprints": {
         "66de7d2dfc7c5b0dc4b5f9cbef584801d2927b83d7ca4d3b4910fe32abdef575": "optimal.cs",
-        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs"
+        "c1ca1d30ac1aac2d411c540baac712278138f3039ff3c05ed710ec12cc17bb3b": "suboptimal.cs",
+        "bdc996d5aba6f968176f3b6a81a9cf2931200d1e304d1bfdd13d51b4684f725f": "optimal.cs",
+        "59b5e03db907c88485055fc7e34f1310a89c385acd9a87e9a135f708f8aaa50f": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1371,10 +1436,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs"
+        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs",
+        "2bf99e1f501a8678cae9dfbc60b0dbf6d2e47d50a7180a6a1f4ec5c610955c5a": "optimal.cs"
       },
       "fingerprints": {
-        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs"
+        "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs",
+        "2bf99e1f501a8678cae9dfbc60b0dbf6d2e47d50a7180a6a1f4ec5c610955c5a": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1409,10 +1476,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs"
+        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs",
+        "a5e352601878950a859cb1277d534bd343fc10e7e258e5de70e41db4232347d4": "optimal.cs"
       },
       "fingerprints": {
-        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs"
+        "4924c078b78b55df46351855e7899637be62d8611d20951014de1a2c1f4bd318": "optimal.cs",
+        "a5e352601878950a859cb1277d534bd343fc10e7e258e5de70e41db4232347d4": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1467,11 +1536,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "3b0e84ebfabf94bc8d3664f6327436dc475bdd9e24c048d81f23350d40ccd70f": "optimal.cs",
-        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs"
+        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs",
+        "ddeb1d2764d6c3b7f97cf5430075324ed5d891c57140ecacac098ed6b9bbaa35": "optimal.cs",
+        "5a2a130e5eef764a16b3a77f8a039ae679bee39afd21fd7ec771e5ec014208b1": "suboptimal.cs"
       },
       "fingerprints": {
         "3b0e84ebfabf94bc8d3664f6327436dc475bdd9e24c048d81f23350d40ccd70f": "optimal.cs",
-        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs"
+        "c93b14ab0dee33decfb0fb54b38212b2513753ec0d77d22b723307da1e83b515": "suboptimal.cs",
+        "ddeb1d2764d6c3b7f97cf5430075324ed5d891c57140ecacac098ed6b9bbaa35": "optimal.cs",
+        "5a2a130e5eef764a16b3a77f8a039ae679bee39afd21fd7ec771e5ec014208b1": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1521,10 +1594,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs"
+        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs",
+        "2b8344c454aeaa4fcec35e2392a780986dfa7de141d9989f04c0f76123b29a83": "optimal.cs"
       },
       "fingerprints": {
-        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs"
+        "edabe91e98595f14f044a2875fe1aef591864db055d7f1a2d6332389f3311095": "optimal.cs",
+        "2b8344c454aeaa4fcec35e2392a780986dfa7de141d9989f04c0f76123b29a83": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1561,11 +1636,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "bfe9106c0fc048fcd629bea8ab16a8567efe643b98055d100e5092d643082d77": "optimal.cs",
-        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs"
+        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs",
+        "3c04a4a78a665223ee00fc53aa5a58d71f1ace2a17812614ac4df3785f9f4cf0": "optimal.cs",
+        "b23d9ed2eb901b8aaa72836a8216196835b5d9f8224f7425566d9ddbdf0d7c4d": "suboptimal.cs"
       },
       "fingerprints": {
         "bfe9106c0fc048fcd629bea8ab16a8567efe643b98055d100e5092d643082d77": "optimal.cs",
-        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs"
+        "a0b38bcaaf0d0a66d4ed4c23d4c59daa927c219929f93298aaa4761aea20c432": "suboptimal.cs",
+        "3c04a4a78a665223ee00fc53aa5a58d71f1ace2a17812614ac4df3785f9f4cf0": "optimal.cs",
+        "b23d9ed2eb901b8aaa72836a8216196835b5d9f8224f7425566d9ddbdf0d7c4d": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1615,10 +1694,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs"
+        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs",
+        "13c2ab3125a2f1847ec902accda177dd6f3685ea3af9a007961320e33a3f301c": "optimal.cs"
       },
       "fingerprints": {
-        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs"
+        "eb7a14bc99011d1b15832a74b5763fecb013651b329e2cc368d0ca5ab3de64be": "optimal.cs",
+        "13c2ab3125a2f1847ec902accda177dd6f3685ea3af9a007961320e33a3f301c": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1655,11 +1736,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "2664c64e9078a69d862d19f73159fa3e06dc55e40356cdc936ce5087d87cc350": "optimal.cs",
-        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs"
+        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs",
+        "450cb455262e2bc2361ea3212e46482eb24424d467bb6985051762a71c8cb595": "optimal.cs",
+        "15d2eda35ba25abbabd50129bebb55a2e1a08008ddf5c12384eb5bb21999e5b7": "suboptimal.cs"
       },
       "fingerprints": {
         "2664c64e9078a69d862d19f73159fa3e06dc55e40356cdc936ce5087d87cc350": "optimal.cs",
-        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs"
+        "2edda7136511f372c9d50b4a7f06c4d45785a404d9e0d74826ff2a2039309dc0": "suboptimal.cs",
+        "450cb455262e2bc2361ea3212e46482eb24424d467bb6985051762a71c8cb595": "optimal.cs",
+        "15d2eda35ba25abbabd50129bebb55a2e1a08008ddf5c12384eb5bb21999e5b7": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1709,10 +1794,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs"
+        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs",
+        "2eb00d57a5b36aa97a39b3bda3a31fba662ea4e90e37941b488bfcf9b90b5184": "optimal.cs"
       },
       "fingerprints": {
-        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs"
+        "eeb48d2a7bff6b2a04e963523af1390d24e531d911c2701583c5b11669280fd3": "optimal.cs",
+        "2eb00d57a5b36aa97a39b3bda3a31fba662ea4e90e37941b488bfcf9b90b5184": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1747,10 +1834,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs"
+        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs",
+        "356b5ac772ee26abaa70c7e46b9f01a6c2ee1e0c498eaf2825b8c43fd53070c9": "optimal.cs"
       },
       "fingerprints": {
-        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs"
+        "1e262d2b762f42de96b2526879d37b2602119b30bc88ce330db4272120a169ae": "optimal.cs",
+        "356b5ac772ee26abaa70c7e46b9f01a6c2ee1e0c498eaf2825b8c43fd53070c9": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1801,10 +1890,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs"
+        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs",
+        "60023ec0ab1d4665a77ad216d99d61a06d5188ac4a16574b09df00f9e41f07d4": "optimal.cs"
       },
       "fingerprints": {
-        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs"
+        "dbb7370936f48e996713b81e6364693b55f26d3096c0f09cbd50cab60ee05d5a": "optimal.cs",
+        "60023ec0ab1d4665a77ad216d99d61a06d5188ac4a16574b09df00f9e41f07d4": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1857,11 +1948,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs",
-        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs"
+        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs",
+        "b52a45a45ab0ded43916672ec593334b5e5c3165be05c6bd919a195f9004467c": "optimal.cs",
+        "7a45cb63dcc5f0cb1974285c9d51132c01ab739015de79eb90b317eafc6146d5": "suboptimal.cs"
       },
       "fingerprints": {
         "e1f52fa2f5d4d218ad4c9dffc662fd0d6dbdd6d57fe1ba7fd9a69d3c0e14f98a": "optimal.cs",
-        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs"
+        "cc7b45fbbcf219b1519d3d144e5d2acdeb00f33dc18b4a3f526e5ce86e60e1de": "suboptimal.cs",
+        "b52a45a45ab0ded43916672ec593334b5e5c3165be05c6bd919a195f9004467c": "optimal.cs",
+        "7a45cb63dcc5f0cb1974285c9d51132c01ab739015de79eb90b317eafc6146d5": "suboptimal.cs"
       },
       "lint": {
         "optimal.cs": {
@@ -1934,11 +2029,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "1fe0243b4ec5bf9f183fa13fcb86060d967cde01ff4a368bc3d3e68a38a34492": "optimal.cs",
-        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs"
+        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs",
+        "3bae2256cda7fcc1c446c926cb375e6fa114869f618726123cd42530e81e9f27": "optimal.cs",
+        "70cdd4aef16f898495fa895b2649850649cdf5278ec36021158eb839e6f5466f": "suboptimal.cs"
       },
       "fingerprints": {
         "1fe0243b4ec5bf9f183fa13fcb86060d967cde01ff4a368bc3d3e68a38a34492": "optimal.cs",
-        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs"
+        "10e131c67162c55f623c034f2ece9ea78608eb3d55be887428bad16a95154e2e": "suboptimal.cs",
+        "3bae2256cda7fcc1c446c926cb375e6fa114869f618726123cd42530e81e9f27": "optimal.cs",
+        "70cdd4aef16f898495fa895b2649850649cdf5278ec36021158eb839e6f5466f": "suboptimal.cs"
       },
       "lint": {},
       "headerSignatures": {
@@ -1991,11 +2090,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "f90a987c5e3f0f47d698c6546df7f5f708bb22a20c9f88f82e563d200a8e0ba6": "optimal.cs",
-        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs"
+        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs",
+        "53027aaf3f13f009aa23787d75a6957eb7ff5538fe9b79eb623ae8dde7842453": "optimal.cs",
+        "b9a2e463e125a97b9c48ce8523911c080fdec532854d002aa660d03b5d1fab49": "optimal-variant.cs"
       },
       "fingerprints": {
         "f90a987c5e3f0f47d698c6546df7f5f708bb22a20c9f88f82e563d200a8e0ba6": "optimal.cs",
-        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs"
+        "0f47330c041841c6bcafb797ee839bb4908f903bccb394c15b5f90d899f820eb": "optimal-variant.cs",
+        "53027aaf3f13f009aa23787d75a6957eb7ff5538fe9b79eb623ae8dde7842453": "optimal.cs",
+        "b9a2e463e125a97b9c48ce8523911c080fdec532854d002aa660d03b5d1fab49": "optimal-variant.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -2047,11 +2150,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
-        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs",
+        "6814403a2739307362a006c4c3fb000cc275fb1fedca3c0f1376faa31cbf363c": "optimal.cs",
+        "9a57d0de093f98606b90261b7a741281f8a1ddd946e53b41e544b7b93acf6b56": "suboptimal.cs"
       },
       "fingerprints": {
         "1ff27499b86dd575ac9c94d4ad9e40d77b6e3d38a988b3bb13f22a093eedbff8": "optimal.cs",
-        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs"
+        "584f9cc2424ad3ab8eb7445a69506571c34f11635f732897bcd29e4f8e76834c": "suboptimal.cs",
+        "6814403a2739307362a006c4c3fb000cc275fb1fedca3c0f1376faa31cbf363c": "optimal.cs",
+        "9a57d0de093f98606b90261b7a741281f8a1ddd946e53b41e544b7b93acf6b56": "suboptimal.cs"
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"length-prefix encoding (interleaved length#string)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
@@ -2101,10 +2208,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs"
+        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs",
+        "0e89a3b3eefcd108a62e03cece60d4f2e1a3b1f34c5e00d550daa92d9de7d2cb": "optimal.cs"
       },
       "fingerprints": {
-        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs"
+        "ce0637d272836dce8a7aef5f82e58c7df6110ca1baf5907d7e5838a2911074e7": "optimal.cs",
+        "0e89a3b3eefcd108a62e03cece60d4f2e1a3b1f34c5e00d550daa92d9de7d2cb": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -2141,11 +2250,15 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "8d0903e0e7b7df2a5a3ef89fce3de55e950b32598cd5102bd7d86debe2fd59f2": "optimal.cs",
-        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs"
+        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs",
+        "4ca7fa511d642a3fefbbbf41e8f7e23f9d1ee62411d5606df95d5163a87d6d8f": "optimal.cs",
+        "69c5329336baa7b7b2f76beca0a77ae5e41330c1914fffd8c25b00069c20ae04": "suboptimal.cs"
       },
       "fingerprints": {
         "8d0903e0e7b7df2a5a3ef89fce3de55e950b32598cd5102bd7d86debe2fd59f2": "optimal.cs",
-        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs"
+        "ea1cc8905e6ba0e41ac88b6ae1a4e945114d963f52d3a8149ce11d5aec5620bd": "suboptimal.cs",
+        "4ca7fa511d642a3fefbbbf41e8f7e23f9d1ee62411d5606df95d5163a87d6d8f": "optimal.cs",
+        "69c5329336baa7b7b2f76beca0a77ae5e41330c1914fffd8c25b00069c20ae04": "suboptimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -2196,11 +2309,13 @@
       "awaitingClassification": [],
       "knownFingerprints": {
         "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs",
-        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs"
+        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs",
+        "5edf45cbff522ffd2f87d6d3184917aab4c5e0b13ce52a5a795710aa5806feda": "optimal.cs"
       },
       "fingerprints": {
         "2a33cc8cf19cf199ebf214b87e7d44077115b5ad171cf518b9966b9062eaf854": "optimal.cs",
-        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs"
+        "becd46342da03d22d4bae10b3ba7119748f72c6690e61e4f20b1d2a72f5442f3": "suboptimal.cs",
+        "5edf45cbff522ffd2f87d6d3184917aab4c5e0b13ce52a5a795710aa5806feda": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -2235,10 +2350,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs"
+        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs",
+        "f27e2b04c9422503d00355aea664f4b71a88361ed22e7334fd4e2e4d20ed91a2": "optimal.cs"
       },
       "fingerprints": {
-        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs"
+        "7443ea4decbff76bf476742f04de7d0c0f4b1c910f61d7fdde0c7b18622c1cc9": "optimal.cs",
+        "f27e2b04c9422503d00355aea664f4b71a88361ed22e7334fd4e2e4d20ed91a2": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -2270,10 +2387,12 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs"
+        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs",
+        "1750c286be5611feebd295505422e4892f42248bc0559718a72156c2b9bdad2d": "optimal.cs"
       },
       "fingerprints": {
-        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs"
+        "60fd91a31780678a8de77fe64ae5d385bf07ddb7af8eed974d1cb1937fcb30a0": "optimal.cs",
+        "1750c286be5611feebd295505422e4892f42248bc0559718a72156c2b9bdad2d": "optimal.cs"
       },
       "provenance": {
         "optimal.cs": {
