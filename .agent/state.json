@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T04:09:45.413Z",
+  "updatedAt": "2026-09-07T04:24:16.289Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -328,16 +328,87 @@
     },
     "depth-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs",
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [
+        "submission-0.cs"
+      ],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal.cs",
+        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "9b4e53b7de86b0e88e4d63e95ea7106603445541d76f6f773e76d3d680c0ef2f": "optimal.cs",
+        "2cb7717ab6e39cdd198ac5c3238953397bbf905bdbff7259af8163f4f8114f41": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "e63c1520fd78",
+          "renames": [
+            "q->queue",
+            "size->levelSize"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "fc6a6c822bc6",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal counting levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "BFS level-order traversal counting levels",
+          "approachKey": "bfs-level-order",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "recursive DFS computing max depth",
+          "approachKey": "dfs-recursive",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal counting levels\",\"approachKey\":\"bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS computing max depth\",\"approachKey\":\"dfs-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "e63c1520fd78",
+          "optimal-variant.cs": "fc6a6c822bc6"
+        },
+        "builtAt": "2026-09-07T04:24:16.103Z"
+      }
     },
     "duplicate-integer": {
       "topic": "Data Structures & Algorithms",
