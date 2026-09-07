@@ -324,6 +324,28 @@ claude
 The header must say `Claude Pro`. If it says `Not logged in`, finish the setup wizard —
 theme first, login second. Then `/exit`.
 
+### "The run did all the work and then failed at the very end"
+
+If the failing step is **Commit and push** with:
+
+```
+! [rejected]  main -> main (fetch first)
+```
+
+then main moved while the run was working — you submitted a second problem, and
+its push landed during the five or six minutes the first run spent on the model.
+The run now rebases onto whatever arrived and pushes again, up to three times,
+so you should not see this any more. If you do, the log says which:
+
+```
+push rejected (attempt 1) - main moved while this run was working
+rebased onto 5908d02; retrying
+```
+
+A **conflict** during that rebase stops the run rather than forcing anything. The
+work is committed on the runner but gone once it is destroyed; re-run the folder
+by name to redo it.
+
 ### Reading a failed workflow run
 
 Open the failing **step**, not just the run's red/green badge. The AI steps are set to keep

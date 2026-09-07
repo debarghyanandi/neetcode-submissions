@@ -338,7 +338,35 @@ jobs:
           # The chore(pipeline) prefix is what guard 1 above keys on. Do not change
           # it in one place without changing it in the other.
           git commit -m "chore(pipeline): refresh index and state"
-          git push
+
+          # A run takes minutes, and the checkout is from the minute it began.
+          # Submit two problems back to back and the second push lands on main
+          # while the first run is still working - so its push is rejected as
+          # non-fast-forward, and every model call it made dies with the runner.
+          # That happened for real: lint, classify, two teaching blocks and a
+          # visualizer, all discarded, then redone identically by the next run.
+          #
+          # Nothing about the work is stale, only the base it sits on, so rebase
+          # onto whatever arrived and try again. The competing push is a NeetCode
+          # submission in some other folder - concurrency already serialises the
+          # pipeline against itself - so the rebase is expected to be clean, and
+          # a conflict means something unforeseen and is reported, not forced.
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push; then pushed=1; break; fi
+            echo "push rejected (attempt $attempt) - main moved while this run was working"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "::error::rebase onto origin/main conflicted - the work is committed on the runner but could not be pushed"
+              exit 1
+            fi
+            echo "rebased onto $(git rev-parse --short origin/main); retrying"
+          done
+          if [ "$pushed" -ne 1 ]; then
+            echo "::error::push still rejected after 3 attempts - main is moving faster than this run can rebase"
+            exit 1
+          fi
 
       - name: Summarise
         if: always()
