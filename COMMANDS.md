@@ -85,6 +85,14 @@ follows the *name*, not the position: if a private helper also takes a `root`, t
 pinned too. Renaming it in the helper and not in the public method would be one name
 becoming two, which the check cannot tell apart from a real mistake.
 
+It reads the stub out of each file, so it is never problem-specific: `Permute(int[] nums)`
+pins `Permute` and `nums`; `MyQueue` with `Push`/`Pop`/`Peek`/`Empty` pins all of them,
+because for a design problem the whole class is the interface.
+
+The rule keys off the `public` keyword, so **a helper you wrote is pinned too if you
+declared it `public`**. If you want lint to tidy a helper's names, make it `private` —
+which it should be anyway.
+
 Every rewrite is compared to the original token by token before it is written, so a model
 that "improves" a comparison, drops a line, or renames a method has its whole file thrown
 away rather than saved. Your own comments are protected too — they can be reworded when a
