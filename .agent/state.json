@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-07T22:50:03.237Z",
+  "updatedAt": "2026-09-08T00:58:03.013Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1125,15 +1125,85 @@
     },
     "level-order-traversal-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "700d03b2023b2f247ed094b8c6dde9d7b975049b7285c74e72ed4b202797f441": "optimal.cs",
+        "46e10b9a7ad49dee206864a05c722d90e7462f62c1578920fd28e010c273fe88": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "700d03b2023b2f247ed094b8c6dde9d7b975049b7285c74e72ed4b202797f441": "optimal.cs",
+        "46e10b9a7ad49dee206864a05c722d90e7462f62c1578920fd28e010c273fe88": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "f30a147572ac",
+          "renames": []
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "e3520d78f033",
+          "renames": [
+            "res->result",
+            "q->queue"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f30a147572ac\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion tracking depth/level\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, processing level by level using queue size snapshot\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "DFS recursion tracking depth/level",
+          "approachKey": "dfs-track-level",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "BFS with queue, processing level by level using queue size snapshot",
+          "approachKey": "bfs-queue-level-size",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f30a147572ac\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion tracking depth/level\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, processing level by level using queue size snapshot\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "f30a147572ac",
+          "optimal-variant.cs": "e3520d78f033"
+        },
+        "builtAt": "2026-09-08T00:58:02.815Z"
+      }
     },
     "linked-list-cycle-detection": {
       "topic": "Data Structures & Algorithms",
@@ -2654,6 +2724,17 @@
           "bruteForce": false
         }
       }
+    },
+    "valid-binary-search-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "validate-parentheses": {
       "topic": "Data Structures & Algorithms",
