@@ -58,7 +58,16 @@ const INSTRUCTIONS = [
   'You may change ONLY these things:',
   '  - whitespace and indentation',
   '  - comments',
-  '  - the names of LOCAL VARIABLES and parameters',
+  '  - the names of LOCAL VARIABLES, and of PRIVATE methods and their parameters',
+  '',
+  'THE PUBLIC SIGNATURE IS NOT YOURS. It is the stub NeetCode generated - the',
+  'method name and its parameters are the grader\'s interface, and renaming one',
+  'breaks the submission. In `public bool IsValidBST(TreeNode root)`, all three',
+  'of IsValidBST, TreeNode and root stay exactly as they are, however you feel',
+  'about them. That holds for the name ANYWHERE in the file: if a private helper',
+  'also takes a parameter called `root`, that one stays `root` too. Renaming it',
+  'in the helper and not in the public method is one name becoming two, which is',
+  'rejected - and it is the single most common way these rewrites are refused.',
   '',
   'You may NOT change anything else. Not a comparison, not a literal, not the order of',
   'arguments, not a member name after a dot, not the class or method names, not the',
@@ -189,6 +198,7 @@ for (const p of targets) {
         feedback = [
         ...check.errors,
         'Every distinct variable must keep a distinct name. If two variables would end up with the same name, pick different names for both rather than merging them.',
+        'And one name is one name: whatever you call it, call it that in every method it appears in.',
       ];
       }
     }

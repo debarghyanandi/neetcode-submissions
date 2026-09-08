@@ -75,7 +75,16 @@ git push
 
 ### What lint is and isn't allowed to do
 
-Only three things: whitespace, comments, and the names of local variables and parameters.
+Only three things: whitespace, comments, and the names of local variables and of the
+private helpers you added.
+
+**The public signature is off limits.** `public bool IsValidBST(TreeNode root)` is the stub
+NeetCode generated — the method name and its parameters are the grader's interface, so
+`IsValidBST`, `TreeNode` and `root` are pinned, however clumsy a name might be. The pin
+follows the *name*, not the position: if a private helper also takes a `root`, that one is
+pinned too. Renaming it in the helper and not in the public method would be one name
+becoming two, which the check cannot tell apart from a real mistake.
+
 Every rewrite is compared to the original token by token before it is written, so a model
 that "improves" a comparison, drops a line, or renames a method has its whole file thrown
 away rather than saved. Your own comments are protected too — they can be reworded when a

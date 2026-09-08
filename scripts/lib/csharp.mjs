@@ -101,8 +101,63 @@ const significant = (toks) => toks.filter((t) => t.t !== 'ws' && t.t !== 'commen
  * so the guard would wave through a lint rewrite that turned an O(n) Contains
  * into an O(1) one - a complexity change, dressed as tidier naming.
  */
-function fixedIdentifier(toks, i) {
+/**
+ * The names NeetCode wrote, which are not yours to change.
+ *
+ * Every solution starts from a stub: `public bool IsValidBST(TreeNode root)`.
+ * The method name and its parameters are the grader's interface - rename one
+ * and the submission no longer compiles against it. Everything else in the
+ * file is yours: locals, and the private helpers you added.
+ *
+ * Pinned by NAME across the whole file, not just at the signature. Pinning only
+ * the declaration would let a rewrite rename `root` in the body and leave the
+ * parameter behind, which is a broken file. Pinning the name everywhere also
+ * settles the case that first exposed this: a helper `DFS(TreeNode root, ...)`
+ * where the model sensibly renamed the helper's `root` to `node` and left the
+ * public one alone. Both edits were right, and sameShape - which reads a flat
+ * stream of tokens and knows nothing of scope - could only see one name
+ * becoming two. Now neither is renamed, and there is nothing to disagree about.
+ */
+export function publicSignatureNames(toks) {
+  const fixed = new Set();
+
+  for (let i = 0; i < toks.length; i++) {
+    if (!(toks[i].t === 'kw' && toks[i].v === 'public')) continue;
+
+    // Walk the declaration head to its parameter list. A field or property
+    // never gets there: it hits `{`, `;` or `=` first and is abandoned.
+    let open = -1;
+    for (let j = i + 1; j < toks.length; j++) {
+      const t = toks[j];
+      if (t.t === 'op' && t.v === '(') { open = j; break; }
+      if (t.t === 'kw' || t.t === 'id') continue;
+      if (t.t === 'op' && '<>[],.?'.includes(t.v)) continue;
+      break;
+    }
+    if (open < 0) continue;
+
+    // The method's own name is the identifier immediately before the list.
+    if (toks[open - 1]?.t === 'id') fixed.add(toks[open - 1].v);
+
+    // A parameter name is the identifier that closes its slot: `int[] nums,`
+    // or `TreeNode root)`. Depth-tracked, so a default value or a generic
+    // argument inside the list cannot be mistaken for one.
+    let depth = 0;
+    for (let k = open; k < toks.length; k++) {
+      const t = toks[k];
+      if (t.t === 'op' && t.v === '(') { depth++; continue; }
+      if (t.t === 'op' && t.v === ')') { if (--depth === 0) break; continue; }
+      if (depth !== 1 || t.t !== 'id') continue;
+      const next = toks[k + 1];
+      if (next && next.t === 'op' && (next.v === ',' || next.v === ')')) fixed.add(t.v);
+    }
+  }
+  return fixed;
+}
+
+function fixedIdentifier(toks, i, boilerplate) {
   const prev = toks[i - 1], next = toks[i + 1];
+  if (boilerplate && boilerplate.has(toks[i].v)) return 'boilerplate';
   if (prev && prev.t === 'op' && prev.v === '.') return 'member';
   if (prev && prev.t === 'kw' &&
       (prev.v === 'class' || prev.v === 'struct' || prev.v === 'interface' || prev.v === 'namespace')) return 'type';
@@ -130,13 +185,14 @@ function fixedIdentifier(toks, i) {
  */
 export function shapeForm(src) {
   const toks = significant(tokenize(src));
+  const boilerplate = publicSignatureNames(toks);
   const seen = new Map();
   const out = [];
 
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
     if (t.t !== 'id') { out.push(t.v); continue; }
-    if (fixedIdentifier(toks, i)) { out.push(t.v); continue; }
+    if (fixedIdentifier(toks, i, boilerplate)) { out.push(t.v); continue; }
     if (!seen.has(t.v)) seen.set(t.v, `$${seen.size}`);
     out.push(seen.get(t.v));
   }
@@ -149,6 +205,7 @@ export function shapeForm(src) {
 export function sameShape(before, after) {
   const A = significant(tokenize(before));
   const B = significant(tokenize(after));
+  const boilerplate = publicSignatureNames(A);
   const errors = [];
 
   if (A.length !== B.length) {
@@ -170,9 +227,11 @@ export function sameShape(before, after) {
 
     // A member name belongs to some other API, and a type name decides what the
     // program costs. Renaming either is a different program, not a tidier one.
-    const fixed = fixedIdentifier(A, i);
+    const fixed = fixedIdentifier(A, i, boilerplate);
     if (fixed && a.v !== b.v) {
-      errors.push(`${fixed} name changed: ${a.v} -> ${b.v} near: ${near}`);
+      errors.push(fixed === 'boilerplate'
+        ? `${a.v} -> ${b.v}: ${a.v} is part of the public signature NeetCode gave you - leave it alone`
+        : `${fixed} name changed: ${a.v} -> ${b.v} near: ${near}`);
       continue;
     }
 

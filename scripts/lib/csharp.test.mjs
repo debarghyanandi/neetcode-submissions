@@ -28,6 +28,12 @@ function accepts(name, before, after, expectRenames = null) {
 }
 
 function refuses(name, before, after, mustMention) {
+  // A sabotage that edits nothing is not a passing test, it is a broken one -
+  // and it passes silently, because refusing an identical file is impossible.
+  // Every one of these is built by string replacement on a fixture, so a
+  // reworded fixture can quietly turn a sabotage into a no-op. This caught
+  // exactly that when BASE's signature changed.
+  if (before === after) { fail++; console.log(`FAIL  ${name}\n      the sabotage changed nothing - the fixture must have moved`); return; }
   const r = sameShape(before, after);
   if (r.ok) { fail++; console.log(`FAIL  ${name}\n      let it through`); return; }
   if (mustMention && !r.errors.some((e) => e.includes(mustMention))) {
@@ -36,16 +42,18 @@ function refuses(name, before, after, mustMention) {
   pass++; console.log(`ok    ${name}  (${r.errors[0]})`);
 }
 
+// The signature is NeetCode's stub - `Search`, `nums` and `target` are pinned.
+// `l`, `r` and `m` are yours, and are what lint exists for.
 const BASE = `public class Solution
 {
-    public int Search(int[] nums, int t)
+    public int Search(int[] nums, int target)
     {
         int l = 0, r = nums.Length - 1;
         while (l <= r)
         {
             int m = l + (r - l) / 2;   // avoid overflow
-            if (nums[m] == t) return m;
-            if (t < nums[m]) r = m - 1; else l = m + 1;
+            if (nums[m] == target) return m;
+            if (target < nums[m]) r = m - 1; else l = m + 1;
         }
         return -1;
     }
@@ -58,9 +66,9 @@ accepts('identical file', BASE, BASE, []);
 
 accepts('reindented only', BASE, BASE.replace(/\n    /g, '\n        '), []);
 
-accepts('honest rename', BASE,
-  ren(BASE, [['t', 'target'], ['l', 'left'], ['r', 'right'], ['m', 'mid']]),
-  ['t->target', 'l->left', 'r->right', 'm->mid']);
+accepts('honest rename of the locals', BASE,
+  ren(BASE, [['l', 'left'], ['r', 'right'], ['m', 'mid']]),
+  ['l->left', 'r->right', 'm->mid']);
 
 accepts('comment reworded after a rename', BASE,
   ren(BASE, [['m', 'mid']]).replace('// avoid overflow', '// mid without overflowing'),
@@ -78,8 +86,8 @@ accepts('renaming a variable that happens to be a contextual keyword',
   ['where->index']);
 
 accepts('property accessors are not renames',
-  'public class S { public int Count { get; set; } public int F(int q) { return q; } }',
-  'public class S { public int Count { get; set; } public int F(int count) { return count; } }',
+  'public class S { public int Count { get; set; } private int F(int q) { return q; } }',
+  'public class S { public int Count { get; set; } private int F(int count) { return count; } }',
   ['q->count']);
 
 accepts('renaming a variable whose type is a custom class',
@@ -91,13 +99,13 @@ accepts('renaming a variable whose type is a custom class',
 refuses('flipped comparison', BASE, BASE.replace('l <= r', 'l >= r'), 'op changed');
 refuses('shortened comparison', BASE, BASE.replace('l <= r', 'l < r'), 'token count changed');
 refuses('changed literal', BASE, BASE.replace('return -1;', 'return -2;'), 'num changed');
-refuses('dropped statement', BASE, BASE.replace('            if (nums[m] == t) return m;\n', ''), 'token count changed');
+refuses('dropped statement', BASE, BASE.replace('            if (nums[m] == target) return m;\n', ''), 'token count changed');
 refuses('added statement', BASE, BASE.replace('return -1;', 'Console.WriteLine(l);\n        return -1;'), 'token count changed');
 refuses('renamed a member after a dot', BASE, BASE.replace('nums.Length', 'nums.Count'), 'member name changed');
 refuses('renamed the class', BASE, BASE.replace('class Solution', 'class BinarySearch'), 'type name changed');
-refuses('two variables collapsed into one', BASE, ren(BASE, [['t', 'target'], ['m', 'target']]), 'both became');
+refuses('two variables collapsed into one', BASE, ren(BASE, [['l', 'mid'], ['m', 'mid']]), 'both became');
 refuses('deleted a comment', BASE, BASE.replace('   // avoid overflow', ''), 'comment(s) deleted');
-refuses('renamed onto a contextual keyword', BASE, ren(BASE, [['t', 'value']]), 'contextual keyword');
+refuses('renamed onto a contextual keyword', BASE, ren(BASE, [['l', 'value']]), 'contextual keyword');
 // A collection swap is a complexity change wearing a rename's clothes: seen
 // maps one-to-one onto seen, List onto HashSet, and every other token matches.
 const CONTAINS = 'public class S { public bool F(int[] nums) { List<int> seen = new List<int>(); foreach (var n in nums) { if (seen.Contains(n)) return true; seen.Add(n); } return false; } }';
@@ -110,6 +118,34 @@ refuses('var swapped for an explicit type',
   'public class S { public void F() { var x = 1; } }',
   'public class S { public void F() { int x = 1; } }', 'kw changed');
 
+// ---- the signature NeetCode gave you ----------------------------------
+
+// The case that started this: two methods, one name, and the model was right
+// about both - `root` really is the root in one and just a node in the other.
+// Pinning it by name means there is nothing left to disagree about.
+const TWO_METHODS = `public class Solution {
+    public List<List<int>> LevelOrder(TreeNode root) {
+        var res = new List<List<int>>();
+        DFS(root, 0, res);
+        return res;
+    }
+    private void DFS(TreeNode root, int level, List<List<int>> res) {
+        if (root == null) return;
+        DFS(root.left, level + 1, res);
+    }
+}`;
+
+refuses('a public parameter is not renamed', BASE, ren(BASE, [['target', 'wanted']]), 'public signature');
+refuses('nor a public parameter that is an array', BASE, ren(BASE, [['nums', 'values']]), 'public signature');
+refuses('nor the public method itself', BASE, ren(BASE, [['Search', 'BinarySearch']]), 'public signature');
+refuses('nor the helper copy of a public parameter name',
+  TWO_METHODS, TWO_METHODS.replace('TreeNode root, int level', 'TreeNode node, int level'), 'public signature');
+
+accepts('a private helper and its own parameters are yours',
+  TWO_METHODS,
+  ren(TWO_METHODS, [['DFS', 'Walk'], ['level', 'depth'], ['res', 'levels']]),
+  ['DFS->Walk', 'level->depth', 'res->levels']);
+
 // ---- shapeForm: the same solution, however it is written ---------------
 
 function same(name, a, b, want = true) {
@@ -118,12 +154,13 @@ function same(name, a, b, want = true) {
   else { fail++; console.log(`FAIL  ${name}\n      shapes ${got ? 'matched' : 'differed'}, expected ${want ? 'a match' : 'a difference'}`); }
 }
 
-same('renamed variables are the same solution', BASE, ren(BASE, [['t', 'target'], ['l', 'left'], ['r', 'right'], ['m', 'mid']]));
+same('renamed variables are the same solution', BASE, ren(BASE, [['l', 'left'], ['r', 'right'], ['m', 'mid']]));
 same('recommented is the same solution', BASE, BASE.replace('// avoid overflow', '// NOTE: mid, computed safely'));
 same('reindented is the same solution', BASE, BASE.replace(/\n    /g, '\n\t'));
 same('a flipped comparison is NOT the same solution', BASE, BASE.replace('l <= r', 'l >= r'), false);
 same('a different literal is NOT the same solution', BASE, BASE.replace('return -1;', 'return -2;'), false);
 same('List and HashSet are NOT the same solution', CONTAINS, CONTAINS.split('List').join('HashSet'), false);
+same('the same solution with only the helper renamed', TWO_METHODS, ren(TWO_METHODS, [['DFS', 'Walk'], ['res', 'levels']]));
 same('a queue and a stack are NOT the same solution',
   'public class S { void F() { Queue<int> q = new Queue<int>(); q.Enqueue(1); } }',
   'public class S { void F() { Stack<int> q = new Stack<int>(); q.Push(1); } }', false);
