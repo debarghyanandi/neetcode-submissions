@@ -2,6 +2,19 @@
 
 > Synced automatically from [NeetCode.io](https://neetcode.io) · Repository: `neetcode-submissions`
 
+## Documentation
+
+| file | what it is |
+|---|---|
+| [`PIPELINE.md`](PIPELINE.md) | what the automation is and why it exists |
+| [`CODE-TOUR.md`](CODE-TOUR.md) | every file and every important line, explained from zero |
+| [`COMMANDS.md`](COMMANDS.md) | how to drive it — the three workflow boxes, and every flag |
+| [`compacts.md`](compacts.md) | handoff notes: invariants, the full bug history, gotchas |
+
+New here, or handing this to someone (or something) else? Start with `PIPELINE.md`,
+then `CODE-TOUR.md`. If you are about to change the code, read `compacts.md` first —
+most of what looks like an easy improvement has already been tried and has a scar.
+
 ---
 
 ## What is this?
