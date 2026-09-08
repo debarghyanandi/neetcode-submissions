@@ -346,6 +346,12 @@ A **conflict** during that rebase stops the run rather than forcing anything. Th
 work is committed on the runner but gone once it is destroyed; re-run the folder
 by name to redo it.
 
+This used to be common for a worse reason: a queued run checked out *the commit
+that triggered it*, which is behind main, so it could not see what the run ahead
+of it had just finished and would redo the same folder — then conflict with it.
+Runs now start from the tip of main, so a queued run sees the finished work and
+skips it. The folder your push touched is still held back either way.
+
 ### Reading a failed workflow run
 
 Open the failing **step**, not just the run's red/green badge. The AI steps are set to keep

@@ -87,9 +87,28 @@ jobs:
       !startsWith(github.event.head_commit.message, 'chore(pipeline)')
 
     steps:
-      - name: Check out full history
+      - name: Check out the tip of main, not the commit that triggered this run
         uses: actions/checkout@v7
         with:
+          # THE DEFAULT IS github.sha - the commit that set this run off - and on
+          # a queued run that is behind main. Submit twice in quick succession
+          # and the second run rewinds past everything the first one finished:
+          #
+          #   git rev-parse origin/main          -> eb2f696   (run 1's work)
+          #   git fetch +7649a6c:origin/main     (forced update)
+          #   git log -1                         -> 7649a6c   (behind)
+          #
+          # It then redid a folder run 1 had already curated - lint, classify,
+          # two teaching blocks and a visualizer - and could not push, because
+          # rebasing hit add/add conflicts on the optimal.cs and visualizer run 1
+          # had just created. Roughly $1.10, spent to produce a conflict.
+          #
+          # Starting from the tip instead means a queued run sees the finished
+          # work and skips it. The folder this push touched is still held back:
+          # detect excludes anything with a submission changed since
+          # github.event.before, which from the tip covers this push and any that
+          # overtook it.
+          ref: main
           # detect.mjs diffs against the pre-push SHA; a shallow clone cannot.
           fetch-depth: 0
 
