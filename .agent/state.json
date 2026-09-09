@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T22:57:15.484Z",
+  "updatedAt": "2026-09-09T23:05:25.755Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -180,14 +180,59 @@
     },
     "balanced-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "2facb85cd0190dddb1230dd054f2d45ba52b7df485237e89e5b183b1c4620ba4": "optimal.cs"
+      },
+      "fingerprints": {
+        "2facb85cd0190dddb1230dd054f2d45ba52b7df485237e89e5b183b1c4620ba4": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "581adeee02c4",
+          "renames": [
+            "DFS->CheckBalance"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bottom-up DFS returning height and balanced flag\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "bottom-up DFS returning height and balanced flag",
+          "approachKey": "bottom-up-height-balance",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bottom-up DFS returning height and balanced flag\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "581adeee02c4"
+        },
+        "builtAt": "2026-09-09T23:05:25.584Z"
+      }
     },
     "binary-search": {
       "topic": "Data Structures & Algorithms",
