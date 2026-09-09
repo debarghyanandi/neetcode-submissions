@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Time to Buy and Sell — visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
+
+/* "Lemonade & Sweet Tea" (Designing Digitals) is a paid font, so it can't be bundled here.
+   If it's installed on your machine, local() below picks it up automatically. */
+@font-face{
+  font-family:'Lemonade Sweet Tea';
+  src: local('Lemonade & Sweet Tea'), local('Lemonade Sweet Tea'), local('LemonadeSweetTea');
+  font-display: swap;
+}
+
+:root{
+  --paper:#FBF5E9;
+  --ink:#211E1A;
+  --pencil:#8A8175;
+  --pencil-light:#C9C0AF;
+  --orange:#F5A93F;
+  --orange-soft:#FBE3BC;
+  --red:#C94F2E;
+  --green:#5E8C61;
+  --tile:72px;
+  --hand:'Lemonade Sweet Tea','Patrick Hand',cursive;
+  --mono:'Courier Prime', ui-monospace, 'Courier New', monospace;
+  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
+  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
+  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--hand);
+  min-height:100vh;
+  padding:32px clamp(18px, 3vw, 56px) 48px;
+}
+.app{width:100%;max-width:1760px;margin:0 auto;}
+
+/* ---------- header ---------- */
+.topbar{
+  display:flex; flex-wrap:wrap; gap:24px 40px;
+  justify-content:space-between; align-items:flex-end;
+  margin-bottom:18px; padding-bottom:18px;
+  border-bottom:2px solid var(--ink);
+}
+.brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
+.brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
+.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
+.brand-sub code, .status code, .note-text code{
+  font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
+}
+.brand-sub b{font-weight:700;}
+
+.config{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:2px;}
+.field span{font-size:14px;color:var(--pencil);line-height:1;}
+.field input{
+  font-family:var(--mono);font-size:14px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-md);color:var(--ink);padding:9px 12px;
+}
+.field input:focus-visible, button:focus-visible, input[type=range]:focus-visible{
+  outline:3px solid var(--orange);outline-offset:2px;
+}
+button{
+  font-family:var(--hand);font-weight:700;font-size:15px;line-height:1;cursor:pointer;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);color:var(--ink);
+  padding:9px 16px 11px;transition:transform .1s ease, background .15s ease;
+}
+button:hover{background:var(--orange-soft);}
+button:active{transform:translate(1px,1px);}
+button.primary{background:var(--orange);}
+button.primary:hover{background:#F7B85F;}
+
+/* ---------- solution tabs ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.tab{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:9px 18px 11px;text-align:left;background:var(--paper);
+}
+.tab b{font-size:17px;font-weight:700;line-height:1.1;}
+.tab span{font-family:var(--mono);font-size:11px;color:var(--pencil);line-height:1.1;}
+.tab.active{background:var(--orange);box-shadow:3px 3px 0 var(--ink);}
+.tab.active span{color:var(--ink);}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
+.legend span{display:inline-flex;align-items:center;gap:9px;}
+.swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
+.swatch.win{background:var(--orange-soft);}
+.swatch.hot{background:var(--orange);}
+.swatch.done{background:var(--ink);}
+.swatch.good{background:var(--green);}
+.swatch.dim{opacity:.42;}
+.swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
+.col-left{display:flex;flex-direction:column;gap:20px;min-width:0;}
+@media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
+
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
+
+/* ---------- tiles ---------- */
+.array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.array-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
+.array-row.no-ptrs{padding-bottom:8px;}
+.tile{
+  min-width:var(--tile);height:var(--tile);padding:0 6px;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
+}
+.tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
+.tile .val{font-size:24px;font-weight:700;margin-top:6px;white-space:nowrap;}
+.tile .sub{font-size:12px;line-height:1;color:var(--pencil);margin-top:2px;}
+.tile.narrow{min-width:56px;}
+.tile.in-window{background:var(--orange-soft);}
+.tile.hot{background:var(--orange);}
+.tile.good{background:var(--green);color:var(--paper);}
+.tile.good .idx,.tile.good .sub{color:var(--paper);}
+.tile.dim{opacity:.42;}
+.tile.done{background:var(--ink);color:var(--paper);}
+.tile.done .idx,.tile.done .sub{color:var(--pencil-light);}
+.tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.tile.just-popped{animation:pop-fade .55s ease;}
+.tile.just-popped::after{
+  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
+}
+@keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
+@keyframes x-fade{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+
+.window-bracket{
+  position:absolute;top:2px;height:calc(var(--tile) + 16px);
+  border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;
+  transition:left .3s ease, width .3s ease, opacity .2s ease;opacity:0;
+}
+.window-bracket.visible{opacity:1;}
+.window-bracket.dashed{border-style:dashed;border-color:var(--pencil);}
+
+.ptr-marker{
+  position:absolute;bottom:0;transform:translateX(-50%);
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
+}
+.ptr-marker.visible{opacity:1;}
+.ptr-marker::before{content:'↑';display:block;font-size:15px;line-height:1;}
+.ptr-marker.accent{color:var(--orange);text-shadow:0.5px 0 var(--ink);}
+.ptr-marker.accent::before{color:var(--orange);}
+.ptr-marker.red{color:var(--red);}
+.ptr-marker.red::before{color:var(--red);}
+
+/* ---------- chip rows ---------- */
+.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
+.row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
+.chip{
+  font-size:18px;font-weight:600;line-height:1;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.chip small{font-family:var(--mono);font-size:11px;color:var(--pencil);}
+.chip.head{background:var(--orange);}
+.chip.head small{color:var(--ink);}
+.chip.good{background:var(--green);color:var(--paper);}
+.chip.good small{color:var(--paper);}
+.chip.done{background:var(--ink);color:var(--paper);}
+.chip.done small{color:var(--pencil-light);}
+.chip.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.chip.fresh{animation:fill-flash .5s ease;}
+.chips-empty{font-size:16px;color:var(--pencil);}
+
+/* ---------- slots (result row) ---------- */
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;}
+.slot{
+  min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
+  transition:background .3s ease, color .3s ease, border-color .3s;
+}
+.slot.filled{background:var(--ink);border:2px solid var(--ink);color:var(--paper);}
+.slot.fresh{animation:fill-flash .5s ease;}
+@keyframes fill-flash{0%{transform:scale(1.18) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+
+/* ---------- bars ---------- */
+.bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
+.bar{
+  width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  transition:height .3s ease, background .25s ease;
+}
+.bar-wrap.hot .bar{background:var(--orange);}
+.bar-wrap.in-window .bar{background:var(--orange-soft);}
+.bar-wrap.dim{opacity:.35;}
+.bar-wrap .cap{font-size:14px;line-height:1;margin-bottom:4px;}
+.bar-wrap .foot{position:absolute;bottom:-22px;font-size:12px;color:var(--pencil);line-height:1;}
+.water{
+  position:absolute;border:2px dashed var(--orange);background:rgba(245,169,63,.22);
+  border-radius:var(--sk-sm);pointer-events:none;
+  transition:left .3s ease, width .3s ease, height .3s ease, bottom .3s ease, opacity .2s;
+}
+
+/* ---------- ranges (intervals) ---------- */
+.ranges{display:flex;flex-direction:column;gap:8px;}
+.range-line{position:relative;height:34px;}
+.range-bar{
+  position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;white-space:nowrap;
+  transition:left .3s ease, width .3s ease, background .25s ease;
+}
+.range-bar.hot{background:var(--orange);}
+.range-bar.done{background:var(--ink);color:var(--paper);}
+.range-bar.dim{opacity:.4;}
+.range-bar.ghost{border-style:dashed;color:var(--pencil);}
+
+/* ---------- pills ---------- */
+.pills{display:flex;gap:14px;flex-wrap:wrap;font-size:18px;}
+.pill{display:inline-flex;align-items:baseline;gap:8px;padding:3px 16px 6px;border:2px solid var(--ink);border-radius:var(--sk-md);}
+.pill b{font-size:20px;font-family:var(--mono);}
+.pill.accent{background:var(--orange-soft);}
+.pill.hot{background:var(--orange);}
+.pill.good{background:var(--green);color:var(--paper);}
+.note-text{font-size:17px;line-height:1.45;}
+
+/* ---------- code panel ---------- */
+.code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+.code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+.code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
+.status{margin-top:16px;padding-top:14px;border-top:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
+
+/* ---------- transport ---------- */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:16px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
+#playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
+.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed input{accent-color:var(--orange);}
+.speed .hint{font-size:13px;}
+.progress{margin-left:auto;font-size:17px;color:var(--pencil);}
+.shortcut-note{width:100%;font-size:14px;color:var(--pencil);margin:2px 0 0;}
+.shortcut-note kbd{font-size:11px;border:1.5px solid var(--pencil);padding:0 5px;}
+
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important;transition-duration:.001ms !important;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <p class="brand-note" id="brandNote"></p>
+      <h1 class="brand-title" id="brandTitle"></h1>
+      <p class="brand-sub" id="brandSub"></p>
+    </div>
+    <form class="config" id="configForm"></form>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="legend" id="legend"></div>
+
+  <div class="stage">
+    <div class="col-left" id="colLeft"></div>
+    <aside class="panel">
+      <p class="panel-title">Algorithm</p>
+      <pre class="code" id="codeBlock"></pre>
+      <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+    </aside>
+  </div>
+
+  <div class="transport">
+    <button id="resetBtn" title="Reset" aria-label="Reset">⟲</button>
+    <button id="backBtn" title="Step back" aria-label="Step back">◂</button>
+    <button id="playBtn" title="Play / Pause" aria-label="Play or pause">▶</button>
+    <button id="fwdBtn" title="Step forward" aria-label="Step forward">▸</button>
+    <label class="speed">speed
+      <span class="hint">slow</span>
+      <input type="range" id="speedInput" min="150" max="1800" value="1250" step="50" aria-label="Playback speed, right is faster">
+      <span class="hint">fast</span>
+    </label>
+    <div class="progress" id="progressLabel">0 / 0</div>
+    <p class="shortcut-note">shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step · <kbd>R</kbd> reset</p>
+  </div>
+</div>
+<script>
+/* ---- panel constructors shared by every problem definition ---- */
+function pTiles(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: String(v)}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'tiles', title: title, items: items}, extra || {});
+}
+function pChips(title, rows){ return {t:'chips', title: title, rows: rows}; }
+function pSlots(title, items){ return {t:'slots', title: title, items: items}; }
+function pPills(title, items){ return {t:'pills', title: title, items: items}; }
+function pBars(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: v}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'bars', title: title, items: items}, extra || {});
+}
+function pRanges(title, items, min, max){ return {t:'ranges', title: title, items: items, min: min, max: max}; }
+function pNote(title, html){ return {t:'note', title: title, html: html}; }
+function mapChips(map, hot){
+  return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+}
+/* ---- input parsing ---- */
+function parseInts(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+  if (!parts.length) return null;
+  const nums = parts.map(Number);
+  if (nums.some(n => !Number.isFinite(n))) return null;
+  return cap ? nums.slice(0, cap) : nums;
+}
+function randInts(n, lo, hi){
+  return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+}
+function randWord(len, alphabet){
+  const a = alphabet || 'abc';
+  return Array.from({length: len}, () => a[Math.floor(Math.random() * a.length)]).join('');
+}
+
+const PROBLEM = {
+  title: 'Binary Tree Diameter',
+  note: 'the longest path bends at exactly one node — measure both sides on the way back up',
+  inputs: [{id:'t', label:'tree (positional level-order, null = empty)', value:'1,2,3,4,5,null,6', width:300}],
+  parse(raw){
+    const parts = String(raw.t).split(',').map(s => s.trim());
+    if (!parts.length || !parts[0].length) return {ok:false, msg:'Enter a tree in positional level-order, e.g. 1,2,3,4,5,null,6.'};
+    const tree = parts.slice(0, 15).map(s => {
+      const low = s.toLowerCase();
+      if (!s.length || low === 'null' || low === 'n' || s === '.' || s === '#') return null;
+      return Number(s);
+    });
+    if (tree.some(v => v !== null && !Number.isFinite(v))) return {ok:false, msg:'Node values must be numbers, or null for an empty slot.'};
+    if (tree[0] === null) return {ok:false, msg:'The root slot cannot be empty.'};
+    for (let i = 1; i < tree.length; i++){
+      if (tree[i] !== null && tree[(i - 1) >> 1] === null) return {ok:false, msg:'Slot ' + i + ' has a node but its parent slot ' + ((i - 1) >> 1) + ' is empty.'};
+    }
+    while (tree.length > 1 && tree[tree.length - 1] === null) tree.pop();
+    return {ok:true, value:{tree}, normalized:{t: tree.map(v => v === null ? 'null' : v).join(',')}};
+  },
+  shuffle(){
+    const t = [randInts(1, 1, 9)[0]];
+    for (let i = 1; i < 10; i++){
+      const parent = t[(i - 1) >> 1];
+      t.push(parent !== null && parent !== undefined && Math.random() < 0.72 ? randInts(1, 1, 9)[0] : null);
+    }
+    while (t.length > 1 && t[t.length - 1] === null) t.pop();
+    return {t: t.map(v => v === null ? 'null' : v).join(',')};
+  },
+  solutions: [
+  {
+    label: 'Postorder height, diameter in a field',
+    badge: 'O(n) time · O(n) space · DFS · optimal.cs',
+    blurb: 'Diameter and height are the same walk. Once a node knows how tall each child subtree is, the longest path that <em>bends</em> at it is exactly <code>left + right</code> edges — nothing to search for. So the recursion returns only the height, and every node offers its own bend to a shared <code>res</code> on the way back up.',
+    legend: [
+      {cls:'hot', text:'node being handled right now'},
+      {cls:'win', text:'ancestor still on the call stack'},
+      {cls:'good', text:'finished — height already returned'},
+      {cls:'dim', text:'not reached yet / empty slot'}
+    ],
+    code: [
+      'public int res = 0;      // best diameter seen anywhere',
+      '',
+      'public int DiameterOfBinaryTree(TreeNode root)',
+      '{',
+      '    Height(root);        // called for its side effect',
+      '    return res;',
+      '}',
+      '',
+      'private int Height(TreeNode root)',
+      '{',
+      '    if (root == null)',
+      '        return 0;',
+      '',
+      '    int left = Height(root.left);',
+      '    int right = Height(root.right);',
+      '',
+      '    res = Math.Max(res, left + right);',
+      '',
+      '    return 1 + Math.Max(left, right);',
+      '}'
+    ],
+    simulate(input){
+      const tree = input.tree, steps = [];
+      const stack = [], H = {};
+      let res = 0, bestAt = -1;
+      let cur = {l:'–', r:'–', t:'–'};
+      const name = (k) => 'node <b>' + tree[k] + '</b> (slot ' + k + ')';
+      const panels = (at) => [
+        pTiles('Tree — positional level-order (· = empty slot)', tree.map(v => v === null ? '·' : v), (k) => ({
+          cls: k === at ? 'hot'
+             : stack.indexOf(k) >= 0 ? 'in-window'
+             : H[k] !== undefined ? 'good'
+             : 'dim'
+        })),
+        pTiles('Height returned by each node', tree.map((v, k) => v === null ? '·' : (H[k] === undefined ? '–' : H[k])), (k) => ({
+          cls: tree[k] === null || H[k] === undefined ? 'dim' : (k === at ? 'hot' : 'good')
+        })),
+        pChips('Call stack (root → deepest)', [{items: stack.length
+          ? stack.map((k, j) => ({text: String(tree[k]), sub: 'slot ' + k, cls: j === stack.length - 1 ? 'head' : ''}))
+          : [{text:'empty', sub:'', cls:'dim'}]}]),
+        pPills('', [
+          {k:'left', v: cur.l},
+          {k:'right', v: cur.r},
+          {k:'left + right', v: cur.t, cls:'hot'},
+          {k:'res', v: res, cls:'good'}
+        ])
+      ];
+      steps.push({lines:[1,5], msg:'<code>res</code> lives on the object, not in the recursion, and starts at <b>0</b> — a single node has a diameter of 0 edges, so no path is ever worse than the start value. <code>DiameterOfBinaryTree</code> does no work itself: it calls <code>Height(root)</code> purely for the side effect and then reads the field.', panels: panels(-1)});
+      const dfs = (i, from, side) => {
+        const v = (i < tree.length) ? tree[i] : null;
+        if (v === null){
+          steps.push({lines:[11,12], msg:'The ' + side + ' child of node <b>' + tree[from] + '</b> is empty. An empty subtree has height <b>0</b>, which is what makes a leaf report height 1. This is the only <code>return</code> that never touches <code>res</code> — there is no path here to be the longest.', panels: panels(i < tree.length ? i : from)});
+          return 0;
+        }
+        stack.push(i);
+        steps.push({lines:[9,11,14], msg:'Enter ' + name(i) + '. Nothing can be decided here yet: the bend at this node is worth <code>left + right</code>, and neither number exists until both children have returned. So the call parks on the stack and descends left first — this is why the work is <b>postorder</b>.', panels: panels(i)});
+        const L = dfs(2 * i + 1, i, 'left');
+        const R = dfs(2 * i + 2, i, 'right');
+        const through = L + R;
+        const better = through > res;
+        cur = {l:L, r:R, t:through};
+        if (better){ res = through; bestAt = i; }
+        const h = 1 + Math.max(L, R);
+        H[i] = h;
+        stack.pop();
+        steps.push({lines:[17,19], msg:'Both children of ' + name(i) + ' have returned: left height <b>' + L + '</b>, right height <b>' + R + '</b>. A path bending here runs down the tallest chain on each side, so it spans <b>' + L + ' + ' + R + ' = ' + through + '</b> edges → ' + (better ? '<code>res</code> rises to <b>' + through + '</b>.' : '<code>res</code> stays <b>' + res + '</b>.') + ' Then this node returns only its <em>height</em>, <code>1 + max(' + L + ',' + R + ') = ' + h + '</code> — the parent needs the tallest chain, not the bend, and the bend is already safely in the field.', panels: panels(i)});
+        return h;
+      };
+      dfs(0, -1, 'root');
+      steps.push({lines:[6], msg:'The traversal is done — every node has offered its bend exactly once, so <code>res</code> = <b>' + res + '</b> edges' + (bestAt >= 0 && res > 0 ? ', the path that bends at node <b>' + tree[bestAt] + '</b>' : ' (no node has two non-empty sides, so no path is longer than a single chain of 0 edges)') + '. The height returned by <code>Height(root)</code> is discarded: it was only ever the vehicle for the real answer.', panels: panels(-1)});
+      return steps;
+    }
+  },
+  {
+    label: 'Return (height, diameter) as a tuple',
+    badge: 'O(n) time · O(n) space · DFS · optimal-variant.cs',
+    blurb: 'Same postorder walk without the mutable field: each call hands its parent a pair — how tall I am, and the best diameter anywhere inside me. A subtree’s answer is the largest of three candidates: bend here, or whatever was already best inside the left or right child. The field becomes a return value.',
+    legend: [
+      {cls:'hot', text:'node being handled right now'},
+      {cls:'win', text:'ancestor still on the call stack'},
+      {cls:'good', text:'finished — pair already returned'},
+      {cls:'dim', text:'not reached yet / empty slot'}
+    ],
+    code: [
+      'public int DiameterOfBinaryTree(TreeNode root)',
+      '{',
+      '    var (_, diameter) = DFS(root);',
+      '    return diameter;',
+      '}',
+      '',
+      'private (int height, int diameter) DFS(TreeNode node)',
+      '{',
+      '    if (node == null)',
+      '        return (0, 0);',
+      '',
+      '    var left = DFS(node.left);',
+      '    var right = DFS(node.right);',
+      '',
+      '    int height = 1 + Math.Max(left.height, right.height);',
+      '    int diameterThroughHere = left.height + right.height;',
+      '    int diameter = Math.Max(diameterThroughHere,',
+      '        Math.Max(left.diameter, right.diameter));',
+      '',
+      '    return (height, diameter);',
+      '}'
+    ],
+    simulate(input){
+      const tree = input.tree, steps = [];
+      const stack = [], P = {};
+      let cur = {l:'–', r:'–', t:'–', d:'–'};
+      const name = (k) => 'node <b>' + tree[k] + '</b> (slot ' + k + ')';
+      const panels = (at) => [
+        pTiles('Tree — positional level-order (· = empty slot)', tree.map(v => v === null ? '·' : v), (k) => ({
+          cls: k === at ? 'hot'
+             : stack.indexOf(k) >= 0 ? 'in-window'
+             : P[k] !== undefined ? 'good'
+             : 'dim'
+        })),
+        pTiles('Returned pair (height / diameter)', tree.map((v, k) => v === null ? '·' : (P[k] === undefined ? '–' : (P[k].h + '/' + P[k].d))), (k) => ({
+          cls: tree[k] === null || P[k] === undefined ? 'dim' : (k === at ? 'hot' : 'good')
+        })),
+        pChips('Call stack (root → deepest)', [{items: stack.length
+          ? stack.map((k, j) => ({text: String(tree[k]), sub: 'slot ' + k, cls: j === stack.length - 1 ? 'head' : ''}))
+          : [{text:'empty', sub:'', cls:'dim'}]}]),
+        pPills('', [
+          {k:'left (h/d)', v: cur.l},
+          {k:'right (h/d)', v: cur.r},
+          {k:'through here', v: cur.t, cls:'hot'},
+          {k:'diameter', v: cur.d, cls:'good'}
+        ])
+      ];
+      steps.push({lines:[1,3], msg:'No field this time. <code>DFS</code> returns a pair, and the wrapper discards the height with <code>_</code> — the root’s height is not the answer, the root’s <em>diameter</em> is. Everything a parent could possibly need about a subtree is carried in those two ints.', panels: panels(-1)});
+      const dfs = (i, from, side) => {
+        const v = (i < tree.length) ? tree[i] : null;
+        if (v === null){
+          steps.push({lines:[9,10], msg:'The ' + side + ' child of node <b>' + tree[from] + '</b> is empty: it returns <code>(0, 0)</code> — height 0 and diameter 0. Both zeros are identities here, so the parent’s arithmetic needs no special case for a missing child.', panels: panels(i < tree.length ? i : from)});
+          return {h:0, d:0};
+        }
+        stack.push(i);
+        steps.push({lines:[7,9,12], msg:'Enter ' + name(i) + '. Its own pair depends on both children’s pairs, so the call waits on the stack and recurses left first — the same postorder shape as the field version, just with more travelling upward.', panels: panels(i)});
+        const L = dfs(2 * i + 1, i, 'left');
+        const R = dfs(2 * i + 2, i, 'right');
+        const h = 1 + Math.max(L.h, R.h);
+        const through = L.h + R.h;
+        cur = {l: L.h + '/' + L.d, r: R.h + '/' + R.d, t: through, d:'–'};
+        steps.push({lines:[15,16], msg:'Children of ' + name(i) + ' returned <b>' + L.h + '/' + L.d + '</b> and <b>' + R.h + '/' + R.d + '</b>. Height comes from the taller side only: <code>1 + max(' + L.h + ',' + R.h + ') = ' + h + '</code>. The path bending here uses <em>both</em> sides: <code>' + L.h + ' + ' + R.h + ' = ' + through + '</code> edges. Two different combinations of the same two numbers.', panels: panels(i)});
+        const d = Math.max(through, Math.max(L.d, R.d));
+        P[i] = {h:h, d:d};
+        cur.d = d;
+        const src = d === through ? 'the bend right here' : (d === L.d ? 'a path buried in the left subtree' : 'a path buried in the right subtree');
+        stack.pop();
+        steps.push({lines:[17,18,20], msg:'The longest path inside this subtree either bends at ' + name(i) + ' (<b>' + through + '</b>) or lies entirely within one child (<b>' + L.d + '</b>, <b>' + R.d + '</b>) — there is no fourth option, since any path that does not bend here never crosses this node. Max is <b>' + d + '</b>: ' + src + '. Return <code>(' + h + ', ' + d + ')</code>.', panels: panels(i)});
+        return P[i];
+      };
+      const top = dfs(0, -1, 'root');
+      steps.push({lines:[3,4], msg:'The root’s pair is <code>(' + top.h + ', ' + top.d + ')</code>. The height is dropped on the floor and the diameter <b>' + top.d + '</b> is the answer — every candidate bend was folded into it exactly once on the way up, so one traversal was enough with no shared state at all.', panels: panels(-1)});
+      return steps;
+    }
+  }]
+};
+
+/* ==========================================================================
+   Shared visualizer engine.
+   A problem file defines PROBLEM = { title, note, inputs, parse, shuffle,
+   solutions:[{ label, badge, blurb, legend, code, simulate }] }.
+   simulate(input) returns an array of steps:
+     { lines:[1-based], msg:'html', panels:[ ...panel descriptors... ] }
+   Panel descriptors are declarative; everything below is generic rendering.
+   ========================================================================== */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let solIdx = 0, sol = null, steps = [], stepIndex = -1, playing = false, timer = null;
+
+/* ---------------- header + config form ---------------- */
+function buildHeader(){
+  document.title = PROBLEM.title + ' — visualizer';
+  $('brandTitle').textContent = PROBLEM.title;
+  $('brandNote').textContent = PROBLEM.note || '';
+  const f = $('configForm');
+  f.innerHTML = '';
+  PROBLEM.inputs.forEach(inp => {
+    const d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = '<span>' + esc(inp.label) + '</span>' +
+      '<input id="in_' + inp.id + '" type="' + (inp.type || 'text') + '" value="' + esc(inp.value) +
+      '" spellcheck="false" style="width:' + (inp.width || 210) + 'px" aria-label="' + esc(inp.label) + '">';
+    f.appendChild(d);
+  });
+  const run = document.createElement('button');
+  run.type = 'submit'; run.className = 'primary'; run.textContent = 'Run';
+  f.appendChild(run);
+  if (PROBLEM.shuffle){
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Shuffle';
+    b.addEventListener('click', () => {
+      const vals = PROBLEM.shuffle();
+      PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+      rebuild();
+    });
+    f.appendChild(b);
+  }
+  f.addEventListener('submit', e => { e.preventDefault(); rebuild(); });
+}
+
+function readRaw(){
+  const o = {};
+  PROBLEM.inputs.forEach(i => { o[i.id] = $('in_' + i.id).value; });
+  return o;
+}
+function writeBack(vals){
+  PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+}
+
+/* ---------------- solution tabs ---------------- */
+function buildTabs(){
+  const t = $('tabs');
+  t.innerHTML = '';
+  PROBLEM.solutions.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (i === solIdx ? ' active' : '');
+    b.innerHTML = '<b>' + esc(s.label) + '</b><span>' + esc(s.badge) + '</span>';
+    b.addEventListener('click', () => { if (i === solIdx) return; solIdx = i; buildTabs(); loadSolution(); rebuild(); });
+    t.appendChild(b);
+  });
+}
+
+function loadSolution(){
+  sol = PROBLEM.solutions[solIdx];
+  $('brandSub').innerHTML = sol.blurb;
+  $('legend').innerHTML = (sol.legend || []).map(l =>
+    l.cls === null ? '<span>' + l.text + '</span>'
+                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
+  $('codeBlock').innerHTML = sol.code.map((l, i) =>
+    '<div class="line" data-line="' + (i + 1) + '">' + (l.length ? esc(l) : '&nbsp;') + '</div>').join('');
+}
+
+/* ---------------- panel rendering ---------------- */
+const host = () => $('colLeft');
+
+function panelShell(p){
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.dataset.t = p.t;
+  el.innerHTML = '<p class="panel-title"></p><div class="body"></div>';
+  return el;
+}
+
+function renderPanels(panels, animate){
+  const h = host();
+  while (h.children.length > panels.length) h.removeChild(h.lastChild);
+  panels.forEach((p, i) => {
+    let el = h.children[i];
+    if (!el || el.dataset.t !== p.t){
+      const fresh = panelShell(p);
+      if (el) h.replaceChild(fresh, el); else h.appendChild(fresh);
+      el = fresh;
+    }
+    el.querySelector('.panel-title').innerHTML = p.title || '';
+    el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    RENDER[p.t](el.querySelector('.body'), p, animate);
+  });
+}
+
+const RENDER = {};
+
+/* --- tiles: an array or string laid out as boxes, with optional bracket + pointers --- */
+RENDER.tiles = function(body, p, animate){
+  let scroll = body.querySelector('.array-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="array-scroll"><div class="array-row">' +
+      '<div class="window-bracket"></div></div></div>';
+    scroll = body.querySelector('.array-scroll');
+  }
+  const row = scroll.querySelector('.array-row');
+  const bracket = row.querySelector('.window-bracket');
+  const ptrs = p.ptrs || [];
+  row.classList.toggle('no-ptrs', ptrs.length === 0);
+
+  let tiles = [...row.querySelectorAll('.tile')];
+  if (tiles.length !== p.items.length){
+    tiles.forEach(t => t.remove());
+    p.items.forEach(() => {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.innerHTML = '<span class="idx"></span><span class="val"></span><span class="sub"></span>';
+      row.appendChild(t);
+    });
+    tiles = [...row.querySelectorAll('.tile')];
+  }
+  p.items.forEach((it, i) => {
+    const t = tiles[i];
+    t.className = 'tile ' + (it.cls || '') + (p.narrow ? ' narrow' : '') +
+                  (animate && it.flash ? ' just-popped' : '');
+    const idx = t.querySelector('.idx'), val = t.querySelector('.val'), sub = t.querySelector('.sub');
+    const top = it.top !== undefined ? it.top : i;
+    idx.textContent = top === '' ? '' : top;
+    val.textContent = it.v;
+    sub.textContent = it.sub || '';
+    sub.style.display = it.sub ? '' : 'none';
+  });
+
+  // window bracket
+  if (p.bracket && tiles[p.bracket.from] && tiles[p.bracket.to] && p.bracket.from <= p.bracket.to){
+    const a = tiles[p.bracket.from], b = tiles[p.bracket.to];
+    bracket.className = 'window-bracket visible' + (p.bracket.dashed ? ' dashed' : '');
+    bracket.style.left = (a.offsetLeft - 4) + 'px';
+    bracket.style.width = (b.offsetLeft + b.offsetWidth - a.offsetLeft + 8) + 'px';
+  } else {
+    bracket.className = 'window-bracket';
+  }
+
+  // pointer markers
+  let marks = [...row.querySelectorAll('.ptr-marker')];
+  if (marks.length !== ptrs.length){
+    marks.forEach(m => m.remove());
+    ptrs.forEach(() => {
+      const m = document.createElement('div');
+      m.className = 'ptr-marker';
+      row.appendChild(m);
+    });
+    marks = [...row.querySelectorAll('.ptr-marker')];
+  }
+  const seen = {};
+  ptrs.forEach((pt, i) => {
+    const m = marks[i];
+    m.textContent = pt.name;
+    const tile = tiles[pt.idx];
+    if (!tile || pt.idx < 0){ m.className = 'ptr-marker ' + (pt.cls || ''); return; }
+    m.className = 'ptr-marker visible ' + (pt.cls || '');
+    const n = (seen[pt.idx] = (seen[pt.idx] || 0) + 1);
+    const nudge = n === 1 ? 0 : (n === 2 ? 20 : -20);
+    m.style.left = (tile.offsetLeft + tile.offsetWidth / 2 + nudge) + 'px';
+  });
+
+  // keep the focused tile in view
+  if (p.focus !== undefined && tiles[p.focus] && scroll.scrollWidth > scroll.clientWidth){
+    const t = tiles[p.focus], left = t.offsetLeft, right = left + t.offsetWidth;
+    if (left < scroll.scrollLeft + 12) scroll.scrollTo({left: Math.max(left - 24, 0), behavior:'smooth'});
+    else if (right > scroll.scrollLeft + scroll.clientWidth - 12)
+      scroll.scrollTo({left: right - scroll.clientWidth + 24, behavior:'smooth'});
+  }
+};
+
+/* --- chips: one or more labelled rows of small boxes (deque, stack, map, heap) --- */
+RENDER.chips = function(body, p, animate){
+  const rows = p.rows;
+  let els = [...body.querySelectorAll('.chip-row')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="chip-row"><span class="row-label left"></span><div class="chips"></div><span class="row-label right"></span></div>').join('');
+    els = [...body.querySelectorAll('.chip-row')];
+  }
+  rows.forEach((r, i) => {
+    const el = els[i];
+    const L = el.querySelector('.left'), R = el.querySelector('.right'), box = el.querySelector('.chips');
+    L.textContent = r.left || ''; L.style.display = r.left ? '' : 'none';
+    R.textContent = r.right || ''; R.style.display = r.right ? '' : 'none';
+    if (!r.items.length){
+      box.innerHTML = '<span class="chips-empty">' + esc(r.empty || 'empty') + '</span>';
+    } else {
+      box.innerHTML = r.items.map(c =>
+        '<span class="chip ' + (c.cls || '') + (animate && c.fresh ? ' fresh' : '') + '">' +
+        esc(c.text) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
+    }
+  });
+};
+
+/* --- slots: the output array, dashes until written --- */
+RENDER.slots = function(body, p, animate){
+  let row = body.querySelector('.slot-row');
+  if (!row){ body.innerHTML = '<div class="slot-row"></div>'; row = body.querySelector('.slot-row'); }
+  let slots = [...row.children];
+  if (slots.length !== p.items.length){
+    row.innerHTML = p.items.map(() => '<div class="slot"></div>').join('');
+    slots = [...row.children];
+  }
+  p.items.forEach((it, i) => {
+    const s = slots[i];
+    const wasFilled = s.classList.contains('filled');
+    const filled = it.text !== null && it.text !== undefined && it.text !== '';
+    s.textContent = filled ? it.text : '—';
+    s.className = 'slot' + (filled ? ' filled' : '') + (it.cls ? ' ' + it.cls : '') +
+                  (filled && !wasFilled && animate ? ' fresh' : '');
+  });
+};
+
+/* --- pills: scalar readouts (l, r, sum, best...) --- */
+RENDER.pills = function(body, p){
+  let box = body.querySelector('.pills');
+  if (!box){ body.innerHTML = '<div class="pills"></div>'; box = body.querySelector('.pills'); }
+  box.innerHTML = p.items.map(it =>
+    '<span class="pill ' + (it.cls || '') + '">' + esc(it.k) + ' = <b>' + esc(it.v) + '</b></span>').join('');
+};
+
+/* --- bars: a histogram, for height/price style problems --- */
+RENDER.bars = function(body, p){
+  let box = body.querySelector('.bars');
+  if (!box){ body.innerHTML = '<div class="bars"><div class="water"></div></div>'; box = body.querySelector('.bars'); }
+  const water = box.querySelector('.water');
+  let wraps = [...box.querySelectorAll('.bar-wrap')];
+  if (wraps.length !== p.items.length){
+    wraps.forEach(w => w.remove());
+    p.items.forEach(() => {
+      const w = document.createElement('div');
+      w.className = 'bar-wrap';
+      w.innerHTML = '<span class="cap"></span><div class="bar"></div><span class="foot"></span>';
+      box.appendChild(w);
+    });
+    wraps = [...box.querySelectorAll('.bar-wrap')];
+  }
+  const max = Math.max(1, ...p.items.map(i => Math.abs(i.v)));
+  p.items.forEach((it, i) => {
+    const w = wraps[i];
+    w.className = 'bar-wrap ' + (it.cls || '');
+    w.querySelector('.cap').textContent = it.v;
+    w.querySelector('.foot').textContent = it.foot !== undefined ? it.foot : i;
+    w.querySelector('.bar').style.height = Math.max(3, (Math.abs(it.v) / max) * 165) + 'px';
+  });
+  if (p.fill && wraps[p.fill.from] && wraps[p.fill.to]){
+    const a = wraps[p.fill.from], b = wraps[p.fill.to];
+    water.style.opacity = 1;
+    water.style.left = (a.offsetLeft + a.offsetWidth * 0.5) + 'px';
+    water.style.width = (b.offsetLeft + b.offsetWidth * 0.5 - a.offsetLeft - a.offsetWidth * 0.5) + 'px';
+    water.style.bottom = '26px';
+    water.style.height = Math.max(3, (p.fill.level / max) * 165) + 'px';
+  } else {
+    water.style.opacity = 0;
+  }
+};
+
+/* --- ranges: intervals on a shared timeline --- */
+RENDER.ranges = function(body, p){
+  let box = body.querySelector('.ranges');
+  if (!box){ body.innerHTML = '<div class="ranges"></div>'; box = body.querySelector('.ranges'); }
+  let lines = [...box.children];
+  if (lines.length !== p.items.length){
+    box.innerHTML = p.items.map(() => '<div class="range-line"><div class="range-bar"></div></div>').join('');
+    lines = [...box.children];
+  }
+  const lo = p.min, hi = Math.max(p.max, p.min + 1);
+  p.items.forEach((it, i) => {
+    const bar = lines[i].querySelector('.range-bar');
+    bar.className = 'range-bar ' + (it.cls || '');
+    bar.textContent = it.label;
+    bar.style.left = ((it.from - lo) / (hi - lo) * 100) + '%';
+    bar.style.width = 'max(72px, ' + ((it.to - it.from) / (hi - lo) * 100) + '%)';
+  });
+};
+
+/* --- note: a free-text panel --- */
+RENDER.note = function(body, p){
+  let n = body.querySelector('.note-text');
+  if (!n){ body.innerHTML = '<div class="note-text"></div>'; n = body.querySelector('.note-text'); }
+  n.innerHTML = p.html;
+};
+
+/* ---------------- playback ---------------- */
+function render(animate){
+  if (animate === undefined) animate = true;
+  $('progressLabel').textContent = Math.max(stepIndex + 1, 0) + ' / ' + steps.length;
+  const codeLines = document.querySelectorAll('.code .line');
+  if (stepIndex < 0){
+    codeLines.forEach(l => l.classList.remove('active'));
+    $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
+    renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
+    return;
+  }
+  const step = steps[stepIndex];
+  const active = step.lines || [];
+  codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  $('statusMsg').innerHTML = step.msg;
+  renderPanels(step.panels, animate);
+}
+
+// step -1 shows the first step's shape with all highlighting stripped
+function blankPanels(panels){
+  return JSON.parse(JSON.stringify(panels)).map(p => {
+    if (p.t === 'tiles'){ p.items.forEach(i => { i.cls = ''; i.flash = false; }); p.bracket = null; p.ptrs = []; }
+    if (p.t === 'bars'){ p.items.forEach(i => { i.cls = ''; }); p.fill = null; }
+    if (p.t === 'ranges'){ p.items.forEach(i => { i.cls = 'ghost'; }); }
+    if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+    if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+    if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    return p;
+  });
+}
+
+function stepForward(){ if (stepIndex >= steps.length - 1){ pause(); return; } stepIndex++; render(); if (stepIndex >= steps.length - 1) pause(); }
+function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
+function resetAll(){ pause(); stepIndex = -1; render(false); }
+function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
+function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
+function tick(){
+  if (!playing) return;
+  if (!guard(stepForward)) return;
+  if (stepIndex >= steps.length - 1){ pause(); return; }
+  const s = $('speedInput');
+  timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
+}
+
+function rebuild(){
+  const parsed = PROBLEM.parse(readRaw());
+  if (!parsed.ok){
+    pause(); steps = []; stepIndex = -1;
+    host().innerHTML = '';
+    $('statusMsg').innerHTML = parsed.msg;
+    $('progressLabel').textContent = '0 / 0';
+    return;
+  }
+  if (parsed.normalized) writeBack(parsed.normalized);
+  steps = sol.simulate(parsed.value);
+  stepIndex = -1;
+  pause();
+  host().innerHTML = '';
+  requestAnimationFrame(() => { render(false); requestAnimationFrame(() => render(false)); });
+}
+
+$('playBtn').addEventListener('click', () => playing ? pause() : play());
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
+$('resetBtn').addEventListener('click', resetAll);
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, button')) return;
+  if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); pause(); stepForward(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); pause(); stepBack(); }
+  else if (e.key === 'r' || e.key === 'R'){ resetAll(); }
+});
+window.addEventListener('resize', () => render(false));
+
+buildHeader();
+buildTabs();
+loadSolution();
+rebuild();
+})();
+</script>
+</body>
+</html>

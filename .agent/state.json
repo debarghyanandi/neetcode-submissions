@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T22:34:56.433Z",
+  "updatedAt": "2026-09-09T22:57:03.226Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -178,6 +178,17 @@
         "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n * k)\",\"algorithm\":\"hash by sorted-character canonical key\",\"approachKey\":\"sorted-key-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       }
     },
+    "balanced-binary-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "binary-search": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -229,15 +240,84 @@
     },
     "binary-tree-diameter": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "549e6fa75a9b060547aaf9ab3c7e2acae2b306748b2f25f7bbadc90c2b22031a": "optimal.cs",
+        "9843704ca215f65129f03f8f2cded204176226da6737029c032e71e8f608a29c": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "549e6fa75a9b060547aaf9ab3c7e2acae2b306748b2f25f7bbadc90c2b22031a": "optimal.cs",
+        "9843704ca215f65129f03f8f2cded204176226da6737029c032e71e8f608a29c": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "f4e4e8e76ef5",
+          "renames": [
+            "DFS->Height"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "dd102e06d6f4",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS computing height, tracking diameter in shared field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS returning (height, diameter) tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "postorder DFS computing height, tracking diameter in shared field",
+          "approachKey": "postorder-height-diameter",
+          "correct": true,
+          "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "postorder DFS returning (height, diameter) tuple",
+          "approachKey": "postorder-height-diameter",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS computing height, tracking diameter in shared field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS returning (height, diameter) tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "f4e4e8e76ef5",
+          "optimal-variant.cs": "dd102e06d6f4"
+        },
+        "builtAt": "2026-09-09T22:57:03.012Z"
+      }
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",
