@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-08T06:38:32.331Z",
+  "updatedAt": "2026-09-09T22:30:34.036Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -226,6 +226,17 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       }
+    },
+    "binary-tree-diameter": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",
