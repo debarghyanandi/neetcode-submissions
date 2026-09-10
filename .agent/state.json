@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T07:26:23.767Z",
+  "updatedAt": "2026-09-10T17:13:48.315Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1420,14 +1420,57 @@
     },
     "last-stone-weight": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "dd444d4dbe0453da8ee967f75502b632eac0cb78b50efcc41909f1f49a6ff932": "optimal.cs"
+      },
+      "fingerprints": {
+        "dd444d4dbe0453da8ee967f75502b632eac0cb78b50efcc41909f1f49a6ff932": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "04449d586ae7",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap simulated via min-heap on negated priority\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log n)",
+          "space": "O(n)",
+          "algorithm": "max-heap simulated via min-heap on negated priority",
+          "approachKey": "heap-simulate-collisions",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap simulated via min-heap on negated priority\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "04449d586ae7"
+        },
+        "builtAt": "2026-09-10T17:13:48.090Z"
+      }
     },
     "level-order-traversal-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
