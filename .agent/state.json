@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T07:08:34.009Z",
+  "updatedAt": "2026-09-10T07:26:23.767Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1310,14 +1310,57 @@
     },
     "kth-largest-integer-in-a-stream": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "54e14e6a215f45cadfe9d592041385172c6ba2221d000642bea19a92029942ca": "optimal.cs"
+      },
+      "fingerprints": {
+        "54e14e6a215f45cadfe9d592041385172c6ba2221d000642bea19a92029942ca": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "failed": true,
+          "reason": "member name changed: pq -> minHeap near: k ; this . pq = new PriorityQueue"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"min-heap of size k via PriorityQueue\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log k)",
+          "space": "O(n)",
+          "algorithm": "min-heap of size k via PriorityQueue",
+          "approachKey": "min-heap-size-k",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"min-heap of size k via PriorityQueue\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "7ac2d53d1f52"
+        },
+        "builtAt": "2026-09-10T07:26:23.583Z"
+      }
     },
     "kth-smallest-integer-in-bst": {
       "topic": "Data Structures & Algorithms",
@@ -1374,6 +1417,17 @@
         },
         "builtAt": "2026-09-10T04:52:57.313Z"
       }
+    },
+    "last-stone-weight": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "level-order-traversal-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
