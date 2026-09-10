@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T06:41:38.879Z",
+  "updatedAt": "2026-09-10T07:08:34.009Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1307,6 +1307,17 @@
         },
         "builtAt": "2026-09-06T12:33:29.066Z"
       }
+    },
+    "kth-largest-integer-in-a-stream": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "kth-smallest-integer-in-bst": {
       "topic": "Data Structures & Algorithms",
