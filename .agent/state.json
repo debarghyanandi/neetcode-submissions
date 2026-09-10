@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-09T23:05:25.755Z",
+  "updatedAt": "2026-09-10T04:47:29.411Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1307,6 +1307,17 @@
         },
         "builtAt": "2026-09-06T12:33:29.066Z"
       }
+    },
+    "kth-smallest-integer-in-bst": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "level-order-traversal-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
