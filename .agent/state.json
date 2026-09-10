@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T04:47:29.411Z",
+  "updatedAt": "2026-09-10T04:52:57.548Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1310,14 +1310,59 @@
     },
     "kth-smallest-integer-in-bst": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a64142158605e09b58157d9e14c650c1a969b88649ff43a373271fbcd20880af": "optimal.cs"
+      },
+      "fingerprints": {
+        "a64142158605e09b58157d9e14c650c1a969b88649ff43a373271fbcd20880af": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "d7fd1f9a1680",
+          "renames": [
+            "count->visitedCount"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"in-order traversal with early return propagation\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "in-order traversal with early return propagation",
+          "approachKey": "inorder-traversal-early-stop",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"in-order traversal with early return propagation\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "d7fd1f9a1680"
+        },
+        "builtAt": "2026-09-10T04:52:57.313Z"
+      }
     },
     "level-order-traversal-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
@@ -2817,6 +2862,17 @@
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"length-prefix encoding (interleaved length#string)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
         "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding (sizes header + concatenated payload)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       }
+    },
+    "subtree-of-a-binary-tree": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "three-integer-sum": {
       "topic": "Data Structures & Algorithms",
