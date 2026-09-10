@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T04:52:57.548Z",
+  "updatedAt": "2026-09-10T06:41:38.879Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2865,14 +2865,57 @@
     },
     "subtree-of-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "dd793474be134bb49cf7ec0c18affd73621b9c77418cf381adc1b5f29b8d6e7f": "optimal.cs"
+      },
+      "fingerprints": {
+        "dd793474be134bb49cf7ec0c18affd73621b9c77418cf381adc1b5f29b8d6e7f": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "67281e8f59a4",
+          "renames": []
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive tree match at every node\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n)",
+          "space": "O(n)",
+          "algorithm": "recursive tree match at every node",
+          "approachKey": "tree-compare-each-node",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive tree match at every node\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "67281e8f59a4"
+        },
+        "builtAt": "2026-09-10T06:41:38.706Z"
+      }
     },
     "three-integer-sum": {
       "topic": "Data Structures & Algorithms",
