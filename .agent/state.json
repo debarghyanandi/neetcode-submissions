@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-11T04:55:10.335Z",
+  "updatedAt": "2026-09-11T05:02:02.648Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2020,20 +2020,36 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, greedy elimination from ends\",\"approachKey\":\"two-pointer-elimination\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, discard shorter wall\",\"approachKey\":\"two-pointer-elimination\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two pointers, greedy elimination from ends",
+          "algorithm": "two pointers, discard shorter wall",
           "approachKey": "two-pointer-elimination",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, greedy elimination from ends\",\"approachKey\":\"two-pointer-elimination\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, discard shorter wall\",\"approachKey\":\"two-pointer-elimination\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "d6040c070cce",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "d6040c070cce"
+        },
+        "builtAt": "2026-09-11T05:00:02.630Z"
       }
     },
     "maximum-subarray": {
@@ -2074,30 +2090,53 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane-rolling\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP table, best sum ending at i\",\"approachKey\":\"kadane-dp-table\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
           "algorithm": "Kadane's algorithm, rolling max",
-          "approachKey": "kadane-rolling",
+          "approachKey": "kadane",
           "correct": true,
           "bruteForce": false
         },
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "1D DP table, best sum ending at i",
-          "approachKey": "kadane-dp-table",
+          "algorithm": "Kadane's recurrence materialized into a DP array",
+          "approachKey": "kadane",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane-rolling\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP table, best sum ending at i\",\"approachKey\":\"kadane-dp-table\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "66de7d2dfc7c",
+          "renames": []
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "c1ca1d30ac1a",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "66de7d2dfc7c",
+          "suboptimal.cs": "c1ca1d30ac1a"
+        },
+        "builtAt": "2026-09-11T05:02:02.646Z"
       }
     },
     "merge-intervals": {
