@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-11T16:33:33.016Z",
+  "updatedAt": "2026-09-11T17:12:54.322Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1317,7 +1317,17 @@
         "submission-0.cs"
       ],
       "knownFingerprints": {},
-      "fingerprints": {}
+      "fingerprints": {},
+      "lint": {
+        "submission-0.cs": {
+          "version": 1,
+          "codePrint": "9dc695fc5a28",
+          "renames": [
+            "dist->distance",
+            "res->result"
+          ]
+        }
+      }
     },
     "kth-largest-integer-in-a-stream": {
       "topic": "Data Structures & Algorithms",

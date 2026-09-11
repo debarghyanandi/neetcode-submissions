@@ -1,20 +1,24 @@
 public class Solution {
-    public int[][] KClosest(int[][] points, int K) {
+    public int[][] KClosest(int[][] points, int K)
+    {
         PriorityQueue<int[], int> maxHeap = new();
 
-        foreach (var point in points) {
-            int dist = point[0] * point[0] + point[1] * point[1];
-            maxHeap.Enqueue(point, -dist);
-            if (maxHeap.Count > K) {
+        foreach (var point in points)
+        {
+            int distance = point[0] * point[0] + point[1] * point[1];
+            maxHeap.Enqueue(point, -distance);
+            if (maxHeap.Count > K)
+            {
                 maxHeap.Dequeue();
             }
         }
 
-        var res = new List<int[]>();
-        while (maxHeap.Count > 0) {
-            res.Add(maxHeap.Dequeue());
+        var result = new List<int[]>();
+        while (maxHeap.Count > 0)
+        {
+            result.Add(maxHeap.Dequeue());
         }
 
-        return res.ToArray();
+        return result.ToArray();
     }
 }
