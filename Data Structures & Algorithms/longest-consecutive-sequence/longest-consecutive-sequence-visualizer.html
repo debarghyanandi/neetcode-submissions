@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Longest Consecutive Sequence — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -327,153 +327,106 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Longest Consecutive Sequence',
-  note: 'sorting is the obvious answer — and the one the constraint forbids',
-  inputs: [{id:'nums', label:'array', value:'100,4,200,1,3,2,5', width:280}],
+  note: 'only the left edge of a run is allowed to count it',
+  inputs: [{id:'n', label:'nums', value:'2,20,4,10,3,4,5', width:260}],
   parse(raw){
-    const nums = parseInts(raw.nums, 14);
-    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    return {ok:true, value:{nums}, normalized:{nums: nums.join(',')}};
+    const n = parseInts(raw.n, 14);
+    if (!n) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
+    if (n.some(v => !Number.isInteger(v))) return {ok:false, msg:'Values must be whole numbers.'};
+    return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
-  shuffle(){
-    const base = 1 + Math.floor(Math.random()*5);
-    const run = Array.from({length: 3 + Math.floor(Math.random()*3)}, (_, i) => base + i);
-    const noise = randInts(3, 30, 60);
-    const a = run.concat(noise);
-    for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    return {nums: a.join(',')};
-  },
+  shuffle(){ return {n: randInts(7 + Math.floor(Math.random()*2), 1, 12).join(',')}; },
   solutions: [
   {
-    label: 'Sort, then scan for runs',
-    badge: 'O(n log n) · not in repo · the answer the constraint rules out',
-    blurb: 'Sort the values and walk them, counting consecutive steps. Completely correct, and worth stating first in an interview — but the problem <b>asks for O(n)</b>, and that sentence is the interviewer telling you to find the hashing solution.',
+    label: 'Hash set, walk each run from its left edge',
+    badge: 'O(n) time · O(n) space · hash set · optimal.cs',
+    blurb: 'A run can be walked in O(len) once you know where it <b>starts</b>, and a number is a start exactly when <code>number − 1</code> is missing from the set. So every run is counted once, from its left edge, never from the middle — each value is touched at most twice overall, which keeps the nested loop linear.',
     legend: [
-      {cls:'hot', text:'element being compared with its predecessor'},
-      {cls:'good', text:'extends the current run'},
-      {cls:'done', text:'part of the best run so far'},
-      {cls:'dim', text:'duplicate — contributes nothing'}
+      {cls:'hot', text:'number — current foreach value'},
+      {cls:'in-window', text:'run being counted from it'},
+      {cls:'good', text:'longest run so far'},
+      {cls:'dim', text:'duplicate / not yet visited'}
     ],
     code: [
-      'Array.Sort(nums);                 // O(n log n) — the whole cost',
+      'var numberSet = new HashSet<int>(nums);  // duplicates collapse',
       '',
-      'int longest = 1, run = 1;',
-      'for (int i = 1; i < nums.Length; i++) {',
-      '    if (nums[i] == nums[i - 1]) continue;      // duplicate',
-      '    if (nums[i] == nums[i - 1] + 1) run++;     // extends the run',
-      '    else run = 1;                              // gap — start over',
-      '    longest = Math.Max(longest, run);',
-      '}',
-      'return longest;'
-    ],
-    simulate(input){
-      const raw = input.nums, sorted = [...raw].sort((a, b) => a - b), steps = [];
-      let run = 1, longest = raw.length ? 1 : 0, bestStart = 0, curStart = 0;
-      const panels = (i, cls) => [
-        pTiles('Original order', raw, () => ({cls:'dim'}), {narrow:true}),
-        pTiles('After Array.Sort — the O(n log n) you are paying for', sorted, (k) => ({
-          cls: k === i ? (cls || 'hot') + ' is-current'
-             : (k >= bestStart && k < bestStart + longest) ? 'done'
-             : (k >= curStart && k < i) ? 'good' : ''
-        }), {narrow:true, focus:i}),
-        pPills('', [{k:'current run', v: run, cls:'accent'}, {k:'longest', v: longest, cls:'good'}])
-      ];
-      steps.push({lines:[1], msg:'Sorted: <code>' + sorted.join(', ') + '</code>. Everything after this is a linear scan — but the sort already cost more than the whole optimal solution does.',
-        panels: panels(-1)});
-      for (let i = 1; i < sorted.length; i++){
-        if (sorted[i] === sorted[i-1]){
-          steps.push({lines:[5], msg:'<b>' + sorted[i] + '</b> repeats the previous value — skip it. Duplicates neither extend nor break a run.', panels: panels(i, 'dim')});
-          continue;
-        }
-        if (sorted[i] === sorted[i-1] + 1){
-          run++;
-          if (run > longest){ longest = run; bestStart = curStart; }
-          steps.push({lines:[6,8], msg:'<b>' + sorted[i] + '</b> is one more than <b>' + sorted[i-1] + '</b> — run grows to ' + run + '.', panels: panels(i, 'good')});
-        } else {
-          run = 1; curStart = i;
-          steps.push({lines:[7,8], msg:'Gap between <b>' + sorted[i-1] + '</b> and <b>' + sorted[i] + '</b> — the run resets to 1.', panels: panels(i)});
-        }
-      }
-      steps.push({lines:[10], msg:'Longest consecutive run: <b>' + longest + '</b>. Correct — and O(n log n), which fails the stated constraint.', panels: panels(-1)});
-      return steps;
-    }
-  },
-  {
-    label: 'Hash set + run-start check',
-    badge: 'O(n) · optimal.cs · reference solution',
-    blurb: 'You never needed the values <b>ordered</b> — only the ability to ask <i>“does x+1 exist?”</i>, which is membership. The one guard that makes it linear: only walk a run from its <b>left edge</b>, i.e. when <code>x−1</code> is absent.',
-    legend: [
-      {cls:'hot', text:'candidate being tested for run-start'},
-      {cls:'dim', text:'mid-run — skipped, someone else counts it'},
-      {cls:'good', text:'the run being walked right now'},
-      {cls:'done', text:'the longest run found'}
-    ],
-    code: [
-      'var numberSet = new HashSet<int>(nums);   // duplicates collapse',
       'int longestRun = 0;',
       '',
-      'foreach (int number in numberSet) {',
+      'foreach (int number in numberSet)',
+      '{',
+      '    // only start counting at the LEFT EDGE of a run',
       '    if (numberSet.Contains(number - 1))',
-      '        continue;                 // not a run start — skip',
+      '        continue;',
       '',
       '    int runLength = 0;',
-      '    while (numberSet.Contains(number + runLength))',
-      '        runLength++;',
       '',
-      '    if (runLength > longestRun) longestRun = runLength;',
+      '    while (numberSet.Contains(number + runLength))',
+      '    {',
+      '        runLength++;',
+      '    }',
+      '',
+      '    if (runLength > longestRun)',
+      '        longestRun = runLength;',
       '}',
+      '',
       'return longestRun;'
     ],
     simulate(input){
-      const raw = input.nums, steps = [];
-      const distinct = [];
-      const set = new Set();
-      raw.forEach(v => { if (!set.has(v)){ set.add(v); distinct.push(v); } });
-      let longest = 0, bestRun = [];
-      let probes = 0;
-      const panels = (cand, walking, isStart) => [
-        pTiles('HashSet contents — original order, duplicates collapsed', distinct, (k) => ({
-          cls: bestRun.indexOf(distinct[k]) >= 0 && !walking.length ? 'done'
-             : walking.indexOf(distinct[k]) >= 0 ? 'good is-current'
-             : distinct[k] === cand ? (isStart === false ? 'dim is-current' : 'hot is-current')
-             : bestRun.indexOf(distinct[k]) >= 0 ? 'done' : ''
-        }), {narrow:true}),
+      const nums = input.n, steps = [];
+      const order = [], has = {};
+      for (let i = 0; i < nums.length; i++){
+        if (!has[nums[i]]){ has[nums[i]] = true; order.push(nums[i]); }
+      }
+      const inSet = (x) => has[x] === true;
+
+      let curIdx = -1, runVals = [], bestVals = [], best = 0, probe = null;
+
+      const panels = () => [
+        pTiles('nums (input)', nums, (i, v) => ({cls: nums.indexOf(v) === i ? '' : 'dim'})),
+        pTiles('numberSet — iteration order', order, (i, v) => ({
+          cls: curIdx === i ? 'hot'
+             : runVals.indexOf(v) >= 0 ? 'in-window'
+             : bestVals.indexOf(v) >= 0 ? 'good'
+             : i > curIdx ? 'dim' : ''
+        })),
         pPills('', [
-          {k:'candidate', v: cand === null ? '–' : cand, cls:'accent'},
-          {k:'run length', v: walking.length},
-          {k:'longest', v: longest, cls:'good'},
-          {k:'set probes', v: probes}
+          {k:'number', v: curIdx >= 0 ? order[curIdx] : '–', cls:'hot'},
+          {k:'runLength', v: runVals.length},
+          {k:'Contains(...)', v: probe === null ? '–' : probe, cls:'accent'},
+          {k:'longestRun', v: best, cls:'good'}
         ])
       ];
-      steps.push({lines:[1,2], msg:'Everything into a set. Duplicates disappear in the constructor, and <b>iterate the set, not the array</b> — otherwise repeated values redo the same work.',
-        panels: panels(null, [])});
-      for (const v of distinct){
-        probes++;
-        if (set.has(v - 1)){
-          steps.push({lines:[5,6], msg:'<b>' + (v - 1) + '</b> exists, so <b>' + v + '</b> sits in the middle of a run — <b>skip it</b>. This single guard is what keeps the whole thing O(n): without it, every member of a run re-walks that run and you get O(n²).',
-            panels: panels(v, [], false)});
+
+      steps.push({lines:[1,3], msg:'The set does two jobs at once: <code>Contains</code> becomes <b>O(1)</b>, and duplicates vanish — <b>' + nums.length + '</b> values collapse to <b>' + order.length + '</b>. Sorting would also work but costs O(n log n); membership is all this algorithm ever asks for. The iteration order of a <code>HashSet</code> is unspecified, and that is fine — the answer never depends on it.', panels: panels()});
+
+      for (let k = 0; k < order.length; k++){
+        const number = order[k];
+        curIdx = k; runVals = []; probe = number - 1;
+
+        if (inSet(number - 1)){
+          steps.push({lines:[5,8,9], msg:'<b>' + number + '</b> has <b>' + (number - 1) + '</b> in the set, so it is <em>mid-run</em>, not a beginning. Counting from here would only re-walk a suffix of a run somebody else already owns — and that repetition is exactly what turns this into O(n²). Skip it: the run containing ' + number + ' gets counted when the loop reaches its left edge.', panels: panels()});
           continue;
         }
-        steps.push({lines:[5], msg:'<b>' + (v - 1) + '</b> is absent, so <b>' + v + '</b> is the <b>left edge</b> of a run. Every run has exactly one of these, so every run is walked exactly once.',
-          panels: panels(v, [], true)});
-        const walk = [];
-        while (set.has(v + walk.length)){
-          walk.push(v + walk.length);
-          probes++;
-          steps.push({lines:[9,10], msg:'<b>' + walk[walk.length-1] + '</b> is present — run is now <b>' + walk.length + '</b> long.',
-            panels: panels(v, [...walk], true)});
+
+        probe = null;
+        steps.push({lines:[5,8,11], msg:'<b>' + (number - 1) + '</b> is missing from the set, so <b>' + number + '</b> is the <b>left edge</b> of its run — nothing can extend it downward. This is the one and only place that run is allowed to be counted, so start <code>runLength</code> at 0 and walk upward.', panels: panels()});
+
+        let run = 0;
+        while (inSet(number + run)){
+          run++;
+          runVals.push(number + run - 1);
+          probe = number + run - 1;
+          steps.push({lines:[13,15], msg:'<code>Contains(' + (number + run - 1) + ')</code> is true → <code>runLength</code> becomes <b>' + run + '</b>. Each of these lookups is O(1), and the value ' + (number + run - 1) + ' will never be walked again: if it is not ' + number + ', it failed the left-edge test, so its own iteration exits immediately.', panels: panels()});
         }
-        probes++;
-        if (walk.length > longest){
-          longest = walk.length; bestRun = [...walk];
-          steps.push({lines:[12], msg:'<b>' + (v + walk.length) + '</b> is missing — the run ends at ' + walk.length + ', which is a <b>new best</b>.',
-            panels: panels(v, [...walk], true)});
-        } else {
-          steps.push({lines:[12], msg:'<b>' + (v + walk.length) + '</b> is missing — run of ' + walk.length + ', not better than ' + longest + '.',
-            panels: panels(v, [...walk], true)});
-        }
+
+        probe = number + run;
+        const improved = run > best;
+        if (improved){ best = run; bestVals = runVals.slice(); }
+        steps.push({lines:[13,18,19], msg:'<code>Contains(' + (number + run) + ')</code> is false, so the run ends: <b>' + number + ' … ' + (number + run - 1) + '</b>, length <b>' + run + '</b>. ' + (improved ? 'That beats the old best, so <code>longestRun</code> = <b>' + run + '</b>.' : '<code>longestRun</code> stays <b>' + best + '</b>.'), panels: panels()});
       }
-      steps.push({lines:[14], msg:'Longest run: <b>' + longest + '</b> (' + (bestRun.length ? bestRun.join(', ') : '—') + ') in <b>' + probes + '</b> set probes. Nested loops, still linear — the amortised argument matters more than the nesting.',
-        panels: panels(null, [])});
+
+      curIdx = -1; runVals = []; probe = null;
+      steps.push({lines:[22], msg:'Answer <b>' + best + '</b>' + (best > 0 ? ' (' + bestVals.join(' → ') + ')' : '') + '. Every value was inspected once as a candidate start, and walked at most once inside a single run — two touches per value, so the loop-inside-a-loop is still <b>O(n)</b> total, bought with O(n) space for the set.', panels: panels()});
       return steps;
     }
   }]
@@ -814,9 +767,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -840,8 +813,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;

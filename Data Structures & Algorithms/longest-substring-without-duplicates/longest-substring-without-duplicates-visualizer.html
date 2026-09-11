@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Longest Substring Without Repeating Characters — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -326,36 +326,124 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Longest Substring Without Repeating Characters',
-  note: 'crawl the left pointer, or jump it',
-  inputs: [{id:'s', label:'string', value:'abcabcbb', width:230}],
+  title: 'Longest Substring Without Duplicates',
+  note: 'the left edge only ever moves forward — that is the whole reason one pass is enough',
+  inputs: [{id:'s', label:'s', value:'abcbadac', width:260}],
   parse(raw){
-    const s = String(raw.s).trim();
-    if (!s.length) return {ok:false, msg:'Enter a string.'};
-    if (s.length > 18) return {ok:false, msg:'Keep it to 18 characters or fewer.'};
+    const s = String(raw.s).replace(/\s+/g, '');
+    if (!s.length) return {ok:false, msg:'Enter a non-empty string.'};
+    if (s.length > 14) return {ok:false, msg:'Keep it to 14 characters or fewer so the whole run stays watchable.'};
     return {ok:true, value:{s}, normalized:{s}};
   },
-  shuffle(){
-    const pool = ['abcabcbb', 'pwwkew', 'abba', 'dvdf', 'tmmzuxt', 'abcdefg', 'aabbcc'];
-    return {s: pool[Math.floor(Math.random()*pool.length)]};
-  },
+  shuffle(){ return {s: randWord(7 + Math.floor(Math.random()*2), 'abcd')}; },
   solutions: [
   {
-    label: 'Shrink one step at a time',
-    badge: 'O(n) · suboptimal.cs · the shape that generalises',
-    blurb: 'Extend <code>right</code>; while the window is invalid, evict <code>s[left]</code> one character at a time. Same O(n) — <code>left</code> never moves backward — but it <b>crawls</b>. Keep this shape: it is the one that still works when invalidity has no single culprit to jump past.',
+    label: 'Jump the left edge with a last-seen map',
+    badge: 'O(n) time · O(n) space · sliding window · optimal.cs',
+    blurb: 'If <code>s[right]</code> was last seen at index <b>p</b>, then <em>no</em> duplicate-free window ending at <code>right</code> can start at or before <b>p</b>. Remembering each character’s last index lets <code>left</code> jump straight to <code>p + 1</code> in one assignment, so neither pointer ever walks backward.',
     legend: [
-      {cls:'win', text:'inside the window'},
-      {cls:'hot', text:'right — the character being admitted'},
-      {cls:'rem', text:'evicted from the left'},
-      {cls:'done', text:'the longest window found'}
+      {cls:'hot', text:'right — character entering the window'},
+      {cls:'win', text:'rest of the current window'},
+      {cls:'good', text:'longest duplicate-free window found'},
+      {cls:'dim', text:'not yet reached'}
     ],
     code: [
-      'var windowChars = new HashSet<char>();',
-      'int left = 0, longest = 0;',
+      'var lastSeenIndex = new Dictionary<char, int>();  // char -> LAST index',
+      '',
+      'int left = 0;',
+      'int longest = 0;',
       '',
       'for (int right = 0; right < s.Length; right++)',
       '{',
+      '    char current = s[right];',
+      '',
+      '    if (lastSeenIndex.TryGetValue(current, out int previousIndex))',
+      '    {',
+      '        // the previous sighting may be OUTSIDE the window,',
+      '        // in which case it is stale and left must NOT move backward',
+      '        left = Math.Max(left, previousIndex + 1);',
+      '    }',
+      '',
+      '    lastSeenIndex[current] = right;',
+      '    longest = Math.Max(longest, right - left + 1);',
+      '}',
+      '',
+      'return longest;'
+    ],
+    simulate(input){
+      const chars = input.s.split('');
+      const steps = [];
+      const last = {};
+      let left = 0, best = 0, bl = -1, br = -1;
+      const panels = (right, mode) => {
+        const tiles = pTiles('s — current window', chars, (k) => {
+          if (mode === 'final') return {cls: (best > 0 && k >= bl && k <= br) ? 'good' : 'dim'};
+          if (right < 0) return {cls:'dim'};
+          if (k === right) return {cls:'hot'};
+          if (k >= left && k < right) return {cls:'in-window'};
+          if (k > right) return {cls:'dim'};
+          return {};
+        });
+        const cur = right >= 0 ? chars[right] : null;
+        return [
+          tiles,
+          pChips('lastSeenIndex (char → last index)', [{items: mapChips(last, cur), empty:'nothing recorded yet'}]),
+          pPills('', [
+            {k:'left', v: left, cls:'accent'},
+            {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
+            {k:'window length', v: right >= 0 ? (right - left + 1) : '–'},
+            {k:'longest', v: best, cls:'good'}
+          ]),
+          pSlots('longest so far', best > 0 ? chars.slice(bl, br + 1).map(c => ({text: c, cls:'good'})) : [{text:'–', cls:'dim'}])
+        ];
+      };
+      steps.push({lines:[1,3,4], msg:'<code>left</code> is the first index of the current duplicate-free window and <code>longest</code> the best length seen. The dictionary keeps, per character, only its <b>most recent</b> index — that single number is all the window needs, because excluding an earlier copy just means starting after it.', panels: panels(-1)});
+      for (let r = 0; r < chars.length; r++){
+        const c = chars[r];
+        const seen = Object.prototype.hasOwnProperty.call(last, c);
+        const p = seen ? last[c] : -1;
+        const before = left;
+        let kind = 'new';
+        if (seen && p + 1 > left){ left = p + 1; kind = 'jump'; }
+        else if (seen){ kind = 'stale'; }
+        last[c] = r;
+        const len = r - left + 1;
+        const better = len > best;
+        if (better){ best = len; bl = left; br = r; }
+        const tail = ' The window is now <code>' + chars.slice(left, r + 1).join('') + '</code>, length <b>' + len + '</b>' + (better ? ' — a new longest.' : '; longest stays ' + best + '.');
+        let msg;
+        if (kind === 'new'){
+          msg = 'Index ' + r + ' holds <code>' + c + '</code>, which the dictionary has never recorded, so it cannot clash with anything inside the window and <code>left</code> stays at ' + left + '. Record <code>lastSeenIndex[' + c + '] = ' + r + '</code>.' + tail;
+        } else if (kind === 'jump'){
+          msg = '<code>' + c + '</code> was last seen at index ' + p + ', which is <b>inside</b> the window (index ' + p + ' ≥ left ' + before + '), so that copy is a genuine duplicate. Every duplicate-free window ending at ' + r + ' must start at ' + (p + 1) + ' or later, so <code>left</code> jumps from ' + before + ' straight to ' + (p + 1) + ' — one assignment instead of shrinking step by step.' + tail;
+        } else {
+          msg = '<code>' + c + '</code> was last seen at index ' + p + ', but the window already starts at ' + before + ', so that sighting is <b>stale</b> — it was evicted by an earlier jump and is not in the window at all. <code>previousIndex + 1 = ' + (p + 1) + '</code> lies behind <code>left</code>, and <code>Math.Max</code> keeps <code>left</code> at ' + before + '; moving it there would drag the window <em>backward</em> and re-admit characters already discarded.' + tail;
+        }
+        steps.push({lines: kind === 'new' ? [8,10,17,18] : [10,14,17,18], msg: msg, panels: panels(r)});
+      }
+      steps.push({lines:[21], msg:'<code>right</code> advanced ' + chars.length + ' times and <code>left</code> only ever moved forward, so each index is visited a bounded number of times — one pass. The answer is <b>' + best + '</b>' + (best > 0 ? ' (<code>' + chars.slice(bl, br + 1).join('') + '</code>, indices ' + bl + '…' + br + ')' : '') + '.', panels: panels(-1, 'final')});
+      return steps;
+    }
+  },
+  {
+    label: 'Shrink the window one character at a time',
+    badge: 'O(n) time · O(n) space · sliding window · optimal-variant.cs',
+    blurb: 'A <code>HashSet</code> stores exactly the characters between <code>left</code> and <code>right</code>, so a hit means the duplicate is definitely inside the window. The set does not say <em>where</em>, so <code>left</code> drops characters one by one until it is gone — still linear, since each character is added once and removed at most once.',
+    legend: [
+      {cls:'hot', text:'right — character entering the window'},
+      {cls:'win', text:'characters currently in the set'},
+      {cls:'good', text:'longest duplicate-free window found'},
+      {cls:'dim', text:'not yet reached'}
+    ],
+    code: [
+      'var windowChars = new HashSet<char>();  // exactly what is in the window',
+      '',
+      'int left = 0;',
+      'int longest = 0;',
+      '',
+      'for (int right = 0; right < s.Length; right++)',
+      '{',
+      '    // shrink from the left ONE STEP AT A TIME until the duplicate is gone',
       '    while (windowChars.Contains(s[right]))',
       '    {',
       '        windowChars.Remove(s[left]);',
@@ -365,121 +453,56 @@ const PROBLEM = {
       '    windowChars.Add(s[right]);',
       '    longest = Math.Max(longest, right - left + 1);',
       '}',
+      '',
       'return longest;'
     ],
     simulate(input){
-      const s = input.s, steps = [];
-      const win = [];
-      let left = 0, longest = 0, bestA = 0, bestB = -1, evictions = 0;
-      const panels = (right, popped) => [
-        pTiles('String', s.split(''), (k) => ({
-          v: s[k],
-          cls: k === popped ? 'is-current' : k === right ? 'hot is-current'
-             : (k >= left && k < right) ? 'win'
-             : (bestB >= bestA && k >= bestA && k <= bestB) ? 'done' : '',
-          flash: k === popped
-        }), {narrow:true, focus:right,
-             bracket: (right >= 0 && left <= right) ? {from:left, to:right} : null,
-             ptrs:[{name:'left', idx:left, cls:'accent'}, {name:'right', idx: right < 0 ? 0 : right}]}),
-        pChips('windowChars — the exact set inside [left, right]', [{left:'set:', items: win.map(c => ({text:c})), empty:'empty'}]),
-        pPills('', [
-          {k:'window', v: right >= 0 ? (right - left + 1) : 0, cls:'accent'},
-          {k:'longest', v: longest, cls:'good'},
-          {k:'single left-steps', v: evictions, cls:'hot'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'Empty window. The universal shape: extend right, shrink while invalid, record.', panels: panels(-1)});
-      for (let right = 0; right < s.length; right++){
-        while (win.indexOf(s[right]) >= 0){
-          const gone = s[left];
-          win.splice(win.indexOf(gone), 1);
-          steps.push({lines:[6,8,9], msg:'<code>' + s[right] + '</code> is already in the window, so evict <code>' + gone + '</code> at index ' + left + ' — <b>one character</b>, then test again.',
-            panels: panels(right, left)});
-          left++; evictions++;
+      const chars = input.s.split('');
+      const steps = [];
+      let left = 0, best = 0, bl = -1, br = -1;
+      const panels = (right, setEnd, mode) => {
+        const tiles = pTiles('s — current window', chars, (k) => {
+          if (mode === 'final') return {cls: (best > 0 && k >= bl && k <= br) ? 'good' : 'dim'};
+          if (right < 0) return {cls:'dim'};
+          if (k === right) return {cls:'hot'};
+          if (k >= left && k < setEnd) return {cls:'in-window'};
+          if (k > right) return {cls:'dim'};
+          return {};
+        });
+        const inside = right < 0 ? [] : chars.slice(left, setEnd);
+        return [
+          tiles,
+          pChips('windowChars', [{items: inside.map(c => ({text: c, cls: (right >= 0 && setEnd > right && c === chars[right]) ? 'head' : ''})), empty:'empty'}]),
+          pPills('', [
+            {k:'left', v: left, cls:'accent'},
+            {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
+            {k:'set size', v: right >= 0 ? (setEnd - left) : 0},
+            {k:'longest', v: best, cls:'good'}
+          ]),
+          pSlots('longest so far', best > 0 ? chars.slice(bl, br + 1).map(c => ({text: c, cls:'good'})) : [{text:'–', cls:'dim'}])
+        ];
+      };
+      steps.push({lines:[1,3,4], msg:'No indices are stored this time — the set holds the <b>membership</b> of the window <code>[left, right]</code> and nothing else. That is enough to detect a duplicate, which is all the loop condition needs to ask.', panels: panels(-1, 0)});
+      for (let r = 0; r < chars.length; r++){
+        const c = chars[r];
+        let removals = 0;
+        while (chars.slice(left, r).indexOf(c) !== -1){
+          const gone = chars[left];
+          left++;
+          removals++;
+          steps.push({lines:[9,11,12], msg:'The set still contains <code>' + c + '</code>, so the duplicate is inside the window — but the set cannot say <em>where</em>, so the only safe move is to give up the leftmost character <code>' + gone + '</code> (index ' + (left - 1) + ') and test again. <code>left</code> is now ' + left + '.', panels: panels(r, r)});
         }
-        win.push(s[right]);
-        const len = right - left + 1;
-        if (len > longest){ longest = len; bestA = left; bestB = right; }
-        steps.push({lines:[12,13], msg:'Add <code>' + s[right] + '</code> — <b>after</b> the shrink loop, or the loop would see the character it just inserted and spin the window down to nothing. Window <code>[' + left + ', ' + right + ']</code>, length <b>' + len + '</b>' + (bestB === right ? ' — new best.' : '.'),
-          panels: panels(right)});
-      }
-      steps.push({lines:[15], msg:'Longest: <b>' + longest + '</b> (<code>' + s.slice(bestA, bestB+1) + '</code>). <code>left</code> took <b>' + evictions + '</b> single steps, each with a set removal. The jump version takes none.',
-        panels: panels(s.length - 1)});
-      return steps;
-    }
-  },
-  {
-    label: 'Jump the left pointer',
-    badge: 'O(n), no inner loop · optimal.cs · your solution',
-    blurb: 'When <code>s[right]</code> duplicates something in the window you already <b>know where</b> the offender is — so jump <code>left</code> straight past it. The map is never cleaned up, so a hit can be <b>stale</b>: <code>Math.Max</code> is what stops <code>left</code> moving backward.',
-    legend: [
-      {cls:'win', text:'inside the window'},
-      {cls:'hot', text:'right'},
-      {cls:'rem', text:'the previous sighting being jumped past'},
-      {cls:'done', text:'the longest window found'}
-    ],
-    code: [
-      'var lastSeenIndex = new Dictionary<char, int>();',
-      'int left = 0, longest = 0;',
-      '',
-      'for (int right = 0; right < s.Length; right++)',
-      '{',
-      '    char current = s[right];',
-      '',
-      '    if (lastSeenIndex.TryGetValue(current, out int prev))',
-      '        left = Math.Max(left, prev + 1);   // never move back',
-      '',
-      '    lastSeenIndex[current] = right;',
-      '    longest = Math.Max(longest, right - left + 1);',
-      '}',
-      'return longest;'
-    ],
-    simulate(input){
-      const s = input.s, steps = [];
-      const last = {};
-      let left = 0, longest = 0, bestA = 0, bestB = -1, jumps = 0;
-      const panels = (right, prev, stale) => [
-        pTiles('String', s.split(''), (k) => ({
-          v: s[k],
-          cls: k === prev ? 'is-current' : k === right ? 'hot is-current'
-             : (k >= left && k < right) ? 'win'
-             : (bestB >= bestA && k >= bestA && k <= bestB) ? 'done' : '',
-          flash: k === prev && !stale
-        }), {narrow:true, focus:right,
-             bracket: (right >= 0 && left <= right) ? {from:left, to:right} : null,
-             ptrs:[{name:'left', idx:left, cls:'accent'}, {name:'right', idx: right < 0 ? 0 : right}]}),
-        pChips('lastSeenIndex — never cleaned up, so entries can be stale', [{
-          left:'map:', items: Object.keys(last).map(c => ({text:c, sub:'to ' + last[c], cls: (right >= 0 && c === s[right]) ? 'head' : (last[c] < left ? 'ghost' : '')})), empty:'empty'
-        }]),
-        pPills('', [
-          {k:'window', v: right >= 0 ? (right - left + 1) : 0, cls:'accent'},
-          {k:'longest', v: longest, cls:'good'},
-          {k:'left jumps', v: jumps, cls:'hot'},
-          {k:'inner loops', v:'0', cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'A map of <b>last index seen</b>, not a set of members. That extra information is exactly what makes a jump possible.', panels: panels(-1)});
-      for (let right = 0; right < s.length; right++){
-        const c = s[right];
-        if (last.hasOwnProperty(c)){
-          const prev = last[c];
-          if (prev + 1 > left){
-            steps.push({lines:[8,9], msg:'<code>' + c + '</code> was last seen at index <b>' + prev + '</b>, which is <b>inside</b> the window. Jump <code>left</code> from ' + left + ' straight to <b>' + (prev + 1) + '</b> — one move, no evictions, no set removals.',
-              panels: panels(right, prev, false)});
-            left = prev + 1; jumps++;
-          } else {
-            steps.push({lines:[8,9], msg:'<code>' + c + '</code> was last seen at index <b>' + prev + '</b> — but that is <b>outside</b> the window (left = ' + left + '), so the entry is <b>stale</b>. <code>Math.Max</code> keeps left where it is. Without it, <code>abba</code> returns 3 instead of 2 — that is the test case that exposes this.',
-              panels: panels(right, prev, true)});
-          }
+        const len = r - left + 1;
+        const better = len > best;
+        if (better){ best = len; bl = left; br = r; }
+        const tail = ' Window <code>' + chars.slice(left, r + 1).join('') + '</code> has length <b>' + len + '</b>' + (better ? ' — a new longest.' : '; longest stays ' + best + '.');
+        if (removals === 0){
+          steps.push({lines:[9,15,16], msg:'<code>' + c + '</code> at index ' + r + ' is not in the set, so the <code>while</code> body never runs and <code>left</code> holds at ' + left + '. Add it and the window simply grows by one.' + tail, panels: panels(r, r + 1)});
+        } else {
+          steps.push({lines:[15,16], msg:'After ' + removals + ' removal' + (removals === 1 ? '' : 's') + ' the set no longer contains <code>' + c + '</code>, so index ' + r + ' can join it. Those removals are not wasted work overall: <code>left</code> never rewinds, so across the whole string each character is removed at most once — ' + chars.length + ' adds and at most ' + chars.length + ' removes.' + tail, panels: panels(r, r + 1)});
         }
-        last[c] = right;
-        const len = right - left + 1;
-        if (len > longest){ longest = len; bestA = left; bestB = right; }
-        steps.push({lines:[11,12], msg:'Record <code>' + c + ' to ' + right + '</code> — after computing left, not before, or the character looks like its own duplicate. Window <code>[' + left + ', ' + right + ']</code>, length <b>' + len + '</b>' + (bestB === right ? ' — new best.' : '.'),
-          panels: panels(right)});
       }
-      steps.push({lines:[14], msg:'Longest: <b>' + longest + '</b> (<code>' + s.slice(bestA, bestB+1) + '</code>) in a single pass with <b>no inner loop at all</b> — ' + jumps + ' jump' + (jumps === 1 ? '' : 's') + ' instead of a crawl.',
-        panels: panels(s.length - 1)});
+      steps.push({lines:[19], msg:'Same answer as the map version, <b>' + best + '</b>' + (best > 0 ? ' (<code>' + chars.slice(bl, br + 1).join('') + '</code>)' : '') + '. The difference is only in how <code>left</code> travels: here it creeps one index per removal, whereas the last-seen map teleports it — both amortise to O(n), and this one trades the index bookkeeping for a simpler invariant.', panels: panels(-1, 0, 'final')});
       return steps;
     }
   }]
@@ -820,9 +843,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -846,8 +889,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;

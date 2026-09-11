@@ -5,9 +5,9 @@
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Builds a HashSet for O(1) membership, only starts walking a run when
-// -  number-1 is absent so each element is visited by exactly one run-walk,
-// -  giving amortized O(n) total work.
+// -  Builds a HashSet for O(1) membership and only starts a walk when
+// -  number-1 is absent, so each element is visited by exactly one
+// -  run-walk, giving amortized O(n) total work.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -44,65 +44,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash set membership + scan only from run starts
+ PATTERN : Hash set + start-of-run guard, expand each run once
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The answer depends only on which values are present, never on their order or
-  index, so sorting buys information the problem does not need. Once every value
-  is in numberSet, the only question the algorithm ever asks is "is number + 1
-  here", and a consecutive run is just a chain you can walk one Contains call at
-  a time.
-ALTERNATIVES AND WHY THEY LOSE
-  Sort, then scan adjacent pairs while skipping equal neighbours: correct, but
-  it pays a full ordering to answer a membership question, and it needs an
-  explicit duplicate case. Union-find over value/value+1 edges: also correct,
-  but it builds a structure to represent runs the set already encodes
-  implicitly. Set plus a forward walk from every element and no start guard:
-  correct too, and it is the version that quietly blows up (see below).
-INVARIANT
-  Every distinct run is counted exactly once, starting from its smallest
-  element. The guard numberSet.Contains(number - 1) is precisely the test
-  "number is the minimum of its run": a run has exactly one such element, so no
-  run is missed and none is measured twice. This is why HashSet enumeration
-  order does not matter - being a run start is a property of the value, not of
-  when the foreach happens to reach it. The comment's "earlier (or later)
-  iteration" is doing that work.
-WHY THE NESTED WHILE IS NOT A NESTED SCAN
-  The while body only ever runs for values that survived the guard. Mid-run
-  values cost one probe and hit continue. Across the whole foreach, the Contains
-  calls inside the while total the summed lengths of all runs, plus one failing
-  probe per run - and the runs partition numberSet, so that walk touches each
-  value once. The loop is nested in shape but it is a partition walk, not a scan
-  inside a scan.
-COUNTING DETAIL
-  runLength starts at 0 and the probe is number + runLength, so the first test
-  is for number itself. That makes runLength an element count rather than an
-  offset, and it exits the while already equal to the run's size - no +1
-  correction before comparing against longestRun.
-EDGE CASES
-  Empty nums: numberSet is empty, the foreach body never runs, longestRun stays
-  0, which is the right answer. Duplicates collapse at construction, so [1,1,1]
-  returns 1 rather than 3, and the guard never sees the same start twice.
-  Contrived but real: number - 1 and number + runLength are unchecked int
-  arithmetic, so if nums holds both int.MinValue and int.MaxValue the wraparound
-  makes them look adjacent and the two runs get chained into one. LeetCode's
-  constraints keep this out of reach; mention it if an interviewer pushes on
-  integer bounds.
+  The obvious solution is sort then scan for adjacency, which costs O(n log n)
+  and is dominated by the sort. The insight here is that consecutiveness is a
+  membership question, not an ordering question: to know whether a run continues
+  past number you only need to ask "is number + 1 present?" A HashSet answers
+  that in O(1), so the sort is pure waste. numberSet also collapses duplicates
+  for free, which the sort-based version has to handle with an explicit skip.
+THE ONE IDEA: LEFT-EDGE GUARD
+  if (numberSet.Contains(number - 1)) continue; is the whole algorithm. Without
+  it, every element of a run walks the rest of that run, and a single run of
+  length m does 1 + 2 + ... + m work. With it, only the smallest element of each
+  run is allowed to expand. Every other element bails after one lookup.
+
+  Correctness: every non-empty run has exactly one element with no predecessor
+  in the set - its minimum. So each run is expanded exactly once, never zero
+  times, never twice. No run is missed and none is double-counted.
+WHY THE NESTED LOOP IS NOT QUADRATIC
+  This is the follow-up an interviewer will ask, because the code reads like two
+  nested loops over the same data. The counting argument: the while loop only
+  runs for left edges, and the total number of iterations across all while loops
+  equals the total length of all runs, which is exactly the size of numberSet.
+  Each element is touched by at most one while loop - the one belonging to its
+  own run's minimum. So the inner work summed over the whole foreach is linear,
+  plus one wasted Contains per non-edge element.
+WHY FOREACH OVER NUMBERSET AND NOT NUMS
+  Iterating the deduplicated set matters for the runtime argument, not just for
+  style. If you wrote foreach (int number in nums), a duplicated left edge would
+  re-expand its entire run once per copy. Take nums = [1, 1, 1, ..., 1, 2, 3,
+  ..., m] with d copies of 1: the guard passes d times and each pass walks m
+  elements, giving d*m work, which is quadratic in n = d + m. Deduplicating
+  first caps the foreach at one visit per distinct value.
+OFF-BY-ONE AND THE ZERO CASE
+  runLength starts at 0 and the test is Contains(number + runLength), so the
+  first probe re-checks number itself - a lookup you know will succeed. That is
+  deliberate: it makes runLength end as the count of members rather than the
+  offset of the last member, so no +1 is needed at the end.
+
+  Empty input returns 0 because longestRun is initialized to 0 and the foreach
+  body never executes. A single element yields runLength 1. There is no
+  special-casing anywhere.
 WATCH OUT
-  Two ways this degrades without ever going wrong on a small test. Delete the
-  guard and a single input like 1..n makes the walk restart at every element.
-  Iterate nums instead of numberSet and duplicates of a run start rescan that
-  whole run - [1,1,1,...,1,2,3,...] is the shape that exposes it. The foreach
-  source is a correctness-neutral, performance-critical choice; say out loud
-  that you iterate the set.
+  number + runLength is unchecked int arithmetic. If the set contains
+  int.MaxValue as a left edge, the second probe computes int.MaxValue + 1, which
+  wraps to int.MinValue. If int.MinValue also happens to be in nums, the run
+  falsely continues and longestRun is overstated. LeetCode's constraints keep
+  values away from the boundary so the file is correct as submitted, but name
+  this if asked to harden it - the fix is to break when number + runLength would
+  overflow, or to widen the probe to long.
 TRIGGER
-  Longest consecutive / streak / chain over an unordered collection where
-  indices and original order carry no meaning and only presence does. The tell
-  is catching yourself about to sort purely so that neighbours end up next to
-  each other.
+  Reach for set-plus-left-edge whenever the problem asks about maximal chains,
+  intervals, or islands over unordered values and you catch yourself reaching
+  for a sort. The general shape: build O(1) membership, identify a canonical
+  starting element per group (here: no predecessor), and let only canonical
+  elements do the expansion. The same trick drives grid island counting, where
+  the guard is "this cell is unvisited" instead of "number - 1 is absent".
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

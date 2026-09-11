@@ -1,14 +1,13 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  sliding window, shrink left one step at a time
+// -  sliding window, HashSet with left shrinking one step at a time
 // -  [sliding-window-shrink-one]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (was suboptimal.cs)
+// -  Reference solution - not one you solved yourself
 // -
-// -  HashSet-based window where left advances one character per removal
-// -  until the duplicate is evicted; amortized linear but with larger
-// -  constant than the jump version.
+// -  Each character enters and leaves the HashSet at most once across the
+// -  whole run, giving amortized O(n) despite the nested while loop.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -40,80 +39,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - HashSet of window chars, shrink one step
+ PATTERN : Sliding window + HashSet - shrink left one step at a time
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
-WHY THIS PATTERN
-  The answer is the longest contiguous window whose characters are all distinct.
-  "All distinct" is monotone in the wrong direction: if s[left..right] already
-  contains a repeat, every window that contains it also does. So for a fixed
-  right there is a smallest valid left, and that smallest left is non-decreasing
-  as right grows. Two pointers that both only move forward capture exactly that,
-  which is why no start position ever needs re-scanning.
-
-  Brute force is: for every start index, extend forward until a repeat appears,
-  tracking seen chars. That is O(n^2) and throws away the fact that the previous
-  start's work already told you where the repeat was.
 INVARIANT
-  At the top of each for iteration: windowChars holds exactly the characters of
-  s[left..right-1], each appearing once, and longest is the best window length
-  over all windows ending before right.
+  At the top of every iteration of the for loop, windowChars holds exactly the
+  characters of s[left..right-1], and they are all distinct. Two halves, both
+  load-bearing:
 
-  The while loop restores the precondition for adding s[right]; after it,
-  s[right] is not in windowChars, so Add keeps the "each appears once" part true
-  and s[left..right] is a valid all-distinct window. longest is updated after
-  the Add, so right - left + 1 correctly counts s[right] itself.
-WHY THE SHRINK TERMINATES
-  If windowChars.Contains(s[right]) is true, the invariant says there is exactly
-  one index d in [left, right-1] with s[d] == s[right]. Each pass removes
-  s[left] and advances left, so after at most d - left + 1 passes left == d + 1
-  and the duplicate is gone. The loop cannot run past right because d < right -
-  it always finds its target inside the current window.
+  - "exactly": every Add is paired with a Remove of the character that left
+  drops, so the set never drifts from the window. This is why Contains is a
+  correct duplicate test.
+  - "all distinct": the while loop refuses to let s[right] in until the old copy
+  is gone, so the set's Count equals right - left + 1 after the Add. That
+  equality is what licenses measuring the window as right - left + 1 instead of
+  tracking a length variable.
+WHY THE WHILE LOOP TERMINATES
+  windowChars.Contains(s[right]) is true only because some index i in [left,
+  right-1] has s[i] == s[right]. Each pass removes s[left] and advances left, so
+  left marches toward that i. When left reaches i the offending character is
+  removed and Contains goes false. left therefore never passes right, and the
+  window is never empty at the measurement - worst case it shrinks to the single
+  character s[right] itself, giving length 1.
 
-  "Exactly one" is what makes a plain HashSet enough. Remove(s[left])
-  unconditionally deletes the character because there is no second copy of it in
-  the window to protect. A frequency-map version of this loop would need to
-  decrement and only erase at zero.
-LEFT NEVER REWINDS
-  left is only ever incremented, and it is bounded by s.Length, so the inner
-  while body executes at most n times summed over the entire run - the nesting
-  is not a product. Each character enters windowChars once when right passes it
-  and leaves at most once when left passes it. This is the standard interview
-  follow-up for any nested-loop sliding window: answer with the monotone
-  pointer, not with the loop shape.
-VS THE LAST-INDEX MAP
-  The other common route replaces the set with a Dictionary<char,int> lastSeen
-  and, on reading c = s[right], does left = Math.Max(left, lastSeen[c] + 1) -
-  one jump, no removals - then lastSeen[c] = right.
+  That is also the answer for "bbbb": each right removes the one b, left lands
+  on right, and longest stays 1.
+THE NESTED-LOOP OBJECTION
+  An interviewer will point at the while inside the for and ask if this is
+  quadratic. It is not, and the argument is amortization, not hand-waving: left
+  is only ever incremented, never reset, and it is bounded by s.Length. So
+  across the whole run the while body executes at most s.Length times total, no
+  matter how it clusters. Each character is added once and removed at most once.
 
-  The difference is per-step, not overall. That version does bounded work at
-  every right; this one can do a burst of Removes at one right and none at the
-  next. The tradeoff is which check you own: the map keeps stale entries for
-  characters that have already left the window, so every lookup must be compared
-  against left or it will shrink backwards; this set holds only live characters,
-  so Contains is the entire test and left needs no guarding. Neither dominates -
-  pick the one whose bookkeeping you will not get wrong under pressure.
+  Say "each pointer makes one monotone pass" - that is the whole proof.
+ORDER OF OPERATIONS - THE TRAP
+  Three orderings here are not interchangeable:
+
+  1. The Add of s[right] must come after the while, not before. Add first and
+  Contains is trivially true forever - an infinite loop that also never
+  terminates by the argument above, since left would keep advancing past right.
+  2. Inside the loop, Remove(s[left]) must precede left++. Swap them and you
+  evict the wrong character, silently corrupting the set while the window
+  indices say otherwise.
+  3. longest is updated after the Add. Updating before it would measure a window
+  that does not yet include s[right].
+VERSUS THE INDEX-JUMP VARIANT
+  The other route to the same complexity replaces the HashSet with a
+  Dictionary<char,int> of last-seen index and jumps left straight to lastIndex +
+  1 rather than stepping. Same asymptotics; fewer set operations in practice on
+  long duplicate runs.
+
+  Its cost is a real correctness trap this file does not have: the dictionary
+  retains entries for characters already outside the window, so a stale index
+  can drag left backwards. That version needs left = Math.Max(left, lastIndex +
+  1). Because windowChars only ever describes the live window, no such guard
+  exists or is needed here. If you are asked to write one under pressure, this
+  is the safer one; if asked to optimize it, the jump is the answer to offer.
 WATCH OUT
-  1. Remove(s[left]) must come before left++. Swapping them removes the
-  character just outside the window and leaves the real duplicate behind, so the
-  while loop keeps spinning and left walks off past right.
-  2. The while condition tests Contains(s[right]), the incoming character - not
-  the character at left. Shrinking is driven by the new element, not by the old
-  one.
-  3. longest is computed after the Add, deliberately. Moving it before the Add
-  still gives the same number here (the set is not read for the length), but
-  computing it before the while would measure a window that still holds a
-  duplicate.
-  4. Empty string: the for loop never runs and longest stays 0, which is right.
-  No separate guard is needed.
-TRIGGER
-  Reach for this shape when the problem asks for the longest or shortest
-  contiguous run subject to a constraint that only gets harder as the window
-  grows. Then pair two forward-only pointers with a structure describing the
-  window's current contents: a HashSet when the constraint is "all distinct", a
-  count map when repeats are allowed up to some budget k.
+  Empty input falls straight through the for loop and returns the initialized
+  longest = 0 - no special case needed, but say so out loud rather than letting
+  it look accidental.
+
+  Also note what the routine does not return: only the length. Reconstructing
+  the substring itself means recording left at the moment longest improves,
+  which the Math.Max form hides - you would have to expand it into an explicit
+  if to capture the start index.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

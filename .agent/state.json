@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-10T17:13:48.315Z",
+  "updatedAt": "2026-09-11T04:55:10.335Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1642,7 +1642,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, walk runs from left edge only\",\"approachKey\":\"hashset-sequence-start\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, walk runs from left edge only\",\"approachKey\":\"hashset-sequence-start\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -1655,7 +1655,23 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, walk runs from left edge only\",\"approachKey\":\"hashset-sequence-start\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, walk runs from left edge only\",\"approachKey\":\"hashset-sequence-start\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "711ff7adff41",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "711ff7adff41"
+        },
+        "builtAt": "2026-09-11T04:48:59.366Z"
       }
     },
     "longest-repeating-substring-with-replacement": {
@@ -1696,14 +1712,14 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, monotonic max-frequency tracker\",\"approachKey\":\"sliding-window-max-freq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window rerun per candidate target character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bf1a8a6b1e82\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, stale monotonic max-frequency\",\"approachKey\":\"sliding-window-max-freq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"696e4b6c8ada\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window rerun per candidate target character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "sliding window, monotonic max-frequency tracker",
+          "algorithm": "sliding window, stale monotonic max-frequency",
           "approachKey": "sliding-window-max-freq",
           "correct": true,
           "bruteForce": false
@@ -1718,8 +1734,31 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, monotonic max-frequency tracker\",\"approachKey\":\"sliding-window-max-freq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window rerun per candidate target character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bf1a8a6b1e82\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, stale monotonic max-frequency\",\"approachKey\":\"sliding-window-max-freq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"696e4b6c8ada\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window rerun per candidate target character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "bf1a8a6b1e82",
+          "renames": []
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "696e4b6c8ada",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "bf1a8a6b1e82",
+          "suboptimal.cs": "696e4b6c8ada"
+        },
+        "builtAt": "2026-09-11T04:52:06.514Z"
       }
     },
     "longest-substring-without-duplicates": {
@@ -1760,14 +1799,14 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, jump left via last-seen index\",\"approachKey\":\"sliding-window-jump-index\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, shrink left one step at a time\",\"approachKey\":\"sliding-window-shrink-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d051b5e92c81\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, jump left via last-seen index map\",\"approachKey\":\"sliding-window-jump-index\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"529409e826f5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, HashSet with left shrinking one step at a time\",\"approachKey\":\"sliding-window-shrink-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "sliding window, jump left via last-seen index",
+          "algorithm": "sliding window, jump left via last-seen index map",
           "approachKey": "sliding-window-jump-index",
           "correct": true,
           "bruteForce": false
@@ -1775,15 +1814,38 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "sliding window, shrink left one step at a time",
+          "algorithm": "sliding window, HashSet with left shrinking one step at a time",
           "approachKey": "sliding-window-shrink-one",
           "correct": true,
           "bruteForce": false
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, jump left via last-seen index\",\"approachKey\":\"sliding-window-jump-index\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":2,\"name\":\"optimal-variant.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, shrink left one step at a time\",\"approachKey\":\"sliding-window-shrink-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d051b5e92c81\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, jump left via last-seen index map\",\"approachKey\":\"sliding-window-jump-index\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"529409e826f5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window, HashSet with left shrinking one step at a time\",\"approachKey\":\"sliding-window-shrink-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "d051b5e92c81",
+          "renames": []
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "529409e826f5",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "d051b5e92c81",
+          "optimal-variant.cs": "529409e826f5"
+        },
+        "builtAt": "2026-09-11T04:55:10.333Z"
       }
     },
     "lowest-common-ancestor-in-binary-search-tree": {
