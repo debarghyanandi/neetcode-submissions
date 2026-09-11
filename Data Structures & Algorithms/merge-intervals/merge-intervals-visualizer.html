@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Merge Intervals — visualizer</title>
+<title>Best Time to Buy and Sell — visualizer</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -327,161 +327,110 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Merge Intervals',
-  note: 'sorting by start turns a global problem into a local one',
-  inputs: [{id:'iv', label:'intervals (a-b, a-b, …)', value:'1-3, 8-10, 2-6, 15-18', width:300}],
+  note: 'sorting by start is the whole algorithm; the sweep is bookkeeping',
+  inputs: [{id:'iv', label:'intervals (start,end,start,end,…)', value:'1,10,2,3,12,14,13,20,22,25', width:300}],
   parse(raw){
-    const parts = String(raw.iv).split(',').map(s => s.trim()).filter(s => s.length).slice(0, 7);
+    const n = parseInts(raw.iv, 20);
+    if (!n) return {ok:false, msg:'Enter intervals as comma-separated numbers: start,end,start,end,…'};
+    if (n.length % 2) return {ok:false, msg:'Needs an even count — every interval is a start and an end.'};
+    if (n.length < 2) return {ok:false, msg:'Needs at least one interval.'};
     const iv = [];
-    for (const p of parts){
-      const m = p.match(/^(-?\d+)\s*-\s*(-?\d+)$/);
-      if (!m) return {ok:false, msg:'Use <code>start-end</code> pairs separated by commas, e.g. <code>1-3, 2-6, 8-10</code>.'};
-      const a = Number(m[1]), b = Number(m[2]);
-      if (b < a) return {ok:false, msg:'Each interval needs end ≥ start.'};
-      iv.push([a, b]);
+    for (let i = 0; i < n.length; i += 2){
+      if (n[i] > n[i+1]) return {ok:false, msg:'Each start must be ≤ its end (saw ' + n[i] + ' > ' + n[i+1] + ').'};
+      iv.push([n[i], n[i+1]]);
     }
-    if (!iv.length) return {ok:false, msg:'Enter at least one interval.'};
-    return {ok:true, value:{iv}, normalized:{iv: iv.map(x => x[0] + '-' + x[1]).join(', ')}};
+    return {ok:true, value:{iv}, normalized:{iv: n.join(',')}};
   },
   shuffle(){
+    const k = 4 + Math.floor(Math.random() * 2);
     const out = [];
-    let t = 1;
-    for (let i = 0; i < 4 + Math.floor(Math.random()*2); i++){
-      const a = t + Math.floor(Math.random()*4) - 1;
-      out.push([Math.max(a, 0), a + 1 + Math.floor(Math.random()*4)]);
-      t = a + 2 + Math.floor(Math.random()*3);
+    for (let i = 0; i < k; i++){
+      const s = 1 + Math.floor(Math.random() * 18);
+      out.push(s, s + Math.floor(Math.random() * 6));
     }
-    for (let i = out.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [out[i],out[j]]=[out[j],out[i]]; }
-    return {iv: out.map(x => x[0] + '-' + x[1]).join(', ')};
+    return {iv: out.join(',')};
   },
   solutions: [
   {
-    label: 'Merge any overlapping pair, repeat',
-    badge: 'O(n²)–O(n³) · not in repo · correct but flails',
-    blurb: 'Scan for <b>any</b> two intervals that overlap, merge them, and start over. Correct — and every merge can create a new overlap somewhere else, so the whole list has to be rescanned each time.',
+    label: 'Sort by start, then sweep once',
+    badge: 'O(n log n) time · O(log n) space · sort + sweep · optimal.cs',
+    blurb: 'Once starts ascend, an interval can only overlap the block currently open: every later interval starts further right, so none can reach back across a gap that has already closed. Comparing all pairs collapses into one pass that never looks past the <b>last</b> block in the output.',
     legend: [
-      {cls:'hot', text:'the pair being tested'},
-      {cls:'good', text:'just merged'},
-      {cls:'dim', text:'absorbed'},
-      {cls:null, text:'each restart rescans everything'}
-    ],
-    code: [
-      'bool changed = true;',
-      'while (changed) {',
-      '    changed = false;',
-      '    for (int i = 0; i < list.Count && !changed; i++)',
-      '        for (int j = i + 1; j < list.Count; j++)',
-      '            if (Overlap(list[i], list[j])) {',
-      '                list[i] = Union(list[i], list[j]);',
-      '                list.RemoveAt(j);',
-      '                changed = true;   // and rescan from the top',
-      '                break;',
-      '            }',
-      '}'
-    ],
-    simulate(input){
-      let list = input.iv.map(x => [...x]);
-      const steps = [];
-      const lo = Math.min(...list.map(x => x[0])), hi = Math.max(...list.map(x => x[1]));
-      let scans = 0, comparisons = 0;
-      const panels = (i, j, merged) => [
-        pRanges('Intervals — original order, mutated in place', list.map((x, k) => ({
-          from:x[0], to:x[1], label:'[' + x[0] + ', ' + x[1] + ']',
-          cls: merged && k === i ? 'hot' : (k === i || k === j) ? 'hot' : ''
-        })), lo, hi),
-        pPills('', [{k:'full rescans', v:scans, cls:'accent'}, {k:'pair tests', v:comparisons}, {k:'intervals left', v:list.length}])
-      ];
-      steps.push({lines:[1,2], msg:'No sorting. The plan is to keep merging any overlapping pair until nothing changes.', panels: panels(-1, -1)});
-      let changed = true;
-      let guard = 0;
-      while (changed && guard++ < 40){
-        changed = false; scans++;
-        outer:
-        for (let i = 0; i < list.length; i++){
-          for (let j = i + 1; j < list.length; j++){
-            comparisons++;
-            if (list[i][0] <= list[j][1] && list[j][0] <= list[i][1]){
-              steps.push({lines:[6], msg:'[' + list[i] + '] and [' + list[j] + '] overlap.', panels: panels(i, j)});
-              list[i] = [Math.min(list[i][0], list[j][0]), Math.max(list[i][1], list[j][1])];
-              list.splice(j, 1);
-              steps.push({lines:[7,8,9], msg:'Merged into <b>[' + list[i] + ']</b>. But that merge may now overlap something scanned earlier — so the whole list is <b>rescanned from the top</b>. That restart is the cost.',
-                panels: panels(i, -1, true)});
-              changed = true;
-              break outer;
-            }
-          }
-        }
-      }
-      steps.push({lines:[12], msg:'Stable after <b>' + scans + '</b> full scans and <b>' + comparisons + '</b> pair tests: ' + list.map(x => '[' + x + ']').join(' ') + '. Sorting by start makes every overlap <b>adjacent</b>, and a single pass suffices.',
-        panels: panels(-1, -1)});
-      return steps;
-    }
-  },
-  {
-    label: 'Sort by start, then one pass',
-    badge: 'O(n log n) · optimal.cs · reference solution',
-    blurb: 'Sorted by start, an interval can only ever overlap the one <b>immediately before</b> it — everything earlier ends before that one begins or has already been absorbed into it. So the test is local and one pass is enough.',
-    legend: [
-      {cls:'hot', text:'current interval'},
-      {cls:'done', text:'committed to the output'},
-      {cls:'good', text:'the last merged interval, still extendable'},
-      {cls:'ghost', text:'not reached yet'}
+      {cls:'hot', text:'interval being examined'},
+      {cls:'win', text:'lastMerged — the open block'},
+      {cls:'good', text:'block already finalised'},
+      {cls:'dim', text:'not yet reached'}
     ],
     code: [
       'Array.Sort(intervals, (a, b) => a[0].CompareTo(b[0]));',
       '',
       'var merged = new List<int[]>();',
-      'merged.Add(new int[]{ intervals[0][0], intervals[0][1] });',
+      'merged.Add(new int[] { intervals[0][0], intervals[0][1] });',
       '',
-      'for (int i = 1; i < intervals.Length; i++) {',
+      'for (int i = 1; i < intervals.Length; i++)',
+      '{',
       '    int currentStart = intervals[i][0];',
       '    int currentEnd   = intervals[i][1];',
       '    int[] lastMerged = merged[merged.Count - 1];',
       '',
       '    if (currentStart <= lastMerged[1])',
+      '    {',
+      '        // overlap — absorb it by stretching the end',
       '        lastMerged[1] = Math.Max(lastMerged[1], currentEnd);',
+      '    }',
       '    else',
-      '        merged.Add(new int[]{ currentStart, currentEnd });',
+      '    {',
+      '        // gap — the previous block is final',
+      '        merged.Add(new int[] { currentStart, currentEnd });',
+      '    }',
       '}',
+      '',
       'return merged.ToArray();'
     ],
     simulate(input){
-      const sorted = input.iv.map(x => [...x]).sort((a, b) => a[0] - b[0]);
-      const steps = [];
-      const lo = Math.min(...sorted.map(x => x[0])), hi = Math.max(...sorted.map(x => x[1]));
-      const merged = [];
-      const panels = (i, cls) => [
-        pRanges('Input, sorted by start', sorted.map((x, k) => ({
-          from:x[0], to:x[1], label:'[' + x[0] + ', ' + x[1] + ']',
-          cls: k === i ? (cls || 'hot') : (k < i ? 'dim' : 'ghost')
-        })), lo, hi),
-        pRanges('merged — the output being built', merged.map((x, k) => ({
-          from:x[0], to:x[1], label:'[' + x[0] + ', ' + x[1] + ']',
-          cls: k === merged.length - 1 ? 'good' : 'done'
-        })), lo, hi),
+      const sorted = input.iv.map(p => p.slice()).sort((a, b) => a[0] - b[0]);
+      const fmt = (iv) => '[' + iv[0] + ',' + iv[1] + ']';
+      const given = input.iv.map(fmt).join(' &nbsp; ');
+      const merged = [], steps = [];
+      const panels = (cur, lastCls) => [
+        pSlots('intervals — sorted by start', sorted.map((iv, k) => ({
+          text: fmt(iv),
+          cls: k === cur ? 'hot' : (cur >= 0 && k > cur) ? 'dim' : ''
+        }))),
+        pSlots('merged', merged.length
+          ? merged.map((iv, k) => ({text: fmt(iv), cls: k === merged.length - 1 ? (lastCls || 'win') : 'good'}))
+          : [{text: 'empty', cls: 'dim'}]),
         pPills('', [
-          {k:'last merged end', v: merged.length ? merged[merged.length-1][1] : '–', cls:'accent'},
-          {k:'current start', v: i >= 0 ? sorted[i][0] : '–', cls:'hot'},
-          {k:'output size', v: merged.length}
+          {k:'currentStart', v: cur >= 0 ? sorted[cur][0] : '–', cls:'hot'},
+          {k:'currentEnd', v: cur >= 0 ? sorted[cur][1] : '–'},
+          {k:'lastMerged end', v: merged.length ? merged[merged.length - 1][1] : '–', cls:'accent'},
+          {k:'blocks so far', v: merged.length, cls:'good'}
         ])
       ];
-      steps.push({lines:[1], msg:'Sorted by start: ' + sorted.map(x => '[' + x + ']').join(' ') + '. This is the entire trick — after it, overlaps can only be adjacent.', panels: panels(-1)});
-      merged.push([...sorted[0]]);
-      steps.push({lines:[3,4], msg:'Seed the output with the first interval. A <b>copy</b>, so extending it later does not mutate the input.', panels: panels(0)});
+      steps.push({lines:[1], msg:'Sort by <b>start</b> only — the ends are reconciled later by <code>Math.Max</code>. This one line is what makes a single pass legal: with starts ascending, the only interval that can overlap the block being built is the very next one, because everything after it starts even further right and cannot reach back over a closed gap. Order becomes <b>' + sorted.map(fmt).join(' ') + '</b>.',
+        panels: [pNote('Given order', given)].concat(panels(-1))});
+      merged.push(sorted[0].slice());
+      steps.push({lines:[3,4], msg:'The smallest start opens the first block, ' + fmt(merged[0]) + '. It is <b>copied</b> into a fresh <code>int[]</code> instead of stored by reference, because the loop stretches <code>lastMerged[1]</code> in place — reusing the caller’s row would silently rewrite their input array.',
+        panels: panels(0)});
       for (let i = 1; i < sorted.length; i++){
-        const [cs, ce] = sorted[i];
+        const cs = sorted[i][0], ce = sorted[i][1];
         const last = merged[merged.length - 1];
-        steps.push({lines:[7,8,9], msg:'Interval <b>[' + cs + ', ' + ce + ']</b>. Compare its start against the last merged end (<b>' + last[1] + '</b>) — and only that one.', panels: panels(i)});
+        steps.push({lines:[6,8,9,10], msg:'Take ' + fmt(sorted[i]) + '. The only block it can possibly touch is <code>lastMerged</code> = <b>' + fmt(last) + '</b>, the tail of the list — every earlier block was closed off by a gap, and ' + cs + ' starts after that gap, so no interval from here on can reopen it. That is why there is no inner loop.',
+          panels: panels(i)});
         if (cs <= last[1]){
           const before = last[1];
           last[1] = Math.max(last[1], ce);
-          steps.push({lines:[11,12], msg:'<b>' + cs + ' ≤ ' + before + '</b>, so they touch or overlap. Extend the last interval’s end to <b>max(' + before + ', ' + ce + ') = ' + last[1] + '</b>. <code>Math.Max</code> is doing real work: [1,10] then [2,3] must not shrink to 3.',
-            panels: panels(i, 'good')});
+          steps.push({lines:[12,15], msg:'<code>currentStart ' + cs + ' ≤ ' + before + '</code>, so the two overlap (or touch) — absorb rather than append. <code>Math.Max(' + before + ', ' + ce + ') = ' + last[1] + '</code>' + (ce <= before
+              ? ': ' + fmt(sorted[i]) + ' lies entirely <em>inside</em> the block, so the end must not move. Assigning <code>currentEnd</code> blindly would shrink it to ' + ce + ' and wrongly re-expose the tail.'
+              : ': the block stretches right to ' + last[1] + ', and it stays open because the next interval may overlap this new end.') + ' Block is now <b>' + fmt(last) + '</b>.',
+            panels: panels(i, 'win')});
         } else {
-          merged.push([cs, ce]);
-          steps.push({lines:[13,14], msg:'<b>' + cs + ' &gt; ' + last[1] + '</b> — a genuine gap. The previous interval is <b>final</b>; start a new one.', panels: panels(i, 'done')});
+          steps.push({lines:[12,17,20], msg:'<code>currentStart ' + cs + ' > ' + last[1] + '</code> — a real gap. Since starts only grow from here, nothing remaining can ever reach back to ' + fmt(last) + ', so that block is <b>final</b> and never touched again. ' + fmt(sorted[i]) + ' becomes the new open block.',
+            panels: (function(){ merged.push(sorted[i].slice()); return panels(i, 'win'); })()});
         }
       }
-      steps.push({lines:[16], msg:'Result: ' + merged.map(x => '[' + x + ']').join(' ') + '. One pass after the sort — <b>O(n log n)</b>, dominated entirely by <code>Array.Sort</code>.', panels: panels(-1)});
+      steps.push({lines:[24], msg:'Every interval consumed. <b>' + merged.length + '</b> block' + (merged.length === 1 ? '' : 's') + ': ' + merged.map(fmt).join(' ') + '. The sort dominates at O(n log n); the sweep itself is one O(n) pass that only ever holds a reference to the last block, and the O(log n) space is the sort’s recursion depth.',
+        panels: panels(-1, 'good')});
       return steps;
     }
   }]
@@ -822,9 +771,29 @@ function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
 function resetAll(){ pause(); stepIndex = -1; render(false); }
 function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
 function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
 function tick(){
   if (!playing) return;
-  stepForward();
+  if (!guard(stepForward)) return;
   if (stepIndex >= steps.length - 1){ pause(); return; }
   const s = $('speedInput');
   timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
@@ -848,8 +817,8 @@ function rebuild(){
 }
 
 $('playBtn').addEventListener('click', () => playing ? pause() : play());
-$('fwdBtn').addEventListener('click', () => { pause(); stepForward(); });
-$('backBtn').addEventListener('click', () => { pause(); stepBack(); });
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;

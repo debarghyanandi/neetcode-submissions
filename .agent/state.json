@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-11T05:02:02.648Z",
+  "updatedAt": "2026-09-11T05:06:43.380Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2165,7 +2165,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -2178,7 +2178,23 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "ffd9e2faee07",
+          "renames": []
+        }
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ffd9e2faee07"
+        },
+        "builtAt": "2026-09-11T05:06:43.378Z"
       }
     },
     "merge-two-sorted-linked-lists": {
