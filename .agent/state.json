@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-11T17:12:54.322Z",
+  "updatedAt": "2026-09-11T23:04:37.753Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1310,16 +1310,20 @@
     },
     "k-closest-points-to-origin": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {},
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "b7b8f25ffdbe8ded9f90a152e186c9cf890246f867cc88111f63be67220adc99": "optimal.cs"
+      },
+      "fingerprints": {
+        "b7b8f25ffdbe8ded9f90a152e186c9cf890246f867cc88111f63be67220adc99": "optimal.cs"
+      },
       "lint": {
-        "submission-0.cs": {
+        "optimal.cs": {
           "version": 1,
           "codePrint": "9dc695fc5a28",
           "renames": [
@@ -1327,6 +1331,38 @@
             "res->result"
           ]
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap of size K\",\"approachKey\":\"heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log k)",
+          "space": "O(n)",
+          "algorithm": "max-heap of size K",
+          "approachKey": "heap-size-k",
+          "correct": true,
+          "bruteForce": false
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap of size K\",\"approachKey\":\"heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "9dc695fc5a28"
+        },
+        "builtAt": "2026-09-11T23:04:37.523Z"
       }
     },
     "kth-largest-integer-in-a-stream": {
@@ -2595,6 +2631,17 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       }
+    },
+    "remove-duplicates-from-sorted-array": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "remove-node-from-end-of-linked-list": {
       "topic": "Data Structures & Algorithms",
