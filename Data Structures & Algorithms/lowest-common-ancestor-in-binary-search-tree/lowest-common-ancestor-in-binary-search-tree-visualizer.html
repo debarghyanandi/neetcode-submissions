@@ -233,6 +233,227 @@ button.primary:hover{background:#F7B85F;}
 .pill.good{background:var(--green);color:var(--paper);}
 .note-text{font-size:17px;line-height:1.45;}
 
+/* ==========================================================================
+   Structural panels: tree, linked list, stack/queue, grid, heap.
+   Every one of these reuses the tokens and the state-class names above
+   (hot / good / done / dim / ghost / fresh), so a structural panel is the
+   same drawing as a tile row by construction rather than by resemblance.
+
+   --pscale is the density dial. A panel may ask to be drawn smaller so a
+   big structure fits one screen; panelShell() clamps it before it lands
+   here, so "smaller" can never become "unreadable".
+   ========================================================================== */
+.panel{--pscale:1;}
+.node{
+  position:absolute;box-sizing:border-box;
+  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
+  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transform:translate(-50%,-50%);
+  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
+}
+.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.node.hot{background:var(--orange);}
+.node.in-window{background:var(--orange-soft);}
+.node.good{background:var(--green);color:var(--paper);}
+.node.good .sub{color:var(--paper);}
+.node.done{background:var(--ink);color:var(--paper);}
+.node.done .sub{color:var(--pencil-light);}
+.node.dim{opacity:.4;}
+.node.is-current{box-shadow:3px 3px 0 var(--ink);}
+.node.ghost,.node.nil{
+  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
+  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
+}
+.node.fresh{animation:fill-flash .5s ease;}
+.node.square{border-radius:var(--sk-md);}
+
+/* ---------- tree ---------- */
+.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
+.tree-stage{position:relative;width:max-content;min-width:100%;}
+.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
+.tree-stage .edge{
+  stroke:var(--ink);stroke-width:2;fill:none;
+  transition:stroke .25s ease, opacity .25s ease;
+}
+.tree-stage .edge.dim{opacity:.3;}
+.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
+.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
+.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
+.tree-stage .edge-label{
+  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
+}
+.node-tag{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
+  transition:left .32s ease, top .32s ease, opacity .2s ease;
+}
+.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.node-tag.red{color:var(--red);}
+.node-tag.green{color:var(--green);}
+
+/* ---------- linked list ---------- */
+.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
+.list-scroll{overflow-x:auto;scrollbar-width:thin;}
+.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
+.list-cell{
+  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
+}
+.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
+.list-cell.hot{background:var(--orange);}
+.list-cell.in-window{background:var(--orange-soft);}
+.list-cell.good{background:var(--green);color:var(--paper);}
+.list-cell.good .sub{color:var(--paper);}
+.list-cell.done{background:var(--ink);color:var(--paper);}
+.list-cell.done .sub{color:var(--pencil-light);}
+.list-cell.dim{opacity:.4;}
+.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.list-cell.fresh{animation:fill-flash .5s ease;}
+.list-arrow{
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
+  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
+}
+.list-arrow.back{transform:scaleX(-1);}
+.list-arrow.hot{color:var(--orange);}
+.list-arrow.ghost{color:var(--pencil-light);}
+.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
+.list-null{
+  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
+}
+.list-tag{
+  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;
+}
+.list-tag.visible{opacity:1;}
+.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
+.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.below{bottom:calc(2px * var(--pscale));}
+.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.list-tag.red{color:var(--red);}
+.list-tag.green{color:var(--green);}
+.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
+
+/* ---------- stack / queue buckets ---------- */
+.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
+/* A grid, not a column, so that several buckets of different depths still line
+   their labels up along the top and their floors up along the bottom. Stacked
+   as a plain flex column they drifted against each other and the panel read as
+   three unrelated drawings. */
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
+/* three sides only: the top is open, because that is the whole point of a bucket */
+.bucket-box{
+  align-self:end;
+  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
+  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
+  padding:calc(10px * var(--pscale));
+  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
+}
+.bucket-box::before,.bucket-box::after{
+  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
+}
+.bucket-box::before{left:-2px;}
+.bucket-box::after{right:-2px;}
+.bucket.queue .bucket-box{
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
+  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
+}
+.cell{
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
+.cell.hot{background:var(--orange);}
+.cell.head{background:var(--orange);}
+.cell.good{background:var(--green);color:var(--paper);}
+.cell.good small{color:var(--paper);}
+.cell.done{background:var(--ink);color:var(--paper);}
+.cell.done small{color:var(--pencil-light);}
+.cell.dim{opacity:.42;}
+.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.cell.fresh{animation:fill-flash .5s ease;}
+.cell.popped{animation:pop-fade .55s ease;}
+.bucket-empty{
+  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
+  text-align:center;font-size:15px;color:var(--pencil);
+}
+.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
+/* A normal flex child, appended last, so column-reverse lands it directly above
+   the topmost item. Absolutely positioned against the box it floated at the top
+   of the bucket instead - pointing at empty space above a two-item stack. */
+.bucket-top{
+  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
+  line-height:1;padding:0 2px calc(2px * var(--pscale));
+}
+.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
+
+/* ---------- grid / matrix ---------- */
+.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
+.grid-stage{position:relative;width:max-content;}
+.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
+.grid-tbl th{
+  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
+  padding:0;min-width:calc(20px * var(--pscale));
+}
+.grid-cell{
+  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
+  vertical-align:middle;white-space:nowrap;position:relative;
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.grid-cell.hot{background:var(--orange);}
+.grid-cell.in-window{background:var(--orange-soft);}
+.grid-cell.good{background:var(--green);color:var(--paper);}
+.grid-cell.good .sub{color:var(--paper);}
+.grid-cell.done{background:var(--ink);color:var(--paper);}
+.grid-cell.done .sub{color:var(--pencil-light);}
+.grid-cell.dim{opacity:.4;}
+.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
+.grid-cell.fresh{animation:fill-flash .5s ease;}
+.grid-box{
+  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
+  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
+}
+.grid-box.visible{opacity:1;}
+.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
+
+/* ---------- heap (array and the tree it implies) ---------- */
+.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
+.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
+.heap-slot{
+  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
+.heap-slot.hot{background:var(--orange);}
+.heap-slot.in-window{background:var(--orange-soft);}
+.heap-slot.good{background:var(--green);color:var(--paper);}
+.heap-slot.good .idx{color:var(--paper);}
+.heap-slot.done{background:var(--ink);color:var(--paper);}
+.heap-slot.done .idx{color:var(--pencil-light);}
+.heap-slot.dim{opacity:.4;}
+.heap-slot.fresh{animation:fill-flash .5s ease;}
+.heap-caption{font-size:15px;color:var(--pencil);}
+
 /* ---------- code panel ---------- */
 .code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
 .code .line{padding:1px 8px;border-radius:var(--sk-sm);}
@@ -309,6 +530,48 @@ function pNote(title, html){ return {t:'note', title: title, html: html}; }
 function mapChips(map, hot){
   return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
 }
+/* ---- structural panel constructors ----
+   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
+   stack as a bucket, a matrix as a grid - and every one of them uses the same
+   ink, paper and orange as the tile row above, because they all read the same
+   CSS custom properties.
+
+   Each of these accepts an `opts` object as its last argument. `scale` lives
+   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
+   fits one screen. It is clamped on the way in, so it cannot make a panel
+   unreadable however small a number is passed. */
+function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
+function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
+function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
+function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
+function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
+/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
+   the {id, v, parent, side} node list pTree wants. A null does not get children,
+   which is the part that is easy to get wrong by hand. */
+function treeFromLevelOrder(vals){
+  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
+  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
+  const q = ['n0'];
+  let qi = 0, i = 1, made = 1;
+  while (qi < q.length && i < vals.length){
+    const pid = q[qi++];
+    for (const side of ['L','R']){
+      if (i >= vals.length) break;
+      const v = vals[i++];
+      if (v === null || v === undefined) continue;
+      const id = 'n' + (made++);
+      nodes.push({id: id, v: v, parent: pid, side: side});
+      q.push(id);
+    }
+  }
+  return nodes;
+}
+/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
+function heapNodes(values){
+  return values.map((v, i) => ({
+    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
+  }));
+}
 /* ---- input parsing ---- */
 function parseInts(raw, cap){
   const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
@@ -316,6 +579,21 @@ function parseInts(raw, cap){
   const nums = parts.map(Number);
   if (nums.some(n => !Number.isFinite(n))) return null;
   return cap ? nums.slice(0, cap) : nums;
+}
+/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
+   all mean "no node here", because every source writes it differently. */
+function parseLevelOrder(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim());
+  const out = [];
+  for (const s of parts){
+    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    out.push(n);
+  }
+  while (out.length && out[out.length - 1] === null) out.pop();
+  if (!out.length || out[0] === null) return null;
+  return cap ? out.slice(0, cap) : out;
 }
 function randInts(n, lo, hi){
   return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
@@ -327,268 +605,291 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Lowest Common Ancestor in a BST',
-  note: 'the answer is the first node whose value the two targets straddle',
+  note: 'in a BST you never search for the split point - you walk to it',
   inputs: [
-    {id:'t', label:'BST inserts', value:'6,2,8,0,4,7,9,3,5', width:230},
+    {id:'t', label:'tree (level order)', value:'6,2,8,0,4,7,9,null,null,3,5', width:300},
     {id:'p', label:'p', value:'3', width:70},
     {id:'q', label:'q', value:'5', width:70}
   ],
   parse(raw){
-    const vals = parseInts(raw.t, 15);
-    if (!vals) return {ok:false, msg:'Enter a valid comma-separated list of node values.'};
-    const uniq = [];
-    vals.forEach(v => { if (uniq.indexOf(v) < 0) uniq.push(v); });
-    if (uniq.length < 3) return {ok:false, msg:'Needs at least three distinct node values.'};
+    const vals = parseLevelOrder(raw.t, 31);
+    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 6,2,8,0,4,7,9,null,null,3,5'};
+    const nodes = treeFromLevelOrder(vals);
+    if (nodes.length < 2) return {ok:false, msg:'Needs at least two nodes.'};
+    const seen = {};
+    for (const n of nodes){
+      if (seen[n.v]) return {ok:false, msg:'A BST here must have distinct node values.'};
+      seen[n.v] = true;
+    }
+    const byId = {}, kid = {};
+    nodes.forEach(n => { byId[n.id] = n; });
+    nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+    const order = [];
+    (function walk(id){
+      if (!id) return;
+      const k = kid[id] || {};
+      walk(k.L); order.push(byId[id].v); walk(k.R);
+    })('n0');
+    for (let i = 1; i < order.length; i++){
+      if (order[i] <= order[i - 1]) return {ok:false, msg:'Not a BST: everything left of a node must be smaller, everything right larger.'};
+    }
     const pv = parseInts(raw.p, 1), qv = parseInts(raw.q, 1);
     if (!pv || !qv) return {ok:false, msg:'p and q must each be a single number.'};
-    const p = pv[0], q = qv[0];
-    if (uniq.indexOf(p) < 0 || uniq.indexOf(q) < 0) return {ok:false, msg:'p and q must both be values present in the tree.'};
-    if (p === q) return {ok:false, msg:'Pick two different nodes for p and q.'};
-    return {ok:true, value:{vals:uniq, p:p, q:q}, normalized:{t:uniq.join(','), p:String(p), q:String(q)}};
+    if (!seen[pv[0]]) return {ok:false, msg:'p = ' + pv[0] + ' is not a node in this tree.'};
+    if (!seen[qv[0]]) return {ok:false, msg:'q = ' + qv[0] + ' is not a node in this tree.'};
+    return {
+      ok:true,
+      value:{vals: vals, p: pv[0], q: qv[0]},
+      normalized:{t: vals.map(v => v === null ? 'null' : v).join(','), p: String(pv[0]), q: String(qv[0])}
+    };
   },
   shuffle(){
-    const pool = [];
-    for (let i = 0; i <= 15; i++) pool.push(i);
-    for (let i = pool.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
-    }
-    const vals = pool.slice(0, 9);
-    const a = Math.floor(Math.random() * vals.length);
-    let b = Math.floor(Math.random() * vals.length);
-    if (b === a) b = (a + 1) % vals.length;
-    return {t: vals.join(','), p: String(vals[a]), q: String(vals[b])};
+    const a = [];
+    let x = 1 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < 7; i++){ a.push(x); x += 1 + Math.floor(Math.random() * 3); }
+    const t = [a[3], a[1], a[5], a[0], a[2], a[4], a[6]];
+    let i = Math.floor(Math.random() * 7), j = Math.floor(Math.random() * 7);
+    while (j === i) j = Math.floor(Math.random() * 7);
+    return {t: t.join(','), p: String(a[i]), q: String(a[j])};
   },
   solutions: [
   {
-    label: 'Walk down, let the ordering pick the direction',
-    badge: 'O(n) time · O(1) space · iterative BST descent · optimal.cs',
-    blurb: 'Every BST node splits its subtree into <b>smaller-left</b> and <b>larger-right</b>. If both targets fall on the same side of a node, that node is not the meeting point and the entire other side is dead. The first node the pair <em>straddles</em> holds both and no child can, so it is the lowest ancestor — found in one descent, no stack.',
+    label: 'Walk down until the values split',
+    badge: 'O(n) time · O(1) space · BST descent · optimal.cs',
+    blurb: 'The lowest common ancestor is the first node the two values <b>disagree</b> about. While both are larger than <code>curr</code>, both live in the right subtree, so <code>curr</code> cannot be the answer and the whole left side is gone; same story mirrored. The moment one is not larger and one is not smaller, the paths part here — that node is the LCA.',
     legend: [
-      {cls:'hot', text:'node — where the walk is now'},
-      {cls:'win', text:'p and q'},
-      {cls:'head', text:'ancestors already passed'},
-      {cls:'dim', text:'subtree ruled out'},
+      {cls:'hot', text:'curr'},
+      {cls:'in-window', text:'p and q, the two targets'},
+      {cls:'dim', text:'subtree the ordering ruled out'},
+      {cls:'done', text:'already walked past'},
       {cls:'good', text:'the LCA'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'This version is a plain while loop over one pointer - there is no recursion and no stack to draw, which is exactly the space win over the recursive solution below.'},
     code: [
-      'TreeNode node = root;',
+      'TreeNode curr = root;',
       '',
-      'while (node != null)',
+      'while (curr != null)',
       '{',
-      '    if (p.val > node.val && q.val > node.val)',
+      '    if (p.val > curr.val && q.val > curr.val)',
       '    {',
-      '        node = node.right;   // both targets are larger',
+      '        curr = curr.right;   // both targets are bigger',
       '    }',
-      '    else if (p.val < node.val && q.val < node.val)',
+      '    else if (p.val < curr.val && q.val < curr.val)',
       '    {',
-      '        node = node.left;    // both targets are smaller',
+      '        curr = curr.left;    // both targets are smaller',
       '    }',
       '    else',
       '    {',
-      '        return node;         // the pair straddles here',
+      '        return curr;         // the values split right here',
       '    }',
       '}',
       'return null;'
     ],
     simulate(input){
-      const vals = input.vals, p = input.p, q = input.q, steps = [];
-      const lo = Math.min(p, q), hi = Math.max(p, q);
-      const build = (list) => {
-        let r = null;
-        list.forEach(v => {
-          const n = {val:v, left:null, right:null};
-          if (!r){ r = n; return; }
-          let c = r;
-          for(;;){
-            if (v < c.val){ if (!c.left){ c.left = n; return; } c = c.left; }
-            else { if (!c.right){ c.right = n; return; } c = c.right; }
-          }
-        });
-        return r;
+      const P = input.p, Q = input.q;
+      const nodes = treeFromLevelOrder(input.vals);
+      const byId = {}, kid = {};
+      nodes.forEach(n => { byId[n.id] = n; });
+      nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+      const child = (id, s) => (kid[id] || {})[s] || null;
+      const find = (v) => { for (const n of nodes) if (n.v === v) return n.id; return null; };
+      const subtree = (id) => {
+        const out = [], st = id ? [id] : [];
+        while (st.length){
+          const c = st.pop(); out.push(c);
+          const k = kid[c] || {};
+          if (k.L) st.push(k.L);
+          if (k.R) st.push(k.R);
+        }
+        return out;
       };
-      const root = build(vals);
-      const collect = (n, out) => { if (!n) return out; out.push(n.val); collect(n.left, out); collect(n.right, out); return out; };
-      const levels = [];
-      (function place(n, d, tag){
-        if (!n) return;
-        if (!levels[d]) levels[d] = [];
-        levels[d].push({node:n, tag:tag});
-        place(n.left, d + 1, 'left of ' + n.val);
-        place(n.right, d + 1, 'right of ' + n.val);
-      })(root, 0, 'root');
+      const pid = find(P), qid = find(Q);
+      const dim = {}, done = {};
+      let ansId = null, hops = 0;
+      const steps = [];
 
-      let done = [], pruned = [], ans = null;
-      const walk = [];
-      const rows = (cur) => levels.map((row, d) => ({
-        left: 'depth ' + d,
-        items: row.map(e => {
-          const v = e.node.val;
-          const marks = [];
-          if (v === p) marks.push('p');
-          if (v === q) marks.push('q');
-          const cls = (ans !== null && v === ans) ? 'good'
-            : v === cur ? 'hot'
-            : pruned.indexOf(v) >= 0 ? 'dim'
-            : marks.length ? 'win'
-            : done.indexOf(v) >= 0 ? 'head' : '';
-          return {text: String(v), sub: marks.length ? marks.join(' · ') : e.tag, cls: cls};
-        })
-      }));
-      const panels = (cur) => [
-        pChips('BST by depth', rows(cur)),
-        pSlots('Path from the root', walk.length
-          ? walk.map((v, i) => ({text: String(v), cls: (ans !== null && v === ans) ? 'good' : (i === walk.length - 1 ? 'hot' : 'head')}))
-          : [{text: String(root.val), cls:'hot'}]),
-        pPills('', [
-          {k:'node', v: cur === null ? 'null' : cur, cls:'hot'},
-          {k:'p.val', v: p},
-          {k:'q.val', v: q},
-          {k:'result', v: ans === null ? '–' : ans, cls:'good'}
+      const panels = (curId, verdict) => [
+        pTree('BST', nodes.map(n => ({
+          id: n.id, v: n.v, parent: n.parent, side: n.side,
+          cls: n.id === ansId ? 'good'
+             : n.id === curId ? 'hot'
+             : dim[n.id] ? 'dim'
+             : (n.id === pid || n.id === qid) ? 'in-window'
+             : done[n.id] ? 'done' : ''
+        })), {
+          tags: (curId ? [{name:'curr', id: curId, cls:'accent'}] : []).concat([
+            {name:'p', id: pid}, {name:'q', id: qid}
+          ]),
+          scale: 0.8
+        }),
+        pPills('state', [
+          {k:'curr', v: curId ? byId[curId].v : 'null', cls:'hot'},
+          {k:'p.val', v: P},
+          {k:'q.val', v: Q},
+          {k:'this node says', v: verdict},
+          {k:'nodes visited', v: hops}
         ])
       ];
 
-      steps.push({lines:[1,3], msg:'One reference, <code>node</code>, starts at the root <b>' + root.val + '</b>. The BST invariant — everything left is smaller, everything right is larger — means the targets <b>p=' + p + '</b> and <b>q=' + q + '</b> can only be in one of two situations at each node: both on the same side, or split across it. That is the whole algorithm. Line 18 is unreachable while both targets really are in the tree.', panels: panels(root.val)});
+      let cur = 'n0';
+      hops = 1;
+      steps.push({lines:[1], msg:'<code>curr</code> starts at the root, because the root is the one node guaranteed to be an ancestor of both <b>' + P + '</b> and <b>' + Q + '</b>. Everything after this is a single pointer moving down — no queue, no recursion, no second traversal.', panels: panels(cur, 'not asked yet')});
 
-      let node = root;
-      while (node){
-        const v = node.val;
-        walk.push(v);
-        if (p > v && q > v){
-          pruned = pruned.concat(collect(node.left, []));
-          steps.push({lines:[5,7], msg:'At node <b>' + v + '</b>: both ' + p + ' and ' + q + ' are larger, so both live in the right subtree. Node ' + v + ' and everything to its left are smaller than both targets, so that entire side cannot hold either one — a single comparison discards it without a visit.', panels: panels(v)});
-          done.push(v);
-          node = node.right;
-        } else if (p < v && q < v){
-          pruned = pruned.concat(collect(node.right, []));
-          steps.push({lines:[9,11], msg:'At node <b>' + v + '</b>: both ' + p + ' and ' + q + ' are smaller, so both live in the left subtree. The right subtree holds only values above ' + v + ' and is dropped whole. <code>node</code> is simply overwritten — nothing about ' + v + ' needs remembering, because the answer is a node we are still walking toward.', panels: panels(v)});
-          done.push(v);
-          node = node.left;
+      while (true){
+        const v = byId[cur].v;
+        if (P > v && Q > v){
+          const gone = child(cur, 'L');
+          subtree(gone).forEach(id => dim[id] = true);
+          steps.push({lines:[3,5,7], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are larger than <b>' + v + '</b>, so in a BST both must live in the right subtree. Neither the left subtree nor <b>' + v + '</b> itself can be an ancestor of either one, so half the tree is discarded in a single comparison and <code>curr</code> steps right.', panels: panels(cur, 'both bigger, go right')});
+          done[cur] = true;
+          cur = child(cur, 'R');
+          hops++;
+        } else if (P < v && Q < v){
+          const gone = child(cur, 'R');
+          subtree(gone).forEach(id => dim[id] = true);
+          steps.push({lines:[3,9,11], msg:'Both targets are smaller than <b>' + v + '</b>, so both sit in the left subtree. The mirror of the last case: the right subtree and <b>' + v + '</b> are ruled out together, and <code>curr</code> steps left.', panels: panels(cur, 'both smaller, go left')});
+          done[cur] = true;
+          cur = child(cur, 'L');
+          hops++;
         } else {
-          ans = v;
-          steps.push({lines:[13,15], msg:'At node <b>' + v + '</b>: ' + lo + ' ≤ ' + v + ' ≤ ' + hi + ', so the pair straddles it (or one target <em>is</em> it). Both targets are inside this subtree, and either child would keep only one of them — so no deeper node is a common ancestor. <b>' + v + '</b> is the lowest.', panels: panels(v)});
+          ansId = cur;
+          const why = (P === v || Q === v)
+            ? 'one of the targets <em>is</em> this node, and a node is allowed to be its own ancestor'
+            : '<b>' + Math.min(P, Q) + '</b> is below it and <b>' + Math.max(P, Q) + '</b> is above it, so the two search paths part company here';
+          steps.push({lines:[3,13,15], msg:'At <b>' + v + '</b> the two values stop agreeing: ' + why + '. Every node further down holds only one of them, so this is the <b>lowest</b> node holding both. Return it immediately.', panels: panels(cur, 'they split here')});
           break;
         }
       }
 
-      steps.push({lines:[15], msg:'Answer <b>' + ans + '</b> after ' + walk.length + ' comparison' + (walk.length === 1 ? '' : 's') + ' — one per level descended. No parent pointers, no path list, no stack: the node value alone decided the direction every time. The cost is the tree height, which is O(log n) when balanced and O(n) for a chain-shaped tree.', panels: panels(ans).concat([pNote('Why one pass is enough', 'The descent never has to back up. Once both targets are known to be on one side, the other side is eliminated <b>permanently</b> — the same reasoning that makes a binary search irreversible.')])});
+      steps.push({lines:[15,18], msg:'Answer <b>' + byId[ansId].v + '</b>, found in ' + hops + ' node visit(s) — one pointer, no extra memory. The loop can only ever walk downward, so it is O(h): O(log n) on a balanced tree and O(n) on a degenerate one. Line 18 is unreachable for a real tree; it only fires if <code>root</code> was null to begin with.', panels: panels(null, 'done')});
       return steps;
     }
   },
   {
     label: 'The same descent, written as recursion',
     badge: 'O(n) time · O(n) space · recursive BST descent · suboptimal.cs',
-    blurb: 'Identical logic: recompute <code>min</code>/<code>max</code>, ask whether <code>root</code> falls inside that range, otherwise recurse into the one child that can still contain both. It visits exactly the same nodes — but each level parks a stack frame that exists only to hand the result back up, so the walk costs O(h) space instead of a single reference.',
+    blurb: 'Identical logic with the bounds named up front: <code>min</code> and <code>max</code> straddling <code>root.val</code> is the same test as “the values split here”. But each step is a <b>call</b>, so the path is held open on the call stack and the answer is copied back up through every frame. Same visits, O(h) stack instead of O(1), and <code>min</code>/<code>max</code> recomputed per frame.',
     legend: [
-      {cls:'hot', text:'root of the current call'},
-      {cls:'win', text:'p and q'},
-      {cls:'head', text:'frames still open below'},
-      {cls:'dim', text:'subtree never entered'},
-      {cls:'good', text:'the returned LCA'}
+      {cls:'hot', text:'the frame running now'},
+      {cls:'done', text:'frames parked below, waiting'},
+      {cls:'in-window', text:'p and q, the two targets'},
+      {cls:'dim', text:'subtree never visited'},
+      {cls:'good', text:'the LCA'}
     ],
     code: [
-      'int min = Math.Min(p.val, q.val);',
+      'int min = Math.Min(p.val, q.val);   // recomputed every call',
       'int max = Math.Max(p.val, q.val);',
       '',
       'if (max >= root.val && min <= root.val)',
-      '    return root;                       // root splits the pair',
+      '    return root;',
       '',
       'if (min > root.val)',
       '{',
       '    return LowestCommonAncestor(root.right, p, q);',
       '}',
       'else',
-      '    return LowestCommonAncestor(root.left, p, q);'
+      '{',
+      '    return LowestCommonAncestor(root.left, p, q);',
+      '}'
     ],
     simulate(input){
-      const vals = input.vals, p = input.p, q = input.q, steps = [];
-      const lo = Math.min(p, q), hi = Math.max(p, q);
-      const build = (list) => {
-        let r = null;
-        list.forEach(v => {
-          const n = {val:v, left:null, right:null};
-          if (!r){ r = n; return; }
-          let c = r;
-          for(;;){
-            if (v < c.val){ if (!c.left){ c.left = n; return; } c = c.left; }
-            else { if (!c.right){ c.right = n; return; } c = c.right; }
-          }
-        });
-        return r;
+      const P = input.p, Q = input.q;
+      const lo = Math.min(P, Q), hi = Math.max(P, Q);
+      const nodes = treeFromLevelOrder(input.vals);
+      const byId = {}, kid = {};
+      nodes.forEach(n => { byId[n.id] = n; });
+      nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+      const child = (id, s) => (kid[id] || {})[s] || null;
+      const find = (v) => { for (const n of nodes) if (n.v === v) return n.id; return null; };
+      const subtree = (id) => {
+        const out = [], st = id ? [id] : [];
+        while (st.length){
+          const c = st.pop(); out.push(c);
+          const k = kid[c] || {};
+          if (k.L) st.push(k.L);
+          if (k.R) st.push(k.R);
+        }
+        return out;
       };
-      const root = build(vals);
-      const collect = (n, out) => { if (!n) return out; out.push(n.val); collect(n.left, out); collect(n.right, out); return out; };
-      const levels = [];
-      (function place(n, d, tag){
-        if (!n) return;
-        if (!levels[d]) levels[d] = [];
-        levels[d].push({node:n, tag:tag});
-        place(n.left, d + 1, 'left of ' + n.val);
-        place(n.right, d + 1, 'right of ' + n.val);
-      })(root, 0, 'root');
-
-      let pruned = [], ans = null;
+      const pid = find(P), qid = find(Q);
+      const dim = {};
       const frames = [];
-      const rows = (cur) => levels.map((row, d) => ({
-        left: 'depth ' + d,
-        items: row.map(e => {
-          const v = e.node.val;
-          const marks = [];
-          if (v === p) marks.push('p');
-          if (v === q) marks.push('q');
-          const open = frames.some(f => f.val === v);
-          const cls = (ans !== null && v === ans) ? 'good'
-            : v === cur ? 'hot'
-            : pruned.indexOf(v) >= 0 ? 'dim'
-            : marks.length ? 'win'
-            : open ? 'head' : '';
-          return {text: String(v), sub: marks.length ? marks.join(' · ') : e.tag, cls: cls};
-        })
-      }));
-      const panels = (cur) => [
-        pChips('BST by depth', rows(cur)),
-        pSlots('Call stack (bottom → top)', frames.map((f, i) => ({text: 'LCA(' + f.val + ')', cls: i === frames.length - 1 ? 'hot' : 'head'}))),
-        pPills('', [
-          {k:'root.val', v: cur === null ? 'null' : cur, cls:'hot'},
+      let ansId = null, opened = 0;
+      const steps = [];
+
+      const panels = (curId, popId, freshId) => [
+        pTree('BST', nodes.map(n => ({
+          id: n.id, v: n.v, parent: n.parent, side: n.side,
+          cls: n.id === ansId ? 'good'
+             : n.id === curId ? 'hot'
+             : frames.some(f => f.id === n.id) ? 'done'
+             : dim[n.id] ? 'dim'
+             : (n.id === pid || n.id === qid) ? 'in-window' : ''
+        })), {
+          tags: (curId ? [{name:'root', id: curId, cls:'accent'}] : []).concat([
+            {name:'p', id: pid}, {name:'q', id: qid}
+          ]),
+          scale: 0.8
+        }),
+        pStack('call stack', [{
+          label: 'LowestCommonAncestor(root, p, q)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: 'root = ' + byId[f.id].v,
+            sub: 'min ' + lo + ', max ' + hi,
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.id === freshId,
+            popped: f.id === popId && i === frames.length - 1
+          })),
+          empty: 'all frames returned',
+          foot: 'first call',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'root.val', v: curId ? byId[curId].v : 'unwound', cls:'hot'},
           {k:'min', v: lo},
           {k:'max', v: hi},
-          {k:'depth', v: frames.length},
-          {k:'returned', v: ans === null ? '–' : ans, cls:'good'}
+          {k:'frames open', v: frames.length},
+          {k:'calls made', v: opened}
         ])
       ];
 
-      let node = root;
-      while (node){
-        const v = node.val;
-        frames.push({val:v, line:0});
-        steps.push({lines:[1,2], msg:'Call ' + frames.length + ' enters with <code>root = ' + v + '</code> and recomputes <code>min=' + lo + '</code>, <code>max=' + hi + '</code>. p and q never change, so these two lines produce the same pair on every call — harmless, but it is per-frame work the loop version does once, and there is no <code>root == null</code> guard, so this relies on p and q genuinely being in the tree.', panels: panels(v)});
+      let cur = 'n0';
+      frames.push({id: cur, site: 5});
+      opened = 1;
+      steps.push({lines:[1,2], msg:'The first call opens with <code>root</code> = <b>' + byId[cur].v + '</b>. It sorts the two targets into <code>min</code> = <b>' + lo + '</b> and <code>max</code> = <b>' + hi + '</b> so the test below can be written once instead of twice — but note these two lines run again in <em>every</em> frame, recomputing the same two constants all the way down.', panels: panels(cur, null, cur)});
+
+      while (true){
+        const v = byId[cur].v;
         if (hi >= v && lo <= v){
-          steps.push({lines:[4], msg:'Test at <b>' + v + '</b>: is ' + lo + ' ≤ ' + v + ' ≤ ' + hi + '? <b>Yes.</b> The pair straddles this node (or one target is this node), so both are inside its subtree while either child would keep only one — this is the lowest common ancestor.', panels: panels(v)});
-          ans = v;
-          steps.push({lines:[5], msg:'Line 5 returns <b>' + v + '</b> — but only to the caller one level up. Every frame opened on the way down is still parked, waiting to pass the value along.', panels: panels(v)});
+          ansId = cur;
+          steps.push({lines:[4,5], msg:'<code>max &gt;= root.val &amp;&amp; min &lt;= root.val</code>: <b>' + v + '</b> sits between the two targets, which is the split point — the same condition the loop version calls “they disagree here”. This frame returns <b>' + v + '</b> and pops.', panels: panels(cur, cur, null)});
           break;
         }
-        steps.push({lines:[4], msg:'Test at <b>' + v + '</b>: is ' + lo + ' ≤ ' + v + ' ≤ ' + hi + '? <b>No</b> — ' + (lo > v ? 'both targets are larger than ' + v : 'both targets are smaller than ' + v) + '. This node is a common ancestor, but not the <em>lowest</em> one, since one child still contains both.', panels: panels(v)});
         if (lo > v){
-          pruned = pruned.concat(collect(node.left, []));
-          frames[frames.length - 1].line = 9;
-          steps.push({lines:[7,9], msg:'<code>min=' + lo + ' > ' + v + '</code>, so the search recurses into the right child. The left subtree is never entered — same pruning as the loop. What differs is the bookkeeping: frame LCA(' + v + ') stays alive on the stack purely to receive whatever the recursive call eventually returns.', panels: panels(v)});
-          node = node.right;
+          frames[frames.length - 1].site = 9;
+          subtree(child(cur, 'L')).forEach(id => dim[id] = true);
+          steps.push({lines:[4,7,9], msg:'Both targets are above <b>' + v + '</b>, so the answer is somewhere right. The method calls itself on <code>root.right</code> — and because this is a <code>return</code> of the call, the frame has nothing left to do afterwards, yet C# still keeps it parked on the stack until the answer comes back.', panels: panels(cur, null, null)});
+          cur = child(cur, 'R');
         } else {
-          pruned = pruned.concat(collect(node.right, []));
-          frames[frames.length - 1].line = 12;
-          steps.push({lines:[11,12], msg:'Not both larger, and not straddling, so both targets must be smaller: the else branch recurses into the left child. The right subtree is skipped, and another frame goes onto the stack on top of LCA(' + v + ').', panels: panels(v)});
-          node = node.left;
+          frames[frames.length - 1].site = 13;
+          subtree(child(cur, 'R')).forEach(id => dim[id] = true);
+          steps.push({lines:[4,7,11,13], msg:'<code>min</code> is not above <b>' + v + '</b> and the split test failed, so both targets must be below it: recurse on <code>root.left</code>. The right subtree is never touched.', panels: panels(cur, null, null)});
+          cur = child(cur, 'L');
         }
+        frames.push({id: cur, site: 5});
+        opened++;
+        steps.push({lines:[1,2], msg:'A fresh frame stacks on top with <code>root</code> = <b>' + byId[cur].v + '</b>, and lines 1-2 compute <code>min</code> = <b>' + lo + '</b> and <code>max</code> = <b>' + hi + '</b> all over again. The parent frame underneath is frozen mid-return, holding memory for no reason other than the shape of the code.', panels: panels(cur, null, cur)});
       }
 
-      for (let i = frames.length - 2; i >= 0; i--){
-        const f = frames[i];
-        frames.length = i + 1;
-        steps.push({lines:[f.line], msg:'Frame LCA(' + f.val + ') resumes at its <code>return</code> and passes <b>' + ans + '</b> upward unchanged. It made no decision of its own after recursing — the frame existed only to forward a result.', panels: panels(ans)});
+      frames.pop();
+      while (frames.length){
+        const f = frames[frames.length - 1];
+        steps.push({lines:[f.site], msg:'The value comes back to the frame with <code>root</code> = <b>' + byId[f.id].v + '</b>, which was parked on this line. It does <em>no</em> work with it — it just returns <b>' + byId[ansId].v + '</b> onward. This is the whole cost of the recursion: ' + frames.length + ' more frame(s) of copying an answer that was already final.', panels: panels(f.id, f.id, null)});
+        frames.pop();
       }
 
-      steps.push({lines:[5], msg:'The top-level call yields <b>' + ans + '</b>, the same node the loop found by visiting the same nodes in the same order. The extra cost is space: one frame per level, so O(h) — O(log n) on a balanced tree and O(n) on a chain — where the iterative version reassigns one reference and keeps nothing.', panels: panels(ans).concat([pNote('Same walk, extra stack', 'This descent is naturally <b>tail recursive</b>: the recursive call is the last thing each frame does. C# does not guarantee tail-call elimination, so those frames are real. Replacing the call with <code>root = root.right;</code> inside a loop is exactly the optimal version.')])});
+      steps.push({lines:[1,2], msg:'Answer <b>' + byId[ansId].v + '</b> after ' + opened + ' call(s) — the exact same nodes the loop visited, so the time is identical. The difference is the stack that just drained: O(h) frames, which is O(n) on a degenerate tree and can overflow. Worth noting too, there is no <code>root == null</code> guard here, so a p or q that is not in the tree would run off the bottom and throw.', panels: panels(null, null, null)});
       return steps;
     }
   }]
@@ -696,6 +997,9 @@ function renderPanels(panels, animate){
     }
     el.querySelector('.panel-title').innerHTML = p.title || '';
     el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    // The density dial. Clamped here, once, so no renderer has to defend
+    // itself against a panel that asked to be drawn at 0.1.
+    el.style.setProperty('--pscale', pscale(p));
     RENDER[p.t](el.querySelector('.body'), p, animate);
   });
 }
@@ -893,6 +1197,490 @@ RENDER.note = function(body, p){
   n.innerHTML = p.html;
 };
 
+/* ==========================================================================
+   Structural renderers.
+
+   These exist because every panel above this line is a row of boxes. With only
+   those, a tree came out as "nodes grouped by depth" and a stack as a row of
+   chips - the animation was correct and the shape was a lie. The rule they all
+   follow: the PROBLEM object supplies data, the chassis does every bit of
+   layout arithmetic. A generated definition that had to compute its own x and y
+   would be a generated definition that silently drifts.
+   ========================================================================== */
+
+/* The density dial, clamped. A panel may ask to be drawn smaller so a big
+   structure fits one screen; it may not ask to be drawn illegibly. */
+const SCALE_MIN = 0.7;
+function pscale(p){
+  const v = Number(p && p.scale);
+  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
+}
+
+/* Rebuild a container's children only when the *identity* of what it holds
+   changes. Keeping elements between steps is what makes a node glide to its new
+   position instead of blinking there. */
+function keyed(el, key){
+  if (el.dataset.key === key) return false;
+  el.dataset.key = key;
+  el.innerHTML = '';
+  return true;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const mkSvg = (name) => document.createElementNS(SVG_NS, name);
+
+/* ---------------- shared tree layout ----------------
+   Used by both the tree panel and the heap panel, which is a tree with its
+   edges implied by array indices. Leaves take the next free column; a parent
+   centres over its children. Depth comes from the parent chain, so the caller
+   never states a depth and cannot state a wrong one. */
+function layoutTree(nodes, k){
+  const byId = new Map();
+  const kids = new Map();
+  const roots = [];
+  const work = nodes.map((n) => ({
+    id: String(n.id), v: n.v,
+    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
+    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
+    nil: n.v === null || n.v === undefined,
+  }));
+  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
+  work.forEach((n) => {
+    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
+    else { n.parent = null; roots.push(n.id); }
+  });
+  // Left child first when sides are given, otherwise the order they arrived in.
+  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
+  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
+
+  const X = new Map(), D = new Map(), seen = new Set();
+  let col = 0;
+  const walk = (id, d) => {
+    if (seen.has(id)) return;          // malformed data must not hang the page
+    seen.add(id);
+    D.set(id, d);
+    const cs = kids.get(id) || [];
+    if (!cs.length){ X.set(id, col++); return; }
+    cs.forEach((c) => walk(c, d + 1));
+    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
+    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
+  };
+  roots.forEach((r) => { walk(r, 0); col += 0.7; });
+  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
+
+  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
+  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
+  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
+  work.forEach((n) => {
+    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
+    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
+  });
+  return {
+    work, byId,
+    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
+    height: PAD * 2 + NODE + maxD * ROWH,
+  };
+}
+
+/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
+   absolutely positioned node divs, so edges never paint over a value. */
+function drawTree(stage, nodes, p, k){
+  const L = layoutTree(nodes, k);
+  const links = p.links || [];
+  stage.style.width = L.width + 'px';
+  stage.style.height = L.height + 'px';
+
+  let svg = stage.querySelector('svg');
+  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
+  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
+  // positioned in pixels, so anything that scales the edge layer independently
+  // - which min-width:100% on the stage does the moment the tree is narrower
+  // than the panel - draws the edges somewhere the nodes are not.
+  svg.setAttribute('width', L.width);
+  svg.setAttribute('height', L.height);
+  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+
+  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
+    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
+    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
+      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
+                    cls: e.cls || 'ghost', label: e.label || ''})));
+
+  if (keyed(svg, edges.map((e) => e.key).join('|'))){
+    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
+  }
+  edges.forEach((e, i) => {
+    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
+    line.setAttribute('class', 'edge ' + (e.cls || ''));
+    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
+    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
+    text.setAttribute('y', (e.a.py + e.b.py) / 2);
+    text.textContent = e.label || '';
+  });
+
+  const wrapKey = L.work.map((n) => n.id).join('|');
+  let holder = stage.querySelector('.tree-nodes');
+  if (!holder){
+    holder = document.createElement('div');
+    holder.className = 'tree-nodes';
+    stage.appendChild(holder);
+  }
+  if (keyed(holder, wrapKey)){
+    L.work.forEach(() => {
+      const d = document.createElement('div');
+      d.className = 'node';
+      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
+      holder.appendChild(d);
+    });
+  }
+  L.work.forEach((n, i) => {
+    const el = holder.children[i];
+    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
+    el.style.left = n.px + 'px';
+    el.style.top = n.py + 'px';
+    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
+    const sub = el.querySelector('.sub');
+    sub.textContent = n.sub || '';
+    sub.style.display = n.sub ? '' : 'none';
+  });
+
+  // Named markers - root, cur, lca - floating just above their node.
+  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
+  let tagHolder = stage.querySelector('.tree-tags');
+  if (!tagHolder){
+    tagHolder = document.createElement('div');
+    tagHolder.className = 'tree-tags';
+    stage.appendChild(tagHolder);
+  }
+  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
+    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
+  }
+  tags.forEach((t, i) => {
+    const el = tagHolder.children[i];
+    const n = L.byId.get(String(t.id));
+    el.className = 'node-tag ' + (t.cls || '');
+    el.textContent = t.name;
+    el.style.left = n.px + 'px';
+    el.style.top = (n.py - 38 * k) + 'px';
+  });
+}
+
+/* --- tree: a real tree, with edges --- */
+RENDER.tree = function(body, p){
+  const k = pscale(p);
+  let scroll = body.querySelector('.tree-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
+    scroll = body.querySelector('.tree-scroll');
+  }
+  const stage = scroll.querySelector('.tree-stage');
+  if (!p.nodes || !p.nodes.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
+    delete stage.dataset.built;
+    return;
+  }
+  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+  drawTree(stage, p.nodes, p, k);
+};
+
+/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
+RENDER.list = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  let els = [...body.querySelectorAll('.list-row-wrap')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="list-row-wrap"><div class="list-label"></div>' +
+      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
+    els = [...body.querySelectorAll('.list-row-wrap')];
+  }
+  rows.forEach((r, ri) => {
+    const wrap = els[ri];
+    const label = wrap.querySelector('.list-label');
+    label.textContent = r.label || '';
+    label.style.display = r.label ? '' : 'none';
+    const row = wrap.querySelector('.list-row');
+    const svg = row.querySelector('.list-cycle');
+    const nodes = r.nodes || [];
+
+    // One cell per node, an arrow between each pair, and a terminator.
+    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
+    let cells = [...row.querySelectorAll('.list-cell')];
+    if (row.dataset.key !== key){
+      row.dataset.key = key;
+      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
+      nodes.forEach((n, i) => {
+        const c = document.createElement('div');
+        c.className = 'list-cell';
+        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
+        row.appendChild(c);
+        if (i < nodes.length - 1 || r.tail){
+          const a = document.createElement('span');
+          a.className = 'list-arrow';
+          a.textContent = '→';
+          row.appendChild(a);
+        }
+      });
+      if (r.tail){
+        const t = document.createElement('span');
+        t.className = 'list-null';
+        t.textContent = r.tail === true ? '∅' : String(r.tail);
+        row.appendChild(t);
+      }
+      if (!nodes.length){
+        const e = document.createElement('span');
+        e.className = 'chips-empty';
+        e.textContent = r.empty || 'empty';
+        row.appendChild(e);
+      }
+      cells = [...row.querySelectorAll('.list-cell')];
+    }
+
+    nodes.forEach((n, i) => {
+      const c = cells[i];
+      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
+      c.querySelector('.v').textContent = String(n.v);
+      const sub = c.querySelector('.sub');
+      sub.textContent = n.sub || '';
+      sub.style.display = n.sub ? '' : 'none';
+    });
+    // An arrow is a pointer. Reversal problems live or die on being able to see
+    // one go dashed or vanish, so arrows take their own classes.
+    const arrows = [...row.querySelectorAll('.list-arrow')];
+    arrows.forEach((a, i) => {
+      const spec = (r.arrows || [])[i];
+      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
+      a.className = 'list-arrow ' + cls;
+      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
+    });
+
+    // Markers, placed against real measured geometry rather than guessed at.
+    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
+    let marks = [...row.querySelectorAll('.list-tag')];
+    if (marks.length !== tags.length){
+      marks.forEach((m) => m.remove());
+      tags.forEach(() => {
+        const m = document.createElement('span');
+        m.className = 'list-tag';
+        row.appendChild(m);
+      });
+      marks = [...row.querySelectorAll('.list-tag')];
+    }
+    const seen = {};
+    tags.forEach((t, i) => {
+      const m = marks[i];
+      m.textContent = t.name;
+      const cell = cells[t.idx];
+      const below = !!t.below;
+      if (!cell || t.idx < 0 || t.idx === undefined){
+        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
+        return;
+      }
+      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
+      const bucket = (below ? 'b' : 'a') + t.idx;
+      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
+      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
+      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
+    });
+
+    // The back-edge that makes a cycle a cycle.
+    const to = r.cycleTo;
+    const from = cells.length - 1;
+    if (to !== undefined && to !== null && cells[to] && cells[from]){
+      const a = cells[from], b = cells[to];
+      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
+      const y = a.offsetTop + a.offsetHeight;
+      const dip = y + 26 * k;
+      svg.style.display = '';
+      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
+      svg.setAttribute('width', row.scrollWidth);
+      svg.setAttribute('height', row.scrollHeight);
+      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
+      svg.firstChild.setAttribute('d',
+        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
+    } else {
+      svg.style.display = 'none';
+    }
+  });
+};
+
+/* --- stack / queue: a bucket with a floor and an open top --- */
+RENDER.stack = function(body, p, animate){
+  const buckets = p.buckets || [];
+  let box = body.querySelector('.buckets');
+  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
+  let els = [...box.children];
+  if (els.length !== buckets.length){
+    box.innerHTML = buckets.map(() =>
+      '<div class="bucket"><span class="bucket-label"></span>' +
+      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
+      '<span class="bucket-foot"></span></div>').join('');
+    els = [...box.children];
+  }
+  buckets.forEach((b, bi) => {
+    const el = els[bi];
+    const queue = b.mode === 'queue';
+    el.className = 'bucket' + (queue ? ' queue' : '');
+    const label = el.querySelector('.bucket-label');
+    label.textContent = b.label || '';
+    label.style.display = b.label ? '' : 'none';
+    const foot = el.querySelector('.bucket-foot');
+    foot.textContent = b.foot || '';
+    foot.style.display = b.foot ? '' : 'none';
+
+    const inner = el.querySelector('.bucket-box');
+    const items = b.items || [];
+    let cells = [...inner.querySelectorAll('.cell')];
+    let top = inner.querySelector('.bucket-top');
+    if (cells.length !== items.length){
+      cells.forEach((c) => c.remove());
+      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
+      items.forEach(() => {
+        const c = document.createElement('div');
+        c.className = 'cell';
+        inner.appendChild(c);
+      });
+      cells = [...inner.querySelectorAll('.cell')];
+    }
+    // Outside the rebuild, not inside it: a bucket that starts empty and stays
+    // empty never enters that branch, and step -1 empties every bucket. Created
+    // in there, the marker did not exist on the first frame of every stack
+    // panel in the repo, and the whole page died on the first render.
+    if (!top){
+      top = document.createElement('span');
+      top.className = 'bucket-top';
+      inner.appendChild(top);          // last child: column-reverse puts it on top
+    }
+    items.forEach((it, i) => {
+      const c = cells[i];
+      c.className = 'cell ' + (it.cls || '') +
+                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
+      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
+    });
+    const empty = el.querySelector('.bucket-empty');
+    empty.textContent = b.empty || 'empty';
+    empty.style.display = items.length ? 'none' : '';
+    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
+    top.style.display = top.textContent ? '' : 'none';
+  });
+};
+
+/* --- grid: a matrix, drawn as a matrix --- */
+RENDER.grid = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  const colLabels = p.colLabels, rowLabels = p.rowLabels;
+  let stage = body.querySelector('.grid-stage');
+  if (!stage){
+    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
+                     '<div class="grid-box"></div></div></div>';
+    stage = body.querySelector('.grid-stage');
+  }
+  const tbl = stage.querySelector('.grid-tbl');
+  const width = Math.max(0, ...rows.map((r) => r.length));
+  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
+  if (keyed(tbl, key)){
+    let html = '';
+    if (colLabels){
+      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
+              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
+    }
+    for (let r = 0; r < rows.length; r++){
+      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
+      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
+      html += '</tr>';
+    }
+    tbl.innerHTML = html;
+  }
+  const cells = [...tbl.querySelectorAll('.grid-cell')];
+  const at = (r, c) => cells[r * width + c];
+  rows.forEach((row, r) => {
+    for (let c = 0; c < width; c++){
+      const el = at(r, c);
+      if (!el) continue;
+      const raw = row[c];
+      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
+      const missing = it.v === undefined || it.v === null;
+      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
+                     (animate && it.fresh ? ' fresh' : '');
+      el.querySelector('.v').textContent = missing ? '' : String(it.v);
+      const sub = el.querySelector('.sub');
+      sub.textContent = it.sub || '';
+      sub.style.display = it.sub ? '' : 'none';
+    }
+  });
+
+  // A bracket round a sub-rectangle: the search space that is still alive.
+  const bx = stage.querySelector('.grid-box');
+  const b = p.box;
+  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
+    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
+    const pad = 5 * k;
+    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
+    bx.style.left = (a.offsetLeft - pad) + 'px';
+    bx.style.top = (a.offsetTop - pad) + 'px';
+    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
+    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
+  } else {
+    bx.className = 'grid-box';
+  }
+};
+
+/* --- heap: the tree and the array that stores it, side by side ---
+   A heap is the one structure where both views are needed at once: the
+   sift path only makes sense as a tree, and the index arithmetic only
+   makes sense as an array. Showing one without the other is how a heap
+   animation ends up teaching nothing. */
+RENDER.heap = function(body, p, animate){
+  const k = pscale(p);
+  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
+  let wrap = body.querySelector('.heap-wrap');
+  if (!wrap){
+    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
+                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
+    wrap = body.querySelector('.heap-wrap');
+  }
+  const stage = wrap.querySelector('.tree-stage');
+  const cap = wrap.querySelector('.heap-caption');
+  const arr = wrap.querySelector('.heap-array');
+
+  if (!items.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
+    delete stage.dataset.built;
+  } else {
+    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+    const nodes = items.map((it, i) => ({
+      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
+      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
+    }));
+    drawTree(stage, nodes, {
+      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
+      links: p.links,
+    }, k);
+  }
+
+  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
+  cap.style.display = p.showArray === false ? 'none' : '';
+
+  if (p.showArray === false){ arr.style.display = 'none'; return; }
+  arr.style.display = '';
+  let slots = [...arr.children];
+  if (slots.length !== items.length){
+    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
+    slots = [...arr.children];
+  }
+  items.forEach((it, i) => {
+    const s = slots[i];
+    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
+    s.querySelector('.idx').textContent = i;
+    s.querySelector('.v').textContent = String(it.v);
+  });
+};
+
 /* ---------------- playback ---------------- */
 function render(animate){
   if (animate === undefined) animate = true;
@@ -920,6 +1708,13 @@ function blankPanels(panels){
     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
     if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    // A structure is shown in its starting state, not emptied: the whole point
+    // of step -1 on a tree problem is seeing the tree you are about to walk.
+    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
+    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
+    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
+    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
+    if (p.t === 'heap'){ p.items = []; p.tags = []; }
     return p;
   });
 }

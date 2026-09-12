@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-11T23:04:37.753Z",
+  "updatedAt": "2026-09-12T05:35:33.016Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1929,9 +1929,9 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "codePrint": "6b934e271ac0",
+          "codePrint": "90be34e26a2b",
           "renames": [
-            "cur->node"
+            "node->curr"
           ]
         },
         "suboptimal.cs": {
@@ -1941,8 +1941,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"90be34e26a2b\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1960,34 +1960,46 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "iterative BST binary search on value range",
+          "algorithm": "iterative BST descent using ordering property",
           "approachKey": "bst-property-navigate",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive BST binary search on value range",
+          "algorithm": "recursive BST descent using ordering property",
           "approachKey": "bst-property-navigate",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"90be34e26a2b\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
         ],
         "prints": {
-          "optimal.cs": "6b934e271ac0",
+          "optimal.cs": "90be34e26a2b",
           "suboptimal.cs": "5ba2247c9f92"
         },
-        "builtAt": "2026-09-07T22:50:03.071Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-12T05:35:33.013Z"
       }
     },
     "lru-cache": {

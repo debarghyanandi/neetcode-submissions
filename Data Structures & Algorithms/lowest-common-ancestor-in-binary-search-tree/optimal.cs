@@ -1,33 +1,35 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  iterative BST binary search on value range   [bst-property-navigate]
+// -  iterative BST descent using ordering property
+// -  [bst-property-navigate]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
-// -  same BST-ordering navigation as submission-0 but iterative, so no call
-// -  stack growth
+// -  walks down one path using node.val comparisons, stopping at the
+// -  split/hit node, worst-case depth n on a skewed tree but no extra
+// -  memory
 // --------------------------------------------------------------------------
 
 public class Solution
 {
     public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q)
     {
-        TreeNode node = root;
+        TreeNode curr = root;
 
-        while (node != null)
+        while (curr != null)
         {
-            if (p.val > node.val && q.val > node.val)
+            if (p.val > curr.val && q.val > curr.val)
             {
-                node = node.right;
+                curr = curr.right;
             }
-            else if (p.val < node.val && q.val < node.val)
+            else if (p.val < curr.val && q.val < curr.val)
             {
-                node = node.left;
+                curr = curr.left;
             }
             else
             {
-                return node;
+                return curr;
             }
         }
         return null;
@@ -36,67 +38,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BST Descent - stop at the first split point
+ PATTERN : BST descent - first split point is the LCA
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  Nothing here searches. The only fact used is the BST ordering property:
-  everything in node.left is smaller than node.val, everything in node.right is
-  larger. That single fact turns "find the lowest common ancestor" into "walk
-  down one path and notice when p and q stop agreeing on which way to go." No
-  parent pointers, no path lists, no second traversal, no comparing subtree
-  results on the way back up.
+  The ordering is information the generic LCA algorithm throws away. Everything
+  in curr.left is below curr.val and everything in curr.right is above it, so
+  one comparison of p.val and q.val against curr.val already says which subtree
+  can still hold both nodes. That turns a search into a walk: one node per
+  level, no branching, no backtracking, which is why a single curr pointer is
+  the entire state.
 INVARIANT
-  At the top of every loop iteration, node is an ancestor of both p and q (root
-  satisfies this trivially). The body only moves node in a direction that both
-  p.val and q.val agree on, so the invariant is preserved: if both values are
-  greater than node.val, both targets live in the right subtree, so node.right
-  is still a common ancestor. Same mirrored for left. Therefore the first node
-  we do NOT move past is a common ancestor, and since every node above it was
-  strictly higher on the same root path, it is the lowest one.
-ALGORITHM
-  1. node = root.
-  2. If p.val > node.val AND q.val > node.val, both targets are strictly right:
-  node = node.right.
-  3. Else if p.val < node.val AND q.val < node.val, both are strictly left: node
-  = node.left.
-  4. Else return node. This else fires in exactly two situations - the split
-  (one target on each side) and the hit (node.val equals p.val or q.val). Both
-  are correct answers, and they are the same answer for the same reason: a node
-  is defined as a descendant of itself, so if node IS p, no descendant of node
-  can be an ancestor of p.
-WHY THE COMPARISONS MUST BE STRICT
-  Change the first condition to p.val >= node.val && q.val >= node.val and the
-  code breaks on the ancestor-of-itself case: when node.val == p.val and q sits
-  in the right subtree, it would descend into node.right and walk right past the
-  real answer, eventually returning q instead of p. Strict > and < are what make
-  the else branch absorb equality. This is the detail an interviewer pokes at.
+  At the top of every iteration, the subtree rooted at curr contains both p and
+  q. True initially since curr = root. Preserved because curr only moves right
+  when p.val and q.val both exceed curr.val (both nodes must then live in the
+  right subtree) and only moves left when both are below. curr strictly descends
+  each pass and the invariant guarantees the chosen child is non-null, so the
+  loop cannot spin.
+WHY THE SPLIT NODE IS THE ANSWER
+  The else branch fires exactly when p and q disagree on a direction: p.val <=
+  curr.val <= q.val, or the mirror. By the invariant curr is a common ancestor.
+  Neither child can be one, because whichever child you descend into excludes
+  the other node. So curr is the lowest such node, and it is unique - there is
+  exactly one place where the two search paths diverge.
+WHY NO EQUALITY CHECK IS NEEDED
+  The else also absorbs the case p.val == curr.val (or q.val == curr.val):
+  neither strict comparison holds, so it returns curr. That is correct, since
+  this problem counts a node as a descendant of itself - when curr is p, p is
+  the LCA. An explicit guard like 'if curr == p or curr == q return curr' would
+  be dead weight, and interviewers often expect you to justify leaving it out
+  rather than add it.
 WATCH OUT
-  The comparisons are on .val, not reference equality - correct only because the
-  problem guarantees unique node values. With duplicates in the BST this logic
-  has no way to tell which physical node p refers to.
-
-  The trailing return null is unreachable under the problem's guarantee that
-  both p and q exist in the tree; it is there because C# needs every path to
-  return. If an interviewer relaxes that guarantee, this method silently returns
-  a wrong split node rather than null - detecting an absent target needs an
-  explicit membership check, which the loop does not do.
-FOLLOW-UP TO EXPECT
-  "Now it is a plain binary tree, not a BST." The ordering property is gone, so
-  the descent has nothing to steer by. The answer becomes the recursive
-  postorder version: recurse into both children, and a node is the LCA if it
-  matches p or q, or if both child calls returned non-null. That one must touch
-  every node and carries the recursion stack, so it is strictly worse - which is
-  exactly why the BST version is worth remembering separately instead of just
-  reusing the general one.
+  Comparisons are on .val, not reference identity, so the code assumes BST
+  values are distinct. It also assumes p and q are both actually in the tree; if
+  one were missing the descent could run off a leaf, which is the only way to
+  reach the final return null - unreachable under the stated guarantees, present
+  only to satisfy the compiler. Note the code never assumes p.val < q.val: the
+  two mirrored conditions handle either order.
 TRIGGER
-  See a tree question that hands you a BST plus two target nodes and asks about
-  a relationship between them (ancestor, distance, the path between them,
-  insertion point): reach for the single downward walk driven by comparing both
-  targets against node.val. If both comparisons agree, keep descending; the
-  moment they disagree, you are standing on the answer.
+  Lowest or first common ancestor asked over a search tree, or any phrasing of
+  'where do two search paths diverge'. The tell is that you can compare a target
+  against the current node and rule out a whole subtree - the moment that holds,
+  prefer the iterative descent over any traversal that visits both children.
+FOLLOW-UP
+  Plain binary tree with no ordering: post-order recursion that returns a found
+  node upward, and the first node receiving a non-null result from both sides is
+  the LCA. Nodes with parent pointers: walk both upward and intersect the
+  chains. Asked to handle p or q possibly absent: this loop cannot detect it,
+  since it never confirms it reached either node - you need a separate existence
+  search for each before trusting the result.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
