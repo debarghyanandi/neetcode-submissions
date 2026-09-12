@@ -19,6 +19,7 @@ import { loadState, scanRepo } from './lib/scan.mjs';
 import { HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { LINT_FORMAT } from './lib/lint-rules.mjs';
+import { VISUALIZER_FORMAT } from './lib/shapes.mjs';
 
 const argv = process.argv.slice(2);
 const limit = Number(argv.includes('--limit') ? argv[argv.indexOf('--limit') + 1] : '5') || 5;
@@ -34,8 +35,13 @@ const reasons = (p) => {
 
   if (all.some((f) => (lint[f]?.version ?? -1) !== LINT_FORMAT)) why.push('lint');
 
+  // Must agree with atCurrentStandard() in classify.mjs. It is duplicated here
+  // rather than shared because the two answer slightly different questions -
+  // but the CONDITIONS must match, or this queue hands classify a folder it
+  // considers finished, or worse, never queues one it does not.
   const classified = p.curatedFiles.length && !p.pending.length && p.curatedFiles.every((f) => {
     if (!cls[f] || !sigs[f]) return false;
+    if (!Array.isArray(cls[f].structures)) return false;   // classified before shapes existed
     try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
   });
   if (!classified) why.push('classify');
@@ -44,7 +50,18 @@ const reasons = (p) => {
     teach[f] && sigs[f] && teach[f] === sigs[f] && splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).had);
   if (!taught) why.push('teach');
 
+  // "Has a visualizer" was the whole test, and it is why every array-shaped
+  // visualizer in the repo counted as finished work. A visualizer built before
+  // the structural panels is a visualizer that draws a BST as rows of chips: it
+  // exists, and it is exactly what the backfill is for. So the test is now
+  // whether it was built under the CURRENT shape contract.
+  //
+  // A hand-built one carries no record at all. It is queued too - a Back-Fill
+  // run is the one place those are meant to be replaced, and it is the only
+  // kind of run that consults this queue.
+  const viz = rec.visualizer;
   if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) why.push('visualizer');
+  else if ((viz?.v ?? 1) !== VISUALIZER_FORMAT) why.push('visualizer shape');
 
   return why;
 };

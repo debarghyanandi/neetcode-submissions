@@ -33,6 +33,7 @@ import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
 import { renameInVisualizer } from './lib/visualizer.mjs';
+import { STRUCTURES, STRUCTURE_HELP } from './lib/shapes.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -95,8 +96,17 @@ const SCHEMA = {
             type: 'string',
             description: 'Only when time or space is "other": the complexity you would have written, e.g. "O(m log n)". Empty otherwise. This is how a missing rung gets reported instead of guessed at.',
           },
+          // Evidence, not design. This says what the code is MADE OF; what to
+          // draw it with is decided later, in visualize.mjs, from this list.
+          // Same reasoning as the complexity enum: an answer from a fixed list
+          // can be ranked and disagreed with, prose has to be trusted.
+          structures: {
+            type: 'array',
+            items: { type: 'string', enum: STRUCTURES },
+            description: 'Every structure this code actually builds or walks, from the list. Judge the code, not the problem title.',
+          },
         },
-        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity'],
+        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity', 'structures'],
       },
     },
   },
@@ -115,6 +125,13 @@ const INSTRUCTIONS = [
   'Set bruteForce=true only for exhaustive enumeration with no idea behind it. Slower-but-different is not brute force.',
   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
+  '',
+  'Also list, in "structures", every structure the code is MADE OF. This drives how the solution gets',
+  'drawn later, so it is about the code in front of you, not about the problem title - a tree problem',
+  'solved with an explicit Stack<TreeNode> uses BOTH tree and stack, and the iterative version of a',
+  'recursive solution does not use call-stack at all. Report each one that applies:',
+  ...STRUCTURES.map((s) => `  ${s.padEnd(12)} ${STRUCTURE_HELP[s]}`),
+  'List every one that applies, not just the most obvious. Omit anything the code does not actually use.',
   '',
   'You have no tools available and no access to the filesystem. Everything you need is on stdin. Do not attempt to read, list, or search files - answer directly from the text you were given.',
 ].join('\n');
@@ -217,6 +234,10 @@ const atCurrentStandard = (p) => {
   if (!p.curatedFiles.length || p.pending.length) return false;
   return p.curatedFiles.every((f) => {
     if (!cls[f] || !sigs[f]) return false;
+    // Classified before the structures field existed. Not a failure - just not
+    // current, so --backfill picks it up and migrates it without a second
+    // script and without a list of slugs to hand-maintain.
+    if (!Array.isArray(cls[f].structures)) return false;
     try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
   });
 };
@@ -326,6 +347,7 @@ for (const p of targets) {
   for (const s of res.solutions) {
     console.log(`    ${s.file}`);
     console.log(`        ${s.time} time / ${s.space} space   ${s.algorithm}  [${s.approachKey}]${s.correct ? '' : '   *** MODEL SAYS INCORRECT ***'}`);
+    console.log(`        made of: ${(s.structures ?? []).join(', ') || '(nothing reported)'}`);
     console.log(`        marked yours: ${marks.get(s.file) ? 'yes' : 'no marker found'}`);
     if (verbose) console.log(`        ${s.note}`);
   }
@@ -424,6 +446,10 @@ for (const p of targets) {
       nextClass[finalName] = {
         time: s.time, space: s.space, algorithm: s.algorithm,
         approachKey: s.approachKey, correct: s.correct, bruteForce: !!s.bruteForce,
+        // Kept out of headerSignature on purpose, exactly like bruteForce: the
+        // header never prints it, so folding it in would rewrite every header
+        // in the repo for a field no reader ever sees.
+        structures: (s.structures ?? []).filter((x) => STRUCTURES.includes(x)),
       };
     }
     rec.classification = { ...(rec.classification ?? {}), ...nextClass };

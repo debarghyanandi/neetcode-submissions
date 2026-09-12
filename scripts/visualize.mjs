@@ -26,6 +26,7 @@ import { stripHeader } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
+import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
 
 const argv = process.argv.slice(2);
@@ -58,53 +59,100 @@ function contract() {
   return helpers.trim();
 }
 
-const EXAMPLE = () => {
-  // A real, working definition from this repo beats any amount of description.
-  const f = join(REPO, 'Data Structures & Algorithms', 'buy-and-sell-crypto', 'buy-and-sell-crypto-visualizer.html');
-  const src = readFileSync(f, 'utf8').split(/\r?\n/);
+/** Lift the PROBLEM definition out of a finished visualizer. */
+function definitionFrom(dir, slug) {
+  const src = readFileSync(join(dir, `${slug}-visualizer.html`), 'utf8').split(/\r?\n/);
   const s = src.findIndex((l) => /^const PROBLEM = \{/.test(l));
+  if (s < 0) return null;
   let depth = 0, end = -1;
   for (let i = s; i < src.length && end < 0; i++) {
     for (const ch of src[i]) { if (ch === '{') depth++; else if (ch === '}' && --depth === 0) { end = i; break; } }
   }
-  return src.slice(s, end + 1).join('\n');
-};
+  return end < 0 ? null : src.slice(s, end + 1).join('\n');
+}
 
-function instructions(slug, sols, feedback) {
+const FALLBACK_EXAMPLE = { slug: 'buy-and-sell-crypto', dir: join(REPO, 'Data Structures & Algorithms', 'buy-and-sell-crypto') };
+
+/**
+ * A worked example, chosen for SHAPE where one exists.
+ *
+ * This used to be one hard-coded array problem handed to every folder, under
+ * the instruction to match it exactly. That is most of why every visualizer in
+ * the repo came out array-shaped: a tree problem was being shown a row of tiles
+ * and told to copy it. The panels were only half the cause; this was the rest.
+ *
+ * So: prefer a finished visualizer that shares an ENFORCED structure with this
+ * problem - the first tree one built becomes the example for every tree problem
+ * after it, which makes the step quietly better as the backfill proceeds. When
+ * nothing shares a shape, fall back to the array problem and SAY it is a
+ * different shape, so its panel choice is not read as a template.
+ */
+function pickExample(slug, structures, state, all) {
+  const want = new Set(required(structures).map((r) => r.structure));
+  if (want.size) {
+    const scored = all
+      .filter((p) => p.slug !== slug && p.hasVisualizer && state.problems[p.slug]?.visualizer)
+      .map((p) => {
+        const cls = state.problems[p.slug]?.classification ?? {};
+        const have = new Set(Object.values(cls).flatMap((c) => c.structures ?? []));
+        return { p, hits: [...want].filter((x) => have.has(x)).length };
+      })
+      .filter((x) => x.hits > 0)
+      .sort((a, b) => b.hits - a.hits || a.p.slug.localeCompare(b.p.slug));
+    for (const { p } of scored) {
+      const def = definitionFrom(p.dir, p.slug);
+      if (def) return { source: def, from: p.slug, sameShape: true };
+    }
+  }
+  const def = definitionFrom(FALLBACK_EXAMPLE.dir, FALLBACK_EXAMPLE.slug);
+  return { source: def, from: FALLBACK_EXAMPLE.slug, sameShape: false };
+}
+
+function instructions(slug, sols, structures, example, feedback) {
   return [
     `Write the PROBLEM definition for the NeetCode problem "${slug}", to be spliced into an existing visualizer.`,
     '',
     'These helper functions and panel constructors already exist. Use them; do not redefine them:',
     '```', contract(), '```',
     '',
-    'Here is a complete, working PROBLEM definition for a different problem. Match its shape, its',
-    'voice and its level of detail exactly:',
-    '```', EXAMPLE(), '```',
+    // The example teaches the OBJECT - its fields, its register, how much
+    // detail a msg carries. It must not teach the panel choice unless it
+    // genuinely shares a shape, or every problem inherits the last one's
+    // drawing, which is exactly how this step came to render trees as rows.
+    example.sameShape
+      ? `Here is a complete, working definition for "${example.from}", which is built from the same kind of` +
+        '\nstructure as this one. Match its voice and its level of detail, and treat its panel choices as a' +
+        '\nsound starting point - though yours should follow this problem\'s code, not copy that one\'s:'
+      : `Here is a complete, working definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
+        '\nvoice and the level of detail. Do NOT copy its choice of panels - it is a differently shaped' +
+        '\nproblem, and its panels are right for it and probably wrong for yours:',
+    '```', example.source, '```',
     '',
     `Build one entry in "solutions" for each of these ${sols.length} solution file(s), in this order,`,
     'faithfully animating what that code actually does - not a tidier algorithm you would prefer:',
-    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".`),
+    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".` +
+      ((s.structures ?? []).length ? `\n      made of: ${s.structures.join(', ')}` : '')),
     '',
-    'PANEL SHAPES - get these exactly right, the renderer does not tolerate a wrong one:',
-    "  pTiles(title, values, decorate)   values is a flat array; decorate(i, v) returns {cls}",
-    "  pBars(title, values, decorate)    same shape as pTiles, drawn as bars",
-    "  pPills(title, items)              items: [{k, v, cls}]",
-    "  pSlots(title, items)              items: [{text, cls}]",
-    "  pNote(title, html)                html is a string",
-    "  pRanges(title, items, min, max)   min and max are numbers",
-    "  pChips(title, rows)               rows is an array of ROWS, NOT of chips.",
-    "                                    Each row is {left, right, items: [{text, sub, cls}], empty}.",
-    "                                    One row of chips is still [{items: [...]}] - a one-element array.",
+    contractSection(structures),
+    '',
+    catalogueSection(structures),
     '',
     'Requirements:',
+    '- Draw each structure as the thing it IS. A tree has edges, a stack is a bucket you push onto and',
+    '  pop off, a linked list is boxes joined by arrows, a matrix is a grid. A row of boxes is the right',
+    '  drawing for an array and the wrong one for everything else.',
     '- Every step\'s "lines" must be 1-based indices into THAT solution\'s own "code" array. A line',
     '  number outside it highlights nothing and the visualizer silently reads as broken.',
     '- parse() must accept its own default input value.',
     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
+    '- Everything else is PLAIN TEXT and is escaped on the way in - a chip\'s text, a stack frame\'s',
+    '  sub, a node\'s value, a pill\'s k and v. Write < and & as themselves there, never as &lt; or',
+    '  &amp;, or the entity arrives on screen character by character.',
     '- "blurb" must fit five rendered lines: keep it under 450 characters of visible text, and',
     '  under 300 if you can. The existing visualizers in this repo average about 210. It is the',
     '  one-paragraph reason the approach works, not a summary of the teaching block.',
+    '- Use `scale` to keep a panel on one screen rather than letting it scroll sideways.',
     '- Output only the statement: const PROBLEM = { ... };',
     '',
     'You have no tools and no filesystem access. The solution code is on stdin and everything else',
@@ -137,7 +185,8 @@ function ask(prompt, code) {
 // ---------------------------------------------------------------- run
 
 const state = loadState();
-let targets = scanRepo(state);
+const all = scanRepo(state);
+let targets = all;
 if (only) targets = targets.filter((p) => only.includes(p.slug));
 /** What the code looks like now, ignoring comments and whitespace. */
 const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
@@ -198,6 +247,27 @@ for (const p of targets) {
   console.log(`  visualising: ${chosen.join(', ')}`);
 
   const sols = chosen.map((f) => ({ file: f, ...cls[f] }));
+
+  // What the chosen solutions are made of, unioned. The union rather than the
+  // intersection: a problem whose recursive version uses a call stack and whose
+  // iterative one does not must still show the frames on the recursive tab, and
+  // the per-solution override is how the other tab says it does not need them.
+  const structures = [...new Set(chosen.flatMap((f) => cls[f]?.structures ?? []))];
+  if (structures.length) {
+    console.log(`  made of: ${structures.join(', ')}`);
+    const req = required(structures);
+    if (req.length) console.log(`  must be drawn: ${req.map((r) => r.structure).join(', ')}`);
+  } else {
+    // Not a failure: every folder classified before the structures field
+    // existed lands here. Say so plainly rather than silently dropping to the
+    // old behaviour, because the old behaviour is the bug being fixed.
+    console.log('  no structures on record - run classify --backfill --apply first for shape enforcement');
+  }
+
+  const example = pickExample(p.slug, structures, state, all);
+  if (!example.source) { console.log('  cannot read the worked example'); report('visualize', p.slug, 'failed', 'worked example unreadable'); failures++; endGroup(); continue; }
+  console.log(`  example: ${example.from}${example.sameShape ? ' (same shape)' : ' (different shape - voice only)'}`);
+
   const code = chosen
     .map((f) => `===== FILE: ${f} =====\n${stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body}`)
     .join('\n\n');
@@ -205,7 +275,7 @@ for (const p of targets) {
   let result = null, feedback = null, spend = 0;
   for (let attempt = 1; attempt <= 2 && !result; attempt++) {
     let r;
-    try { r = ask(instructions(p.slug, sols, feedback), code); }
+    try { r = ask(instructions(p.slug, sols, structures, example, feedback), code); }
     catch (e) {
       console.log(`  attempt ${attempt} FAILED: ${e.message}`);
       // Retry a run that simply ran out of room; do not retry an auth or
@@ -217,10 +287,14 @@ for (const p of targets) {
       break;
     }
     spend += r.cost ?? 0;
-    const v = validate(r.src);
+    const v = validate(r.src, structures);
     if (!v.errors.length) {
       result = r;
       for (const [k, n] of Object.entries(v.stats)) console.log(`      ${k}: ${n}`);
+      // A waiver is a claim that a structure is not really there. Print it:
+      // it is the one thing here that is accepted on the model's say-so, so it
+      // should be the one thing that is impossible to miss in the log.
+      for (const w of v.waived ?? []) console.log(`      WAIVED  ${w}`);
     } else {
       console.log(`  attempt ${attempt} rejected by validation:`);
       v.errors.slice(0, 6).forEach((e) => console.log(`      ${e}`));
@@ -236,7 +310,11 @@ for (const p of targets) {
     writeFileSync(out, splice(result.src), 'utf8');
     // Record what it was built from, so a later code change is detectable.
     const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
-    prec.visualizer = { files: chosen, prints: codePrints(p, chosen), builtAt: new Date().toISOString() };
+    prec.visualizer = {
+      v: VISUALIZER_FORMAT,
+      files: chosen, prints: codePrints(p, chosen),
+      structures, builtAt: new Date().toISOString(),
+    };
     console.log(`  wrote ${p.slug}-visualizer.html`);
     report('visualize', p.slug, 'ok', `${chosen.join(' + ')}, validated`);
     wrote++;

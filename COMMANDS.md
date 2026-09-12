@@ -236,9 +236,14 @@ backfill: 23 folder(s), 6 already at the current standard, 17 remaining
 - Run it repeatedly and the remaining count drops each time.
 - When it reaches `0 remaining`, the step does nothing. You're finished.
 
-"Already at the current standard" means that folder has a recorded complexity *and* a header
-built by the current version of the code. If I change the header format later, those folders
-correctly go back to "remaining".
+"Already at the current standard" means that folder has a recorded complexity, a recorded
+list of the **structures** the code is made of, *and* a header built by the current version
+of the code. If I change the header format later, those folders correctly go back to
+"remaining".
+
+> **Right now every folder is "remaining."** The structures field is new, so nothing recorded
+> before it counts as current. That's deliberate — it's how the migration happens with no
+> separate script to run and no list of folders to keep by hand.
 
 ### Backfilling locally instead
 
@@ -248,6 +253,47 @@ Same thing, on your machine:
 node scripts/classify.mjs --backfill --apply --limit 3
 node scripts/teach.mjs --backfill --apply --limit 3
 ```
+
+### Re-drawing the visualizers in the right shape
+
+The visualizers built before the structural panels existed all render as rows of boxes — a
+BST as chip rows grouped by depth, a stack as a line of chips. Fixing that is a backfill, and
+it has to happen in this order:
+
+```powershell
+# 1. classify first - it records WHAT each solution is made of.
+node scripts/classify.mjs --backfill --apply --limit 5
+
+# 2. then visualize, which reads that and is refused if it draws the wrong shape.
+node scripts/visualize.mjs --backfill --apply --limit 3
+```
+
+Run them the other way round and visualize prints
+
+```
+no structures on record - run classify --backfill --apply first for shape enforcement
+```
+
+and falls back to advice instead of enforcement. It still works; it just can't refuse a bad
+shape, which is the whole point of the step.
+
+**Do the tree and stack problems early.** `visualize` prefers a finished visualizer of the
+same shape as its worked example, so the first tree one you build becomes the example for
+every tree problem after it. Until one exists it falls back to the array problem and warns
+that it's a different shape. Good order: one tree problem, one linked-list problem, one stack
+problem, check them, then let the rest run.
+
+What each run prints per folder:
+
+```
+made of: tree, call-stack
+must be drawn: tree, call-stack
+example: invert-a-binary-tree (same shape)
+    WAIVED  Walk down until they split: call-stack (declared: ...)
+```
+
+A `WAIVED` line is the one thing accepted on the model's say-so — it claims the code never
+materialises that structure. Read those. Everything else was checked by running it.
 
 Start with `--limit 1`.
 

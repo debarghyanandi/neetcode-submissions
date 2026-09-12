@@ -301,6 +301,79 @@ the result was byte-identical to the file it came from.
 checked by hand. Regenerating them would trade work that's known good for work that merely
 passes validation.
 
+#### The shape problem, and the fix
+
+The design above worked exactly as intended, and that turned out to be the bug. The chassis
+owned seven panel constructors — `pTiles`, `pBars`, `pChips`, `pSlots`, `pPills`, `pRanges`,
+`pNote` — and six of the seven are a row of boxes. There was nothing in the file that could
+draw a parent-child edge, a bucket with a floor, or a 2-D grid.
+
+So a tree problem *couldn't* come out looking like a tree. The model picked the least-wrong
+thing available and rendered a BST as chip rows grouped by depth. Two more things locked it
+in: every folder was handed the same worked example — `buy-and-sell-crypto`, an array
+problem — under the instruction *"match its shape exactly"*, and `validate()` rejected any
+panel type it didn't recognise. The animations were correct. The shapes were a lie.
+
+The fix splits one question into three, so no step decides something it has no business
+deciding:
+
+| Step | Decides | Recorded? |
+|---|---|---|
+| `classify.mjs` | **which structures** the code is made of, from a fixed enum | yes, in `state.json` |
+| `visualize.mjs` | **how to draw them** — free choice from the panel catalogue | no, it's a design call |
+| `validate()` | only that **nothing handed over went undrawn** | — |
+
+`scripts/lib/shapes.mjs` holds all three halves of that table, so they can't drift apart by
+being edited separately. Adding graph or DP panels later is an edit to that one file plus a
+renderer in the chassis; nothing else in the pipeline needs touching.
+
+**The chassis gained five structural panels**: `pTree` (real edges, depth derived from the
+parent chain, never stated), `pList` (boxes and arrows, with cycle back-edges), `pStack`
+(a bucket with a floor and an open top, also the right panel for recursion frames), `pGrid`,
+and `pHeap` (the tree and its backing array, index-linked). All five read the same CSS custom
+properties as the tile row, so the palette and fonts are shared **by construction** — same
+argument as the chassis itself. Each accepts a `scale` between 0.7 and 1 so a wide structure
+fits one screen; it's clamped in the chassis, so a panel can be made smaller but not
+unreadable.
+
+**`call-stack` is a structure.** Recursion is a mechanism rather than a data structure, but a
+recursive descent *is* a stack, and a recursive solution drawn without its frames is the most
+common way one of these teaches nothing. Classify reports it per file, which matters: on
+`lowest-common-ancestor-in-binary-search-tree` it correctly gave `optimal.cs` → `tree` and
+`suboptimal.cs` → `tree, call-stack`, off the code alone.
+
+**Coverage enforcement is deliberately weak.** The check is *"the structure is on screen
+somewhere"*, never *"you must call `pHeap`"* — any panel that can draw it satisfies it, so
+which one to reach for stays a design decision. Only structures where a row of boxes is a
+real loss are enforced; an array genuinely **is** a row of boxes and a frequency map
+genuinely **is** a row of chips, so neither is. Enforcing those would be ceremony, and
+ceremony is what gets a check switched off.
+
+When the code genuinely doesn't materialise a structure, the solution says so rather than
+drawing a fake:
+
+```js
+shapeOverride: {
+  skip: ['call-stack'],
+  reason: 'the loop rebinds one variable and keeps no frames at all',
+}
+```
+
+A reason under 25 characters is rejected — an override with no argument behind it is just a
+way of turning the check off. Every waiver is printed in the run log, because it's the one
+thing here accepted on the model's say-so.
+
+**The worked example is now chosen for shape.** `visualize.mjs` prefers a finished visualizer
+that shares an enforced structure with the problem in hand, so the first tree visualizer
+built becomes the example for every tree problem after it and the step improves as the
+backfill proceeds. When nothing matches it falls back to the array problem and *says so* —
+"different shape, voice only" — so its panel choice isn't read as a template.
+
+**Migration is free.** A folder classified before the `structures` field existed fails
+`atCurrentStandard()`, so `classify.mjs --backfill --apply` picks all 52 up with no bespoke
+script and no hand-maintained list of slugs. Until a folder has been re-classified,
+`visualize.mjs` says so in the log and falls back to advice instead of enforcement.
+
 ### `scripts/lib/visualizer.mjs` — the part that matters most
 
 A broken visualizer still *looks* like a finished 40KB file. So this doesn't inspect the
@@ -318,6 +391,11 @@ confirming each was caught:
 | Input parser rejects its own default | `parse() rejects its own default input` |
 | Runaway loop generating frames | out-of-memory, reported |
 | Syntax error | `the definition does not even run` |
+| A tree drawn as chip rows | `the code uses tree and nothing in this solution draws one` |
+| A recursive solution with no frames shown | `the code uses call-stack and nothing ... draws one` |
+| `parent` naming a node that isn't in the panel | `would silently be drawn as a second root` |
+| A ragged grid row | `has 3 cells but row 0 has 4` |
+| `&lt;` written into a plain-text label | `rendered as plain text but contains markup` |
 
 The first one is the interesting failure. An out-of-range line number doesn't crash
 anything — the visualizer just highlights nothing and reads as *dull*. Nobody reports a dull
@@ -606,8 +684,9 @@ scripts/
     header.mjs                     the short banner
     teach.mjs                      the long block
     visualizer.mjs                 splicing + validation
+    shapes.mjs                     structures, panels, coverage rules
   templates/
-    visualizer.chassis.html        32KB of design, lifted verbatim
+    visualizer.chassis.html        design + panels, lifted verbatim
 ```
 
 ### A note on `.gitattributes`
