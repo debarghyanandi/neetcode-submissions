@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">5</span> / 55</b></div>
-      <div class="bar"><span id="bar" style="width:9.1%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">6</span> / 55</b></div>
+      <div class="bar"><span id="bar" style="width:10.9%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -697,18 +697,18 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Heap / Priority Queue">
   <div class="group-head">
     <h2>Heap / Priority Queue</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>3</b> reshaped</span>
+    <span class="group-count"><b class="gdone">1</b> / <b>3</b> reshaped</span>
   </div>
   <p class="group-note">You need the best few, not the sorted whole.</p>
   <ul>
-    <li data-hay="k closest points to origin k-closest-points-to-origin heap / priority queue top-k via bounded max-heap: evict the current farthest  needs reshape" data-status="stale">
+    <li data-hay="k closest points to origin k-closest-points-to-origin heap / priority queue bounded max-heap of size k - evict the farthest array heap current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/k-closest-points-to-origin" target="_blank" rel="noopener noreferrer">K Closest Points To Origin</a>
-        <span class="why">Top-K via bounded max-heap: evict the current farthest</span>
+        <span class="why">Bounded max-heap of size K - evict the farthest</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n log k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/k-closest-points-to-origin-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+        <span class="cx" title="time / space">O(n log k) &middot; O(k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/k-closest-points-to-origin-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
     <li data-hay="kth largest integer in a stream kth-largest-integer-in-a-stream heap / priority queue top-k min-heap - size-k heap root is the kth largest  needs reshape" data-status="stale">

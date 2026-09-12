@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T16:33:50.406Z",
+  "updatedAt": "2026-09-12T17:53:06.759Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1508,14 +1508,11 @@
         "optimal.cs": {
           "version": 1,
           "codePrint": "9dc695fc5a28",
-          "renames": [
-            "dist->distance",
-            "res->result"
-          ]
+          "renames": []
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap of size K\",\"approachKey\":\"heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"bounded max-heap of size K, evict farthest\",\"approachKey\":\"max-heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1527,24 +1524,33 @@
       "classification": {
         "optimal.cs": {
           "time": "O(n log k)",
-          "space": "O(n)",
-          "algorithm": "max-heap of size K",
-          "approachKey": "heap-size-k",
+          "space": "O(k)",
+          "algorithm": "bounded max-heap of size K, evict farthest",
+          "approachKey": "max-heap-size-k",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "heap"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap of size K\",\"approachKey\":\"heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"bounded max-heap of size K, evict farthest\",\"approachKey\":\"max-heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "9dc695fc5a28"
         },
-        "builtAt": "2026-09-11T23:04:37.523Z"
+        "structures": [
+          "array",
+          "heap"
+        ],
+        "builtAt": "2026-09-12T17:53:06.757Z"
       }
     },
     "kth-largest-integer-in-a-stream": {
