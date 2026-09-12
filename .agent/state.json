@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T10:52:34.490Z",
+  "updatedAt": "2026-09-12T11:56:40.024Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -419,6 +419,17 @@
           "renames": []
         }
       }
+    },
+    "count-number-of-islands": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "daily-temperatures": {
       "topic": "Data Structures & Algorithms",
