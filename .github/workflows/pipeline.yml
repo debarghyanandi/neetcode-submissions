@@ -348,7 +348,11 @@ jobs:
           # Every path the pipeline can write. A file regenerated on the runner but
           # not staged here is silently discarded when the runner is destroyed -
           # index.md was exactly that, so the Pages site would never have updated.
-          git add -- README.md index.html index.md .agent/state.json
+          for f in README.md index.html index.md .agent/state.json; do
+            if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
+              git add -A -- "$f"
+            fi
+          done
           git add -A -- "Data Structures & Algorithms"
           if git diff --cached --quiet; then
             echo "nothing staged after all - not committing"

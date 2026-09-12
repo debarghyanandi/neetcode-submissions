@@ -12,6 +12,12 @@ export const COMPLEXITY = [
   'O(log n)',
   'O(log(m*n))',  // a matrix treated as one flat sorted array
   'O(sqrt n)',
+  // A bounded structure - a heap capped at k, a window of k - where k <= n by
+  // the problem's own definition. Placed directly below O(n) for the same
+  // reason O(n log k) sits below O(n log n): k is bounded by n and may
+  // approach it, so ranking it any lower would claim a guarantee the code
+  // does not make.
+  'O(k)',
   'O(n)',
   'O(n + m)',     // two independent inputs, each scanned once
   'O(n log k)',   // k <= n, so this sits below O(n log n)
