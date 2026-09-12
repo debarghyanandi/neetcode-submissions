@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T05:35:33.016Z",
+  "updatedAt": "2026-09-12T06:30:45.600Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2646,14 +2646,67 @@
     },
     "remove-duplicates-from-sorted-array": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "81fb6d75037363b11da98f8b15efd4feebf6b5a1df03ee22e1a71006dbfe2a2d": "optimal.cs"
+      },
+      "fingerprints": {
+        "81fb6d75037363b11da98f8b15efd4feebf6b5a1df03ee22e1a71006dbfe2a2d": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "de07fdf93514",
+          "renames": [
+            "l->left",
+            "r->right"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"de07fdf93514\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, in-place overwrite\",\"approachKey\":\"two-pointer-inplace\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "two-pointer, in-place overwrite",
+          "approachKey": "two-pointer-inplace",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"de07fdf93514\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, in-place overwrite\",\"approachKey\":\"two-pointer-inplace\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "de07fdf93514"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-12T06:30:45.371Z"
+      }
     },
     "remove-node-from-end-of-linked-list": {
       "topic": "Data Structures & Algorithms",
