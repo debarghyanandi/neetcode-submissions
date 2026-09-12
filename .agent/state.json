@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T14:59:28.266Z",
+  "updatedAt": "2026-09-12T16:33:50.406Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -422,14 +422,71 @@
     },
     "clone-graph": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "b3bf81470bdd78ba52c45153ef546a8b2ae427ce865308ff9ef7aa9531889843": "optimal.cs"
+      },
+      "fingerprints": {
+        "b3bf81470bdd78ba52c45153ef546a8b2ae427ce865308ff9ef7aa9531889843": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "26da04dfc753",
+          "renames": [
+            "map->visited",
+            "n->neighbor"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"26da04dfc753\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with hash map memoization of cloned nodes\",\"approachKey\":\"dfs-hashmap-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(n)",
+          "algorithm": "DFS with hash map memoization of cloned nodes",
+          "approachKey": "dfs-hashmap-clone",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "graph",
+            "hash-map",
+            "call-stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"26da04dfc753\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with hash map memoization of cloned nodes\",\"approachKey\":\"dfs-hashmap-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "26da04dfc753"
+        },
+        "structures": [
+          "graph",
+          "hash-map",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-12T16:33:50.199Z"
+      }
     },
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
