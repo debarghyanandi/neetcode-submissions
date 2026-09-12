@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T06:30:45.600Z",
+  "updatedAt": "2026-09-12T10:52:34.490Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -196,13 +196,11 @@
         "optimal.cs": {
           "version": 1,
           "codePrint": "581adeee02c4",
-          "renames": [
-            "DFS->CheckBalance"
-          ]
+          "renames": []
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bottom-up DFS returning height and balanced flag\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning height and balance together\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -215,23 +213,32 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "bottom-up DFS returning height and balanced flag",
+          "algorithm": "post-order DFS returning height and balance together",
           "approachKey": "bottom-up-height-balance",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bottom-up DFS returning height and balanced flag\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning height and balance together\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "581adeee02c4"
         },
-        "builtAt": "2026-09-09T23:05:25.584Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-12T10:52:34.486Z"
       }
     },
     "binary-search": {

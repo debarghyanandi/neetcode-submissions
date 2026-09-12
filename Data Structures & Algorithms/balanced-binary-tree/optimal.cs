@@ -1,14 +1,14 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  bottom-up DFS returning height and balanced flag
+// -  post-order DFS returning height and balance together
 // -  [bottom-up-height-balance]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
 // -  single post-order traversal computes height and balance
-// -  simultaneously, avoiding recomputation; recursion stack depth is O(n)
-// -  worst case for a skewed tree
+// -  simultaneously; recursion stack depth is O(n) worst case for a skewed
+// -  tree
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -32,94 +32,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Bottom-up DFS returning height and balance in one pass
+ PATTERN : Post-order DFS returning (height, balanced) together
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
-BRUTE FORCE, AND WHY THIS BEATS IT
-  The obvious version walks every node and calls a separate Height(node) helper
-  on its two children. Height is itself a full subtree walk, so a node at depth
-  d is re-measured once per ancestor: O(n^2) on a left-leaning chain, since the
-  top node measures n nodes, the next n-1, and so on.
-
-  CheckBalance kills the repetition by having the traversal that checks balance
-  also carry the height back up. Each node is visited exactly once, and its
-  height is computed exactly once, from the two values its children already
-  returned.
-THE CONTRACT
-  CheckBalance(node) returns a pair with a fixed meaning that must hold at every
-  node, not just the root:
-
-  1. balanced - true if EVERY subtree rooted inside node's subtree satisfies the
-  height rule, not merely node itself.
-  2. height - number of nodes on the longest downward path from node, always the
-  true height regardless of what balanced says.
-
-  IsBalanced just reads .balanced off the root pair and throws the height away.
-HEIGHT CONVENTION
-  null returns (true, 0), so a leaf returns 1 + Math.Max(0, 0) = 1. This counts
-  nodes, not edges; the textbook edge-height of a leaf is 0, not 1.
-
-  The off-by-one never matters here because every height in the file comes from
-  the same recursion. Math.Abs(left.height - right.height) is a difference of
-  two heights, so the constant cancels, and Math.Max preserves the shift as it
-  moves up. Just do not mix this helper with an edge-counting one.
-WHY IT IS CORRECT
-  Induction on subtree size. Base: an empty tree is balanced and has height 0,
-  which (true, 0) states.
-
-  Step: assume left and right are correct for the children. Then balanced =
-  left.balanced && right.balanced && Math.Abs(left.height - right.height) <= 1
-  is a literal transcription of the definition - both sides internally balanced,
-  plus the local difference test - so it is correct for node. And height = 1 +
-  Math.Max(left.height, right.height) is the longest child path plus node
-  itself.
-
-  The order matters: both recursive calls complete before either field is
-  computed. That is what post-order buys you - children are already solved facts
-  by the time the parent runs.
-THE TRAP: A POISONED SENTINEL
-  The common rewrite drops the tuple and returns int, using -1 to mean
-  "unbalanced somewhere below." That version is only correct if every caller
-  checks for -1 BEFORE using the value. Forget the guard and -1 flows into
-  Math.Abs(left - right), where an unbalanced child of a null sibling gives
-  Math.Abs(-1 - 0) = 1 <= 1 and the failure is silently reported as balanced.
-
-  Carrying the bool separately means height is never a lie, so no call site
-  needs a guard. That is the tradeoff being made - an allocation-free ValueTuple
-  in exchange for not having to reason about sentinel propagation.
+WHY THIS PATTERN
+  Balance at a node needs the heights of both children, and height is itself a
+  post-order quantity. The naive split - a Height helper called from an
+  IsBalanced walker - recomputes the same subtree heights once per ancestor.
+  Folding both answers into one return value from CheckBalance means every node
+  is visited exactly once and its height is computed exactly once, from the
+  heights its children already handed up.
+BRUTE FORCE
+  bool IsBalanced(node) => node == null || (Abs(Height(node.left) -
+  Height(node.right)) <= 1 && IsBalanced(node.left) && IsBalanced(node.right)),
+  with a separate Height that walks the whole subtree. Correct, but Height(node)
+  re-walks everything under node, and it is called again at every descendant. On
+  a left-skewed chain of n nodes that is 1+2+...+n work, quadratic. The
+  information Height already found is thrown away between calls; the tuple
+  return is what keeps it.
+INVARIANT
+  CheckBalance(node) returns exactly two facts about the subtree rooted at node:
+  height is its true height, and balanced is true if and only if EVERY node
+  inside that subtree satisfies the height-difference condition - not just node
+  itself. The base case (true, 0) gives an empty subtree height 0, so a leaf
+  returns (true, 1) and its null children differ by 0. Because height is
+  returned unconditionally and correctly even when balanced is false, a parent
+  can never be misled about geometry by an unbalanced child.
+ALGORITHM
+  1. Null node returns (true, 0).
+  2. Recurse left, then right, capturing both tuples in left and right.
+  3. balanced = left.balanced && right.balanced && Math.Abs(left.height -
+  right.height) <= 1. All three conjuncts are required.
+  4. height = 1 + Math.Max(left.height, right.height), computed regardless of
+  balance.
+  5. IsBalanced returns only the .balanced field of the root's tuple; the root
+  height is discarded.
 WATCH OUT
-  The comment above CheckBalance - "returns balanced (1 or 0) and height as 2
-  element int array" - describes an earlier int[] draft, not this code. Nothing
-  returns an array or a 1/0 here. Fix or delete it before this file is read as
-  reference.
+  The two left.balanced && right.balanced conjuncts are the part people drop.
+  Without them you would only check the root: a tree whose left and right
+  subtrees both have height 3 passes the Math.Abs test at the root even if the
+  left subtree is internally a skewed chain. Balance is defined over all nodes,
+  and only the recursive conjunction carries that up.
 
-  Also note there is no early exit. Once left.balanced is false the answer is
-  already decided, but CheckBalance(node.right) on the line above has already
-  run. The && short-circuits on the booleans, not on the recursion that produced
-  them. Inserting an early return after the left call is a legitimate
-  constant-factor win and changes nothing about the result.
-INTERVIEWER FOLLOW-UP
-  Expect "what breaks on a 100000-node linked-list-shaped tree?" - the recursion
-  depth equals the height, so this stack-overflows on a fully skewed input long
-  before it runs slowly. The answer is an explicit post-order stack keeping a
-  map from node to computed height, or a parent-pointer iterative walk; the
-  recurrence is unchanged, only the stack moves to the heap.
+  The && short-circuits, but nothing is saved by it - both CheckBalance calls
+  have already run on the lines above. An early return after left when
+  !left.balanced would prune real work; it does not change the worst case, since
+  a fully balanced tree never triggers it.
 
-  Second likely probe: "can you report the deepest unbalanced node?" Replace the
-  bool with the offending node reference or an int depth and keep the same merge
-  rule - the shape of the recursion does not change.
-TRIGGER
-  Reach for this whenever a question asks for a property that must hold at every
-  subtree, and checking it at one node needs an aggregate over that node's
-  subtree. Diameter of a binary tree, max path sum, count of univalue subtrees,
-  and validating a BST by passing ranges are the same skeleton: one post-order
-  pass, return the aggregate the parent needs alongside the answer the problem
-  asked for.
+  The comment above CheckBalance is stale: it describes returning 1 or 0 in a
+  2-element int array. The method returns a named ValueTuple, so left.height and
+  left.balanced are the accessors, not left[0].
+FOLLOW-UP
+  The classic compression of this: return int alone, using -1 as a sentinel for
+  "unbalanced somewhere below", and propagate -1 upward on sight. Same
+  traversal, one less field, but it conflates a height with an error code - the
+  tuple here is the more honest version and is what you should be able to
+  defend.
 
-  The tell for the O(n^2) version you are replacing: a helper being called from
-  inside another traversal over the same nodes.
+  The other likely probe is depth. This recurses to the height of the tree, so a
+  degenerate n-node chain puts n frames on the call stack and can overflow
+  before the algorithm's own cost matters. The answer is an explicit stack with
+  a post-order iterative traversal, carrying computed heights in a dictionary or
+  on the stack itself.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
