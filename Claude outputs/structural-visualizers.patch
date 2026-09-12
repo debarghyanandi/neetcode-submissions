@@ -1,0 +1,3503 @@
+From 251ea5a8530ece6a58440dddae30ff28990c22a0 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 12 Sep 2026 05:07:21 +0000
+Subject: [PATCH] Draw each structure as the thing it is, not as a row of boxes
+
+The chassis owned seven panel constructors and six of them were a row of
+boxes. There was nothing in it that could draw a parent-child edge, a
+bucket with a floor, or a 2-D grid, so a tree problem could not come out
+looking like a tree - the model picked the least-wrong thing available and
+rendered a BST as chip rows grouped by depth. Two more things locked it in:
+every folder was handed the same array problem as its worked example under
+the instruction "match its shape exactly", and validate() rejected any panel
+type it did not recognise. The animations were correct. The shapes were a lie.
+
+Split the one question into three, so no step decides what it has no
+business deciding:
+
+  classify  reports WHICH STRUCTURES the code is made of, from a fixed enum
+  visualize decides HOW TO DRAW THEM, freely, from the panel catalogue
+  validate  checks only that nothing handed over went undrawn
+
+lib/shapes.mjs holds all three halves of that table so they cannot drift
+apart by being edited separately. Adding graph or DP panels later is an edit
+to that one file plus a renderer in the chassis.
+
+The chassis gains pTree, pList, pStack, pGrid and pHeap. All five read the
+same CSS custom properties as the tile row, so palette and fonts are shared
+by construction - the same argument that produced the chassis itself. Each
+takes a `scale` from 0.7 to 1 so a wide structure fits one screen, clamped so
+a panel can be made smaller but not unreadable. The chassis does every bit of
+layout arithmetic; the generated definition supplies data only.
+
+call-stack is a structure. Recursion is a mechanism rather than a data
+structure, but a recursive descent is a stack, and a recursive solution drawn
+without its frames is the most common way one of these teaches nothing.
+
+Coverage enforcement is deliberately weak: any panel that can draw the
+structure satisfies it, and only structures where a row of boxes is a real
+loss are enforced. An array genuinely is a row of boxes. Where the code truly
+never materialises a structure, a solution declares shapeOverride {skip,
+reason}; a reason under 25 characters is refused, and every waiver is printed.
+
+Also:
+- the worked example is chosen for shape, so the first tree visualizer built
+  becomes the example for every tree problem after it
+- VISUALIZER_FORMAT, so the backfill knows what it has redrawn and terminates.
+  "has a visualizer" was the whole test, which is why every array-shaped one
+  counted as finished work
+- select-backfill's copy of "is this classified" kept in step with classify's
+- plain-text fields are checked for markup: &lt; written into a stack frame
+  label arrived on screen character by character, and nothing caught it
+- 46 new tests covering the coverage rule's edges
+
+Verified end to end on lowest-common-ancestor-in-binary-search-tree: classify
+gave optimal.cs -> tree and suboptimal.cs -> tree, call-stack off the code
+alone, and visualize drew a real tree plus real recursion frames, waiving the
+call stack on the iterative version with its own reasoning. Every panel type
+was rendered in a browser; two layout faults and one crash found that way and
+fixed.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01U4JCfAqRDyZwYXYtCunw7x
+---
+ .agent/state.json                             |   23 +-
+ COMMANDS.md                                   |   52 +-
+ ...stor-in-binary-search-tree-visualizer.html | 1163 ++++++++++++++---
+ .../optimal.cs                                |    9 +-
+ .../suboptimal.cs                             |    9 +-
+ PIPELINE.md                                   |   81 +-
+ scripts/classify.mjs                          |   28 +-
+ scripts/lib/shapes.mjs                        |  347 +++++
+ scripts/lib/shapes.test.mjs                   |   99 ++
+ scripts/lib/visualizer.mjs                    |  182 ++-
+ scripts/select-backfill.mjs                   |   17 +
+ scripts/templates/visualizer.chassis.html     |  772 +++++++++++
+ scripts/visualize.mjs                         |  128 +-
+ 13 files changed, 2662 insertions(+), 248 deletions(-)
+ create mode 100644 scripts/lib/shapes.mjs
+ create mode 100644 scripts/lib/shapes.test.mjs
+
+diff --git a/.agent/state.json b/.agent/state.json
+index c197e36..6645a46 100644
+--- a/.agent/state.json
++++ b/.agent/state.json
+@@ -1,6 +1,6 @@
+ {
+   "version": 1,
+-  "updatedAt": "2026-09-11T23:04:37.753Z",
++  "updatedAt": "2026-09-12T01:09:40.531Z",
+   "problems": {
+     "add-two-numbers": {
+       "topic": "Data Structures & Algorithms",
+@@ -1941,8 +1941,8 @@
+         }
+       },
+       "headerSignatures": {
+-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST binary search on value range\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
++        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST descent, split-point detection\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
++        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST descent, split-point detection\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+       },
+       "provenance": {
+         "optimal.cs": {
+@@ -1960,18 +1960,25 @@
+         "optimal.cs": {
+           "time": "O(n)",
+           "space": "O(1)",
+-          "algorithm": "iterative BST binary search on value range",
++          "algorithm": "iterative BST descent, split-point detection",
+           "approachKey": "bst-property-navigate",
+           "correct": true,
+-          "bruteForce": false
++          "bruteForce": false,
++          "structures": [
++            "tree"
++          ]
+         },
+         "suboptimal.cs": {
+           "time": "O(n)",
+           "space": "O(n)",
+-          "algorithm": "recursive BST binary search on value range",
++          "algorithm": "recursive BST descent, split-point detection",
+           "approachKey": "bst-property-navigate",
+           "correct": true,
+-          "bruteForce": false
++          "bruteForce": false,
++          "structures": [
++            "tree",
++            "call-stack"
++          ]
+         }
+       },
+       "teachSignatures": {
+@@ -1987,7 +1994,7 @@
+           "optimal.cs": "6b934e271ac0",
+           "suboptimal.cs": "5ba2247c9f92"
+         },
+-        "builtAt": "2026-09-07T22:50:03.071Z"
++        "builtAt": "2026-09-12T01:09:40.528Z"
+       }
+     },
+     "lru-cache": {
+diff --git a/COMMANDS.md b/COMMANDS.md
+index 3d25b87..656d934 100644
+--- a/COMMANDS.md
++++ b/COMMANDS.md
+@@ -236,9 +236,14 @@ backfill: 23 folder(s), 6 already at the current standard, 17 remaining
+ - Run it repeatedly and the remaining count drops each time.
+ - When it reaches `0 remaining`, the step does nothing. You're finished.
+ 
+-"Already at the current standard" means that folder has a recorded complexity *and* a header
+-built by the current version of the code. If I change the header format later, those folders
+-correctly go back to "remaining".
++"Already at the current standard" means that folder has a recorded complexity, a recorded
++list of the **structures** the code is made of, *and* a header built by the current version
++of the code. If I change the header format later, those folders correctly go back to
++"remaining".
++
++> **Right now every folder is "remaining."** The structures field is new, so nothing recorded
++> before it counts as current. That's deliberate — it's how the migration happens with no
++> separate script to run and no list of folders to keep by hand.
+ 
+ ### Backfilling locally instead
+ 
+@@ -249,6 +254,47 @@ node scripts/classify.mjs --backfill --apply --limit 3
+ node scripts/teach.mjs --backfill --apply --limit 3
+ ```
+ 
++### Re-drawing the visualizers in the right shape
++
++The visualizers built before the structural panels existed all render as rows of boxes — a
++BST as chip rows grouped by depth, a stack as a line of chips. Fixing that is a backfill, and
++it has to happen in this order:
++
++```powershell
++# 1. classify first - it records WHAT each solution is made of.
++node scripts/classify.mjs --backfill --apply --limit 5
++
++# 2. then visualize, which reads that and is refused if it draws the wrong shape.
++node scripts/visualize.mjs --backfill --apply --limit 3
++```
++
++Run them the other way round and visualize prints
++
++```
++no structures on record - run classify --backfill --apply first for shape enforcement
++```
++
++and falls back to advice instead of enforcement. It still works; it just can't refuse a bad
++shape, which is the whole point of the step.
++
++**Do the tree and stack problems early.** `visualize` prefers a finished visualizer of the
++same shape as its worked example, so the first tree one you build becomes the example for
++every tree problem after it. Until one exists it falls back to the array problem and warns
++that it's a different shape. Good order: one tree problem, one linked-list problem, one stack
++problem, check them, then let the rest run.
++
++What each run prints per folder:
++
++```
++made of: tree, call-stack
++must be drawn: tree, call-stack
++example: invert-a-binary-tree (same shape)
++    WAIVED  Walk down until they split: call-stack (declared: ...)
++```
++
++A `WAIVED` line is the one thing accepted on the model's say-so — it claims the code never
++materialises that structure. Read those. Everything else was checked by running it.
++
+ Start with `--limit 1`.
+ 
+ ---
+diff --git a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html
+index de1fa2a..ef0c8d0 100644
+--- a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html	
++++ b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html	
+@@ -233,6 +233,227 @@ button.primary:hover{background:#F7B85F;}
+ .pill.good{background:var(--green);color:var(--paper);}
+ .note-text{font-size:17px;line-height:1.45;}
+ 
++/* ==========================================================================
++   Structural panels: tree, linked list, stack/queue, grid, heap.
++   Every one of these reuses the tokens and the state-class names above
++   (hot / good / done / dim / ghost / fresh), so a structural panel is the
++   same drawing as a tile row by construction rather than by resemblance.
++
++   --pscale is the density dial. A panel may ask to be drawn smaller so a
++   big structure fits one screen; panelShell() clamps it before it lands
++   here, so "smaller" can never become "unreadable".
++   ========================================================================== */
++.panel{--pscale:1;}
++.node{
++  position:absolute;box-sizing:border-box;
++  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
++  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
++  display:flex;flex-direction:column;align-items:center;justify-content:center;
++  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transform:translate(-50%,-50%);
++  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
++}
++.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
++.node.hot{background:var(--orange);}
++.node.in-window{background:var(--orange-soft);}
++.node.good{background:var(--green);color:var(--paper);}
++.node.good .sub{color:var(--paper);}
++.node.done{background:var(--ink);color:var(--paper);}
++.node.done .sub{color:var(--pencil-light);}
++.node.dim{opacity:.4;}
++.node.is-current{box-shadow:3px 3px 0 var(--ink);}
++.node.ghost,.node.nil{
++  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
++  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
++}
++.node.fresh{animation:fill-flash .5s ease;}
++.node.square{border-radius:var(--sk-md);}
++
++/* ---------- tree ---------- */
++.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
++.tree-stage{position:relative;width:max-content;min-width:100%;}
++.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
++.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
++.tree-stage .edge{
++  stroke:var(--ink);stroke-width:2;fill:none;
++  transition:stroke .25s ease, opacity .25s ease;
++}
++.tree-stage .edge.dim{opacity:.3;}
++.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
++.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
++.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
++.tree-stage .edge-label{
++  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
++}
++.node-tag{
++  position:absolute;transform:translate(-50%,-50%);
++  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
++  transition:left .32s ease, top .32s ease, opacity .2s ease;
++}
++.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
++.node-tag.red{color:var(--red);}
++.node-tag.green{color:var(--green);}
++
++/* ---------- linked list ---------- */
++.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
++.list-scroll{overflow-x:auto;scrollbar-width:thin;}
++.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
++.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
++.list-cell{
++  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
++  display:flex;flex-direction:column;align-items:center;justify-content:center;
++  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
++}
++.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
++.list-cell.hot{background:var(--orange);}
++.list-cell.in-window{background:var(--orange-soft);}
++.list-cell.good{background:var(--green);color:var(--paper);}
++.list-cell.good .sub{color:var(--paper);}
++.list-cell.done{background:var(--ink);color:var(--paper);}
++.list-cell.done .sub{color:var(--pencil-light);}
++.list-cell.dim{opacity:.4;}
++.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
++.list-cell.fresh{animation:fill-flash .5s ease;}
++.list-arrow{
++  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
++  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
++}
++.list-arrow.back{transform:scaleX(-1);}
++.list-arrow.hot{color:var(--orange);}
++.list-arrow.ghost{color:var(--pencil-light);}
++.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
++.list-null{
++  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
++}
++.list-tag{
++  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
++  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
++  transition:left .3s ease, opacity .2s ease;opacity:0;
++}
++.list-tag.visible{opacity:1;}
++.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
++.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
++.list-tag.below{bottom:calc(2px * var(--pscale));}
++.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
++.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
++.list-tag.red{color:var(--red);}
++.list-tag.green{color:var(--green);}
++.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
++.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
++
++/* ---------- stack / queue buckets ---------- */
++.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
++/* A grid, not a column, so that several buckets of different depths still line
++   their labels up along the top and their floors up along the bottom. Stacked
++   as a plain flex column they drifted against each other and the panel read as
++   three unrelated drawings. */
++.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
++.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
++.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
++/* three sides only: the top is open, because that is the whole point of a bucket */
++.bucket-box{
++  align-self:end;
++  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
++  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
++  padding:calc(10px * var(--pscale));
++  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
++}
++.bucket-box::before,.bucket-box::after{
++  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
++}
++.bucket-box::before{left:-2px;}
++.bucket-box::after{right:-2px;}
++.bucket.queue .bucket-box{
++  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
++  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
++}
++.cell{
++  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
++  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
++  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
++  transition:background .25s ease, color .25s ease;
++}
++.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
++.cell.hot{background:var(--orange);}
++.cell.head{background:var(--orange);}
++.cell.good{background:var(--green);color:var(--paper);}
++.cell.good small{color:var(--paper);}
++.cell.done{background:var(--ink);color:var(--paper);}
++.cell.done small{color:var(--pencil-light);}
++.cell.dim{opacity:.42;}
++.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
++.cell.fresh{animation:fill-flash .5s ease;}
++.cell.popped{animation:pop-fade .55s ease;}
++.bucket-empty{
++  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
++  text-align:center;font-size:15px;color:var(--pencil);
++}
++.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
++/* A normal flex child, appended last, so column-reverse lands it directly above
++   the topmost item. Absolutely positioned against the box it floated at the top
++   of the bucket instead - pointing at empty space above a two-item stack. */
++.bucket-top{
++  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
++  line-height:1;padding:0 2px calc(2px * var(--pscale));
++}
++.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
++
++/* ---------- grid / matrix ---------- */
++.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
++.grid-stage{position:relative;width:max-content;}
++.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
++.grid-tbl th{
++  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
++  padding:0;min-width:calc(20px * var(--pscale));
++}
++.grid-cell{
++  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
++  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
++  vertical-align:middle;white-space:nowrap;position:relative;
++  transition:background .25s ease, color .25s ease, border-color .25s ease;
++}
++.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
++.grid-cell.hot{background:var(--orange);}
++.grid-cell.in-window{background:var(--orange-soft);}
++.grid-cell.good{background:var(--green);color:var(--paper);}
++.grid-cell.good .sub{color:var(--paper);}
++.grid-cell.done{background:var(--ink);color:var(--paper);}
++.grid-cell.done .sub{color:var(--pencil-light);}
++.grid-cell.dim{opacity:.4;}
++.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
++.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
++.grid-cell.fresh{animation:fill-flash .5s ease;}
++.grid-box{
++  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
++  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
++}
++.grid-box.visible{opacity:1;}
++.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
++
++/* ---------- heap (array and the tree it implies) ---------- */
++.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
++.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
++.heap-slot{
++  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
++  display:flex;align-items:center;justify-content:center;
++  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transition:background .25s ease, color .25s ease;
++}
++.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
++.heap-slot.hot{background:var(--orange);}
++.heap-slot.in-window{background:var(--orange-soft);}
++.heap-slot.good{background:var(--green);color:var(--paper);}
++.heap-slot.good .idx{color:var(--paper);}
++.heap-slot.done{background:var(--ink);color:var(--paper);}
++.heap-slot.done .idx{color:var(--pencil-light);}
++.heap-slot.dim{opacity:.4;}
++.heap-slot.fresh{animation:fill-flash .5s ease;}
++.heap-caption{font-size:15px;color:var(--pencil);}
++
+ /* ---------- code panel ---------- */
+ .code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+ .code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+@@ -309,6 +530,48 @@ function pNote(title, html){ return {t:'note', title: title, html: html}; }
+ function mapChips(map, hot){
+   return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+ }
++/* ---- structural panel constructors ----
++   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
++   stack as a bucket, a matrix as a grid - and every one of them uses the same
++   ink, paper and orange as the tile row above, because they all read the same
++   CSS custom properties.
++
++   Each of these accepts an `opts` object as its last argument. `scale` lives
++   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
++   fits one screen. It is clamped on the way in, so it cannot make a panel
++   unreadable however small a number is passed. */
++function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
++function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
++function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
++function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
++function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
++/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
++   the {id, v, parent, side} node list pTree wants. A null does not get children,
++   which is the part that is easy to get wrong by hand. */
++function treeFromLevelOrder(vals){
++  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
++  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
++  const q = ['n0'];
++  let qi = 0, i = 1, made = 1;
++  while (qi < q.length && i < vals.length){
++    const pid = q[qi++];
++    for (const side of ['L','R']){
++      if (i >= vals.length) break;
++      const v = vals[i++];
++      if (v === null || v === undefined) continue;
++      const id = 'n' + (made++);
++      nodes.push({id: id, v: v, parent: pid, side: side});
++      q.push(id);
++    }
++  }
++  return nodes;
++}
++/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
++function heapNodes(values){
++  return values.map((v, i) => ({
++    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
++  }));
++}
+ /* ---- input parsing ---- */
+ function parseInts(raw, cap){
+   const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+@@ -317,6 +580,21 @@ function parseInts(raw, cap){
+   if (nums.some(n => !Number.isFinite(n))) return null;
+   return cap ? nums.slice(0, cap) : nums;
+ }
++/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
++   all mean "no node here", because every source writes it differently. */
++function parseLevelOrder(raw, cap){
++  const parts = String(raw).split(',').map(s => s.trim());
++  const out = [];
++  for (const s of parts){
++    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
++    const n = Number(s);
++    if (!Number.isFinite(n)) return null;
++    out.push(n);
++  }
++  while (out.length && out[out.length - 1] === null) out.pop();
++  if (!out.length || out[0] === null) return null;
++  return cap ? out.slice(0, cap) : out;
++}
+ function randInts(n, lo, hi){
+   return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+ }
+@@ -326,51 +604,75 @@ function randWord(len, alphabet){
+ }
+ 
+ const PROBLEM = {
+-  title: 'Lowest Common Ancestor in a BST',
+-  note: 'the answer is the first node whose value the two targets straddle',
++  title: 'Lowest Common Ancestor in a Binary Search Tree',
++  note: 'the first node whose value sits between p and q is the answer',
+   inputs: [
+-    {id:'t', label:'BST inserts', value:'6,2,8,0,4,7,9,3,5', width:230},
++    {id:'t', label:'tree (level order)', value:'6,2,8,0,4,7,9,null,null,3,5', width:300},
+     {id:'p', label:'p', value:'3', width:70},
+     {id:'q', label:'q', value:'5', width:70}
+   ],
+   parse(raw){
+-    const vals = parseInts(raw.t, 15);
+-    if (!vals) return {ok:false, msg:'Enter a valid comma-separated list of node values.'};
+-    const uniq = [];
+-    vals.forEach(v => { if (uniq.indexOf(v) < 0) uniq.push(v); });
+-    if (uniq.length < 3) return {ok:false, msg:'Needs at least three distinct node values.'};
+-    const pv = parseInts(raw.p, 1), qv = parseInts(raw.q, 1);
+-    if (!pv || !qv) return {ok:false, msg:'p and q must each be a single number.'};
+-    const p = pv[0], q = qv[0];
+-    if (uniq.indexOf(p) < 0 || uniq.indexOf(q) < 0) return {ok:false, msg:'p and q must both be values present in the tree.'};
+-    if (p === q) return {ok:false, msg:'Pick two different nodes for p and q.'};
+-    return {ok:true, value:{vals:uniq, p:p, q:q}, normalized:{t:uniq.join(','), p:String(p), q:String(q)}};
++    const vals = parseLevelOrder(raw.t, 31);
++    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 6,2,8,0,4,7,9,null,null,3,5.'};
++    const nodes = treeFromLevelOrder(vals);
++    if (!nodes.length) return {ok:false, msg:'The tree needs at least a root.'};
++    const byId = {}; nodes.forEach(n => { byId[n.id] = n; });
++    const kid = {}; nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
++    const order = [];
++    (function walk(id){ if (!id) return; const k = kid[id] || {}; walk(k.L); order.push(byId[id].v); walk(k.R); })('n0');
++    for (let i = 1; i < order.length; i++){
++      if (order[i] <= order[i-1]) return {ok:false, msg:'That is not a binary search tree — an in-order walk must be strictly increasing, and this one reads ' + order.join(' ') + '.'};
++    }
++    const p = Number(String(raw.p).trim()), q = Number(String(raw.q).trim());
++    if (!Number.isFinite(p) || !Number.isFinite(q)) return {ok:false, msg:'p and q must be numbers.'};
++    if (p === q) return {ok:false, msg:'p and q must be two different nodes.'};
++    const present = {}; nodes.forEach(n => { present[n.v] = 1; });
++    if (!present[p] || !present[q]) return {ok:false, msg:'p and q must both be values that exist in the tree.'};
++    return {
++      ok:true,
++      value:{vals: vals, p: p, q: q},
++      normalized:{t: vals.map(v => v === null ? 'null' : v).join(','), p: String(p), q: String(q)}
++    };
+   },
+   shuffle(){
+-    const pool = [];
+-    for (let i = 0; i <= 15; i++) pool.push(i);
+-    for (let i = pool.length - 1; i > 0; i--){
+-      const j = Math.floor(Math.random() * (i + 1));
+-      const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
++    const picked = [];
++    while (picked.length < 8){
++      const v = 1 + Math.floor(Math.random() * 40);
++      if (picked.indexOf(v) < 0) picked.push(v);
+     }
+-    const vals = pool.slice(0, 9);
+-    const a = Math.floor(Math.random() * vals.length);
+-    let b = Math.floor(Math.random() * vals.length);
+-    if (b === a) b = (a + 1) % vals.length;
+-    return {t: vals.join(','), p: String(vals[a]), q: String(vals[b])};
++    const root = {v: picked[0], l: null, r: null};
++    for (let i = 1; i < picked.length; i++){
++      const v = picked[i];
++      let n = root;
++      for (;;){
++        if (v < n.v){ if (!n.l){ n.l = {v: v, l: null, r: null}; break; } n = n.l; }
++        else { if (!n.r){ n.r = {v: v, l: null, r: null}; break; } n = n.r; }
++      }
++    }
++    const out = [], q = [root];
++    while (q.length){
++      const n = q.shift();
++      if (!n){ out.push('null'); continue; }
++      out.push(n.v); q.push(n.l); q.push(n.r);
++    }
++    while (out.length && out[out.length - 1] === 'null') out.pop();
++    const a = picked[Math.floor(Math.random() * picked.length)];
++    let b = a;
++    while (b === a) b = picked[Math.floor(Math.random() * picked.length)];
++    return {t: out.join(','), p: String(a), q: String(b)};
+   },
+   solutions: [
+   {
+-    label: 'Walk down, let the ordering pick the direction',
++    label: 'Walk down until they split',
+     badge: 'O(n) time · O(1) space · iterative BST descent · optimal.cs',
+-    blurb: 'Every BST node splits its subtree into <b>smaller-left</b> and <b>larger-right</b>. If both targets fall on the same side of a node, that node is not the meeting point and the entire other side is dead. The first node the pair <em>straddles</em> holds both and no child can, so it is the lowest ancestor — found in one descent, no stack.',
++    blurb: 'A BST sorts every node: if <b>p</b> and <b>q</b> are both above the current value they are both in the right subtree, both below and they are both in the left. Either way the node you are standing on is a common ancestor but not the <em>lowest</em> one, so step down. The first node they straddle — or that is one of them — is the answer, because one more step would drop one of the two.',
+     legend: [
+-      {cls:'hot', text:'node — where the walk is now'},
+-      {cls:'win', text:'p and q'},
+-      {cls:'head', text:'ancestors already passed'},
+-      {cls:'dim', text:'subtree ruled out'},
+-      {cls:'good', text:'the LCA'}
++      {cls:'hot', text:'node — the live pointer'},
++      {cls:'done', text:'already passed through'},
++      {cls:'dim', text:'ruled out by one comparison'},
++      {cls:'good', text:'the split point — the LCA'}
+     ],
++    shapeOverride: {skip: ['call-stack'], reason: 'This version is a while loop over a single pointer — there is never more than one frame, and that absence is exactly what makes it O(1) space.'},
+     code: [
+       'TreeNode node = root;',
+       '',
+@@ -378,120 +680,100 @@ const PROBLEM = {
+       '{',
+       '    if (p.val > node.val && q.val > node.val)',
+       '    {',
+-      '        node = node.right;   // both targets are larger',
++      '        node = node.right;',
+       '    }',
+       '    else if (p.val < node.val && q.val < node.val)',
+       '    {',
+-      '        node = node.left;    // both targets are smaller',
++      '        node = node.left;',
+       '    }',
+       '    else',
+       '    {',
+-      '        return node;         // the pair straddles here',
++      '        return node;   // p and q split here',
+       '    }',
+       '}',
+       'return null;'
+     ],
+     simulate(input){
+-      const vals = input.vals, p = input.p, q = input.q, steps = [];
+-      const lo = Math.min(p, q), hi = Math.max(p, q);
+-      const build = (list) => {
+-        let r = null;
+-        list.forEach(v => {
+-          const n = {val:v, left:null, right:null};
+-          if (!r){ r = n; return; }
+-          let c = r;
+-          for(;;){
+-            if (v < c.val){ if (!c.left){ c.left = n; return; } c = c.left; }
+-            else { if (!c.right){ c.right = n; return; } c = c.right; }
+-          }
+-        });
+-        return r;
++      const vals = input.vals, P = input.p, Q = input.q;
++      const nodes = treeFromLevelOrder(vals);
++      const byId = {}; nodes.forEach(n => { byId[n.id] = n; });
++      const kid = {}; nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
++      const idOf = {}; nodes.forEach(n => { idOf[n.v] = n.id; });
++      const sub = (id) => {
++        const out = {}, st = [id];
++        while (st.length){
++          const c = st.pop(); if (!c) continue;
++          out[c] = 1;
++          const k = kid[c] || {};
++          if (k.L) st.push(k.L);
++          if (k.R) st.push(k.R);
++        }
++        return out;
++      };
++      const visited = {};
++      const panels = (curId, ansId, go) => {
++        const live = curId ? sub(curId) : null;
++        const tags = [{name:'p', id: idOf[P], cls:'accent'}, {name:'q', id: idOf[Q], cls:'accent'}];
++        if (curId) tags.push({name:'node', id: curId});
++        return [
++          pTree('BST', nodes.map(n => {
++            let cls = '';
++            if (ansId && n.id === ansId) cls = 'good';
++            else if (curId && n.id === curId) cls = 'hot';
++            else if (visited[n.id]) cls = 'done';
++            else if (live && !live[n.id]) cls = 'dim';
++            return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
++          }), {tags: tags, scale: 0.85}),
++          pPills('', [
++            {k:'p.val', v: P},
++            {k:'q.val', v: Q},
++            {k:'node.val', v: curId ? byId[curId].v : '–', cls:'hot'},
++            {k:'step', v: go}
++          ])
++        ];
+       };
+-      const root = build(vals);
+-      const collect = (n, out) => { if (!n) return out; out.push(n.val); collect(n.left, out); collect(n.right, out); return out; };
+-      const levels = [];
+-      (function place(n, d, tag){
+-        if (!n) return;
+-        if (!levels[d]) levels[d] = [];
+-        levels[d].push({node:n, tag:tag});
+-        place(n.left, d + 1, 'left of ' + n.val);
+-        place(n.right, d + 1, 'right of ' + n.val);
+-      })(root, 0, 'root');
+-
+-      let done = [], pruned = [], ans = null;
+-      const walk = [];
+-      const rows = (cur) => levels.map((row, d) => ({
+-        left: 'depth ' + d,
+-        items: row.map(e => {
+-          const v = e.node.val;
+-          const marks = [];
+-          if (v === p) marks.push('p');
+-          if (v === q) marks.push('q');
+-          const cls = (ans !== null && v === ans) ? 'good'
+-            : v === cur ? 'hot'
+-            : pruned.indexOf(v) >= 0 ? 'dim'
+-            : marks.length ? 'win'
+-            : done.indexOf(v) >= 0 ? 'head' : '';
+-          return {text: String(v), sub: marks.length ? marks.join(' · ') : e.tag, cls: cls};
+-        })
+-      }));
+-      const panels = (cur) => [
+-        pChips('BST by depth', rows(cur)),
+-        pSlots('Path from the root', walk.length
+-          ? walk.map((v, i) => ({text: String(v), cls: (ans !== null && v === ans) ? 'good' : (i === walk.length - 1 ? 'hot' : 'head')}))
+-          : [{text: String(root.val), cls:'hot'}]),
+-        pPills('', [
+-          {k:'node', v: cur === null ? 'null' : cur, cls:'hot'},
+-          {k:'p.val', v: p},
+-          {k:'q.val', v: q},
+-          {k:'result', v: ans === null ? '–' : ans, cls:'good'}
+-        ])
+-      ];
+-
+-      steps.push({lines:[1,3], msg:'One reference, <code>node</code>, starts at the root <b>' + root.val + '</b>. The BST invariant — everything left is smaller, everything right is larger — means the targets <b>p=' + p + '</b> and <b>q=' + q + '</b> can only be in one of two situations at each node: both on the same side, or split across it. That is the whole algorithm. Line 18 is unreachable while both targets really are in the tree.', panels: panels(root.val)});
+-
+-      let node = root;
+-      while (node){
+-        const v = node.val;
+-        walk.push(v);
+-        if (p > v && q > v){
+-          pruned = pruned.concat(collect(node.left, []));
+-          steps.push({lines:[5,7], msg:'At node <b>' + v + '</b>: both ' + p + ' and ' + q + ' are larger, so both live in the right subtree. Node ' + v + ' and everything to its left are smaller than both targets, so that entire side cannot hold either one — a single comparison discards it without a visit.', panels: panels(v)});
+-          done.push(v);
+-          node = node.right;
+-        } else if (p < v && q < v){
+-          pruned = pruned.concat(collect(node.right, []));
+-          steps.push({lines:[9,11], msg:'At node <b>' + v + '</b>: both ' + p + ' and ' + q + ' are smaller, so both live in the left subtree. The right subtree holds only values above ' + v + ' and is dropped whole. <code>node</code> is simply overwritten — nothing about ' + v + ' needs remembering, because the answer is a node we are still walking toward.', panels: panels(v)});
+-          done.push(v);
+-          node = node.left;
++      const steps = [];
++      let cur = 'n0';
++      steps.push({lines:[1], msg:'Start at the root with one pointer and nothing else. In a BST a single comparison at a node tells you which <em>whole</em> subtree both targets live in, so the walk never backtracks and never has to remember where it has been — that is why no stack, no parent pointers and no path list appear anywhere below.', panels: panels(cur, null, 'start')});
++      let answer = null;
++      while (cur){
++        const v = byId[cur].v;
++        if (P > v && Q > v){
++          const next = (kid[cur] || {}).R;
++          visited[cur] = 1;
++          cur = next;
++          steps.push({lines:[3,5,7], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are greater than <b>' + v + '</b>, so both nodes sit in the right subtree of ' + v + '. Node ' + v + ' <em>is</em> a common ancestor — but so is its right child, and that one is lower. So ' + v + ' and its entire left subtree are dead in one comparison; move right to <b>' + byId[cur].v + '</b>.', panels: panels(cur, null, 'right')});
++        } else if (P < v && Q < v){
++          const next = (kid[cur] || {}).L;
++          visited[cur] = 1;
++          cur = next;
++          steps.push({lines:[3,9,11], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are smaller than <b>' + v + '</b>, so both live in the left subtree. Same argument mirrored: ' + v + ' is an ancestor of both but its left child is a lower one, so ' + v + ' and everything to its right is discarded. Move left to <b>' + byId[cur].v + '</b>.', panels: panels(cur, null, 'left')});
+         } else {
+-          ans = v;
+-          steps.push({lines:[13,15], msg:'At node <b>' + v + '</b>: ' + lo + ' ≤ ' + v + ' ≤ ' + hi + ', so the pair straddles it (or one target <em>is</em> it). Both targets are inside this subtree, and either child would keep only one of them — so no deeper node is a common ancestor. <b>' + v + '</b> is the lowest.', panels: panels(v)});
++          answer = cur;
++          steps.push({lines:[3,13,15], msg:'Neither test holds at <b>' + v + '</b>: ' + P + ' and ' + Q + ' straddle it' + ((P === v || Q === v) ? ' — in fact ' + v + ' is one of them, and a node is its own ancestor' : ', one on each side') + '. Stepping either way would leave the other behind, so no node below ' + v + ' has both underneath it. <b>' + v + '</b> is the lowest common ancestor.', panels: panels(cur, cur, 'split')});
+           break;
+         }
+       }
+-
+-      steps.push({lines:[15], msg:'Answer <b>' + ans + '</b> after ' + walk.length + ' comparison' + (walk.length === 1 ? '' : 's') + ' — one per level descended. No parent pointers, no path list, no stack: the node value alone decided the direction every time. The cost is the tree height, which is O(log n) when balanced and O(n) for a chain-shaped tree.', panels: panels(ans).concat([pNote('Why one pass is enough', 'The descent never has to back up. Once both targets are known to be on one side, the other side is eliminated <b>permanently</b> — the same reasoning that makes a binary search irreversible.')])});
++      steps.push({lines:[15], msg:'Answer <b>' + byId[answer].v + '</b>, found in ' + (steps.length - 2) + ' comparison' + ((steps.length - 2) === 1 ? '' : 's') + ' — one per level, never more than the height of the tree. <code>return null</code> on the last line is unreachable whenever p and q really are in the tree: the descent is guaranteed to hit their split point before it runs out of nodes.', panels: panels(answer, answer, 'done')});
+       return steps;
+     }
+   },
+   {
+     label: 'The same descent, written as recursion',
+     badge: 'O(n) time · O(n) space · recursive BST descent · suboptimal.cs',
+-    blurb: 'Identical logic: recompute <code>min</code>/<code>max</code>, ask whether <code>root</code> falls inside that range, otherwise recurse into the one child that can still contain both. It visits exactly the same nodes — but each level parks a stack frame that exists only to hand the result back up, so the walk costs O(h) space instead of a single reference.',
++    blurb: 'Identical logic with the straddle test normalised into <code>min</code> and <code>max</code>, but each level becomes a stack frame. Every frame does one comparison, recurses, then hands the child\'s answer straight back up untouched — a tail call C# does not eliminate. So the frames buy nothing and cost O(h) memory, which on a degenerate BST is O(n).',
+     legend: [
+       {cls:'hot', text:'root of the current call'},
+-      {cls:'win', text:'p and q'},
+-      {cls:'head', text:'frames still open below'},
+-      {cls:'dim', text:'subtree never entered'},
+-      {cls:'good', text:'the returned LCA'}
++      {cls:'done', text:'a frame still waiting below'},
++      {cls:'dim', text:'never passed to any call'},
++      {cls:'good', text:'the value being returned'}
+     ],
+     code: [
+       'int min = Math.Min(p.val, q.val);',
+       'int max = Math.Max(p.val, q.val);',
+       '',
+       'if (max >= root.val && min <= root.val)',
+-      '    return root;                       // root splits the pair',
++      '    return root;',
+       '',
+       'if (min > root.val)',
+       '{',
+@@ -501,94 +783,87 @@ const PROBLEM = {
+       '    return LowestCommonAncestor(root.left, p, q);'
+     ],
+     simulate(input){
+-      const vals = input.vals, p = input.p, q = input.q, steps = [];
+-      const lo = Math.min(p, q), hi = Math.max(p, q);
+-      const build = (list) => {
+-        let r = null;
+-        list.forEach(v => {
+-          const n = {val:v, left:null, right:null};
+-          if (!r){ r = n; return; }
+-          let c = r;
+-          for(;;){
+-            if (v < c.val){ if (!c.left){ c.left = n; return; } c = c.left; }
+-            else { if (!c.right){ c.right = n; return; } c = c.right; }
+-          }
+-        });
+-        return r;
++      const vals = input.vals, P = input.p, Q = input.q;
++      const lo = Math.min(P, Q), hi = Math.max(P, Q);
++      const nodes = treeFromLevelOrder(vals);
++      const byId = {}; nodes.forEach(n => { byId[n.id] = n; });
++      const kid = {}; nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
++      const idOf = {}; nodes.forEach(n => { idOf[n.v] = n.id; });
++      const sub = (id) => {
++        const out = {}, st = [id];
++        while (st.length){
++          const c = st.pop(); if (!c) continue;
++          out[c] = 1;
++          const k = kid[c] || {};
++          if (k.L) st.push(k.L);
++          if (k.R) st.push(k.R);
++        }
++        return out;
++      };
++      let frames = [];
++      const onStack = () => { const m = {}; frames.forEach(f => { m[f.id] = 1; }); return m; };
++      const panels = (curId, ansId, carry, popped) => {
++        const live = curId ? sub(curId) : null;
++        const held = onStack();
++        const tags = [{name:'p', id: idOf[P], cls:'accent'}, {name:'q', id: idOf[Q], cls:'accent'}];
++        if (curId) tags.push({name:'root', id: curId});
++        const items = frames.map((f, i) => ({
++          text: 'LCA(node ' + f.v + ')',
++          sub: 'min ' + lo + ', max ' + hi,
++          cls: (ansId && f.id === ansId) ? 'good' : (i === frames.length - 1 ? 'hot' : ''),
++          fresh: !!f.fresh
++        }));
++        if (popped) items.push({text: 'LCA(node ' + popped.v + ')', sub: 'returns ' + popped.ret, cls:'good', popped: true});
++        return [
++          pTree('BST', nodes.map(n => {
++            let cls = '';
++            if (ansId && n.id === ansId) cls = 'good';
++            else if (curId && n.id === curId) cls = 'hot';
++            else if (held[n.id]) cls = 'done';
++            else if (live && !live[n.id]) cls = 'dim';
++            return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
++          }), {tags: tags, scale: 0.85}),
++          pStack('call stack', [{label:'LowestCommonAncestor frames', items: items, mode:'stack', empty:'no frames — back in the caller', foot:'bottom = first call'}]),
++          pPills('', [
++            {k:'min', v: lo},
++            {k:'max', v: hi},
++            {k:'root.val', v: curId ? byId[curId].v : '–', cls:'hot'},
++            {k:'depth', v: frames.length},
++            {k:'carrying', v: carry === null ? '–' : carry, cls:'good'}
++          ])
++        ];
+       };
+-      const root = build(vals);
+-      const collect = (n, out) => { if (!n) return out; out.push(n.val); collect(n.left, out); collect(n.right, out); return out; };
+-      const levels = [];
+-      (function place(n, d, tag){
+-        if (!n) return;
+-        if (!levels[d]) levels[d] = [];
+-        levels[d].push({node:n, tag:tag});
+-        place(n.left, d + 1, 'left of ' + n.val);
+-        place(n.right, d + 1, 'right of ' + n.val);
+-      })(root, 0, 'root');
+-
+-      let pruned = [], ans = null;
+-      const frames = [];
+-      const rows = (cur) => levels.map((row, d) => ({
+-        left: 'depth ' + d,
+-        items: row.map(e => {
+-          const v = e.node.val;
+-          const marks = [];
+-          if (v === p) marks.push('p');
+-          if (v === q) marks.push('q');
+-          const open = frames.some(f => f.val === v);
+-          const cls = (ans !== null && v === ans) ? 'good'
+-            : v === cur ? 'hot'
+-            : pruned.indexOf(v) >= 0 ? 'dim'
+-            : marks.length ? 'win'
+-            : open ? 'head' : '';
+-          return {text: String(v), sub: marks.length ? marks.join(' · ') : e.tag, cls: cls};
+-        })
+-      }));
+-      const panels = (cur) => [
+-        pChips('BST by depth', rows(cur)),
+-        pSlots('Call stack (bottom → top)', frames.map((f, i) => ({text: 'LCA(' + f.val + ')', cls: i === frames.length - 1 ? 'hot' : 'head'}))),
+-        pPills('', [
+-          {k:'root.val', v: cur === null ? 'null' : cur, cls:'hot'},
+-          {k:'min', v: lo},
+-          {k:'max', v: hi},
+-          {k:'depth', v: frames.length},
+-          {k:'returned', v: ans === null ? '–' : ans, cls:'good'}
+-        ])
+-      ];
+-
+-      let node = root;
+-      while (node){
+-        const v = node.val;
+-        frames.push({val:v, line:0});
+-        steps.push({lines:[1,2], msg:'Call ' + frames.length + ' enters with <code>root = ' + v + '</code> and recomputes <code>min=' + lo + '</code>, <code>max=' + hi + '</code>. p and q never change, so these two lines produce the same pair on every call — harmless, but it is per-frame work the loop version does once, and there is no <code>root == null</code> guard, so this relies on p and q genuinely being in the tree.', panels: panels(v)});
++      const steps = [];
++      let cur = 'n0', answer = null;
++      for (;;){
++        const v = byId[cur].v;
++        frames.forEach(f => { f.fresh = false; });
++        frames.push({id: cur, v: v, fresh: true, via: null});
++        steps.push({lines:[1,2], msg:'A new frame opens for node <b>' + v + '</b>' + (frames.length === 1 ? '' : ', stacked on top of the ' + (frames.length - 1) + ' still waiting below') + '. <code>min</code> and <code>max</code> are recomputed here from p and q — the same two numbers, <b>' + lo + '</b> and <b>' + hi + '</b>, re-derived at every single level. Sorting the pair once is what lets a single test cover "p left, q right" and "q left, p right" together.', panels: panels(cur, null, null)});
+         if (hi >= v && lo <= v){
+-          steps.push({lines:[4], msg:'Test at <b>' + v + '</b>: is ' + lo + ' ≤ ' + v + ' ≤ ' + hi + '? <b>Yes.</b> The pair straddles this node (or one target is this node), so both are inside its subtree while either child would keep only one — this is the lowest common ancestor.', panels: panels(v)});
+-          ans = v;
+-          steps.push({lines:[5], msg:'Line 5 returns <b>' + v + '</b> — but only to the caller one level up. Every frame opened on the way down is still parked, waiting to pass the value along.', panels: panels(v)});
++          answer = cur;
++          frames[frames.length - 1].fresh = false;
++          steps.push({lines:[4,5], msg:'<b>' + hi + ' &gt;= ' + v + '</b> and <b>' + lo + ' &lt;= ' + v + '</b>: the pair straddles this node' + ((P === v || Q === v) ? ', and ' + v + ' is itself one of them' : '') + '. The two targets are therefore in different subtrees of ' + v + ', so nothing below it can hold both. Return <b>' + v + '</b> — and note the recursion stops on this test, never on <code>root == null</code>, so a p or q that is missing from the tree would crash instead of answering.', panels: panels(cur, cur, v)});
+           break;
+         }
+-        steps.push({lines:[4], msg:'Test at <b>' + v + '</b>: is ' + lo + ' ≤ ' + v + ' ≤ ' + hi + '? <b>No</b> — ' + (lo > v ? 'both targets are larger than ' + v : 'both targets are smaller than ' + v) + '. This node is a common ancestor, but not the <em>lowest</em> one, since one child still contains both.', panels: panels(v)});
+-        if (lo > v){
+-          pruned = pruned.concat(collect(node.left, []));
+-          frames[frames.length - 1].line = 9;
+-          steps.push({lines:[7,9], msg:'<code>min=' + lo + ' > ' + v + '</code>, so the search recurses into the right child. The left subtree is never entered — same pruning as the loop. What differs is the bookkeeping: frame LCA(' + v + ') stays alive on the stack purely to receive whatever the recursive call eventually returns.', panels: panels(v)});
+-          node = node.right;
+-        } else {
+-          pruned = pruned.concat(collect(node.right, []));
+-          frames[frames.length - 1].line = 12;
+-          steps.push({lines:[11,12], msg:'Not both larger, and not straddling, so both targets must be smaller: the else branch recurses into the left child. The right subtree is skipped, and another frame goes onto the stack on top of LCA(' + v + ').', panels: panels(v)});
+-          node = node.left;
+-        }
++        steps.push({lines:[4], msg:'At <b>' + v + '</b> the straddle test fails: ' + (lo > v ? '<b>' + lo + ' &gt; ' + v + '</b>, so both targets are above it' : '<b>' + hi + ' &lt; ' + v + '</b>, so both targets are below it') + '. A node with both targets on one side is a common ancestor, but not the lowest — the child on that side is also one. Fall through and go deeper.', panels: panels(cur, null, null)});
++        const side = lo > v ? 'R' : 'L';
++        const next = (kid[cur] || {})[side];
++        frames[frames.length - 1].via = side === 'R' ? 9 : 12;
++        frames[frames.length - 1].fresh = false;
++        cur = next;
++        steps.push({lines: side === 'R' ? [7,9] : [7,12], msg:'Recurse into the <b>' + (side === 'R' ? 'right' : 'left') + '</b> child, node <b>' + byId[cur].v + '</b>. The frame for ' + v + ' does not disappear: it stays parked on the stack holding a return address, even though it will do nothing with the result but pass it on. That parked frame is the entire difference from the loop version.', panels: panels(cur, null, null)});
+       }
+-
+-      for (let i = frames.length - 2; i >= 0; i--){
+-        const f = frames[i];
+-        frames.length = i + 1;
+-        steps.push({lines:[f.line], msg:'Frame LCA(' + f.val + ') resumes at its <code>return</code> and passes <b>' + ans + '</b> upward unchanged. It made no decision of its own after recursing — the frame existed only to forward a result.', panels: panels(ans)});
++      const ansVal = byId[answer].v;
++      while (frames.length > 1){
++        const child = frames.pop();
++        const parent = frames[frames.length - 1];
++        steps.push({lines:[parent.via], msg:'The call on node <b>' + child.v + '</b> hands <b>' + ansVal + '</b> back to the frame for node <b>' + parent.v + '</b>, which resumes at its <code>return</code> and passes the value straight up. Nothing is compared, combined or corrected on the way out — that is what makes this a tail call, and what a compiler that eliminated it would turn back into the while loop.', panels: panels(parent.id, answer, ansVal, {v: child.v, ret: ansVal})});
+       }
+-
+-      steps.push({lines:[5], msg:'The top-level call yields <b>' + ans + '</b>, the same node the loop found by visiting the same nodes in the same order. The extra cost is space: one frame per level, so O(h) — O(log n) on a balanced tree and O(n) on a chain — where the iterative version reassigns one reference and keeps nothing.', panels: panels(ans).concat([pNote('Same walk, extra stack', 'This descent is naturally <b>tail recursive</b>: the recursive call is the last thing each frame does. C# does not guarantee tail-call elimination, so those frames are real. Replacing the call with <code>root = root.right;</code> inside a loop is exactly the optimal version.')])});
++      const rootVia = frames[0].via || 5;
++      const depth = steps.filter(s => s.lines[0] === 1).length;
++      frames = [];
++      steps.push({lines:[rootVia], msg:'The outermost frame returns <b>' + ansVal + '</b> to the caller and the stack empties. Same answer and same ' + depth + ' comparison' + (depth === 1 ? '' : 's') + ' as the iterative version, but it needed ' + depth + ' live frame' + (depth === 1 ? '' : 's') + ' at peak to get there — and on a BST built from sorted input, where the height <em>is</em> n, that peak is a stack overflow waiting to happen.', panels: panels(answer, answer, ansVal)});
+       return steps;
+     }
+   }]
+@@ -696,6 +971,9 @@ function renderPanels(panels, animate){
+     }
+     el.querySelector('.panel-title').innerHTML = p.title || '';
+     el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
++    // The density dial. Clamped here, once, so no renderer has to defend
++    // itself against a panel that asked to be drawn at 0.1.
++    el.style.setProperty('--pscale', pscale(p));
+     RENDER[p.t](el.querySelector('.body'), p, animate);
+   });
+ }
+@@ -893,6 +1171,490 @@ RENDER.note = function(body, p){
+   n.innerHTML = p.html;
+ };
+ 
++/* ==========================================================================
++   Structural renderers.
++
++   These exist because every panel above this line is a row of boxes. With only
++   those, a tree came out as "nodes grouped by depth" and a stack as a row of
++   chips - the animation was correct and the shape was a lie. The rule they all
++   follow: the PROBLEM object supplies data, the chassis does every bit of
++   layout arithmetic. A generated definition that had to compute its own x and y
++   would be a generated definition that silently drifts.
++   ========================================================================== */
++
++/* The density dial, clamped. A panel may ask to be drawn smaller so a big
++   structure fits one screen; it may not ask to be drawn illegibly. */
++const SCALE_MIN = 0.7;
++function pscale(p){
++  const v = Number(p && p.scale);
++  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
++}
++
++/* Rebuild a container's children only when the *identity* of what it holds
++   changes. Keeping elements between steps is what makes a node glide to its new
++   position instead of blinking there. */
++function keyed(el, key){
++  if (el.dataset.key === key) return false;
++  el.dataset.key = key;
++  el.innerHTML = '';
++  return true;
++}
++
++const SVG_NS = 'http://www.w3.org/2000/svg';
++const mkSvg = (name) => document.createElementNS(SVG_NS, name);
++
++/* ---------------- shared tree layout ----------------
++   Used by both the tree panel and the heap panel, which is a tree with its
++   edges implied by array indices. Leaves take the next free column; a parent
++   centres over its children. Depth comes from the parent chain, so the caller
++   never states a depth and cannot state a wrong one. */
++function layoutTree(nodes, k){
++  const byId = new Map();
++  const kids = new Map();
++  const roots = [];
++  const work = nodes.map((n) => ({
++    id: String(n.id), v: n.v,
++    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
++    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
++    nil: n.v === null || n.v === undefined,
++  }));
++  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
++  work.forEach((n) => {
++    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
++    else { n.parent = null; roots.push(n.id); }
++  });
++  // Left child first when sides are given, otherwise the order they arrived in.
++  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
++  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
++
++  const X = new Map(), D = new Map(), seen = new Set();
++  let col = 0;
++  const walk = (id, d) => {
++    if (seen.has(id)) return;          // malformed data must not hang the page
++    seen.add(id);
++    D.set(id, d);
++    const cs = kids.get(id) || [];
++    if (!cs.length){ X.set(id, col++); return; }
++    cs.forEach((c) => walk(c, d + 1));
++    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
++    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
++  };
++  roots.forEach((r) => { walk(r, 0); col += 0.7; });
++  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
++
++  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
++  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
++  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
++  work.forEach((n) => {
++    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
++    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
++  });
++  return {
++    work, byId,
++    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
++    height: PAD * 2 + NODE + maxD * ROWH,
++  };
++}
++
++/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
++   absolutely positioned node divs, so edges never paint over a value. */
++function drawTree(stage, nodes, p, k){
++  const L = layoutTree(nodes, k);
++  const links = p.links || [];
++  stage.style.width = L.width + 'px';
++  stage.style.height = L.height + 'px';
++
++  let svg = stage.querySelector('svg');
++  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
++  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
++  // positioned in pixels, so anything that scales the edge layer independently
++  // - which min-width:100% on the stage does the moment the tree is narrower
++  // than the panel - draws the edges somewhere the nodes are not.
++  svg.setAttribute('width', L.width);
++  svg.setAttribute('height', L.height);
++  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
++
++  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
++    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
++    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
++      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
++                    cls: e.cls || 'ghost', label: e.label || ''})));
++
++  if (keyed(svg, edges.map((e) => e.key).join('|'))){
++    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
++  }
++  edges.forEach((e, i) => {
++    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
++    line.setAttribute('class', 'edge ' + (e.cls || ''));
++    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
++    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
++    text.setAttribute('class', 'edge-label');
++    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
++    text.setAttribute('y', (e.a.py + e.b.py) / 2);
++    text.textContent = e.label || '';
++  });
++
++  const wrapKey = L.work.map((n) => n.id).join('|');
++  let holder = stage.querySelector('.tree-nodes');
++  if (!holder){
++    holder = document.createElement('div');
++    holder.className = 'tree-nodes';
++    stage.appendChild(holder);
++  }
++  if (keyed(holder, wrapKey)){
++    L.work.forEach(() => {
++      const d = document.createElement('div');
++      d.className = 'node';
++      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
++      holder.appendChild(d);
++    });
++  }
++  L.work.forEach((n, i) => {
++    const el = holder.children[i];
++    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
++    el.style.left = n.px + 'px';
++    el.style.top = n.py + 'px';
++    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
++    const sub = el.querySelector('.sub');
++    sub.textContent = n.sub || '';
++    sub.style.display = n.sub ? '' : 'none';
++  });
++
++  // Named markers - root, cur, lca - floating just above their node.
++  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
++  let tagHolder = stage.querySelector('.tree-tags');
++  if (!tagHolder){
++    tagHolder = document.createElement('div');
++    tagHolder.className = 'tree-tags';
++    stage.appendChild(tagHolder);
++  }
++  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
++    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
++  }
++  tags.forEach((t, i) => {
++    const el = tagHolder.children[i];
++    const n = L.byId.get(String(t.id));
++    el.className = 'node-tag ' + (t.cls || '');
++    el.textContent = t.name;
++    el.style.left = n.px + 'px';
++    el.style.top = (n.py - 38 * k) + 'px';
++  });
++}
++
++/* --- tree: a real tree, with edges --- */
++RENDER.tree = function(body, p){
++  const k = pscale(p);
++  let scroll = body.querySelector('.tree-scroll');
++  if (!scroll){
++    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
++    scroll = body.querySelector('.tree-scroll');
++  }
++  const stage = scroll.querySelector('.tree-stage');
++  if (!p.nodes || !p.nodes.length){
++    stage.style.width = ''; stage.style.height = '';
++    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
++    delete stage.dataset.built;
++    return;
++  }
++  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
++  drawTree(stage, p.nodes, p, k);
++};
++
++/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
++RENDER.list = function(body, p, animate){
++  const k = pscale(p);
++  const rows = p.rows || [];
++  let els = [...body.querySelectorAll('.list-row-wrap')];
++  if (els.length !== rows.length){
++    body.innerHTML = rows.map(() =>
++      '<div class="list-row-wrap"><div class="list-label"></div>' +
++      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
++    els = [...body.querySelectorAll('.list-row-wrap')];
++  }
++  rows.forEach((r, ri) => {
++    const wrap = els[ri];
++    const label = wrap.querySelector('.list-label');
++    label.textContent = r.label || '';
++    label.style.display = r.label ? '' : 'none';
++    const row = wrap.querySelector('.list-row');
++    const svg = row.querySelector('.list-cycle');
++    const nodes = r.nodes || [];
++
++    // One cell per node, an arrow between each pair, and a terminator.
++    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
++    let cells = [...row.querySelectorAll('.list-cell')];
++    if (row.dataset.key !== key){
++      row.dataset.key = key;
++      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
++      nodes.forEach((n, i) => {
++        const c = document.createElement('div');
++        c.className = 'list-cell';
++        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
++        row.appendChild(c);
++        if (i < nodes.length - 1 || r.tail){
++          const a = document.createElement('span');
++          a.className = 'list-arrow';
++          a.textContent = '→';
++          row.appendChild(a);
++        }
++      });
++      if (r.tail){
++        const t = document.createElement('span');
++        t.className = 'list-null';
++        t.textContent = r.tail === true ? '∅' : String(r.tail);
++        row.appendChild(t);
++      }
++      if (!nodes.length){
++        const e = document.createElement('span');
++        e.className = 'chips-empty';
++        e.textContent = r.empty || 'empty';
++        row.appendChild(e);
++      }
++      cells = [...row.querySelectorAll('.list-cell')];
++    }
++
++    nodes.forEach((n, i) => {
++      const c = cells[i];
++      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
++      c.querySelector('.v').textContent = String(n.v);
++      const sub = c.querySelector('.sub');
++      sub.textContent = n.sub || '';
++      sub.style.display = n.sub ? '' : 'none';
++    });
++    // An arrow is a pointer. Reversal problems live or die on being able to see
++    // one go dashed or vanish, so arrows take their own classes.
++    const arrows = [...row.querySelectorAll('.list-arrow')];
++    arrows.forEach((a, i) => {
++      const spec = (r.arrows || [])[i];
++      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
++      a.className = 'list-arrow ' + cls;
++      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
++    });
++
++    // Markers, placed against real measured geometry rather than guessed at.
++    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
++    let marks = [...row.querySelectorAll('.list-tag')];
++    if (marks.length !== tags.length){
++      marks.forEach((m) => m.remove());
++      tags.forEach(() => {
++        const m = document.createElement('span');
++        m.className = 'list-tag';
++        row.appendChild(m);
++      });
++      marks = [...row.querySelectorAll('.list-tag')];
++    }
++    const seen = {};
++    tags.forEach((t, i) => {
++      const m = marks[i];
++      m.textContent = t.name;
++      const cell = cells[t.idx];
++      const below = !!t.below;
++      if (!cell || t.idx < 0 || t.idx === undefined){
++        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
++        return;
++      }
++      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
++      const bucket = (below ? 'b' : 'a') + t.idx;
++      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
++      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
++      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
++    });
++
++    // The back-edge that makes a cycle a cycle.
++    const to = r.cycleTo;
++    const from = cells.length - 1;
++    if (to !== undefined && to !== null && cells[to] && cells[from]){
++      const a = cells[from], b = cells[to];
++      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
++      const y = a.offsetTop + a.offsetHeight;
++      const dip = y + 26 * k;
++      svg.style.display = '';
++      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
++      svg.setAttribute('width', row.scrollWidth);
++      svg.setAttribute('height', row.scrollHeight);
++      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
++      svg.firstChild.setAttribute('d',
++        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
++    } else {
++      svg.style.display = 'none';
++    }
++  });
++};
++
++/* --- stack / queue: a bucket with a floor and an open top --- */
++RENDER.stack = function(body, p, animate){
++  const buckets = p.buckets || [];
++  let box = body.querySelector('.buckets');
++  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
++  let els = [...box.children];
++  if (els.length !== buckets.length){
++    box.innerHTML = buckets.map(() =>
++      '<div class="bucket"><span class="bucket-label"></span>' +
++      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
++      '<span class="bucket-foot"></span></div>').join('');
++    els = [...box.children];
++  }
++  buckets.forEach((b, bi) => {
++    const el = els[bi];
++    const queue = b.mode === 'queue';
++    el.className = 'bucket' + (queue ? ' queue' : '');
++    const label = el.querySelector('.bucket-label');
++    label.textContent = b.label || '';
++    label.style.display = b.label ? '' : 'none';
++    const foot = el.querySelector('.bucket-foot');
++    foot.textContent = b.foot || '';
++    foot.style.display = b.foot ? '' : 'none';
++
++    const inner = el.querySelector('.bucket-box');
++    const items = b.items || [];
++    let cells = [...inner.querySelectorAll('.cell')];
++    let top = inner.querySelector('.bucket-top');
++    if (cells.length !== items.length){
++      cells.forEach((c) => c.remove());
++      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
++      items.forEach(() => {
++        const c = document.createElement('div');
++        c.className = 'cell';
++        inner.appendChild(c);
++      });
++      cells = [...inner.querySelectorAll('.cell')];
++    }
++    // Outside the rebuild, not inside it: a bucket that starts empty and stays
++    // empty never enters that branch, and step -1 empties every bucket. Created
++    // in there, the marker did not exist on the first frame of every stack
++    // panel in the repo, and the whole page died on the first render.
++    if (!top){
++      top = document.createElement('span');
++      top.className = 'bucket-top';
++      inner.appendChild(top);          // last child: column-reverse puts it on top
++    }
++    items.forEach((it, i) => {
++      const c = cells[i];
++      c.className = 'cell ' + (it.cls || '') +
++                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
++      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
++    });
++    const empty = el.querySelector('.bucket-empty');
++    empty.textContent = b.empty || 'empty';
++    empty.style.display = items.length ? 'none' : '';
++    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
++    top.style.display = top.textContent ? '' : 'none';
++  });
++};
++
++/* --- grid: a matrix, drawn as a matrix --- */
++RENDER.grid = function(body, p, animate){
++  const k = pscale(p);
++  const rows = p.rows || [];
++  const colLabels = p.colLabels, rowLabels = p.rowLabels;
++  let stage = body.querySelector('.grid-stage');
++  if (!stage){
++    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
++                     '<div class="grid-box"></div></div></div>';
++    stage = body.querySelector('.grid-stage');
++  }
++  const tbl = stage.querySelector('.grid-tbl');
++  const width = Math.max(0, ...rows.map((r) => r.length));
++  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
++  if (keyed(tbl, key)){
++    let html = '';
++    if (colLabels){
++      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
++              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
++    }
++    for (let r = 0; r < rows.length; r++){
++      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
++      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
++      html += '</tr>';
++    }
++    tbl.innerHTML = html;
++  }
++  const cells = [...tbl.querySelectorAll('.grid-cell')];
++  const at = (r, c) => cells[r * width + c];
++  rows.forEach((row, r) => {
++    for (let c = 0; c < width; c++){
++      const el = at(r, c);
++      if (!el) continue;
++      const raw = row[c];
++      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
++      const missing = it.v === undefined || it.v === null;
++      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
++                     (animate && it.fresh ? ' fresh' : '');
++      el.querySelector('.v').textContent = missing ? '' : String(it.v);
++      const sub = el.querySelector('.sub');
++      sub.textContent = it.sub || '';
++      sub.style.display = it.sub ? '' : 'none';
++    }
++  });
++
++  // A bracket round a sub-rectangle: the search space that is still alive.
++  const bx = stage.querySelector('.grid-box');
++  const b = p.box;
++  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
++    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
++    const pad = 5 * k;
++    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
++    bx.style.left = (a.offsetLeft - pad) + 'px';
++    bx.style.top = (a.offsetTop - pad) + 'px';
++    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
++    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
++  } else {
++    bx.className = 'grid-box';
++  }
++};
++
++/* --- heap: the tree and the array that stores it, side by side ---
++   A heap is the one structure where both views are needed at once: the
++   sift path only makes sense as a tree, and the index arithmetic only
++   makes sense as an array. Showing one without the other is how a heap
++   animation ends up teaching nothing. */
++RENDER.heap = function(body, p, animate){
++  const k = pscale(p);
++  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
++  let wrap = body.querySelector('.heap-wrap');
++  if (!wrap){
++    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
++                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
++    wrap = body.querySelector('.heap-wrap');
++  }
++  const stage = wrap.querySelector('.tree-stage');
++  const cap = wrap.querySelector('.heap-caption');
++  const arr = wrap.querySelector('.heap-array');
++
++  if (!items.length){
++    stage.style.width = ''; stage.style.height = '';
++    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
++    delete stage.dataset.built;
++  } else {
++    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
++    const nodes = items.map((it, i) => ({
++      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
++      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
++    }));
++    drawTree(stage, nodes, {
++      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
++      links: p.links,
++    }, k);
++  }
++
++  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
++  cap.style.display = p.showArray === false ? 'none' : '';
++
++  if (p.showArray === false){ arr.style.display = 'none'; return; }
++  arr.style.display = '';
++  let slots = [...arr.children];
++  if (slots.length !== items.length){
++    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
++    slots = [...arr.children];
++  }
++  items.forEach((it, i) => {
++    const s = slots[i];
++    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
++    s.querySelector('.idx').textContent = i;
++    s.querySelector('.v').textContent = String(it.v);
++  });
++};
++
+ /* ---------------- playback ---------------- */
+ function render(animate){
+   if (animate === undefined) animate = true;
+@@ -920,6 +1682,13 @@ function blankPanels(panels){
+     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+     if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
++    // A structure is shown in its starting state, not emptied: the whole point
++    // of step -1 on a tree problem is seeing the tree you are about to walk.
++    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
++    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
++    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
++    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
++    if (p.t === 'heap'){ p.items = []; p.tags = []; }
+     return p;
+   });
+ }
+diff --git a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs
+index 6decf3d..7bdba4b 100644
+--- a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs	
++++ b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs	
+@@ -1,12 +1,13 @@
+ // --------------------------------------------------------------------------
+ // -  optimal.cs            O(n) time / O(1) space
+-// -  iterative BST binary search on value range   [bst-property-navigate]
++// -  iterative BST descent, split-point detection   [bst-property-navigate]
+ // -  ranks above suboptimal.cs (O(n) time / O(n) space)
+ // -
+-// -  Reference solution - not one you solved yourself (from submission-1)
++// -  Reference solution - not one you solved yourself
+ // -
+-// -  same BST-ordering navigation as submission-0 but iterative, so no call
+-// -  stack growth
++// -  walks down one path using BST ordering, stopping at the node where p
++// -  and q's comparisons first disagree, no recursion so only constant
++// -  extra space
+ // --------------------------------------------------------------------------
+ 
+ public class Solution
+diff --git a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs
+index 1637db7..e34150b 100644
+--- a/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs	
++++ b/Data Structures & Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs	
+@@ -1,12 +1,13 @@
+ // ##########################################################################
+ // #  suboptimal.cs         O(n) time / O(n) space
+-// #  recursive BST binary search on value range   [bst-property-navigate]
++// #  recursive BST descent, split-point detection   [bst-property-navigate]
+ // #  ranks below optimal.cs (O(n) time / O(1) space)
+ // #
+-// #  YOU SOLVED THIS YOURSELF (from submission-0)
++// #  YOU SOLVED THIS YOURSELF
+ // #
+-// #  recurses one direction per call using BST ordering; worst-case skewed
+-// #  tree gives O(n) depth and O(n) call stack
++// #  same BST-ordering single-direction descent as optimal.cs but
++// #  implemented via tail recursion, so a skewed tree builds an O(n)-deep
++// #  call stack
+ // ##########################################################################
+ 
+ public class Solution {
+diff --git a/PIPELINE.md b/PIPELINE.md
+index 2e33844..0c29a3e 100644
+--- a/PIPELINE.md
++++ b/PIPELINE.md
+@@ -301,6 +301,79 @@ the result was byte-identical to the file it came from.
+ checked by hand. Regenerating them would trade work that's known good for work that merely
+ passes validation.
+ 
++#### The shape problem, and the fix
++
++The design above worked exactly as intended, and that turned out to be the bug. The chassis
++owned seven panel constructors — `pTiles`, `pBars`, `pChips`, `pSlots`, `pPills`, `pRanges`,
++`pNote` — and six of the seven are a row of boxes. There was nothing in the file that could
++draw a parent-child edge, a bucket with a floor, or a 2-D grid.
++
++So a tree problem *couldn't* come out looking like a tree. The model picked the least-wrong
++thing available and rendered a BST as chip rows grouped by depth. Two more things locked it
++in: every folder was handed the same worked example — `buy-and-sell-crypto`, an array
++problem — under the instruction *"match its shape exactly"*, and `validate()` rejected any
++panel type it didn't recognise. The animations were correct. The shapes were a lie.
++
++The fix splits one question into three, so no step decides something it has no business
++deciding:
++
++| Step | Decides | Recorded? |
++|---|---|---|
++| `classify.mjs` | **which structures** the code is made of, from a fixed enum | yes, in `state.json` |
++| `visualize.mjs` | **how to draw them** — free choice from the panel catalogue | no, it's a design call |
++| `validate()` | only that **nothing handed over went undrawn** | — |
++
++`scripts/lib/shapes.mjs` holds all three halves of that table, so they can't drift apart by
++being edited separately. Adding graph or DP panels later is an edit to that one file plus a
++renderer in the chassis; nothing else in the pipeline needs touching.
++
++**The chassis gained five structural panels**: `pTree` (real edges, depth derived from the
++parent chain, never stated), `pList` (boxes and arrows, with cycle back-edges), `pStack`
++(a bucket with a floor and an open top, also the right panel for recursion frames), `pGrid`,
++and `pHeap` (the tree and its backing array, index-linked). All five read the same CSS custom
++properties as the tile row, so the palette and fonts are shared **by construction** — same
++argument as the chassis itself. Each accepts a `scale` between 0.7 and 1 so a wide structure
++fits one screen; it's clamped in the chassis, so a panel can be made smaller but not
++unreadable.
++
++**`call-stack` is a structure.** Recursion is a mechanism rather than a data structure, but a
++recursive descent *is* a stack, and a recursive solution drawn without its frames is the most
++common way one of these teaches nothing. Classify reports it per file, which matters: on
++`lowest-common-ancestor-in-binary-search-tree` it correctly gave `optimal.cs` → `tree` and
++`suboptimal.cs` → `tree, call-stack`, off the code alone.
++
++**Coverage enforcement is deliberately weak.** The check is *"the structure is on screen
++somewhere"*, never *"you must call `pHeap`"* — any panel that can draw it satisfies it, so
++which one to reach for stays a design decision. Only structures where a row of boxes is a
++real loss are enforced; an array genuinely **is** a row of boxes and a frequency map
++genuinely **is** a row of chips, so neither is. Enforcing those would be ceremony, and
++ceremony is what gets a check switched off.
++
++When the code genuinely doesn't materialise a structure, the solution says so rather than
++drawing a fake:
++
++```js
++shapeOverride: {
++  skip: ['call-stack'],
++  reason: 'the loop rebinds one variable and keeps no frames at all',
++}
++```
++
++A reason under 25 characters is rejected — an override with no argument behind it is just a
++way of turning the check off. Every waiver is printed in the run log, because it's the one
++thing here accepted on the model's say-so.
++
++**The worked example is now chosen for shape.** `visualize.mjs` prefers a finished visualizer
++that shares an enforced structure with the problem in hand, so the first tree visualizer
++built becomes the example for every tree problem after it and the step improves as the
++backfill proceeds. When nothing matches it falls back to the array problem and *says so* —
++"different shape, voice only" — so its panel choice isn't read as a template.
++
++**Migration is free.** A folder classified before the `structures` field existed fails
++`atCurrentStandard()`, so `classify.mjs --backfill --apply` picks all 52 up with no bespoke
++script and no hand-maintained list of slugs. Until a folder has been re-classified,
++`visualize.mjs` says so in the log and falls back to advice instead of enforcement.
++
+ ### `scripts/lib/visualizer.mjs` — the part that matters most
+ 
+ A broken visualizer still *looks* like a finished 40KB file. So this doesn't inspect the
+@@ -318,6 +391,11 @@ confirming each was caught:
+ | Input parser rejects its own default | `parse() rejects its own default input` |
+ | Runaway loop generating frames | out-of-memory, reported |
+ | Syntax error | `the definition does not even run` |
++| A tree drawn as chip rows | `the code uses tree and nothing in this solution draws one` |
++| A recursive solution with no frames shown | `the code uses call-stack and nothing ... draws one` |
++| `parent` naming a node that isn't in the panel | `would silently be drawn as a second root` |
++| A ragged grid row | `has 3 cells but row 0 has 4` |
++| `&lt;` written into a plain-text label | `rendered as plain text but contains markup` |
+ 
+ The first one is the interesting failure. An out-of-range line number doesn't crash
+ anything — the visualizer just highlights nothing and reads as *dull*. Nobody reports a dull
+@@ -606,8 +684,9 @@ scripts/
+     header.mjs                     the short banner
+     teach.mjs                      the long block
+     visualizer.mjs                 splicing + validation
++    shapes.mjs                     structures, panels, coverage rules
+   templates/
+-    visualizer.chassis.html        32KB of design, lifted verbatim
++    visualizer.chassis.html        design + panels, lifted verbatim
+ ```
+ 
+ ### A note on `.gitattributes`
+diff --git a/scripts/classify.mjs b/scripts/classify.mjs
+index 5de1cfa..6a27c24 100644
+--- a/scripts/classify.mjs
++++ b/scripts/classify.mjs
+@@ -33,6 +33,7 @@ import { shortPrint } from './lib/normalise.mjs';
+ import { loadState as _ls, saveState } from './lib/scan.mjs';
+ import { report, group, endGroup } from './lib/report.mjs';
+ import { renameInVisualizer } from './lib/visualizer.mjs';
++import { STRUCTURES, STRUCTURE_HELP } from './lib/shapes.mjs';
+ 
+ const argv = process.argv.slice(2);
+ const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
+@@ -95,8 +96,17 @@ const SCHEMA = {
+             type: 'string',
+             description: 'Only when time or space is "other": the complexity you would have written, e.g. "O(m log n)". Empty otherwise. This is how a missing rung gets reported instead of guessed at.',
+           },
++          // Evidence, not design. This says what the code is MADE OF; what to
++          // draw it with is decided later, in visualize.mjs, from this list.
++          // Same reasoning as the complexity enum: an answer from a fixed list
++          // can be ranked and disagreed with, prose has to be trusted.
++          structures: {
++            type: 'array',
++            items: { type: 'string', enum: STRUCTURES },
++            description: 'Every structure this code actually builds or walks, from the list. Judge the code, not the problem title.',
++          },
+         },
+-        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity'],
++        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity', 'structures'],
+       },
+     },
+   },
+@@ -116,6 +126,13 @@ const INSTRUCTIONS = [
+   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
+   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
+   '',
++  'Also list, in "structures", every structure the code is MADE OF. This drives how the solution gets',
++  'drawn later, so it is about the code in front of you, not about the problem title - a tree problem',
++  'solved with an explicit Stack<TreeNode> uses BOTH tree and stack, and the iterative version of a',
++  'recursive solution does not use call-stack at all. Report each one that applies:',
++  ...STRUCTURES.map((s) => `  ${s.padEnd(12)} ${STRUCTURE_HELP[s]}`),
++  'List every one that applies, not just the most obvious. Omit anything the code does not actually use.',
++  '',
+   'You have no tools available and no access to the filesystem. Everything you need is on stdin. Do not attempt to read, list, or search files - answer directly from the text you were given.',
+ ].join('\n');
+ 
+@@ -217,6 +234,10 @@ const atCurrentStandard = (p) => {
+   if (!p.curatedFiles.length || p.pending.length) return false;
+   return p.curatedFiles.every((f) => {
+     if (!cls[f] || !sigs[f]) return false;
++    // Classified before the structures field existed. Not a failure - just not
++    // current, so --backfill picks it up and migrates it without a second
++    // script and without a list of slugs to hand-maintain.
++    if (!Array.isArray(cls[f].structures)) return false;
+     try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
+   });
+ };
+@@ -326,6 +347,7 @@ for (const p of targets) {
+   for (const s of res.solutions) {
+     console.log(`    ${s.file}`);
+     console.log(`        ${s.time} time / ${s.space} space   ${s.algorithm}  [${s.approachKey}]${s.correct ? '' : '   *** MODEL SAYS INCORRECT ***'}`);
++    console.log(`        made of: ${(s.structures ?? []).join(', ') || '(nothing reported)'}`);
+     console.log(`        marked yours: ${marks.get(s.file) ? 'yes' : 'no marker found'}`);
+     if (verbose) console.log(`        ${s.note}`);
+   }
+@@ -424,6 +446,10 @@ for (const p of targets) {
+       nextClass[finalName] = {
+         time: s.time, space: s.space, algorithm: s.algorithm,
+         approachKey: s.approachKey, correct: s.correct, bruteForce: !!s.bruteForce,
++        // Kept out of headerSignature on purpose, exactly like bruteForce: the
++        // header never prints it, so folding it in would rewrite every header
++        // in the repo for a field no reader ever sees.
++        structures: (s.structures ?? []).filter((x) => STRUCTURES.includes(x)),
+       };
+     }
+     rec.classification = { ...(rec.classification ?? {}), ...nextClass };
+diff --git a/scripts/lib/shapes.mjs b/scripts/lib/shapes.mjs
+new file mode 100644
+index 0000000..68c4075
+--- /dev/null
++++ b/scripts/lib/shapes.mjs
+@@ -0,0 +1,347 @@
++/**
++ * The shape catalogue: what a problem can be made of, what can draw each of
++ * those things, and which of them the pipeline refuses to let slide.
++ *
++ * This file exists because the visualizer chassis used to own only linear
++ * panels - seven constructors, six of which are a row of boxes. Nothing was
++ * broken, and every tree problem still came out as "nodes grouped by depth",
++ * because that was the least-wrong drawing available. The animation was right
++ * and the shape was a lie.
++ *
++ * The split, deliberately:
++ *
++ *   classify  reports WHICH STRUCTURES the code uses, from a fixed enum
++ *   visualize decides HOW TO DRAW THEM, freely, from the panel catalogue
++ *   validate  checks only that nothing handed over went undrawn
++ *
++ * That is why the enum lives here and the panel list lives here too: the check
++ * at the end is the same table read backwards, so the three steps cannot drift
++ * apart by being edited separately.
++ *
++ * ADDING A STRUCTURE (graph with a real node-link panel, DP, whatever is next):
++ * add it to STRUCTURES, give it an entry in RENDERABLE_BY, and if a row of
++ * boxes would be a real loss for it, add it to ENFORCED. If it needs a panel
++ * that does not exist yet, add the panel to PANELS and its renderer to the
++ * chassis. Nothing else in the pipeline needs touching - visualize builds its
++ * prompt from this file and validate builds its check from it.
++ */
++
++/**
++ * The version of the shape contract a visualizer was built under.
++ *
++ * Same job as HEADER_FORMAT and LINT_FORMAT: it is how a backfill knows what it
++ * has already redone, and how it knows to stop. Without it the only question
++ * anyone could ask was "does a visualizer file exist", which is true of every
++ * array-shaped one built before the structural panels existed - so the backfill
++ * would have considered the whole repo finished on the day it started.
++ *
++ * Bump this whenever a change would make an already-built visualizer worth
++ * rebuilding: a new panel that better suits a structure already in the enum, or
++ * a change to what coverage enforces. Do NOT bump it for a new structure that
++ * nothing in the repo uses yet.
++ *
++ *   1  seven linear panels, no coverage check
++ *   2  structural panels, structures recorded, coverage enforced
++ */
++export const VISUALIZER_FORMAT = 2;
++
++/**
++ * What a solution can be made of.
++ *
++ * Free text was never an option. A model that must answer from a list is one
++ * whose answer can be ranked, diffed and disagreed with; one that writes prose
++ * is one you have to trust. Same reasoning as the complexity enum.
++ *
++ * `call-stack` is the odd one out and earns its place: recursion is a mechanism
++ * rather than a data structure, but a recursive descent IS a stack, and a
++ * recursive solution drawn without its frames is the single most common way one
++ * of these animations ends up teaching nothing.
++ */
++export const STRUCTURES = [
++  'array',
++  'string',
++  'matrix',
++  'interval',
++  'linked-list',
++  'tree',
++  'graph',
++  'trie',
++  'stack',
++  'queue',
++  'deque',
++  'heap',
++  'call-stack',
++  'hash-map',
++  'hash-set',
++  'union-find',
++  'dp-table',
++  'bitmask',
++];
++
++/** One line each, for the classify prompt. Plain, and about the CODE, not the problem title. */
++export const STRUCTURE_HELP = {
++  'array': 'an array or list walked, indexed or two-pointered',
++  'string': 'a string walked or built character by character',
++  'matrix': 'a 2-D array, grid or board',
++  'interval': 'pairs treated as [start, end] ranges',
++  'linked-list': 'nodes joined by next/prev references',
++  'tree': 'a binary tree, BST or any parent-child node structure',
++  'graph': 'adjacency list or matrix, edges, BFS/DFS over nodes',
++  'trie': 'a prefix tree',
++  'stack': 'an explicit LIFO - Stack<T>, or a List used as one with push/pop at the end',
++  'queue': 'an explicit FIFO - Queue<T>, including a BFS frontier',
++  'deque': 'a double-ended queue - LinkedList<T> used at both ends, a monotonic deque',
++  'heap': 'a priority queue - PriorityQueue<T,TPriority>, or a hand-rolled heap',
++  'call-stack': 'THE CODE RECURSES. Report this whenever a method calls itself, even if the recursion walks a tree you already reported',
++  'hash-map': 'Dictionary, a frequency count, a seen-value map, memoisation',
++  'hash-set': 'HashSet, membership testing',
++  'union-find': 'disjoint set, find/union with parent array',
++  'dp-table': 'a table of subproblem answers filled in order, 1-D or 2-D',
++  'bitmask': 'integers used as sets of bits, shifting and masking',
++};
++
++/**
++ * The panels the chassis can draw, with the exact call shape.
++ *
++ * `renders` is the claim this file is really making: which structures this
++ * panel is an honest drawing of. It is what the coverage check reads, and it is
++ * what the prompt suggests from. Everything else here is prompt material.
++ */
++export const PANELS = [
++  {
++    t: 'tiles', fn: 'pTiles',
++    sig: 'pTiles(title, values, decorate, extra)',
++    use: 'a flat array or string as a row of boxes. decorate(i, v) returns {cls}. extra takes {ptrs:[{name,idx,cls}], bracket:{from,to,dashed}, focus, narrow}.',
++    renders: ['array', 'string', 'dp-table', 'bitmask'],
++    snippet: "pTiles('nums', nums, (i) => ({cls: i === lo ? 'hot' : ''}), {ptrs: [{name: 'l', idx: lo}, {name: 'r', idx: hi}]})",
++  },
++  {
++    t: 'bars', fn: 'pBars',
++    sig: 'pBars(title, values, decorate, extra)',
++    use: 'the same data as a histogram. Right when the VALUE is a height, a price or a width.',
++    renders: ['array'],
++    snippet: "pBars('heights', h, (i) => ({cls: i === best ? 'hot' : ''}), {fill: {from: l, to: r, level: water}})",
++  },
++  {
++    t: 'chips', fn: 'pChips',
++    sig: 'pChips(title, rows)',
++    use: 'labelled rows of small boxes. rows is an array of ROWS, each {left, right, items:[{text, sub, cls, fresh}], empty}. One row is still a one-element array. This is the right panel for a map, a set, a counter, and for a graph adjacency list.',
++    renders: ['hash-map', 'hash-set', 'string', 'graph', 'union-find', 'bitmask'],
++    snippet: "pChips('seen so far', [{left: 'value -> index', items: mapChips(seen, hotKey)}])",
++  },
++  {
++    t: 'slots', fn: 'pSlots',
++    sig: 'pSlots(title, items)',
++    use: 'the output being built, dashes until written. items: [{text, cls}].',
++    renders: ['array'],
++    snippet: "pSlots('answer', out.map((v) => ({text: v === null ? '' : v})))",
++  },
++  {
++    t: 'pills', fn: 'pPills',
++    sig: 'pPills(title, items)',
++    use: 'scalar readouts - l, r, sum, best. items: [{k, v, cls}]. Never the only panel.',
++    renders: [],
++    snippet: "pPills('state', [{k: 'sum', v: sum}, {k: 'best', v: best, cls: 'good'}])",
++  },
++  {
++    t: 'ranges', fn: 'pRanges',
++    sig: 'pRanges(title, items, min, max)',
++    use: 'intervals on a shared timeline. items: [{from, to, label, cls}]; min and max are numbers.',
++    renders: ['interval'],
++    snippet: "pRanges('intervals', iv.map((x, i) => ({from: x[0], to: x[1], label: x[0] + '-' + x[1], cls: i === k ? 'hot' : ''})), 0, 20)",
++  },
++  {
++    t: 'note', fn: 'pNote',
++    sig: 'pNote(title, html)',
++    use: 'a free-text panel. html is a string.',
++    renders: [],
++    snippet: "pNote('why', 'The left half is sorted, so the target is in it only when <code>nums[l] &lt;= t</code>.')",
++  },
++  {
++    t: 'tree', fn: 'pTree',
++    sig: 'pTree(title, nodes, opts)',
++    use: 'a real tree with real edges. nodes: [{id, v, parent, side:"L"|"R", cls, sub, edgeCls}] - id is any unique string, parent is another node\'s id or null for the root, and DEPTH IS DERIVED FROM THE PARENT CHAIN, never stated. A node with v null draws as a dashed ∅. opts: {tags:[{name, id, cls}] for markers floating above a node, links:[{from, to, cls, label}] for extra non-tree edges, square:true for boxes instead of circles, empty, scale}. Build nodes from a LeetCode level-order array with treeFromLevelOrder(vals).',
++    renders: ['tree', 'trie', 'graph', 'union-find'],
++    snippet: "pTree('tree', nodes.map((n) => ({...n, cls: n.id === curId ? 'hot' : ''})), {tags: [{name: 'root', id: curId, cls: 'accent'}], scale: 0.85})",
++  },
++  {
++    t: 'list', fn: 'pList',
++    sig: 'pList(title, rows, opts)',
++    use: 'a linked list as boxes joined by arrows. rows is an array of ROWS - two rows for a merge, one for everything else. Each row is {label, nodes:[{id, v, cls, sub, fresh}], tail:true for a trailing ∅, arrows:[cls-or-{cls,text} per gap, in order], tags:[{name, idx, cls, below}] for prev/cur/next markers, cycleTo:index to draw the back-edge of a cycle, empty}. An arrow is a pointer: give it "ghost" when it is about to be rewired and "back" when it now points the other way.',
++    renders: ['linked-list'],
++    snippet: "pList('list', [{nodes: cells, tail: true, arrows: arrowCls, tags: [{name: 'prev', idx: p}, {name: 'cur', idx: c, cls: 'accent'}]}])",
++  },
++  {
++    t: 'stack', fn: 'pStack',
++    sig: 'pStack(title, buckets)',
++    use: 'a bucket with a floor and an open top - things sit in it and come off the end. buckets is an array, so two stacks stand side by side. Each is {label, items:[{text, sub, cls, fresh, popped}], mode:"stack"|"queue", empty, top, foot}. In stack mode items[0] is the BOTTOM and the last item is the top; in queue mode items[0] is the FRONT. This is also the panel for recursion: one frame per item, innermost call on top.',
++    renders: ['stack', 'queue', 'deque', 'call-stack'],
++    snippet: "pStack('call stack', [{label: 'frames', items: frames.map((f) => ({text: f.node, sub: 'depth ' + f.d})), empty: 'no frames'}])",
++  },
++  {
++    t: 'grid', fn: 'pGrid',
++    sig: 'pGrid(title, rows, opts)',
++    use: 'a matrix drawn as a matrix. rows is an array of arrays; a cell is a scalar or {v, cls, sub, fresh}. opts: {rowLabels, colLabels, box:{r0,c0,r1,c1,dashed} to bracket a live sub-rectangle, scale}.',
++    renders: ['matrix', 'dp-table', 'graph'],
++    snippet: "pGrid('matrix', m.map((row, r) => row.map((v, c) => ({v, cls: r === rr && c === cc ? 'hot' : ''}))), {box: {r0: 0, c0: lo, r1: rows - 1, c1: hi, dashed: true}})",
++  },
++  {
++    t: 'heap', fn: 'pHeap',
++    sig: 'pHeap(title, items, opts)',
++    use: 'a heap as BOTH the tree and the array that stores it, index-linked. items is the backing array in index order; an item is a scalar or {v, cls, sub, fresh}. opts: {tags:[{name, idx, cls}], caption, showArray:false to drop the array row, empty, scale}. Use this rather than a chip row for anything sifting up or down - the sift path only reads as a path in the tree view, and the index arithmetic only reads in the array view.',
++    renders: ['heap'],
++    snippet: "pHeap('min-heap', heap.map((v, i) => ({v, cls: i === sift ? 'hot' : ''})), {tags: [{name: 'sift', idx: sift, cls: 'accent'}]})",
++  },
++];
++
++/** structure -> the panel `t` values that are an honest drawing of it. */
++export const RENDERABLE_BY = (() => {
++  const m = Object.fromEntries(STRUCTURES.map((s) => [s, []]));
++  for (const p of PANELS) for (const s of p.renders) m[s].push(p.t);
++  return m;
++})();
++
++/**
++ * The structures the pipeline will actually fail a run over.
++ *
++ * The test is not "does this structure have a panel" - it is "would a row of
++ * boxes be a real loss here". An array genuinely IS a row of boxes, and a
++ * frequency map genuinely IS a row of chips, so neither is listed: enforcing
++ * those would be ceremony. A tree drawn as rows, a stack drawn as chips or a
++ * recursion drawn with no frames are all losses, so those are.
++ */
++export const ENFORCED = new Set([
++  'matrix', 'linked-list', 'tree', 'graph', 'trie',
++  'stack', 'queue', 'deque', 'heap', 'call-stack',
++]);
++
++export const isStructure = (s) => STRUCTURES.includes(s);
++export const panelsFor = (s) => RENDERABLE_BY[s] ?? [];
++
++/**
++ * Which structures this run must show, and what would count as showing each.
++ *
++ * A structure with no renderer yet is dropped rather than enforced - listing
++ * something in ENFORCED before its panel exists would fail every run with no
++ * way to pass, which is a worse failure than the one this is preventing.
++ */
++export function required(structures) {
++  return [...new Set(structures)]
++    .filter((s) => ENFORCED.has(s) && panelsFor(s).length)
++    .map((s) => ({ structure: s, panels: panelsFor(s) }));
++}
++
++/**
++ * The coverage verdict.
++ *
++ * Deliberately weak: ANY panel that can draw the structure satisfies it. The
++ * check is "the heap is visible somewhere", never "you must call pHeap". Which
++ * panel to reach for stays a design decision, and design decisions are the
++ * model's. This only refuses the one outcome that has actually happened -
++ * everything rendered as a row of boxes.
++ *
++ * @param {string[]} structures   union of what classify recorded for the files in this run
++ * @param {string[]} seenTypes    panel `t` values that appear anywhere in this solution
++ * @param {{skip?: string[], reason?: string}} override  declared escape hatch, if any
++ */
++export function coverage(structures, seenTypes, override) {
++  const seen = new Set(seenTypes);
++  const skip = new Set((override?.skip ?? []).map(String));
++  const reason = String(override?.reason ?? '').trim();
++  const errors = [];
++  const waived = [];
++
++  for (const { structure, panels } of required(structures)) {
++    if (panels.some((t) => seen.has(t))) continue;
++    if (skip.has(structure)) {
++      // An override is a claim, and a claim with no argument behind it is just
++      // a way of turning the check off. Make it cost a sentence.
++      if (reason.length < 25) {
++        errors.push(
++          `shapeOverride skips "${structure}" but its reason is too short to be a reason. ` +
++          `Say in one sentence why this code does not materialise a ${structure}.`);
++      } else {
++        waived.push(structure);
++      }
++      continue;
++    }
++    errors.push(
++      `the code uses ${structure} and nothing in this solution draws one. ` +
++      `Add a panel of type ${panels.join(' or ')} (${panels.map((t) => PANELS.find((p) => p.t === t).fn).join(' / ')}), ` +
++      `or declare shapeOverride: {skip: ['${structure}'], reason: '...'} on this solution if the code genuinely never materialises one.`);
++  }
++  return { errors, waived };
++}
++
++// ---------------------------------------------------------------- prompt text
++
++/**
++ * The panel catalogue, as the visualize prompt sees it.
++ *
++ * Every panel is listed every time. Narrowing the list to the detected
++ * structures would be a quiet way of making the choice for the model, and the
++ * whole point of splitting evidence from design is that it does not. The
++ * detected ones are marked, not filtered.
++ */
++export function catalogueSection(structures = []) {
++  const need = new Set(structures);
++  const hot = new Set(required(structures).flatMap((r) => r.panels));
++
++  const lines = ['PANEL CATALOGUE - every panel the chassis can draw. Get the shapes exactly right;',
++                 'the renderer does not tolerate a wrong one.', ''];
++  for (const p of PANELS) {
++    const mark = hot.has(p.t) ? '  <- suits this problem' : '';
++    lines.push(`  ${p.sig}${mark}`);
++    lines.push(`      ${p.use}`);
++    lines.push(`      e.g. ${p.snippet}`);
++    lines.push('');
++  }
++  lines.push('Every panel also accepts `scale` in its options: a number from 0.7 to 1 that draws it');
++  lines.push('smaller. Use it when a structure is wide or deep enough to need scrolling - a tree of');
++  lines.push('fifteen nodes, a 6x6 grid - so the whole thing is on screen at once. It is clamped at');
++  lines.push('0.7, so you cannot make a panel unreadable, and 1 is right for anything that already fits.');
++  if (need.size) {
++    lines.push('');
++    lines.push('Shared state classes, on any item of any panel, so the colour language is one language:');
++    lines.push('  hot (live, orange) · in-window (inside the current window, pale) · good (settled, green)');
++    lines.push('  done (finished, ink) · dim (ruled out) · ghost (not yet real) · fresh (just written, animates)');
++  }
++  return lines.join('\n');
++}
++
++/**
++ * The coverage contract, as the visualize prompt sees it.
++ * Spelled out up front because a rule discovered only through a rejection costs
++ * a whole extra Opus call to learn.
++ */
++export function contractSection(structures) {
++  const req = required(structures);
++  if (!structures.length) {
++    return [
++      'This problem has no structures on record (classify has not run since the structures field',
++      'was added). Choose panels on the merits: draw each structure the code builds as the thing',
++      'it is - a tree as a tree, a stack as a bucket, a matrix as a grid - not as a row of boxes.',
++    ].join('\n');
++  }
++  const out = [
++    `WHAT THIS CODE IS MADE OF, from classify: ${structures.join(', ')}.`,
++    '',
++    'You choose the panels. The only rule is that nothing on that list goes undrawn.',
++  ];
++  if (req.length) {
++    out.push('', 'These must each be visible in at least one panel of EVERY solution, or the run is rejected:');
++    for (const { structure, panels } of req) {
++      out.push(`  ${structure.padEnd(12)} -> ${panels.map((t) => PANELS.find((p) => p.t === t).fn).join(' or ')}`);
++    }
++    out.push('',
++      'Any one of the listed panels satisfies it - this is a check that the structure is on screen,',
++      'not an instruction to use a particular panel. If the code genuinely never materialises one of',
++      'them, say so on that solution instead of drawing a fake:',
++      "    shapeOverride: {skip: ['tree'], reason: 'one sentence on why not'}");
++  }
++  const soft = structures.filter((s) => !ENFORCED.has(s));
++  if (soft.length) {
++    out.push('', `Also present, and worth drawing though not enforced: ${soft.join(', ')}.`);
++  }
++  return out.join('\n');
++}
+diff --git a/scripts/lib/shapes.test.mjs b/scripts/lib/shapes.test.mjs
+new file mode 100644
+index 0000000..61507f5
+--- /dev/null
++++ b/scripts/lib/shapes.test.mjs
+@@ -0,0 +1,99 @@
++#!/usr/bin/env node
++/**
++ * shapes.test.mjs - the coverage check's deterministic half.
++ *
++ * coverage() is the rule that stopped every problem in this repo coming out
++ * array-shaped. It is also the rule most likely to be wrong in the annoying
++ * direction: too strict and a legitimate iterative solution cannot be drawn at
++ * all, too loose and it enforces nothing and we are back where we started. So
++ * the cases below are mostly about the EDGES of the rule rather than its
++ * middle - what it lets through, and why.
++ *
++ *   node scripts/lib/shapes.test.mjs
++ */
++
++import { coverage, required, panelsFor, STRUCTURES, STRUCTURE_HELP, PANELS, ENFORCED, catalogueSection, contractSection } from './shapes.mjs';
++
++let pass = 0, fail = 0;
++const is = (name, got, want) => {
++  const g = JSON.stringify(got), w = JSON.stringify(want);
++  if (g === w) { pass++; console.log(`ok    ${name}`); }
++  else { fail++; console.log(`FAIL  ${name}\n      got:  ${g}\n      want: ${w}`); }
++};
++const ok = (name, cond) => is(name, !!cond, true);
++
++// ---- the catalogue is internally consistent -------------------------------
++// Cheap, and it is the failure mode of a table split across two constants: a
++// structure listed as enforced whose panel nobody ever wrote fails every run
++// with no way to pass.
++for (const p of PANELS) {
++  for (const s of p.renders) {
++    ok(`${p.fn} renders ${s}, which is a real structure`, STRUCTURES.includes(s));
++  }
++}
++for (const s of ENFORCED) {
++  ok(`enforced structure "${s}" has at least one panel that can draw it`, panelsFor(s).length > 0);
++}
++for (const s of STRUCTURES) {
++  ok(`"${s}" has a help line for the classify prompt`, typeof STRUCTURE_HELP[s] === 'string' && STRUCTURE_HELP[s].length > 5);
++}
++
++// ---- the bug this whole thing exists to prevent ---------------------------
++is('a tree drawn as rows of chips is rejected',
++  coverage(['tree'], ['chips', 'pills'], null).errors.length, 1);
++
++is('a recursive solution with no frames on screen is rejected',
++  coverage(['tree', 'call-stack'], ['tree', 'pills'], null).errors.length, 1);
++
++is('drawing both satisfies both',
++  coverage(['tree', 'call-stack'], ['tree', 'stack'], null).errors, []);
++
++// ---- deliberately weak: any capable panel counts --------------------------
++// The check is "the structure is on screen", never "you called this function".
++is('a queue may be drawn by the bucket panel in queue mode',
++  coverage(['queue'], ['stack'], null).errors, []);
++is('a graph may be satisfied by its adjacency list rather than a node-link drawing',
++  coverage(['graph'], ['chips'], null).errors, []);
++is('a grid-shaped graph may be satisfied by the grid panel',
++  coverage(['graph'], ['grid'], null).errors, []);
++
++// ---- not everything is enforced, on purpose -------------------------------
++// An array IS a row of boxes and a counter IS a row of chips. Enforcing those
++// would be ceremony, and ceremony is what makes a check get switched off.
++is('an array needs no special panel', coverage(['array'], ['tiles'], null).errors, []);
++is('a hash map needs no special panel', coverage(['hash-map'], ['chips'], null).errors, []);
++is('intervals need no special panel', coverage(['interval'], ['ranges'], null).errors, []);
++is('only structures with real geometry are required',
++  required(['array', 'string', 'hash-map', 'tree']).map((r) => r.structure), ['tree']);
++
++// ---- the override --------------------------------------------------------
++is('an override with a real reason waives the requirement',
++  coverage(['call-stack'], ['tree'],
++    { skip: ['call-stack'], reason: 'the loop rebinds one variable and keeps no frames at all' }),
++  { errors: [], waived: ['call-stack'] });
++
++is('an override with a token reason does not',
++  coverage(['call-stack'], ['tree'], { skip: ['call-stack'], reason: 'n/a' }).errors.length, 1);
++
++is('an override only waives what it names',
++  coverage(['tree', 'call-stack'], ['pills'],
++    { skip: ['call-stack'], reason: 'the iterative walk keeps no frames, which is the point of it' }).errors.length, 1);
++
++is('an override for something that was drawn anyway is not reported as waived',
++  coverage(['call-stack'], ['stack'],
++    { skip: ['call-stack'], reason: 'this reason is long enough to pass the length check' }).waived, []);
++
++// ---- unrecorded state degrades, it does not explode -----------------------
++// Every folder classified before the structures field existed arrives here.
++is('no structures on record enforces nothing', coverage([], ['tiles'], null).errors, []);
++is('an unknown structure is ignored rather than crashing', coverage(['quantum-rope'], ['tiles'], null).errors, []);
++is('a missing override object is fine', coverage(['tree'], ['tree'], undefined).errors, []);
++
++// ---- prompt text is built, not hand-maintained ---------------------------
++ok('the catalogue names every panel', PANELS.every((p) => catalogueSection(['tree']).includes(p.sig)));
++ok('the catalogue marks the panels that suit the problem', catalogueSection(['tree']).includes('<- suits this problem'));
++ok('the contract names the structures on record', contractSection(['tree', 'heap']).includes('tree, heap'));
++ok('the contract explains itself when nothing is on record', contractSection([]).includes('no structures on record'));
++
++console.log(`\n${pass} passed, ${fail} failed.`);
++process.exit(fail ? 1 : 0);
+diff --git a/scripts/lib/visualizer.mjs b/scripts/lib/visualizer.mjs
+index 599ddbd..74ba804 100644
+--- a/scripts/lib/visualizer.mjs
++++ b/scripts/lib/visualizer.mjs
+@@ -16,6 +16,7 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync, rmSync } from 'node
+ import { join, dirname } from 'node:path';
+ import { execFileSync } from 'node:child_process';
+ import { REPO } from './scan.mjs';
++import { coverage } from './shapes.mjs';
+ 
+ const CHASSIS = join(REPO, 'scripts', 'templates', 'visualizer.chassis.html');
+ const MARKER = '/*__PROBLEM__*/';
+@@ -48,7 +49,7 @@ function helpersFromChassis() {
+  * failure: the visualizer highlights nothing and looks merely dull, so nobody
+  * reports it.
+  */
+-export function validate(problemSource) {
++export function validate(problemSource, structures = []) {
+   const problems = [];
+   const tmp = join(REPO, '.agent', 'tmp');
+   mkdirSync(tmp, { recursive: true });
+@@ -57,7 +58,7 @@ export function validate(problemSource) {
+   const code = `
+ ${helpersFromChassis()}
+ ${problemSource}
+-const out = { errors: [], stats: {} };
++const out = { errors: [], stats: {}, solutions: [] };
+ const E = (m) => out.errors.push(m);
+ try {
+   if (typeof PROBLEM !== 'object' || !PROBLEM) E('PROBLEM is not an object');
+@@ -93,6 +94,16 @@ try {
+         E(where + '.blurb is ' + visible.length + ' visible chars; over 450 it exceeds five rendered lines');
+       }
+       if (!Array.isArray(sol.code) || !sol.code.length) { E(where + '.code must be a non-empty array'); return; }
++      // Which shapes this solution actually draws, for the coverage check in
++      // the parent process. Collected here because this is the only place the
++      // definition is ever really run.
++      const seenTypes = new Set();
++      out.solutions.push({
++        where: where, label: sol.label || null, types: [],
++        override: (sol.shapeOverride && typeof sol.shapeOverride === 'object')
++          ? { skip: sol.shapeOverride.skip, reason: sol.shapeOverride.reason } : null,
++        __types: seenTypes,
++      });
+       let steps = null;
+       try { steps = sol.simulate(parsed.value); } catch (e) { E(where + '.simulate() threw: ' + e.message); return; }
+       if (!Array.isArray(steps) || !steps.length) { E(where + '.simulate() returned no steps'); return; }
+@@ -109,6 +120,33 @@ try {
+         if (typeof st.msg !== 'string' || !st.msg.trim()) E(w + '.msg is empty');
+         if (!Array.isArray(st.panels)) { E(w + '.panels must be an array'); return; }
+ 
++        // Markup where markup is not read.
++        //
++        // 'msg', a panel 'title' and pNote's 'html' are rendered as HTML.
++        // Everything else - a chip's text, a stack frame's sub, a node's value -
++        // goes through esc() and is rendered as plain text, so "&lt;" written
++        // there arrives on screen as the five characters &lt; and "<b>" as the
++        // three characters <b>. It is a small, ugly, entirely silent fault: the
++        // panel renders, the layout is right, and one label reads as gibberish.
++        // Cheap to catch here, so it is caught here rather than in review.
++        (function scan(v, path, depth){
++          if (depth > 6 || v === null || v === undefined) return;
++          if (typeof v === 'string'){
++            if (/&(?:lt|gt|amp|quot|apos|nbsp|#\\d+);/i.test(v) || /<\\/?[a-z][a-z0-9]*(?:\\s[^>]*)?>/i.test(v)){
++              E(path + ' is rendered as plain text but contains markup: ' + JSON.stringify(v.slice(0, 60)) +
++                ' - write the characters themselves. Only msg, a panel title and pNote html are HTML.');
++            }
++            return;
++          }
++          if (Array.isArray(v)){ v.forEach(function (x, i){ scan(x, path + '[' + i + ']', depth + 1); }); return; }
++          if (typeof v === 'object'){
++            for (const key of Object.keys(v)){
++              if (key === 'title' || key === 'html') continue;   // rendered as HTML on purpose
++              scan(v[key], path + '.' + key, depth + 1);
++            }
++          }
++        })(st.panels, w + '.panels', 0);
++
+         // Panel shapes. Without this, a panel that the renderer will choke on
+         // sails through: the file looks finished, and playback dies mid-run on
+         // whichever step first contains the bad panel.
+@@ -116,6 +154,7 @@ try {
+           const pw = w + '.panels[' + pi + ']';
+           if (!pn || typeof pn !== 'object') { E(pw + ' is not an object'); return; }
+           const arr = (k) => Array.isArray(pn[k]);
++          seenTypes.add(pn.t);
+           switch (pn.t) {
+             case 'chips':
+               // The one that bit us: pChips takes ROWS, each with its own items
+@@ -140,6 +179,118 @@ try {
+             case 'note':
+               if (typeof pn.html !== 'string') E(pw + ' (note) needs an html string');
+               break;
++
++            // ---- structural panels ----
++            // These are the ones with real geometry behind them, so a wrong
++            // shape does not throw - it draws a plausible-looking wrong
++            // picture. A parent id with no node behind it silently turns one
++            // tree into a forest, and nobody reports a forest as a crash.
++            case 'tree': {
++              if (!arr('nodes')) { E(pw + ' (tree) needs a nodes array'); break; }
++              const ids = new Set();
++              pn.nodes.forEach(function (n, ni) {
++                if (!n || typeof n !== 'object') { E(pw + '.nodes[' + ni + '] is not an object'); return; }
++                if (n.id === undefined || n.id === null) E(pw + '.nodes[' + ni + '] needs an id');
++                else if (ids.has(String(n.id))) E(pw + '.nodes[' + ni + '] repeats the id ' + JSON.stringify(String(n.id)));
++                else ids.add(String(n.id));
++              });
++              pn.nodes.forEach(function (n, ni) {
++                if (n && n.parent !== undefined && n.parent !== null && !ids.has(String(n.parent))) {
++                  E(pw + '.nodes[' + ni + '] has parent ' + JSON.stringify(String(n.parent)) +
++                    ', which is not a node in this panel - it would silently be drawn as a second root');
++                }
++                if (n && n.side !== undefined && n.side !== null && n.side !== '' && n.side !== 'L' && n.side !== 'R') {
++                  E(pw + '.nodes[' + ni + '].side must be "L" or "R", got ' + JSON.stringify(n.side));
++                }
++              });
++              const roots = pn.nodes.filter(function (n) { return n && (n.parent === undefined || n.parent === null); });
++              if (pn.nodes.length && !roots.length) E(pw + ' (tree) has no root - every node names a parent, so nothing can be drawn');
++              (pn.tags || []).forEach(function (t, ti) {
++                if (t && t.id !== undefined && !ids.has(String(t.id))) {
++                  E(pw + '.tags[' + ti + '] points at id ' + JSON.stringify(String(t.id)) + ', which is not in this panel');
++                }
++              });
++              break;
++            }
++            case 'list': {
++              if (!arr('rows')) { E(pw + ' (list) needs a rows array; pList takes rows, not nodes'); break; }
++              pn.rows.forEach(function (r, ri) {
++                if (!r || typeof r !== 'object') { E(pw + '.rows[' + ri + '] is not an object'); return; }
++                if (!Array.isArray(r.nodes)) { E(pw + '.rows[' + ri + '].nodes must be an array - each row wraps its own nodes'); return; }
++                r.nodes.forEach(function (n, ni) {
++                  if (!n || n.v === undefined) E(pw + '.rows[' + ri + '].nodes[' + ni + '] needs a v');
++                });
++                (r.tags || []).forEach(function (t, ti) {
++                  if (t && t.idx !== undefined && t.idx !== null &&
++                      (!Number.isInteger(t.idx) || t.idx >= r.nodes.length)) {
++                    E(pw + '.rows[' + ri + '].tags[' + ti + '].idx is ' + t.idx +
++                      ', outside 0..' + (r.nodes.length - 1) + ' - the marker would not be drawn. Use -1 for "not on the list".');
++                  }
++                });
++                if (r.cycleTo !== undefined && r.cycleTo !== null &&
++                    (!Number.isInteger(r.cycleTo) || r.cycleTo < 0 || r.cycleTo >= r.nodes.length)) {
++                  E(pw + '.rows[' + ri + '].cycleTo is ' + r.cycleTo + ', outside 0..' + (r.nodes.length - 1));
++                }
++              });
++              break;
++            }
++            case 'stack': {
++              if (!arr('buckets')) { E(pw + ' (stack) needs a buckets array; pStack takes buckets, not items'); break; }
++              pn.buckets.forEach(function (b, bi) {
++                if (!b || typeof b !== 'object') { E(pw + '.buckets[' + bi + '] is not an object'); return; }
++                if (!Array.isArray(b.items)) { E(pw + '.buckets[' + bi + '].items must be an array'); return; }
++                if (b.mode !== undefined && b.mode !== 'stack' && b.mode !== 'queue') {
++                  E(pw + '.buckets[' + bi + '].mode must be "stack" or "queue", got ' + JSON.stringify(b.mode));
++                }
++                b.items.forEach(function (it, ii) {
++                  if (!it || it.text === undefined || it.text === null) {
++                    E(pw + '.buckets[' + bi + '].items[' + ii + '] needs a text');
++                  }
++                });
++              });
++              break;
++            }
++            case 'grid': {
++              if (!arr('rows')) { E(pw + ' (grid) needs a rows array of arrays'); break; }
++              let width = -1;
++              pn.rows.forEach(function (r, ri) {
++                if (!Array.isArray(r)) { E(pw + '.rows[' + ri + '] must be an array - a grid is an array of rows'); return; }
++                if (width < 0) width = r.length;
++                else if (r.length !== width) {
++                  E(pw + '.rows[' + ri + '] has ' + r.length + ' cells but row 0 has ' + width +
++                    ' - a ragged grid draws blank cells and reads as a rendering fault');
++                }
++              });
++              if (pn.colLabels && Array.isArray(pn.colLabels) && width >= 0 && pn.colLabels.length < width) {
++                E(pw + '.colLabels has ' + pn.colLabels.length + ' entries for ' + width + ' columns');
++              }
++              if (pn.rowLabels && Array.isArray(pn.rowLabels) && pn.rowLabels.length < pn.rows.length) {
++                E(pw + '.rowLabels has ' + pn.rowLabels.length + ' entries for ' + pn.rows.length + ' rows');
++              }
++              if (pn.box) {
++                const b = pn.box;
++                for (const kk of ['r0','c0','r1','c1']) {
++                  if (!Number.isInteger(b[kk])) E(pw + '.box.' + kk + ' must be an integer');
++                }
++                if (Number.isInteger(b.r1) && b.r1 >= pn.rows.length) E(pw + '.box.r1 is outside the grid');
++                if (Number.isInteger(b.c1) && width >= 0 && b.c1 >= width) E(pw + '.box.c1 is outside the grid');
++              }
++              break;
++            }
++            case 'heap': {
++              if (!arr('items')) { E(pw + ' (heap) needs an items array - the backing array in index order'); break; }
++              pn.items.forEach(function (it, ii) {
++                if (it !== null && typeof it === 'object' && it.v === undefined) {
++                  E(pw + '.items[' + ii + '] is an object without a v');
++                }
++              });
++              (pn.tags || []).forEach(function (t, ti) {
++                if (t && t.idx !== undefined && (!Number.isInteger(t.idx) || t.idx < 0 || t.idx >= pn.items.length)) {
++                  E(pw + '.tags[' + ti + '].idx is ' + t.idx + ', outside 0..' + (pn.items.length - 1));
++                }
++              });
++              break;
++            }
+             default:
+               E(pw + " has unknown panel type " + JSON.stringify(pn.t));
+           }
+@@ -149,18 +300,39 @@ try {
+     });
+   }
+ } catch (e) { E('fatal: ' + e.message); }
++for (const s of out.solutions) { s.types = Array.from(s.__types); delete s.__types; }
+ process.stdout.write(JSON.stringify(out));
+ `;
+   writeFileSync(harness, code, 'utf8');
++  let res;
+   try {
+-    const res = execFileSync(process.execPath, [harness], { encoding: 'utf8', timeout: 30000, stdio: ['pipe','pipe','pipe'] });
+-    return JSON.parse(res);
++    res = JSON.parse(execFileSync(process.execPath, [harness], { encoding: 'utf8', timeout: 30000, stdio: ['pipe','pipe','pipe'] }));
+   } catch (e) {
+     const err = String(e.stderr || e.message).split('\n').slice(0, 6).join(' | ');
+-    return { errors: [`the definition does not even run: ${err}`], stats: {} };
++    return { errors: [`the definition does not even run: ${err}`], stats: {}, waived: [] };
+   } finally {
+     try { rmSync(harness); } catch { /* best effort */ }
+   }
++
++  // ---- coverage ----
++  //
++  // Everything above asks "will this render". This asks the question that the
++  // seven-linear-panel era could not: "is the thing the code is made of
++  // actually on screen". It runs here rather than in the harness because the
++  // answer depends on what classify recorded, which the harness has no business
++  // knowing - the harness runs the definition, this decides whether the
++  // definition was the right drawing.
++  //
++  // Only structures that HAVE a renderer are ever enforced, and any panel that
++  // can draw one satisfies it. Which panel remains the model's call.
++  const waived = [];
++  for (const sol of res.solutions ?? []) {
++    const c = coverage(structures, sol.types ?? [], sol.override);
++    for (const e of c.errors) res.errors.push(`${sol.where}: ${e}`);
++    for (const w of c.waived) waived.push(`${sol.label ?? sol.where}: ${w} (declared: ${String(sol.override?.reason ?? '').trim()})`);
++  }
++  res.waived = waived;
++  return res;
+ }
+ 
+ /**
+diff --git a/scripts/select-backfill.mjs b/scripts/select-backfill.mjs
+index faaeeb2..06f5dfb 100644
+--- a/scripts/select-backfill.mjs
++++ b/scripts/select-backfill.mjs
+@@ -19,6 +19,7 @@ import { loadState, scanRepo } from './lib/scan.mjs';
+ import { HEADER_FORMAT } from './lib/header.mjs';
+ import { splitTrailingTeach } from './lib/teach.mjs';
+ import { LINT_FORMAT } from './lib/lint-rules.mjs';
++import { VISUALIZER_FORMAT } from './lib/shapes.mjs';
+ 
+ const argv = process.argv.slice(2);
+ const limit = Number(argv.includes('--limit') ? argv[argv.indexOf('--limit') + 1] : '5') || 5;
+@@ -34,8 +35,13 @@ const reasons = (p) => {
+ 
+   if (all.some((f) => (lint[f]?.version ?? -1) !== LINT_FORMAT)) why.push('lint');
+ 
++  // Must agree with atCurrentStandard() in classify.mjs. It is duplicated here
++  // rather than shared because the two answer slightly different questions -
++  // but the CONDITIONS must match, or this queue hands classify a folder it
++  // considers finished, or worse, never queues one it does not.
+   const classified = p.curatedFiles.length && !p.pending.length && p.curatedFiles.every((f) => {
+     if (!cls[f] || !sigs[f]) return false;
++    if (!Array.isArray(cls[f].structures)) return false;   // classified before shapes existed
+     try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
+   });
+   if (!classified) why.push('classify');
+@@ -44,7 +50,18 @@ const reasons = (p) => {
+     teach[f] && sigs[f] && teach[f] === sigs[f] && splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).had);
+   if (!taught) why.push('teach');
+ 
++  // "Has a visualizer" was the whole test, and it is why every array-shaped
++  // visualizer in the repo counted as finished work. A visualizer built before
++  // the structural panels is a visualizer that draws a BST as rows of chips: it
++  // exists, and it is exactly what the backfill is for. So the test is now
++  // whether it was built under the CURRENT shape contract.
++  //
++  // A hand-built one carries no record at all. It is queued too - a Back-Fill
++  // run is the one place those are meant to be replaced, and it is the only
++  // kind of run that consults this queue.
++  const viz = rec.visualizer;
+   if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) why.push('visualizer');
++  else if ((viz?.v ?? 1) !== VISUALIZER_FORMAT) why.push('visualizer shape');
+ 
+   return why;
+ };
+diff --git a/scripts/templates/visualizer.chassis.html b/scripts/templates/visualizer.chassis.html
+index 79959f7..3621b90 100644
+--- a/scripts/templates/visualizer.chassis.html
++++ b/scripts/templates/visualizer.chassis.html
+@@ -233,6 +233,227 @@ button.primary:hover{background:#F7B85F;}
+ .pill.good{background:var(--green);color:var(--paper);}
+ .note-text{font-size:17px;line-height:1.45;}
+ 
++/* ==========================================================================
++   Structural panels: tree, linked list, stack/queue, grid, heap.
++   Every one of these reuses the tokens and the state-class names above
++   (hot / good / done / dim / ghost / fresh), so a structural panel is the
++   same drawing as a tile row by construction rather than by resemblance.
++
++   --pscale is the density dial. A panel may ask to be drawn smaller so a
++   big structure fits one screen; panelShell() clamps it before it lands
++   here, so "smaller" can never become "unreadable".
++   ========================================================================== */
++.panel{--pscale:1;}
++.node{
++  position:absolute;box-sizing:border-box;
++  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
++  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
++  display:flex;flex-direction:column;align-items:center;justify-content:center;
++  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transform:translate(-50%,-50%);
++  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
++}
++.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
++.node.hot{background:var(--orange);}
++.node.in-window{background:var(--orange-soft);}
++.node.good{background:var(--green);color:var(--paper);}
++.node.good .sub{color:var(--paper);}
++.node.done{background:var(--ink);color:var(--paper);}
++.node.done .sub{color:var(--pencil-light);}
++.node.dim{opacity:.4;}
++.node.is-current{box-shadow:3px 3px 0 var(--ink);}
++.node.ghost,.node.nil{
++  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
++  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
++}
++.node.fresh{animation:fill-flash .5s ease;}
++.node.square{border-radius:var(--sk-md);}
++
++/* ---------- tree ---------- */
++.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
++.tree-stage{position:relative;width:max-content;min-width:100%;}
++.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
++.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
++.tree-stage .edge{
++  stroke:var(--ink);stroke-width:2;fill:none;
++  transition:stroke .25s ease, opacity .25s ease;
++}
++.tree-stage .edge.dim{opacity:.3;}
++.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
++.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
++.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
++.tree-stage .edge-label{
++  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
++}
++.node-tag{
++  position:absolute;transform:translate(-50%,-50%);
++  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
++  transition:left .32s ease, top .32s ease, opacity .2s ease;
++}
++.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
++.node-tag.red{color:var(--red);}
++.node-tag.green{color:var(--green);}
++
++/* ---------- linked list ---------- */
++.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
++.list-scroll{overflow-x:auto;scrollbar-width:thin;}
++.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
++.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
++.list-cell{
++  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
++  display:flex;flex-direction:column;align-items:center;justify-content:center;
++  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
++}
++.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
++.list-cell.hot{background:var(--orange);}
++.list-cell.in-window{background:var(--orange-soft);}
++.list-cell.good{background:var(--green);color:var(--paper);}
++.list-cell.good .sub{color:var(--paper);}
++.list-cell.done{background:var(--ink);color:var(--paper);}
++.list-cell.done .sub{color:var(--pencil-light);}
++.list-cell.dim{opacity:.4;}
++.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
++.list-cell.fresh{animation:fill-flash .5s ease;}
++.list-arrow{
++  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
++  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
++}
++.list-arrow.back{transform:scaleX(-1);}
++.list-arrow.hot{color:var(--orange);}
++.list-arrow.ghost{color:var(--pencil-light);}
++.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
++.list-null{
++  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
++}
++.list-tag{
++  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
++  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
++  transition:left .3s ease, opacity .2s ease;opacity:0;
++}
++.list-tag.visible{opacity:1;}
++.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
++.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
++.list-tag.below{bottom:calc(2px * var(--pscale));}
++.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
++.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
++.list-tag.red{color:var(--red);}
++.list-tag.green{color:var(--green);}
++.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
++.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
++
++/* ---------- stack / queue buckets ---------- */
++.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
++/* A grid, not a column, so that several buckets of different depths still line
++   their labels up along the top and their floors up along the bottom. Stacked
++   as a plain flex column they drifted against each other and the panel read as
++   three unrelated drawings. */
++.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
++.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
++.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
++/* three sides only: the top is open, because that is the whole point of a bucket */
++.bucket-box{
++  align-self:end;
++  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
++  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
++  padding:calc(10px * var(--pscale));
++  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
++}
++.bucket-box::before,.bucket-box::after{
++  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
++}
++.bucket-box::before{left:-2px;}
++.bucket-box::after{right:-2px;}
++.bucket.queue .bucket-box{
++  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
++  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
++}
++.cell{
++  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
++  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
++  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
++  transition:background .25s ease, color .25s ease;
++}
++.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
++.cell.hot{background:var(--orange);}
++.cell.head{background:var(--orange);}
++.cell.good{background:var(--green);color:var(--paper);}
++.cell.good small{color:var(--paper);}
++.cell.done{background:var(--ink);color:var(--paper);}
++.cell.done small{color:var(--pencil-light);}
++.cell.dim{opacity:.42;}
++.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
++.cell.fresh{animation:fill-flash .5s ease;}
++.cell.popped{animation:pop-fade .55s ease;}
++.bucket-empty{
++  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
++  text-align:center;font-size:15px;color:var(--pencil);
++}
++.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
++/* A normal flex child, appended last, so column-reverse lands it directly above
++   the topmost item. Absolutely positioned against the box it floated at the top
++   of the bucket instead - pointing at empty space above a two-item stack. */
++.bucket-top{
++  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
++  line-height:1;padding:0 2px calc(2px * var(--pscale));
++}
++.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
++
++/* ---------- grid / matrix ---------- */
++.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
++.grid-stage{position:relative;width:max-content;}
++.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
++.grid-tbl th{
++  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
++  padding:0;min-width:calc(20px * var(--pscale));
++}
++.grid-cell{
++  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
++  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
++  vertical-align:middle;white-space:nowrap;position:relative;
++  transition:background .25s ease, color .25s ease, border-color .25s ease;
++}
++.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
++.grid-cell.hot{background:var(--orange);}
++.grid-cell.in-window{background:var(--orange-soft);}
++.grid-cell.good{background:var(--green);color:var(--paper);}
++.grid-cell.good .sub{color:var(--paper);}
++.grid-cell.done{background:var(--ink);color:var(--paper);}
++.grid-cell.done .sub{color:var(--pencil-light);}
++.grid-cell.dim{opacity:.4;}
++.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
++.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
++.grid-cell.fresh{animation:fill-flash .5s ease;}
++.grid-box{
++  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
++  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
++}
++.grid-box.visible{opacity:1;}
++.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
++
++/* ---------- heap (array and the tree it implies) ---------- */
++.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
++.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
++.heap-slot{
++  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
++  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
++  display:flex;align-items:center;justify-content:center;
++  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
++  transition:background .25s ease, color .25s ease;
++}
++.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
++.heap-slot.hot{background:var(--orange);}
++.heap-slot.in-window{background:var(--orange-soft);}
++.heap-slot.good{background:var(--green);color:var(--paper);}
++.heap-slot.good .idx{color:var(--paper);}
++.heap-slot.done{background:var(--ink);color:var(--paper);}
++.heap-slot.done .idx{color:var(--pencil-light);}
++.heap-slot.dim{opacity:.4;}
++.heap-slot.fresh{animation:fill-flash .5s ease;}
++.heap-caption{font-size:15px;color:var(--pencil);}
++
+ /* ---------- code panel ---------- */
+ .code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+ .code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+@@ -309,6 +530,48 @@ function pNote(title, html){ return {t:'note', title: title, html: html}; }
+ function mapChips(map, hot){
+   return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+ }
++/* ---- structural panel constructors ----
++   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
++   stack as a bucket, a matrix as a grid - and every one of them uses the same
++   ink, paper and orange as the tile row above, because they all read the same
++   CSS custom properties.
++
++   Each of these accepts an `opts` object as its last argument. `scale` lives
++   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
++   fits one screen. It is clamped on the way in, so it cannot make a panel
++   unreadable however small a number is passed. */
++function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
++function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
++function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
++function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
++function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
++/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
++   the {id, v, parent, side} node list pTree wants. A null does not get children,
++   which is the part that is easy to get wrong by hand. */
++function treeFromLevelOrder(vals){
++  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
++  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
++  const q = ['n0'];
++  let qi = 0, i = 1, made = 1;
++  while (qi < q.length && i < vals.length){
++    const pid = q[qi++];
++    for (const side of ['L','R']){
++      if (i >= vals.length) break;
++      const v = vals[i++];
++      if (v === null || v === undefined) continue;
++      const id = 'n' + (made++);
++      nodes.push({id: id, v: v, parent: pid, side: side});
++      q.push(id);
++    }
++  }
++  return nodes;
++}
++/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
++function heapNodes(values){
++  return values.map((v, i) => ({
++    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
++  }));
++}
+ /* ---- input parsing ---- */
+ function parseInts(raw, cap){
+   const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+@@ -317,6 +580,21 @@ function parseInts(raw, cap){
+   if (nums.some(n => !Number.isFinite(n))) return null;
+   return cap ? nums.slice(0, cap) : nums;
+ }
++/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
++   all mean "no node here", because every source writes it differently. */
++function parseLevelOrder(raw, cap){
++  const parts = String(raw).split(',').map(s => s.trim());
++  const out = [];
++  for (const s of parts){
++    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
++    const n = Number(s);
++    if (!Number.isFinite(n)) return null;
++    out.push(n);
++  }
++  while (out.length && out[out.length - 1] === null) out.pop();
++  if (!out.length || out[0] === null) return null;
++  return cap ? out.slice(0, cap) : out;
++}
+ function randInts(n, lo, hi){
+   return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+ }
+@@ -429,6 +707,9 @@ function renderPanels(panels, animate){
+     }
+     el.querySelector('.panel-title').innerHTML = p.title || '';
+     el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
++    // The density dial. Clamped here, once, so no renderer has to defend
++    // itself against a panel that asked to be drawn at 0.1.
++    el.style.setProperty('--pscale', pscale(p));
+     RENDER[p.t](el.querySelector('.body'), p, animate);
+   });
+ }
+@@ -626,6 +907,490 @@ RENDER.note = function(body, p){
+   n.innerHTML = p.html;
+ };
+ 
++/* ==========================================================================
++   Structural renderers.
++
++   These exist because every panel above this line is a row of boxes. With only
++   those, a tree came out as "nodes grouped by depth" and a stack as a row of
++   chips - the animation was correct and the shape was a lie. The rule they all
++   follow: the PROBLEM object supplies data, the chassis does every bit of
++   layout arithmetic. A generated definition that had to compute its own x and y
++   would be a generated definition that silently drifts.
++   ========================================================================== */
++
++/* The density dial, clamped. A panel may ask to be drawn smaller so a big
++   structure fits one screen; it may not ask to be drawn illegibly. */
++const SCALE_MIN = 0.7;
++function pscale(p){
++  const v = Number(p && p.scale);
++  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
++}
++
++/* Rebuild a container's children only when the *identity* of what it holds
++   changes. Keeping elements between steps is what makes a node glide to its new
++   position instead of blinking there. */
++function keyed(el, key){
++  if (el.dataset.key === key) return false;
++  el.dataset.key = key;
++  el.innerHTML = '';
++  return true;
++}
++
++const SVG_NS = 'http://www.w3.org/2000/svg';
++const mkSvg = (name) => document.createElementNS(SVG_NS, name);
++
++/* ---------------- shared tree layout ----------------
++   Used by both the tree panel and the heap panel, which is a tree with its
++   edges implied by array indices. Leaves take the next free column; a parent
++   centres over its children. Depth comes from the parent chain, so the caller
++   never states a depth and cannot state a wrong one. */
++function layoutTree(nodes, k){
++  const byId = new Map();
++  const kids = new Map();
++  const roots = [];
++  const work = nodes.map((n) => ({
++    id: String(n.id), v: n.v,
++    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
++    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
++    nil: n.v === null || n.v === undefined,
++  }));
++  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
++  work.forEach((n) => {
++    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
++    else { n.parent = null; roots.push(n.id); }
++  });
++  // Left child first when sides are given, otherwise the order they arrived in.
++  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
++  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
++
++  const X = new Map(), D = new Map(), seen = new Set();
++  let col = 0;
++  const walk = (id, d) => {
++    if (seen.has(id)) return;          // malformed data must not hang the page
++    seen.add(id);
++    D.set(id, d);
++    const cs = kids.get(id) || [];
++    if (!cs.length){ X.set(id, col++); return; }
++    cs.forEach((c) => walk(c, d + 1));
++    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
++    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
++  };
++  roots.forEach((r) => { walk(r, 0); col += 0.7; });
++  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
++
++  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
++  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
++  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
++  work.forEach((n) => {
++    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
++    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
++  });
++  return {
++    work, byId,
++    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
++    height: PAD * 2 + NODE + maxD * ROWH,
++  };
++}
++
++/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
++   absolutely positioned node divs, so edges never paint over a value. */
++function drawTree(stage, nodes, p, k){
++  const L = layoutTree(nodes, k);
++  const links = p.links || [];
++  stage.style.width = L.width + 'px';
++  stage.style.height = L.height + 'px';
++
++  let svg = stage.querySelector('svg');
++  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
++  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
++  // positioned in pixels, so anything that scales the edge layer independently
++  // - which min-width:100% on the stage does the moment the tree is narrower
++  // than the panel - draws the edges somewhere the nodes are not.
++  svg.setAttribute('width', L.width);
++  svg.setAttribute('height', L.height);
++  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
++
++  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
++    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
++    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
++      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
++                    cls: e.cls || 'ghost', label: e.label || ''})));
++
++  if (keyed(svg, edges.map((e) => e.key).join('|'))){
++    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
++  }
++  edges.forEach((e, i) => {
++    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
++    line.setAttribute('class', 'edge ' + (e.cls || ''));
++    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
++    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
++    text.setAttribute('class', 'edge-label');
++    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
++    text.setAttribute('y', (e.a.py + e.b.py) / 2);
++    text.textContent = e.label || '';
++  });
++
++  const wrapKey = L.work.map((n) => n.id).join('|');
++  let holder = stage.querySelector('.tree-nodes');
++  if (!holder){
++    holder = document.createElement('div');
++    holder.className = 'tree-nodes';
++    stage.appendChild(holder);
++  }
++  if (keyed(holder, wrapKey)){
++    L.work.forEach(() => {
++      const d = document.createElement('div');
++      d.className = 'node';
++      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
++      holder.appendChild(d);
++    });
++  }
++  L.work.forEach((n, i) => {
++    const el = holder.children[i];
++    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
++    el.style.left = n.px + 'px';
++    el.style.top = n.py + 'px';
++    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
++    const sub = el.querySelector('.sub');
++    sub.textContent = n.sub || '';
++    sub.style.display = n.sub ? '' : 'none';
++  });
++
++  // Named markers - root, cur, lca - floating just above their node.
++  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
++  let tagHolder = stage.querySelector('.tree-tags');
++  if (!tagHolder){
++    tagHolder = document.createElement('div');
++    tagHolder.className = 'tree-tags';
++    stage.appendChild(tagHolder);
++  }
++  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
++    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
++  }
++  tags.forEach((t, i) => {
++    const el = tagHolder.children[i];
++    const n = L.byId.get(String(t.id));
++    el.className = 'node-tag ' + (t.cls || '');
++    el.textContent = t.name;
++    el.style.left = n.px + 'px';
++    el.style.top = (n.py - 38 * k) + 'px';
++  });
++}
++
++/* --- tree: a real tree, with edges --- */
++RENDER.tree = function(body, p){
++  const k = pscale(p);
++  let scroll = body.querySelector('.tree-scroll');
++  if (!scroll){
++    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
++    scroll = body.querySelector('.tree-scroll');
++  }
++  const stage = scroll.querySelector('.tree-stage');
++  if (!p.nodes || !p.nodes.length){
++    stage.style.width = ''; stage.style.height = '';
++    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
++    delete stage.dataset.built;
++    return;
++  }
++  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
++  drawTree(stage, p.nodes, p, k);
++};
++
++/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
++RENDER.list = function(body, p, animate){
++  const k = pscale(p);
++  const rows = p.rows || [];
++  let els = [...body.querySelectorAll('.list-row-wrap')];
++  if (els.length !== rows.length){
++    body.innerHTML = rows.map(() =>
++      '<div class="list-row-wrap"><div class="list-label"></div>' +
++      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
++    els = [...body.querySelectorAll('.list-row-wrap')];
++  }
++  rows.forEach((r, ri) => {
++    const wrap = els[ri];
++    const label = wrap.querySelector('.list-label');
++    label.textContent = r.label || '';
++    label.style.display = r.label ? '' : 'none';
++    const row = wrap.querySelector('.list-row');
++    const svg = row.querySelector('.list-cycle');
++    const nodes = r.nodes || [];
++
++    // One cell per node, an arrow between each pair, and a terminator.
++    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
++    let cells = [...row.querySelectorAll('.list-cell')];
++    if (row.dataset.key !== key){
++      row.dataset.key = key;
++      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
++      nodes.forEach((n, i) => {
++        const c = document.createElement('div');
++        c.className = 'list-cell';
++        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
++        row.appendChild(c);
++        if (i < nodes.length - 1 || r.tail){
++          const a = document.createElement('span');
++          a.className = 'list-arrow';
++          a.textContent = '→';
++          row.appendChild(a);
++        }
++      });
++      if (r.tail){
++        const t = document.createElement('span');
++        t.className = 'list-null';
++        t.textContent = r.tail === true ? '∅' : String(r.tail);
++        row.appendChild(t);
++      }
++      if (!nodes.length){
++        const e = document.createElement('span');
++        e.className = 'chips-empty';
++        e.textContent = r.empty || 'empty';
++        row.appendChild(e);
++      }
++      cells = [...row.querySelectorAll('.list-cell')];
++    }
++
++    nodes.forEach((n, i) => {
++      const c = cells[i];
++      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
++      c.querySelector('.v').textContent = String(n.v);
++      const sub = c.querySelector('.sub');
++      sub.textContent = n.sub || '';
++      sub.style.display = n.sub ? '' : 'none';
++    });
++    // An arrow is a pointer. Reversal problems live or die on being able to see
++    // one go dashed or vanish, so arrows take their own classes.
++    const arrows = [...row.querySelectorAll('.list-arrow')];
++    arrows.forEach((a, i) => {
++      const spec = (r.arrows || [])[i];
++      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
++      a.className = 'list-arrow ' + cls;
++      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
++    });
++
++    // Markers, placed against real measured geometry rather than guessed at.
++    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
++    let marks = [...row.querySelectorAll('.list-tag')];
++    if (marks.length !== tags.length){
++      marks.forEach((m) => m.remove());
++      tags.forEach(() => {
++        const m = document.createElement('span');
++        m.className = 'list-tag';
++        row.appendChild(m);
++      });
++      marks = [...row.querySelectorAll('.list-tag')];
++    }
++    const seen = {};
++    tags.forEach((t, i) => {
++      const m = marks[i];
++      m.textContent = t.name;
++      const cell = cells[t.idx];
++      const below = !!t.below;
++      if (!cell || t.idx < 0 || t.idx === undefined){
++        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
++        return;
++      }
++      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
++      const bucket = (below ? 'b' : 'a') + t.idx;
++      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
++      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
++      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
++    });
++
++    // The back-edge that makes a cycle a cycle.
++    const to = r.cycleTo;
++    const from = cells.length - 1;
++    if (to !== undefined && to !== null && cells[to] && cells[from]){
++      const a = cells[from], b = cells[to];
++      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
++      const y = a.offsetTop + a.offsetHeight;
++      const dip = y + 26 * k;
++      svg.style.display = '';
++      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
++      svg.setAttribute('width', row.scrollWidth);
++      svg.setAttribute('height', row.scrollHeight);
++      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
++      svg.firstChild.setAttribute('d',
++        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
++    } else {
++      svg.style.display = 'none';
++    }
++  });
++};
++
++/* --- stack / queue: a bucket with a floor and an open top --- */
++RENDER.stack = function(body, p, animate){
++  const buckets = p.buckets || [];
++  let box = body.querySelector('.buckets');
++  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
++  let els = [...box.children];
++  if (els.length !== buckets.length){
++    box.innerHTML = buckets.map(() =>
++      '<div class="bucket"><span class="bucket-label"></span>' +
++      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
++      '<span class="bucket-foot"></span></div>').join('');
++    els = [...box.children];
++  }
++  buckets.forEach((b, bi) => {
++    const el = els[bi];
++    const queue = b.mode === 'queue';
++    el.className = 'bucket' + (queue ? ' queue' : '');
++    const label = el.querySelector('.bucket-label');
++    label.textContent = b.label || '';
++    label.style.display = b.label ? '' : 'none';
++    const foot = el.querySelector('.bucket-foot');
++    foot.textContent = b.foot || '';
++    foot.style.display = b.foot ? '' : 'none';
++
++    const inner = el.querySelector('.bucket-box');
++    const items = b.items || [];
++    let cells = [...inner.querySelectorAll('.cell')];
++    let top = inner.querySelector('.bucket-top');
++    if (cells.length !== items.length){
++      cells.forEach((c) => c.remove());
++      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
++      items.forEach(() => {
++        const c = document.createElement('div');
++        c.className = 'cell';
++        inner.appendChild(c);
++      });
++      cells = [...inner.querySelectorAll('.cell')];
++    }
++    // Outside the rebuild, not inside it: a bucket that starts empty and stays
++    // empty never enters that branch, and step -1 empties every bucket. Created
++    // in there, the marker did not exist on the first frame of every stack
++    // panel in the repo, and the whole page died on the first render.
++    if (!top){
++      top = document.createElement('span');
++      top.className = 'bucket-top';
++      inner.appendChild(top);          // last child: column-reverse puts it on top
++    }
++    items.forEach((it, i) => {
++      const c = cells[i];
++      c.className = 'cell ' + (it.cls || '') +
++                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
++      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
++    });
++    const empty = el.querySelector('.bucket-empty');
++    empty.textContent = b.empty || 'empty';
++    empty.style.display = items.length ? 'none' : '';
++    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
++    top.style.display = top.textContent ? '' : 'none';
++  });
++};
++
++/* --- grid: a matrix, drawn as a matrix --- */
++RENDER.grid = function(body, p, animate){
++  const k = pscale(p);
++  const rows = p.rows || [];
++  const colLabels = p.colLabels, rowLabels = p.rowLabels;
++  let stage = body.querySelector('.grid-stage');
++  if (!stage){
++    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
++                     '<div class="grid-box"></div></div></div>';
++    stage = body.querySelector('.grid-stage');
++  }
++  const tbl = stage.querySelector('.grid-tbl');
++  const width = Math.max(0, ...rows.map((r) => r.length));
++  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
++  if (keyed(tbl, key)){
++    let html = '';
++    if (colLabels){
++      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
++              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
++    }
++    for (let r = 0; r < rows.length; r++){
++      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
++      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
++      html += '</tr>';
++    }
++    tbl.innerHTML = html;
++  }
++  const cells = [...tbl.querySelectorAll('.grid-cell')];
++  const at = (r, c) => cells[r * width + c];
++  rows.forEach((row, r) => {
++    for (let c = 0; c < width; c++){
++      const el = at(r, c);
++      if (!el) continue;
++      const raw = row[c];
++      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
++      const missing = it.v === undefined || it.v === null;
++      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
++                     (animate && it.fresh ? ' fresh' : '');
++      el.querySelector('.v').textContent = missing ? '' : String(it.v);
++      const sub = el.querySelector('.sub');
++      sub.textContent = it.sub || '';
++      sub.style.display = it.sub ? '' : 'none';
++    }
++  });
++
++  // A bracket round a sub-rectangle: the search space that is still alive.
++  const bx = stage.querySelector('.grid-box');
++  const b = p.box;
++  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
++    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
++    const pad = 5 * k;
++    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
++    bx.style.left = (a.offsetLeft - pad) + 'px';
++    bx.style.top = (a.offsetTop - pad) + 'px';
++    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
++    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
++  } else {
++    bx.className = 'grid-box';
++  }
++};
++
++/* --- heap: the tree and the array that stores it, side by side ---
++   A heap is the one structure where both views are needed at once: the
++   sift path only makes sense as a tree, and the index arithmetic only
++   makes sense as an array. Showing one without the other is how a heap
++   animation ends up teaching nothing. */
++RENDER.heap = function(body, p, animate){
++  const k = pscale(p);
++  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
++  let wrap = body.querySelector('.heap-wrap');
++  if (!wrap){
++    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
++                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
++    wrap = body.querySelector('.heap-wrap');
++  }
++  const stage = wrap.querySelector('.tree-stage');
++  const cap = wrap.querySelector('.heap-caption');
++  const arr = wrap.querySelector('.heap-array');
++
++  if (!items.length){
++    stage.style.width = ''; stage.style.height = '';
++    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
++    delete stage.dataset.built;
++  } else {
++    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
++    const nodes = items.map((it, i) => ({
++      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
++      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
++    }));
++    drawTree(stage, nodes, {
++      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
++      links: p.links,
++    }, k);
++  }
++
++  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
++  cap.style.display = p.showArray === false ? 'none' : '';
++
++  if (p.showArray === false){ arr.style.display = 'none'; return; }
++  arr.style.display = '';
++  let slots = [...arr.children];
++  if (slots.length !== items.length){
++    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
++    slots = [...arr.children];
++  }
++  items.forEach((it, i) => {
++    const s = slots[i];
++    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
++    s.querySelector('.idx').textContent = i;
++    s.querySelector('.v').textContent = String(it.v);
++  });
++};
++
+ /* ---------------- playback ---------------- */
+ function render(animate){
+   if (animate === undefined) animate = true;
+@@ -653,6 +1418,13 @@ function blankPanels(panels){
+     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+     if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
++    // A structure is shown in its starting state, not emptied: the whole point
++    // of step -1 on a tree problem is seeing the tree you are about to walk.
++    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
++    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
++    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
++    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
++    if (p.t === 'heap'){ p.items = []; p.tags = []; }
+     return p;
+   });
+ }
+diff --git a/scripts/visualize.mjs b/scripts/visualize.mjs
+index b4e07e7..8d6b878 100644
+--- a/scripts/visualize.mjs
++++ b/scripts/visualize.mjs
+@@ -26,6 +26,7 @@ import { stripHeader } from './lib/header.mjs';
+ import { splitTrailingTeach } from './lib/teach.mjs';
+ import { shortPrint } from './lib/normalise.mjs';
+ import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
++import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
+ import { report, group, endGroup } from './lib/report.mjs';
+ 
+ const argv = process.argv.slice(2);
+@@ -58,53 +59,100 @@ function contract() {
+   return helpers.trim();
+ }
+ 
+-const EXAMPLE = () => {
+-  // A real, working definition from this repo beats any amount of description.
+-  const f = join(REPO, 'Data Structures & Algorithms', 'buy-and-sell-crypto', 'buy-and-sell-crypto-visualizer.html');
+-  const src = readFileSync(f, 'utf8').split(/\r?\n/);
++/** Lift the PROBLEM definition out of a finished visualizer. */
++function definitionFrom(dir, slug) {
++  const src = readFileSync(join(dir, `${slug}-visualizer.html`), 'utf8').split(/\r?\n/);
+   const s = src.findIndex((l) => /^const PROBLEM = \{/.test(l));
++  if (s < 0) return null;
+   let depth = 0, end = -1;
+   for (let i = s; i < src.length && end < 0; i++) {
+     for (const ch of src[i]) { if (ch === '{') depth++; else if (ch === '}' && --depth === 0) { end = i; break; } }
+   }
+-  return src.slice(s, end + 1).join('\n');
+-};
++  return end < 0 ? null : src.slice(s, end + 1).join('\n');
++}
++
++const FALLBACK_EXAMPLE = { slug: 'buy-and-sell-crypto', dir: join(REPO, 'Data Structures & Algorithms', 'buy-and-sell-crypto') };
++
++/**
++ * A worked example, chosen for SHAPE where one exists.
++ *
++ * This used to be one hard-coded array problem handed to every folder, under
++ * the instruction to match it exactly. That is most of why every visualizer in
++ * the repo came out array-shaped: a tree problem was being shown a row of tiles
++ * and told to copy it. The panels were only half the cause; this was the rest.
++ *
++ * So: prefer a finished visualizer that shares an ENFORCED structure with this
++ * problem - the first tree one built becomes the example for every tree problem
++ * after it, which makes the step quietly better as the backfill proceeds. When
++ * nothing shares a shape, fall back to the array problem and SAY it is a
++ * different shape, so its panel choice is not read as a template.
++ */
++function pickExample(slug, structures, state, all) {
++  const want = new Set(required(structures).map((r) => r.structure));
++  if (want.size) {
++    const scored = all
++      .filter((p) => p.slug !== slug && p.hasVisualizer && state.problems[p.slug]?.visualizer)
++      .map((p) => {
++        const cls = state.problems[p.slug]?.classification ?? {};
++        const have = new Set(Object.values(cls).flatMap((c) => c.structures ?? []));
++        return { p, hits: [...want].filter((x) => have.has(x)).length };
++      })
++      .filter((x) => x.hits > 0)
++      .sort((a, b) => b.hits - a.hits || a.p.slug.localeCompare(b.p.slug));
++    for (const { p } of scored) {
++      const def = definitionFrom(p.dir, p.slug);
++      if (def) return { source: def, from: p.slug, sameShape: true };
++    }
++  }
++  const def = definitionFrom(FALLBACK_EXAMPLE.dir, FALLBACK_EXAMPLE.slug);
++  return { source: def, from: FALLBACK_EXAMPLE.slug, sameShape: false };
++}
+ 
+-function instructions(slug, sols, feedback) {
++function instructions(slug, sols, structures, example, feedback) {
+   return [
+     `Write the PROBLEM definition for the NeetCode problem "${slug}", to be spliced into an existing visualizer.`,
+     '',
+     'These helper functions and panel constructors already exist. Use them; do not redefine them:',
+     '```', contract(), '```',
+     '',
+-    'Here is a complete, working PROBLEM definition for a different problem. Match its shape, its',
+-    'voice and its level of detail exactly:',
+-    '```', EXAMPLE(), '```',
++    // The example teaches the OBJECT - its fields, its register, how much
++    // detail a msg carries. It must not teach the panel choice unless it
++    // genuinely shares a shape, or every problem inherits the last one's
++    // drawing, which is exactly how this step came to render trees as rows.
++    example.sameShape
++      ? `Here is a complete, working definition for "${example.from}", which is built from the same kind of` +
++        '\nstructure as this one. Match its voice and its level of detail, and treat its panel choices as a' +
++        '\nsound starting point - though yours should follow this problem\'s code, not copy that one\'s:'
++      : `Here is a complete, working definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
++        '\nvoice and the level of detail. Do NOT copy its choice of panels - it is a differently shaped' +
++        '\nproblem, and its panels are right for it and probably wrong for yours:',
++    '```', example.source, '```',
+     '',
+     `Build one entry in "solutions" for each of these ${sols.length} solution file(s), in this order,`,
+     'faithfully animating what that code actually does - not a tidier algorithm you would prefer:',
+-    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".`),
++    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".` +
++      ((s.structures ?? []).length ? `\n      made of: ${s.structures.join(', ')}` : '')),
++    '',
++    contractSection(structures),
+     '',
+-    'PANEL SHAPES - get these exactly right, the renderer does not tolerate a wrong one:',
+-    "  pTiles(title, values, decorate)   values is a flat array; decorate(i, v) returns {cls}",
+-    "  pBars(title, values, decorate)    same shape as pTiles, drawn as bars",
+-    "  pPills(title, items)              items: [{k, v, cls}]",
+-    "  pSlots(title, items)              items: [{text, cls}]",
+-    "  pNote(title, html)                html is a string",
+-    "  pRanges(title, items, min, max)   min and max are numbers",
+-    "  pChips(title, rows)               rows is an array of ROWS, NOT of chips.",
+-    "                                    Each row is {left, right, items: [{text, sub, cls}], empty}.",
+-    "                                    One row of chips is still [{items: [...]}] - a one-element array.",
++    catalogueSection(structures),
+     '',
+     'Requirements:',
++    '- Draw each structure as the thing it IS. A tree has edges, a stack is a bucket you push onto and',
++    '  pop off, a linked list is boxes joined by arrows, a matrix is a grid. A row of boxes is the right',
++    '  drawing for an array and the wrong one for everything else.',
+     '- Every step\'s "lines" must be 1-based indices into THAT solution\'s own "code" array. A line',
+     '  number outside it highlights nothing and the visualizer silently reads as broken.',
+     '- parse() must accept its own default input value.',
+     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
+     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
++    '- Everything else is PLAIN TEXT and is escaped on the way in - a chip\'s text, a stack frame\'s',
++    '  sub, a node\'s value, a pill\'s k and v. Write < and & as themselves there, never as &lt; or',
++    '  &amp;, or the entity arrives on screen character by character.',
+     '- "blurb" must fit five rendered lines: keep it under 450 characters of visible text, and',
+     '  under 300 if you can. The existing visualizers in this repo average about 210. It is the',
+     '  one-paragraph reason the approach works, not a summary of the teaching block.',
++    '- Use `scale` to keep a panel on one screen rather than letting it scroll sideways.',
+     '- Output only the statement: const PROBLEM = { ... };',
+     '',
+     'You have no tools and no filesystem access. The solution code is on stdin and everything else',
+@@ -137,7 +185,8 @@ function ask(prompt, code) {
+ // ---------------------------------------------------------------- run
+ 
+ const state = loadState();
+-let targets = scanRepo(state);
++const all = scanRepo(state);
++let targets = all;
+ if (only) targets = targets.filter((p) => only.includes(p.slug));
+ /** What the code looks like now, ignoring comments and whitespace. */
+ const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
+@@ -198,6 +247,27 @@ for (const p of targets) {
+   console.log(`  visualising: ${chosen.join(', ')}`);
+ 
+   const sols = chosen.map((f) => ({ file: f, ...cls[f] }));
++
++  // What the chosen solutions are made of, unioned. The union rather than the
++  // intersection: a problem whose recursive version uses a call stack and whose
++  // iterative one does not must still show the frames on the recursive tab, and
++  // the per-solution override is how the other tab says it does not need them.
++  const structures = [...new Set(chosen.flatMap((f) => cls[f]?.structures ?? []))];
++  if (structures.length) {
++    console.log(`  made of: ${structures.join(', ')}`);
++    const req = required(structures);
++    if (req.length) console.log(`  must be drawn: ${req.map((r) => r.structure).join(', ')}`);
++  } else {
++    // Not a failure: every folder classified before the structures field
++    // existed lands here. Say so plainly rather than silently dropping to the
++    // old behaviour, because the old behaviour is the bug being fixed.
++    console.log('  no structures on record - run classify --backfill --apply first for shape enforcement');
++  }
++
++  const example = pickExample(p.slug, structures, state, all);
++  if (!example.source) { console.log('  cannot read the worked example'); report('visualize', p.slug, 'failed', 'worked example unreadable'); failures++; endGroup(); continue; }
++  console.log(`  example: ${example.from}${example.sameShape ? ' (same shape)' : ' (different shape - voice only)'}`);
++
+   const code = chosen
+     .map((f) => `===== FILE: ${f} =====\n${stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body}`)
+     .join('\n\n');
+@@ -205,7 +275,7 @@ for (const p of targets) {
+   let result = null, feedback = null, spend = 0;
+   for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+     let r;
+-    try { r = ask(instructions(p.slug, sols, feedback), code); }
++    try { r = ask(instructions(p.slug, sols, structures, example, feedback), code); }
+     catch (e) {
+       console.log(`  attempt ${attempt} FAILED: ${e.message}`);
+       // Retry a run that simply ran out of room; do not retry an auth or
+@@ -217,10 +287,14 @@ for (const p of targets) {
+       break;
+     }
+     spend += r.cost ?? 0;
+-    const v = validate(r.src);
++    const v = validate(r.src, structures);
+     if (!v.errors.length) {
+       result = r;
+       for (const [k, n] of Object.entries(v.stats)) console.log(`      ${k}: ${n}`);
++      // A waiver is a claim that a structure is not really there. Print it:
++      // it is the one thing here that is accepted on the model's say-so, so it
++      // should be the one thing that is impossible to miss in the log.
++      for (const w of v.waived ?? []) console.log(`      WAIVED  ${w}`);
+     } else {
+       console.log(`  attempt ${attempt} rejected by validation:`);
+       v.errors.slice(0, 6).forEach((e) => console.log(`      ${e}`));
+@@ -236,7 +310,11 @@ for (const p of targets) {
+     writeFileSync(out, splice(result.src), 'utf8');
+     // Record what it was built from, so a later code change is detectable.
+     const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
+-    prec.visualizer = { files: chosen, prints: codePrints(p, chosen), builtAt: new Date().toISOString() };
++    prec.visualizer = {
++      v: VISUALIZER_FORMAT,
++      files: chosen, prints: codePrints(p, chosen),
++      structures, builtAt: new Date().toISOString(),
++    };
+     console.log(`  wrote ${p.slug}-visualizer.html`);
+     report('visualize', p.slug, 'ok', `${chosen.join(' + ')}, validated`);
+     wrote++;
+-- 
+2.43.0
+

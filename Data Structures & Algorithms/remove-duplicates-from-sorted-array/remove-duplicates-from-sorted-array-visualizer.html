@@ -39,7 +39,7 @@ body{
   color:var(--ink);
   font-family:var(--hand);
   min-height:100vh;
-  padding:32px clamp(18px, 3vw, 56px) 48px;
+  padding:32px clamp(18px, 3vw, 56px) 30px;
 }
 .app{width:100%;max-width:1760px;margin:0 auto;}
 
@@ -458,11 +458,51 @@ button.primary:hover{background:#F7B85F;}
 .code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
 .code .line{padding:1px 8px;border-radius:var(--sk-sm);}
 .code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
-.status{margin-top:16px;padding-top:14px;border-top:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status{margin-bottom:16px;padding-bottom:14px;border-bottom:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
 .status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
 
+/* ---------- code panel: one layer per method ----------
+   The code used to render as one flat block. On a problem with two or three
+   methods that made the right column taller than the screen, so the panels on
+   the left and the line being executed could not be looked at together - which
+   is the entire point of the thing. A layer is a method; the open one is the
+   method the step is inside, which is the same fact the call-stack panel is
+   already showing. */
+.code-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px;}
+.code-head .panel-title{margin:0;}
+.code-head-right{display:flex;align-items:center;gap:12px;}
+.layer-crumb{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
+.layer-crumb b{color:var(--ink);}
+.code-toggle{
+  font-family:var(--hand);font-size:15px;line-height:1;color:var(--ink);background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:5px 11px 7px;cursor:pointer;white-space:nowrap;
+}
+.code-toggle:hover{background:var(--orange-soft);}
+.code-toggle[aria-pressed="true"]{background:var(--orange);}
+/* Height is locked by script to the tallest single layer, so switching layers
+   never resizes the panel - a column that jumps on every step is worse than one
+   that is merely too long. */
+.code-wrap{overflow:auto;scrollbar-width:thin;}
+.layer{border-radius:var(--sk-sm);}
+.layer.open{background:rgba(245,169,63,.07);margin:3px -8px;padding:3px 8px;}
+.layer > .lines{display:none;}
+.layer.open > .lines{display:block;}
+.layer > .stub{
+  display:flex;gap:8px;align-items:baseline;cursor:pointer;color:var(--pencil);
+  padding:1px 8px;border-radius:var(--sk-sm);
+}
+.layer > .stub:hover{background:var(--orange-soft);color:var(--ink);}
+.layer > .stub .caret{font-size:11px;}
+.layer > .stub .sig{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layer.open > .stub{display:none;}
+.code .line.outside{color:var(--pencil-light);}
+
 /* ---------- transport ---------- */
-.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:16px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);}
+/* Pinned to the bottom of the viewport. It used to sit under the whole stage,
+   so its distance from the panels was set by whichever column was taller - on a
+   long solution that put Play a screen and a half below the thing it drives. */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
+  position:sticky;bottom:14px;z-index:30;background:var(--paper);box-shadow:0 3px 0 0 var(--ink);}
 .transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
 #playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
 .speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
@@ -492,9 +532,15 @@ button.primary:hover{background:#F7B85F;}
   <div class="stage">
     <div class="col-left" id="colLeft"></div>
     <aside class="panel">
-      <p class="panel-title">Algorithm</p>
-      <pre class="code" id="codeBlock"></pre>
+      <div class="code-head">
+        <p class="panel-title">Algorithm</p>
+        <div class="code-head-right">
+          <span class="layer-crumb" id="layerCrumb"></span>
+          <button class="code-toggle" id="codeToggle" aria-pressed="false">show all</button>
+        </div>
+      </div>
       <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+      <div class="code-wrap" id="codeWrap"><pre class="code" id="codeBlock"></pre></div>
     </aside>
   </div>
 
@@ -693,7 +739,7 @@ const PROBLEM = {
       return steps;
     }
   }]
-};
+};;
 
 /* ==========================================================================
    Shared visualizer engine.
@@ -764,14 +810,139 @@ function buildTabs(){
   });
 }
 
+/* ---------------- code layers ----------------
+   A layer is a method, worked out from the code array itself rather than
+   declared by the problem definition. That matters: it costs the generator
+   nothing, needs no schema field that could be filled in wrong, and applies to
+   every visualizer already written. When the parse finds nothing - a code array
+   that is a bare fragment rather than a class - layers are simply off and the
+   panel renders exactly as it always did. */
+const CTRL_WORD = /^\s*(?:if|else|for|foreach|while|do|switch|case|return|using|lock|try|catch|finally|new)\b/;
+
+function findLayers(code){
+  const out = [];
+  for (let i = 0; i < code.length; i++){
+    const line = code[i];
+    if (line.indexOf('(') < 0) continue;          // a signature has parameters
+    if (/;\s*$/.test(line)) continue;             // a call, not a declaration
+    if (CTRL_WORD.test(line)) continue;           // if (...) is not a method
+    const m = line.match(/(\w+)\s*\(/);
+    if (!m) continue;
+    if (!line.slice(0, line.indexOf(m[0])).trim()) continue;   // needs a return type
+    let open = -1;
+    for (let k = i; k < Math.min(i + 3, code.length); k++){
+      if (code[k].indexOf(';') >= 0) break;
+      if (code[k].indexOf('{') >= 0){ open = k; break; }
+    }
+    if (open < 0) continue;
+    let depth = 0, end = -1;
+    for (let k = open; k < code.length; k++){
+      for (const ch of code[k]){ if (ch === '{') depth++; else if (ch === '}') depth--; }
+      if (depth === 0){ end = k; break; }
+    }
+    if (end < 0 || end - i < 2) continue;         // too small to be worth folding
+    out.push({name: m[1], sig: line.trim(), from: i + 1, to: end + 1});
+    i = end;                                       // nested locals belong to this layer
+  }
+  return out;
+}
+
+const layerOf = (n) => (sol.__layers || []).find(L => n >= L.from && n <= L.to);
+let showAll = false;
+let pinned = new Set();
+let lockedH = 0;
+let lastActive = [];
+
 function loadSolution(){
   sol = PROBLEM.solutions[solIdx];
   $('brandSub').innerHTML = sol.blurb;
   $('legend').innerHTML = (sol.legend || []).map(l =>
     l.cls === null ? '<span>' + l.text + '</span>'
                    : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
-  $('codeBlock').innerHTML = sol.code.map((l, i) =>
-    '<div class="line" data-line="' + (i + 1) + '">' + (l.length ? esc(l) : '&nbsp;') + '</div>').join('');
+
+  sol.__layers = findLayers(sol.code);
+  pinned = new Set();
+  const lineHtml = (n, extra) =>
+    '<div class="line' + (extra || '') + '" data-line="' + n + '">' +
+    (sol.code[n - 1].length ? esc(sol.code[n - 1]) : '&nbsp;') + '</div>';
+
+  if (!sol.__layers.length){
+    $('codeBlock').innerHTML = sol.code.map((l, i) => lineHtml(i + 1)).join('');
+    $('codeToggle').style.display = 'none';
+    $('layerCrumb').textContent = '';
+    $('codeWrap').style.height = '';
+    return;
+  }
+  $('codeToggle').style.display = '';
+
+  let html = '', cursor = 1;
+  sol.__layers.forEach((L, idx) => {
+    while (cursor < L.from) html += lineHtml(cursor++, ' outside');
+    html += '<div class="layer" data-idx="' + idx + '">' +
+            '<div class="stub" data-idx="' + idx + '" role="button" tabindex="0">' +
+              '<span class="caret">&#9656;</span><span class="sig">' + esc(L.sig) + ' { \u2026 }</span>' +
+            '</div><div class="lines">';
+    for (let k = L.from; k <= L.to; k++) html += lineHtml(k);
+    html += '</div></div>';
+    cursor = L.to + 1;
+  });
+  while (cursor <= sol.code.length) html += lineHtml(cursor++, ' outside');
+  $('codeBlock').innerHTML = html;
+
+  $('codeBlock').querySelectorAll('.stub').forEach(el => {
+    const open = () => { pinned.add(Number(el.dataset.idx)); applyLayers(lastActive); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+
+  lockHeight();
+  applyLayers([]);
+}
+
+/* Lock the panel to the tallest SINGLE layer, not to the whole file. Sizing it
+   to the whole file would leave the column exactly as long as it was and fix
+   nothing; letting it size itself per layer makes the page jump on every step. */
+function lockHeight(){
+  const wrap = $('codeWrap'), block = $('codeBlock');
+  const layers = [...block.querySelectorAll('.layer')];
+  wrap.style.height = 'auto';
+  const was = layers.map(el => el.classList.contains('open'));
+  layers.forEach(el => el.classList.remove('open'));
+  let tallest = block.scrollHeight;
+  layers.forEach(el => {
+    el.classList.add('open');
+    tallest = Math.max(tallest, block.scrollHeight);
+    el.classList.remove('open');
+  });
+  layers.forEach((el, i) => el.classList.toggle('open', was[i]));
+  lockedH = Math.max(200, Math.min(tallest + 12, Math.round(window.innerHeight * 0.42)));
+  wrap.style.height = lockedH + 'px';
+}
+
+function applyLayers(active){
+  lastActive = active || [];
+  if (!sol.__layers || !sol.__layers.length) return;
+  const here = lastActive.length ? layerOf(Math.min.apply(null, lastActive)) : null;
+  const hereIdx = here ? sol.__layers.indexOf(here) : -1;
+
+  $('codeBlock').querySelectorAll('.layer').forEach((el) => {
+    const i = Number(el.dataset.idx);
+    el.classList.toggle('open', showAll || i === hereIdx || pinned.has(i));
+  });
+
+  const wrap = $('codeWrap');
+  wrap.style.height = showAll ? Math.round(window.innerHeight * 0.42) + 'px' : lockedH + 'px';
+  $('layerCrumb').innerHTML = showAll
+    ? sol.__layers.length + ' methods'
+    : (here ? 'inside <b>' + esc(here.name) + '</b>' : sol.__layers.length + ' methods');
+
+  const live = $('codeBlock').querySelector('.line.active');
+  if (live){
+    const top = live.offsetTop, bottom = top + live.offsetHeight;
+    if (top < wrap.scrollTop + 8) wrap.scrollTo({top: Math.max(top - 40, 0), behavior: 'smooth'});
+    else if (bottom > wrap.scrollTop + wrap.clientHeight - 8)
+      wrap.scrollTo({top: bottom - wrap.clientHeight + 40, behavior: 'smooth'});
+  }
 }
 
 /* ---------------- panel rendering ---------------- */
@@ -1488,6 +1659,7 @@ function render(animate){
   const codeLines = document.querySelectorAll('.code .line');
   if (stepIndex < 0){
     codeLines.forEach(l => l.classList.remove('active'));
+    applyLayers([]);
     $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
     renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
     return;
@@ -1495,6 +1667,7 @@ function render(animate){
   const step = steps[stepIndex];
   const active = step.lines || [];
   codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  applyLayers(active);
   $('statusMsg').innerHTML = step.msg;
   renderPanels(step.panels, animate);
 }
@@ -1573,6 +1746,16 @@ $('playBtn').addEventListener('click', () => playing ? pause() : play());
 $('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
 $('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
+$('codeToggle').addEventListener('click', () => {
+  showAll = !showAll;
+  const b = $('codeToggle');
+  b.textContent = showAll ? 'show one method' : 'show all';
+  b.setAttribute('aria-pressed', String(showAll));
+  applyLayers(lastActive);
+});
+// Re-lock on resize: the cap is a fraction of the viewport, so a window that
+// changed shape leaves the panel measured against a screen that is gone.
+addEventListener('resize', () => { if (sol && sol.__layers && sol.__layers.length){ lockHeight(); applyLayers(lastActive); } });
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;
   if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }

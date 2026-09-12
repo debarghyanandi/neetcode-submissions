@@ -402,6 +402,75 @@ anything — the visualizer just highlights nothing and reads as *dull*. Nobody 
 visualizer as broken. That's exactly the class of fault that survives casual review, and
 it's why validation runs the code rather than reading it.
 
+### `scripts/reskin.mjs` — pushing a chassis change into finished visualizers
+
+`splice()` writes the whole chassis into every visualizer, so each file is standalone — open it
+from anywhere, no build step. The cost is that editing the chassis changes **nothing that has
+already been written**. Before this script the only way to pick up a chassis improvement was to
+regenerate the `PROBLEM` object too, at an Opus call per folder, to reproduce work that was
+already correct.
+
+So `reskin` lifts each file's `PROBLEM` definition out, splices it into the current chassis, and
+puts it back. Deterministic, no model, no cost. The animation is untouched; only the shell moves
+forward.
+
+It **runs** each definition against the new chassis before writing. Re-splicing is exactly the
+operation that would turn every visualizer in the repo into a blank page at once if a chassis edit
+renamed a helper — so it validates first, including the shape-coverage rules.
+
+Hand-built visualizers carry no state record and have CSS and markup of their own. They're skipped
+unless you pass `--force`, because re-splicing would silently replace that work with the chassis.
+
+```powershell
+node scripts/reskin.mjs                  # dry run
+node scripts/reskin.mjs --apply
+node scripts/reskin.mjs --apply --force  # hand-built ones too
+```
+
+### The code panel — one layer per method
+
+The code used to render as one flat block. On a problem with three methods that made the right
+column taller than the screen, so the panels on the left and the line being executed couldn't be
+looked at together — which is the whole point of the thing.
+
+A **layer is a method**, worked out from the `code` array itself by brace matching, not declared by
+the problem definition. That matters three ways: it costs the generator nothing, there's no schema
+field that could be filled in wrong, and it applies to every visualizer already written. When the
+parse finds nothing — a `code` array that's a bare fragment rather than a class — layers switch off
+and the panel renders exactly as it always did.
+
+The open layer is the method the current step is inside, which is **the same fact the call-stack
+panel is already showing**. The two panels now agree instead of competing.
+
+The panel's height is locked to the tallest *single* layer, not the whole file. Sizing it to the
+whole file would leave the column exactly as long as it was and fix nothing; letting it size itself
+per layer would make the page jump on every step.
+
+### `scripts/lib/indexpage.mjs` — the Pages landing page
+
+`index.md` was a 53-row markdown table sorted alphabetically, with a note telling you to use
+Ctrl+F. That's a list, not an index: sorted by name, *"which stack problems have I done"* is
+unanswerable without reading all of it, and there was nowhere to put the fact that matters most now
+— whether a problem's visualizer has been redrawn under the current shape rules.
+
+It's a generated `index.html` instead, in the same palette and faces as the visualizers, grouped by
+NeetCode's own roadmap sections, with a search box and a per-problem standard marker.
+
+**The marker is derived, never declared.** Green when `state.problems[slug].visualizer.v` equals the
+current `VISUALIZER_FORMAT`, red otherwise. There's no list of "done" slugs to maintain and no way
+for the page to claim something untrue — reskin or rebuild a visualizer and it goes green on the
+next `apply` by itself.
+
+Grouping lives in `scripts/lib/patterns.mjs`, an ordered rule table reading three sources in order
+of trust: the `structures` classify recorded, then the slug, then the `PATTERN :` line the teach
+step already writes into each file. All three are in the repo today, so the page grouped correctly
+before any backfill had run.
+
+The rule order is load-bearing, and two bugs in the first version are why there's a test file:
+a bare `/bst/` matches "su**bst**ring" and filed both longest-substring problems under Trees, and
+`/rot/` matches "**rot**ated" and filed both rotated-array searches under Graphs. A misgrouped
+problem doesn't throw — it sits quietly in the wrong section.
+
 ### `scripts/apply.mjs` and `scripts/migrate-provenance.mjs`
 
 `apply.mjs` regenerates the index table in `README.md` and updates `.agent/state.json`. No AI.
@@ -685,6 +754,8 @@ scripts/
     teach.mjs                      the long block
     visualizer.mjs                 splicing + validation
     shapes.mjs                     structures, panels, coverage rules
+    patterns.mjs                   which pattern a problem belongs to
+    indexpage.mjs                  the Pages landing page
   templates/
     visualizer.chassis.html        design + panels, lifted verbatim
 ```

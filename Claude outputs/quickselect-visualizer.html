@@ -650,259 +650,227 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Level Order Traversal of Binary Tree',
-  note: 'a level is a group, not an order of visits — you only need to know each node\'s depth',
-  inputs: [{id:'t', label:'tree (level-order, null for gaps)', value:'1,2,3,4,5,null,6', width:300}],
-  parse(raw){
-    const toks = String(raw.t).split(',').map(s => s.trim()).filter(s => s.length).slice(0, 15);
-    if (!toks.length) return {ok:false, msg:'Enter a level-order list, e.g. 1,2,3,null,null,4,5.'};
-    const isNull = s => /^(null|nil|n|\.|#)$/i.test(s);
-    if (isNull(toks[0])) return {ok:false, msg:'The root cannot be null — give at least one value.'};
-    if (toks.some(s => !isNull(s) && !Number.isFinite(Number(s)))) return {ok:false, msg:'Node values must be numbers, or the word null for a missing child.'};
-    const root = {val: Number(toks[0]), left: null, right: null};
-    const q = [root];
-    let qi = 0, i = 1, count = 1;
-    while (qi < q.length && i < toks.length){
-      const node = q[qi++];
-      const sides = ['left', 'right'];
-      for (let s = 0; s < 2 && i < toks.length; s++){
-        const tk = toks[i++];
-        if (!isNull(tk)){
-          const child = {val: Number(tk), left: null, right: null};
-          node[sides[s]] = child;
-          q.push(child);
-          count++;
-        }
-      }
-    }
-    return {ok:true, value:{root: root, count: count}, normalized:{t: toks.join(',')}};
+  title: 'Kth Largest Element in an Array',
+  note: 'sorting answers a question you did not ask',
+  inputs: [
+    { id: 'nums', label: 'nums', value: '3,2,1,5,6,4', width: 240 },
+    { id: 'k', label: 'k', value: '2', width: 70 },
+  ],
+  parse(raw) {
+    const nums = parseInts(raw.nums, 14);
+    if (!nums) return { ok: false, msg: 'comma separated numbers, e.g. 3,2,1,5,6,4' };
+    const k = Number(raw.k);
+    if (!Number.isInteger(k) || k < 1 || k > nums.length) return { ok: false, msg: 'k must be between 1 and ' + nums.length };
+    return { ok: true, value: { nums, k } };
   },
-  shuffle(){
-    const v = () => 1 + Math.floor(Math.random() * 9);
-    const toks = [String(v()), String(v()), String(v())];
-    for (let k = 0; k < 4; k++) toks.push(Math.random() < 0.6 ? String(v()) : 'null');
-    if (!toks.slice(3).some(s => s !== 'null')) toks[3] = String(v());
-    return {t: toks.join(',')};
+  shuffle() {
+    const n = 6 + Math.floor(Math.random() * 3);
+    return { nums: randInts(n, 1, 40).join(','), k: String(1 + Math.floor(Math.random() * 3)) };
   },
   solutions: [
-  {
-    label: 'DFS carrying the depth down',
-    badge: 'O(n) time · O(n) space · recursion + depth argument · optimal.cs',
-    blurb: 'Level order asks you to <b>group</b> by depth, not to visit in that order. So recurse depth-first and carry <code>level</code> down as an argument: every value lands in <code>res[level]</code>. Depths are met in increasing order, so <code>res.Count == level</code> is exactly the signal that this depth is brand new.',
-    legend: [
-      {cls:'hot', text:'node in the current call'},
-      {cls:'win', text:'ancestor still on the call stack'},
-      {cls:'good', text:'already appended to res'},
-      {cls:'dim', text:'not visited yet'}
-    ],
-    code: [
-      'private List<List<int>> res = new List<List<int>>();',
-      '',
-      'public List<List<int>> LevelOrder(TreeNode root)',
-      '{',
-      '    if (root == null) return res;',
-      '    DFS(root, 0);',
-      '    return res;',
-      '}',
-      '',
-      'private void DFS(TreeNode node, int level)',
-      '{',
-      '    if (node == null) return;',
-      '',
-      '    // first time we reach a depth: level == res.Count',
-      '    if (res.Count == level)',
-      '        res.Add(new List<int>());',
-      '',
-      '    res[level].Add(node.val);',
-      '',
-      '    DFS(node.left,  level + 1);',
-      '    DFS(node.right, level + 1);',
-      '}'
-    ],
-    simulate(input){
-      const root = input.root, all = [], steps = [], res = [], stack = [], done = [];
-      (function(){
-        const q = [{n: root, d: 0, p: null}];
-        while (q.length){
-          const cur = q.shift();
-          cur.n.dep = cur.d; cur.n.par = cur.p;
-          all.push(cur.n);
-          if (cur.n.left) q.push({n: cur.n.left, d: cur.d + 1, p: cur.n.val});
-          if (cur.n.right) q.push({n: cur.n.right, d: cur.d + 1, p: cur.n.val});
-        }
-      })();
-      let maxDep = 0;
-      all.forEach(n => { if (n.dep > maxDep) maxDep = n.dep; });
-      const onStack = (n) => stack.some(f => f.n === n);
-      const fmt = (a) => '[' + a.join(', ') + ']';
-      const tree = (cur) => {
-        const rows = [];
-        for (let d = 0; d <= maxDep; d++){
-          rows.push({left: 'level ' + d, items: all.filter(n => n.dep === d).map(n => ({
-            text: String(n.val),
-            sub: n.par === null ? 'root' : '↑' + n.par,
-            cls: n === cur ? 'hot' : onStack(n) ? 'in-window' : done.indexOf(n) >= 0 ? 'good' : 'dim'
-          }))});
-        }
-        return pChips('Tree by depth', rows);
-      };
-      const stackPanel = () => pSlots('Call stack (deepest last)', stack.length
-        ? stack.map((f, i) => ({text: 'DFS(' + f.n.val + ', ' + f.level + ')', cls: i === stack.length - 1 ? 'hot' : 'in-window'}))
-        : [{text: '— empty —', cls: 'dim'}]);
-      const resPanel = () => pChips('res', res.length
-        ? res.map((lv, i) => ({left: 'res[' + i + ']', items: lv.map(v => ({text: String(v)}))}))
-        : [{left: 'res', items: [{text: '∅', cls: 'dim'}]}]);
-      const pills = (level) => pPills('', [
-        {k:'level', v: level === null ? '–' : level, cls:'accent'},
-        {k:'res.Count', v: res.length},
-        {k:'appended', v: done.length, cls:'good'}
-      ]);
-      const panels = (cur, level) => [tree(cur), stackPanel(), resPanel(), pills(level)];
+    {
+      label: 'Quickselect — partition, then throw half away',
+      badge: 'O(n) average · O(1) space · quickselect · optimal.cs',
+      blurb: 'Sorting gives you every rank when you asked for one. Partitioning puts a single pivot in its final place for free, and that tells you which side the answer is on — so the other side is never looked at again. Halving the work each time sums to O(n), not O(n log n).',
+      legend: [
+        { cls: 'hot', text: 'the pivot, or the pair being swapped' },
+        { cls: 'in-window', text: 'the range still in play' },
+        { cls: 'done', text: 'a pivot already in its final place' },
+        { cls: 'dim', text: 'thrown away — never looked at again' },
+      ],
+      code: [
+        'public class Solution',
+        '{',
+        '    public int FindKthLargest(int[] nums, int k)',
+        '    {',
+        '        int target = nums.Length - k;',
+        '        return QuickSelect(nums, 0, nums.Length - 1, target);',
+        '    }',
+        '',
+        '    private int QuickSelect(int[] nums, int left, int right, int target)',
+        '    {',
+        '        if (left == right)',
+        '            return nums[left];',
+        '',
+        '        int pivotIndex = Partition(nums, left, right);',
+        '',
+        '        if (pivotIndex == target)',
+        '            return nums[pivotIndex];',
+        '',
+        '        if (pivotIndex < target)',
+        '            return QuickSelect(nums, pivotIndex + 1, right, target);',
+        '',
+        '        return QuickSelect(nums, left, pivotIndex - 1, target);',
+        '    }',
+        '',
+        '    private int Partition(int[] nums, int left, int right)',
+        '    {',
+        '        int pivot = nums[right];',
+        '        int store = left;',
+        '',
+        '        for (int i = left; i < right; i++)',
+        '        {',
+        '            if (nums[i] < pivot)',
+        '            {',
+        '                Swap(nums, i, store);',
+        '                store++;',
+        '            }',
+        '        }',
+        '',
+        '        Swap(nums, store, right);',
+        '        return store;',
+        '    }',
+        '',
+        '    private void Swap(int[] nums, int a, int b)',
+        '    {',
+        '        int tmp = nums[a];',
+        '        nums[a] = nums[b];',
+        '        nums[b] = tmp;',
+        '    }',
+        '}',
+      ],
+      simulate(input) {
+        const nums = input.nums.slice();
+        const k = input.k;
+        const target = nums.length - k;
+        const steps = [];
+        const frames = [];
+        const settled = new Set();
+        let swaps = 0, partitions = 0, answer = null;
 
-      steps.push({lines:[5,6], msg:'The root exists, so the empty-tree guard falls through and the recursion starts at <code>DFS(root, 0)</code>. The depth is passed as a plain <code>int</code> — nothing else has to remember where we are in the tree.', panels: panels(null, null)});
-
-      function dfs(node, level, parent, side){
-        if (node === null){
-          steps.push({lines:[12], msg:'<code>DFS(' + parent + '.' + side + ', ' + level + ')</code>: node <b>' + parent + '</b> has no ' + side + ' child, so the call receives <code>null</code> and returns on line 12 without touching <code>res</code>. Missing subtrees cost one call each and never create a level.', panels: panels(null, level)});
-          return;
+        function panels(o) {
+          o = o || {};
+          return [
+            pTiles('nums', nums, (i) => {
+              if (o.found === i) return { cls: 'good' };
+              if (o.swapA === i || o.swapB === i) return { cls: 'hot', flash: !!o.flash };
+              if (o.pivotIdx === i) return { cls: 'hot' };
+              if (settled.has(i)) return { cls: 'done' };
+              if (o.lo !== undefined && i >= o.lo && i <= o.hi) return { cls: 'in-window' };
+              return { cls: 'dim' };
+            }, {
+              ptrs: o.ptrs || [],
+              bracket: (o.lo !== undefined && o.hi >= o.lo) ? { from: o.lo, to: o.hi } : null,
+              focus: o.focus,
+            }),
+            pStack('Call stack', [{
+              label: 'frames',
+              items: frames.map((f, i) => ({
+                text: f.name,
+                sub: f.detail,
+                cls: i === frames.length - 1 ? 'hot' : '',
+              })),
+              empty: 'not started',
+              top: '← running',
+              foot: frames.length + ' open · deepest ' + deepest,
+            }]),
+            pPills('state', [
+              { k: 'target index', v: target },
+              { k: 'partitions', v: partitions },
+              { k: 'swaps', v: swaps },
+              { k: 'answer', v: answer === null ? '–' : answer, cls: answer === null ? '' : 'good' },
+            ]),
+          ];
         }
-        stack.push({n: node, level: level});
-        if (res.length === level){
-          res.push([]);
-          steps.push({lines:[15,16], msg:'First node ever reached at depth <b>' + level + '</b>. <code>res.Count</code> is ' + level + ', equal to <code>level</code>, which can only happen when lists exist for depths 0..' + (level - 1) + ' and not this one — recursion always arrives at a depth through its parent, so depths are discovered in order and this test never misses by more than one. Create <code>res[' + level + ']</code>.', panels: panels(node, level)});
-        } else {
-          steps.push({lines:[15], msg:'<code>res.Count</code> is ' + res.length + ', greater than <code>level</code> ' + level + ' — an earlier node already opened the list for this depth, so reuse <code>res[' + level + ']</code> instead of adding a new one.', panels: panels(node, level)});
-        }
-        res[level].push(node.val);
-        done.push(node);
-        steps.push({lines:[18], msg:'Append <b>' + node.val + '</b> to <code>res[' + level + ']</code> → ' + fmt(res[level]) + '. The <em>visit</em> order is depth-first and jumps between levels, but every ancestor recurses left before right, so within a level values still land strictly left to right.', panels: panels(node, level)});
-        dfs(node.left, level + 1, node.val, 'left');
-        dfs(node.right, level + 1, node.val, 'right');
-        stack.pop();
-      }
-      dfs(root, 0, null, null);
 
-      steps.push({lines:[7], msg:'Stack unwound. <code>res</code> holds ' + res.length + ' level' + (res.length === 1 ? '' : 's') + ': ' + res.map(fmt).join(' ') + '. Every node was touched once, and the only extra memory beyond the output is the call stack — <b>O(h)</b> deep, not O(n) wide.', panels: panels(null, null)});
-      return steps;
-    }
-  },
-  {
-    label: 'BFS with a queue-size snapshot',
-    badge: 'O(n) time · O(n) space · queue, one sweep per level · optimal-variant.cs',
-    blurb: 'A queue visits nodes in true level order, but it does not say where one level ends. Reading <code>queue.Count</code> <b>once</b> at the top of the inner <code>for</code> fixes that: those items are exactly the current depth, and the children pushed during the sweep queue up behind them for the next pass.',
-    legend: [
-      {cls:'hot', text:'node just dequeued'},
-      {cls:'win', text:'waiting in the queue'},
-      {cls:'good', text:'already written to result'},
-      {cls:'dim', text:'not reached / null placeholder'}
-    ],
-    code: [
-      'List<List<int>> result = new List<List<int>>();',
-      '',
-      'if (root == null) return result;',
-      '',
-      'Queue<TreeNode> queue = new Queue<TreeNode>();',
-      'queue.Enqueue(root);',
-      '',
-      'while (queue.Count > 0)',
-      '{',
-      '    List<int> level = new List<int>();',
-      '',
-      '    for (int i = queue.Count; i > 0; i--)',
-      '    {',
-      '        TreeNode node = queue.Dequeue();',
-      '        if (node != null)',
-      '        {',
-      '            level.Add(node.val);',
-      '            queue.Enqueue(node.left);',
-      '            queue.Enqueue(node.right);',
-      '        }',
-      '    }',
-      '',
-      '    if (level.Count > 0)',
-      '        result.Add(level);',
-      '}',
-      '',
-      'return result;'
-    ],
-    simulate(input){
-      const root = input.root, all = [], steps = [], result = [];
-      let queue = [];
-      const done = [];
-      (function(){
-        const q = [{n: root, d: 0, p: null}];
-        while (q.length){
-          const cur = q.shift();
-          cur.n.dep = cur.d; cur.n.par = cur.p;
-          all.push(cur.n);
-          if (cur.n.left) q.push({n: cur.n.left, d: cur.d + 1, p: cur.n.val});
-          if (cur.n.right) q.push({n: cur.n.right, d: cur.d + 1, p: cur.n.val});
-        }
-      })();
-      let maxDep = 0;
-      all.forEach(n => { if (n.dep > maxDep) maxDep = n.dep; });
-      const inQ = (n) => queue.some(e => e.n === n);
-      const fmt = (a) => '[' + a.join(', ') + ']';
-      const tree = (cur) => {
-        const rows = [];
-        for (let d = 0; d <= maxDep; d++){
-          rows.push({left: 'level ' + d, items: all.filter(n => n.dep === d).map(n => ({
-            text: String(n.val),
-            sub: n.par === null ? 'root' : '↑' + n.par,
-            cls: n === cur ? 'hot' : inQ(n) ? 'in-window' : done.indexOf(n) >= 0 ? 'good' : 'dim'
-          }))});
-        }
-        return pChips('Tree by depth', rows);
-      };
-      const qPanel = () => pSlots('queue (front → back)', queue.length
-        ? queue.map(e => ({text: e.n ? String(e.n.val) : '·', cls: e.n ? 'in-window' : 'dim', sub: e.tag}))
-        : [{text: '— empty —', cls: 'dim'}]);
-      const resPanel = (level) => {
-        const rows = result.map((lv, i) => ({left: 'result[' + i + ']', items: lv.map(v => ({text: String(v), cls:'good'}))}));
-        if (level) rows.push({left: 'level (building)', items: level.length ? level.map(v => ({text: String(v), cls:'hot'})) : [{text:'∅', cls:'dim'}]});
-        if (!rows.length) rows.push({left: 'result', items: [{text:'∅', cls:'dim'}]});
-        return pChips('result', rows);
-      };
-      const pills = (i, size, node) => pPills('', [
-        {k:'i', v: i === null ? '–' : i, cls:'accent'},
-        {k:'snapshot', v: size === null ? '–' : size},
-        {k:'node', v: node === undefined ? '–' : (node ? node.val : 'null'), cls:'hot'},
-        {k:'queue.Count', v: queue.length},
-        {k:'result.Count', v: result.length, cls:'good'}
-      ]);
+        let deepest = 0;
+        const push = (lines, msg, o) => {
+          deepest = Math.max(deepest, frames.length);
+          steps.push({ lines: lines, msg: msg, panels: panels(o) });
+        };
 
-      queue.push({n: root, tag: 'root'});
-      steps.push({lines:[1,3,5,6], msg:'The root is not null, so seed the queue with it. The invariant this whole loop maintains: at the top of each <code>while</code> pass, the queue holds every node of one depth (plus the <code>null</code> placeholders its predecessors pushed) and nothing deeper.', panels:[tree(null), qPanel(), resPanel(null), pills(null, null, undefined)]});
+        function doSwap(a, b) { const t = nums[a]; nums[a] = nums[b]; nums[b] = t; swaps++; }
 
-      let guard = 0;
-      while (queue.length > 0 && guard++ < 40){
-        const size = queue.length;
-        const level = [];
-        steps.push({lines:[8,10,12], msg:'A new pass with <b>' + size + '</b> item' + (size === 1 ? '' : 's') + ' waiting. <code>for (int i = queue.Count; i > 0; i--)</code> reads that count <em>once</em> — the children enqueued inside the body land behind the fence and belong to the <em>next</em> pass. That single snapshot is the whole trick that turns a flat queue into levels.', panels:[tree(null), qPanel(), resPanel(level), pills(size, size, undefined)]});
-        for (let i = size; i > 0; i--){
-          const e = queue.shift();
-          if (e.n){
-            level.push(e.n.val);
-            done.push(e.n);
-            queue.push({n: e.n.left, tag: e.n.val + '.L'});
-            queue.push({n: e.n.right, tag: e.n.val + '.R'});
-            steps.push({lines:[14,15,17,18,19], msg:'Dequeue <b>' + e.n.val + '</b> — real node, so its value joins <code>level</code> → ' + fmt(level) + ', and <em>both</em> children are enqueued unconditionally, even when they are <code>null</code>. Pushing blanks keeps this loop branch-free; line 15 pays for it later by skipping them.', panels:[tree(e.n), qPanel(), resPanel(level), pills(i - 1, size, e.n)]});
-          } else {
-            steps.push({lines:[14,15], msg:'Dequeue a <code>null</code> placeholder (' + e.tag + ' does not exist). The check on line 15 fails, so nothing is recorded and nothing is enqueued — this is where the blanks pushed a pass ago quietly disappear instead of corrupting a level.', panels:[tree(null), qPanel(), resPanel(level), pills(i - 1, size, null)]});
+        function partition(left, right) {
+          frames.push({ name: 'Partition', detail: '[' + left + '..' + right + ']' });
+          partitions++;
+          const pivot = nums[right];
+          push([27], 'Take the last value in the range, <b>' + pivot + '</b>, as the pivot.',
+               { lo: left, hi: right, pivotIdx: right });
+          let store = left;
+          push([28], '<code>store</code> is where the next value smaller than the pivot will go.',
+               { lo: left, hi: right, pivotIdx: right, ptrs: [{ name: 'store', idx: store, cls: 'accent' }] });
+
+          for (let i = left; i < right; i++) {
+            const marks = { lo: left, hi: right, pivotIdx: right, focus: i,
+                            ptrs: [{ name: 'i', idx: i }, { name: 'store', idx: store, cls: 'accent' }] };
+            push([30, 32], 'Is <b>' + nums[i] + '</b> smaller than the pivot <b>' + pivot + '</b>?', marks);
+            if (nums[i] < pivot) {
+              frames.push({ name: 'Swap', detail: i + ' ↔ ' + store });
+              push([34], 'Yes. Send it to the left of <code>store</code>.',
+                   { lo: left, hi: right, pivotIdx: right, swapA: i, swapB: store, ptrs: marks.ptrs });
+              push([45, 46, 47], 'Three lines and one temporary — this is the whole of <code>Swap</code>.',
+                   { lo: left, hi: right, pivotIdx: right, swapA: i, swapB: store, ptrs: marks.ptrs });
+              doSwap(i, store);
+              frames.pop();
+              store++;
+              push([35], 'Swapped, and <code>store</code> moves right.',
+                   { lo: left, hi: right, pivotIdx: right, flash: true, swapA: store - 1,
+                     ptrs: [{ name: 'i', idx: i }, { name: 'store', idx: store, cls: 'accent' }] });
+            }
           }
+
+          frames.push({ name: 'Swap', detail: store + ' ↔ ' + right });
+          push([39], 'Every value left of <code>store</code> is smaller. Drop the pivot in there.',
+               { lo: left, hi: right, swapA: store, swapB: right });
+          doSwap(store, right);
+          frames.pop();
+          settled.add(store);
+          push([40], 'The pivot is at index <b>' + store + '</b> and will never move again. That is true whatever happens next.',
+               { lo: left, hi: right, pivotIdx: store });
+          frames.pop();
+          return store;
         }
-        if (level.length){
-          result.push(level);
-          steps.push({lines:[23,24], msg:'The snapshot is exhausted, so depth ' + (result.length - 1) + ' is complete: ' + fmt(level) + ' joins <code>result</code>. Everything now in the queue was enqueued during this pass, so it is exactly the next depth — the invariant is restored.', panels:[tree(null), qPanel(), resPanel(null), pills(0, size, undefined)]});
-        } else {
-          steps.push({lines:[23], msg:'That entire sweep was <code>null</code> placeholders — the phantom row below the deepest leaves. <code>level.Count</code> is 0, so nothing is appended (this guard is what stops an empty trailing level), and because nulls enqueue nothing the queue is now empty.', panels:[tree(null), qPanel(), resPanel(null), pills(0, size, undefined)]});
+
+        function quickSelect(left, right) {
+          frames.push({ name: 'QuickSelect', detail: '[' + left + '..' + right + ']' });
+          push([11], 'Looking at [' + left + '..' + right + ']. Everything outside it is already ruled out.',
+               { lo: left, hi: right });
+          if (left === right) {
+            answer = nums[left];
+            push([12], 'One value left, so it is the answer: <b>' + nums[left] + '</b>.',
+                 { found: left });
+            frames.pop();
+            return nums[left];
+          }
+          const p = partition(left, right);
+          push([16], 'The pivot settled at <b>' + p + '</b>. The index we want is <b>' + target + '</b>.',
+               { lo: left, hi: right, pivotIdx: p });
+          if (p === target) {
+            answer = nums[p];
+            push([17], 'Same index. <b>' + nums[p] + '</b> is the answer — and the rest of the array was never sorted.',
+                 { found: p });
+            frames.pop();
+            return nums[p];
+          }
+          if (p < target) {
+            push([19, 20], 'The answer sits to the right of the pivot. The whole left side is discarded, unsorted.',
+                 { lo: p + 1, hi: right });
+            const r = quickSelect(p + 1, right);
+            frames.pop();
+            return r;
+          }
+          push([22], 'The answer sits to the left. The right side is discarded, unsorted.',
+               { lo: left, hi: p - 1 });
+          const r = quickSelect(left, p - 1);
+          frames.pop();
+          return r;
         }
-      }
-      steps.push({lines:[27], msg:'Queue drained, loop exits. <code>result</code> = ' + result.map(fmt).join(' ') + '. Each node is enqueued and dequeued once, and the queue never holds more than one level at a time — <b>O(w)</b> extra space for the widest level.', panels:[tree(null), qPanel(), resPanel(null), pills(null, null, undefined)]});
-      return steps;
-    }
-  }]
-};;
+
+        frames.push({ name: 'FindKthLargest', detail: 'k = ' + k });
+        push([5], 'The ' + k + 'th largest value is whatever ends up at index <b>' + target + '</b> in sorted order. Find that one index — not the sorted array.',
+             { lo: 0, hi: nums.length - 1 });
+        push([6], 'Hand the whole range to <code>QuickSelect</code>.', { lo: 0, hi: nums.length - 1 });
+        quickSelect(0, nums.length - 1);
+        frames.pop();
+        push([6], 'Answer <b>' + answer + '</b>, returned. Notice how much of the array is still out of order — that work was never done.',
+             { found: target });
+        return steps;
+      },
+    },
+  ],
+};
+
 
 /* ==========================================================================
    Shared visualizer engine.

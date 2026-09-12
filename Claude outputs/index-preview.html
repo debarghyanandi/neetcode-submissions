@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeetCode Solutions — by pattern</title>
+<meta name="description" content="53 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* The same tokens as scripts/templates/visualizer.chassis.html. The index and
+   the thing it opens should look like one piece of work, so the values are
+   copied rather than approximated. Single visual world, painted explicitly. */
+:root{
+  --paper:#FBF5E9; --paper-sunk:#F5EDDD;
+  --ink:#211E1A; --pencil:#8A8175; --pencil-light:#C9C0AF;
+  --orange:#F5A93F; --orange-soft:#FBE3BC;
+  --red:#C94F2E; --green:#5E8C61;
+  --hand:'Patrick Hand','Segoe Print','Bradley Hand',cursive;
+  --mono:'Courier Prime',ui-monospace,'Courier New',monospace;
+  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
+  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
+  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--hand);font-size:17px;line-height:1.5;
+  padding-block:30px 60px;padding-left:clamp(16px,3.5vw,52px);padding-right:clamp(16px,3.5vw,52px);
+}
+.wrap{max-width:1120px;margin:0 auto;}
+a{color:inherit;}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex;flex-wrap:wrap;gap:18px 40px;align-items:flex-end;justify-content:space-between;
+  padding-bottom:16px;border-bottom:2px solid var(--ink);}
+.eyebrow{margin:0 0 2px;font-size:15px;color:var(--pencil);transform:rotate(-1deg);transform-origin:left bottom;}
+h1{margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.02;font-weight:400;text-wrap:balance;}
+.lede{margin:9px 0 0;max-width:64ch;}
+.lede code{font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);}
+.meter{min-width:230px;display:flex;flex-direction:column;gap:7px;}
+.meter-line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px;color:var(--pencil);}
+.meter-line b{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+.bar{height:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);overflow:hidden;}
+.bar span{display:block;height:100%;background:var(--green);}
+
+/* ---------- controls ---------- */
+.controls{position:sticky;top:0;z-index:20;background:var(--paper);
+  display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;
+  margin:0 -6px 22px;padding:14px 6px 12px;border-bottom:2px dashed var(--pencil-light);}
+.search{flex:1 1 300px;display:flex;align-items:center;gap:10px;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);padding:6px 14px;}
+.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;
+  font-family:var(--hand);font-size:17px;color:var(--ink);}
+.search input::placeholder{color:var(--pencil-light);}
+.search .mark{font-size:16px;color:var(--pencil);}
+.search .clear{border:0;background:transparent;cursor:pointer;font-family:var(--hand);font-size:17px;color:var(--pencil);padding:0 2px;}
+.search .clear:hover{color:var(--red);}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{font-family:var(--hand);font-size:15px;line-height:1;color:var(--ink);background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 12px 9px;cursor:pointer;white-space:nowrap;}
+.chip:hover{background:var(--orange-soft);}
+.chip[aria-pressed="true"]{background:var(--orange);}
+.chip:focus-visible,.search input:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.count{font-family:var(--mono);font-size:13px;color:var(--pencil);font-variant-numeric:tabular-nums;margin-left:auto;}
+
+/* ---------- groups ---------- */
+.group{border:2px solid var(--ink);border-radius:var(--sk-lg);padding:18px 22px 8px;margin-bottom:20px;}
+.group-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between;}
+.group h2{margin:0;font-size:24px;font-weight:400;transform:rotate(-.5deg);transform-origin:left center;}
+.group-count{font-family:var(--mono);font-size:13px;color:var(--pencil);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.group-count b{font-weight:700;color:var(--ink);}
+.group-count .gdone{color:var(--green);}
+.group-note{margin:4px 0 12px;font-size:15px;color:var(--pencil);max-width:70ch;}
+ul{list-style:none;margin:0;padding:0;}
+li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;}
+li + li{border-top:2px dashed var(--pencil-light);}
+.who{flex:1 1 340px;min-width:0;}
+.name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
+.name:hover{border-bottom-color:var(--orange);background:var(--orange-soft);}
+.why{display:block;font-size:14px;color:var(--pencil);margin-top:2px;}
+.why.none{font-style:italic;color:var(--pencil-light);}
+.meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-left:auto;}
+.cx{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 8px 7px;
+  border:2px solid var(--pencil-light);border-radius:var(--sk-sm);color:var(--pencil);white-space:nowrap;}
+.src{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 9px 7px;text-decoration:none;
+  border:2px solid var(--ink);border-radius:var(--sk-sm);white-space:nowrap;}
+.src:hover{background:var(--orange-soft);}
+.run{font-family:var(--hand);font-size:15px;line-height:1;padding:6px 12px 8px;text-decoration:none;
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--orange-soft);white-space:nowrap;}
+.run:hover{background:var(--orange);}
+.run.off{border-color:var(--pencil-light);color:var(--pencil-light);background:transparent;pointer-events:none;}
+/* The standard marker. Shape as well as colour, so it still reads when the
+   page is printed or the reader cannot separate red from green. */
+.mark-std{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;line-height:1;
+  padding:6px 9px 7px;border:2px solid;border-radius:var(--sk-sm);white-space:nowrap;}
+.mark-std .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.mark-std.current{border-color:var(--green);color:var(--green);}
+.mark-std.current .dot{background:var(--green);}
+.mark-std.stale{border-color:var(--red);color:var(--red);}
+.mark-std.stale .dot{background:var(--red);}
+.mark-std.none{border-color:var(--pencil-light);color:var(--pencil-light);}
+.mark-std.none .dot{background:var(--pencil-light);}
+
+.empty{display:none;border:2px dashed var(--pencil-light);border-radius:var(--sk-lg);padding:26px 22px;text-align:center;color:var(--pencil);}
+.foot{margin-top:28px;padding-top:14px;border-top:2px solid var(--ink);
+  display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:14px;color:var(--pencil);}
+.foot code{font-family:var(--mono);font-size:12px;}
+@media (max-width:640px){ .meta{margin-left:0;} .count{margin-left:0;} }
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">debarghyanandi / neetcode-submissions</p>
+      <h1>NeetCode Solutions</h1>
+      <p class="lede">53 problems in C#, grouped the way the roadmap groups them. Every one carries its
+        complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
+    </div>
+    <div class="meter">
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">0</span> / 53</b></div>
+      <div class="bar"><span id="bar" style="width:0.0%"></span></div>
+      <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <label class="search">
+      <span class="mark" aria-hidden="true">&#8981;</span>
+      <input id="q" type="search" placeholder="Search a problem, a pattern, or a technique…" autocomplete="off" aria-label="Search problems and patterns">
+      <button class="clear" id="clear" type="button" title="Clear" aria-label="Clear search" hidden>&times;</button>
+    </label>
+    <div class="chips" role="group" aria-label="Filter by visualizer standard">
+      <button class="chip" id="f-all" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" id="f-stale" data-filter="stale" aria-pressed="false">Needs reshape</button>
+      <button class="chip" id="f-current" data-filter="current" aria-pressed="false">Current</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+
+
+<section class="group" data-group="Arrays &amp; Hashing">
+  <div class="group-head">
+    <h2>Arrays &amp; Hashing</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>8</b> reshaped</span>
+  </div>
+  <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
+  <ul>
+    <li data-hay="anagram groups anagram-groups arrays &amp; hashing hash map on a canonical key - 26-slot letter count  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/anagram-groups" target="_blank" rel="noopener noreferrer">Anagram Groups</a>
+        <span class="why">Hash map on a canonical key - 26-slot letter count</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n * k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/anagram-groups/anagram-groups-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="duplicate integer duplicate-integer arrays &amp; hashing hash set membership - add's return value is the test  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/duplicate-integer" target="_blank" rel="noopener noreferrer">Duplicate Integer</a>
+        <span class="why">Hash Set membership - Add's return value is the test</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/duplicate-integer/duplicate-integer-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="is anagram is-anagram arrays &amp; hashing fixed counting array - balances must cancel to zero  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/is-anagram" target="_blank" rel="noopener noreferrer">Is Anagram</a>
+        <span class="why">Fixed counting array - balances must cancel to zero</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-anagram/is-anagram-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set + start-of-run guard, expand each run once  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/longest-consecutive-sequence" target="_blank" rel="noopener noreferrer">Longest Consecutive Sequence</a>
+        <span class="why">Hash set + start-of-run guard, expand each run once</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/longest-consecutive-sequence-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="products of array discluding self products-of-array-discluding-self arrays &amp; hashing prefix/suffix products - two passes, output as scratch  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/products-of-array-discluding-self" target="_blank" rel="noopener noreferrer">Products Of Array Discluding Self</a>
+        <span class="why">Prefix/Suffix Products - two passes, output as scratch</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/products-of-array-discluding-self/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/products-of-array-discluding-self/products-of-array-discluding-self-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="string encode and decode string-encode-and-decode arrays &amp; hashing length-prefixed framing - count, '#', then raw payload  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/string-encode-and-decode" target="_blank" rel="noopener noreferrer">String Encode And Decode</a>
+        <span class="why">Length-Prefixed Framing - count, '#', then raw payload</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/string-encode-and-decode-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="top k elements in list top-k-elements-in-list arrays &amp; hashing bucket sort by frequency - count, bucket, walk down  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/top-k-elements-in-list" target="_blank" rel="noopener noreferrer">Top K Elements In List</a>
+        <span class="why">Bucket sort by frequency - count, bucket, walk down</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/top-k-elements-in-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="two integer sum two-integer-sum arrays &amp; hashing hash map complement lookup - check before insert  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/two-integer-sum" target="_blank" rel="noopener noreferrer">Two Integer Sum</a>
+        <span class="why">Hash Map Complement Lookup - check before insert</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/two-integer-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/two-integer-sum/two-integer-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Two Pointers">
+  <div class="group-head">
+    <h2>Two Pointers</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>6</b> reshaped</span>
+  </div>
+  <p class="group-note">Two indices moving under a rule that never lets you miss an answer.</p>
+  <ul>
+    <li data-hay="is palindrome is-palindrome two pointers two pointers - converge inward, skip non-alphanumerics  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/is-palindrome" target="_blank" rel="noopener noreferrer">Is Palindrome</a>
+        <span class="why">Two Pointers - converge inward, skip non-alphanumerics</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-palindrome/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-palindrome/is-palindrome-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="max water container max-water-container two pointers two pointers - shrink inward from the widest pair  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/max-water-container" target="_blank" rel="noopener noreferrer">Max Water Container</a>
+        <span class="why">Two Pointers - shrink inward from the widest pair</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/max-water-container/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/max-water-container/max-water-container-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="move zeroes move-zeroes two pointers two pointers (read/write) - stable partition by swap  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/move-zeroes" target="_blank" rel="noopener noreferrer">Move Zeroes</a>
+        <span class="why">Two Pointers (read/write) - stable partition by swap</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/move-zeroes/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/move-zeroes/move-zeroes-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="remove duplicates from sorted array remove-duplicates-from-sorted-array two pointers   no visualizer" data-status="none">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/remove-duplicates-from-sorted-array" target="_blank" rel="noopener noreferrer">Remove Duplicates From Sorted Array</a>
+        <span class="why none">not taught yet</span>
+      </span>
+      <span class="meta">
+        <span class="cx">not curated yet</span><span class="run off">no visualizer</span>
+        <span class="mark-std none" title="visualizer shape standard"><i class="dot"></i>no visualizer</span>
+      </span>
+    </li>
+    <li data-hay="three integer sum three-integer-sum two pointers sort, anchor each index, two-pointer the suffix  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/three-integer-sum" target="_blank" rel="noopener noreferrer">Three Integer Sum</a>
+        <span class="why">Sort, anchor each index, two-pointer the suffix</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n^2) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/three-integer-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/three-integer-sum/three-integer-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="two integer sum ii two-integer-sum-ii two pointers two pointers - converging on a sorted array  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/two-integer-sum-ii" target="_blank" rel="noopener noreferrer">Two Integer Sum Ii</a>
+        <span class="why">Two Pointers - Converging on a Sorted Array</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/two-integer-sum-ii/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/two-integer-sum-ii/two-integer-sum-ii-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Sliding Window">
+  <div class="group-head">
+    <h2>Sliding Window</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>7</b> reshaped</span>
+  </div>
+  <p class="group-note">A range that grows on the right and shrinks on the left, never restarting.</p>
+  <ul>
+    <li data-hay="buy and sell crypto buy-and-sell-crypto sliding window running minimum - fix the sell day, greedy buy day  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/buy-and-sell-crypto" target="_blank" rel="noopener noreferrer">Buy And Sell Crypto</a>
+        <span class="why">Running minimum - fix the sell day, greedy buy day</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/buy-and-sell-crypto-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="longest repeating substring with replacement longest-repeating-substring-with-replacement sliding window sliding window with a never-decreasing max frequency  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/longest-repeating-substring-with-replacement" target="_blank" rel="noopener noreferrer">Longest Repeating Substring With Replacement</a>
+        <span class="why">Sliding window with a never-decreasing max frequency</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/longest-repeating-substring-with-replacement-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="longest substring without duplicates longest-substring-without-duplicates sliding window sliding window - jump left past the last duplicate  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/longest-substring-without-duplicates" target="_blank" rel="noopener noreferrer">Longest Substring Without Duplicates</a>
+        <span class="why">Sliding window - jump left past the last duplicate</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/longest-substring-without-duplicates-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="minimum size subarray sum minimum-size-subarray-sum sliding window variable-size sliding window - shrink while valid  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/minimum-size-subarray-sum" target="_blank" rel="noopener noreferrer">Minimum Size Subarray Sum</a>
+        <span class="why">Variable-size sliding window - shrink while valid</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/minimum-size-subarray-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="minimum window with characters minimum-window-with-characters sliding window sliding window - expand right, shrink left while valid  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/minimum-window-with-characters" target="_blank" rel="noopener noreferrer">Minimum Window With Characters</a>
+        <span class="why">Sliding Window - expand right, shrink left while valid</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/minimum-window-with-characters-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="permutation string permutation-string sliding window fixed-size sliding window + matched-letter counter  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/permutation-string" target="_blank" rel="noopener noreferrer">Permutation String</a>
+        <span class="why">Fixed-size sliding window + matched-letter counter</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/permutation-string/permutation-string-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="sliding window maximum sliding-window-maximum sliding window monotonic deque of indices - front is the window max  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/sliding-window-maximum" target="_blank" rel="noopener noreferrer">Sliding Window Maximum</a>
+        <span class="why">Monotonic deque of indices - front is the window max</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/sliding-window-maximum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Stack">
+  <div class="group-head">
+    <h2>Stack</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>5</b> reshaped</span>
+  </div>
+  <p class="group-note">The most recent unresolved thing is the one you need next.</p>
+  <ul>
+    <li data-hay="daily temperatures daily-temperatures stack monotonic stack - decreasing stack of unresolved indices  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/daily-temperatures" target="_blank" rel="noopener noreferrer">Daily Temperatures</a>
+        <span class="why">Monotonic Stack - decreasing stack of unresolved indices</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/daily-temperatures/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/daily-temperatures/daily-temperatures-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="evaluate reverse polish notation evaluate-reverse-polish-notation stack stack - operator pops the two most recent values  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/evaluate-reverse-polish-notation" target="_blank" rel="noopener noreferrer">Evaluate Reverse Polish Notation</a>
+        <span class="why">Stack - operator pops the two most recent values</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/evaluate-reverse-polish-notation/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/evaluate-reverse-polish-notation/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/evaluate-reverse-polish-notation/evaluate-reverse-polish-notation-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="implement queue using stacks implement-queue-using-stacks stack two stacks - lazy drain, refill only when output empty  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/implement-queue-using-stacks" target="_blank" rel="noopener noreferrer">Implement Queue Using Stacks</a>
+        <span class="why">Two Stacks - lazy drain, refill only when output empty</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/implement-queue-using-stacks/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/implement-queue-using-stacks/implement-queue-using-stacks-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="minimum stack minimum-stack stack auxiliary stack - push the running minimum in parallel  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/minimum-stack" target="_blank" rel="noopener noreferrer">Minimum Stack</a>
+        <span class="why">Auxiliary stack - push the running minimum in parallel</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(1) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-stack/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-stack/minimum-stack-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="validate parentheses validate-parentheses stack stack - lifo matching of nested pairs  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/validate-parentheses" target="_blank" rel="noopener noreferrer">Validate Parentheses</a>
+        <span class="why">Stack - LIFO matching of nested pairs</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/validate-parentheses/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/validate-parentheses/validate-parentheses-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Binary Search">
+  <div class="group-head">
+    <h2>Binary Search</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>5</b> reshaped</span>
+  </div>
+  <p class="group-note">Halve a space that is ordered — sometimes the array, sometimes the answer.</p>
+  <ul>
+    <li data-hay="binary search binary-search binary search binary search - recursive halving of a sorted range  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/binary-search" target="_blank" rel="noopener noreferrer">Binary Search</a>
+        <span class="why">Binary Search - recursive halving of a sorted range</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/binary-search/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/binary-search/binary-search-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="eating bananas eating-bananas binary search binary search on the answer - monotone feasibility  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/eating-bananas" target="_blank" rel="noopener noreferrer">Eating Bananas</a>
+        <span class="why">Binary search on the answer - monotone feasibility</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log k) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/eating-bananas/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/eating-bananas/eating-bananas-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="find minimum in rotated sorted array find-minimum-in-rotated-sorted-array binary search binary search on the break - compare mid against right  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/find-minimum-in-rotated-sorted-array" target="_blank" rel="noopener noreferrer">Find Minimum In Rotated Sorted Array</a>
+        <span class="why">Binary Search on the Break - compare mid against right</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(log n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/find-minimum-in-rotated-sorted-array/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/find-minimum-in-rotated-sorted-array/find-minimum-in-rotated-sorted-array-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="find target in rotated sorted array find-target-in-rotated-sorted-array binary search modified binary search - find the sorted half each step  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/find-target-in-rotated-sorted-array" target="_blank" rel="noopener noreferrer">Find Target In Rotated Sorted Array</a>
+        <span class="why">Modified binary search - find the sorted half each step</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(log n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/find-target-in-rotated-sorted-array/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/find-target-in-rotated-sorted-array/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/find-target-in-rotated-sorted-array/find-target-in-rotated-sorted-array-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="search 2d matrix search-2d-matrix binary search binary search over the flattened 2d index  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/search-2d-matrix" target="_blank" rel="noopener noreferrer">Search 2d Matrix</a>
+        <span class="why">Binary search over the flattened 2D index</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(log(m*n)) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/search-2d-matrix/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/search-2d-matrix/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/search-2d-matrix/search-2d-matrix-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Linked List">
+  <div class="group-head">
+    <h2>Linked List</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>7</b> reshaped</span>
+  </div>
+  <p class="group-note">Pointer surgery. The trick is almost always a dummy head or a second pointer.</p>
+  <ul>
+    <li data-hay="add two numbers add-two-numbers linked list little-endian digit add - one pass, carry as state  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/add-two-numbers" target="_blank" rel="noopener noreferrer">Add Two Numbers</a>
+        <span class="why">Little-endian digit add - one pass, carry as state</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/add-two-numbers/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/add-two-numbers/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/add-two-numbers/add-two-numbers-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="linked list cycle detection linked-list-cycle-detection linked list fast and slow pointers - floyd's cycle detection  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/linked-list-cycle-detection" target="_blank" rel="noopener noreferrer">Linked List Cycle Detection</a>
+        <span class="why">Fast and Slow Pointers - Floyd's cycle detection</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/linked-list-cycle-detection/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/linked-list-cycle-detection/linked-list-cycle-detection-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="lru cache lru-cache linked list hash map + doubly linked list, sentinels at both ends  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/lru-cache" target="_blank" rel="noopener noreferrer">Lru Cache</a>
+        <span class="why">Hash map + doubly linked list, sentinels at both ends</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(1) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lru-cache/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/lru-cache/lru-cache-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="merge two sorted linked lists merge-two-sorted-linked-lists linked list dummy head + two pointers - splice, never allocate  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/merge-two-sorted-linked-lists" target="_blank" rel="noopener noreferrer">Merge Two Sorted Linked Lists</a>
+        <span class="why">Dummy head + two pointers - splice, never allocate</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n + m) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-two-sorted-linked-lists/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-two-sorted-linked-lists/merge-two-sorted-linked-lists-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="remove node from end of linked list remove-node-from-end-of-linked-list linked list two pointers - fixed n-gap window plus dummy head  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/remove-node-from-end-of-linked-list" target="_blank" rel="noopener noreferrer">Remove Node From End Of Linked List</a>
+        <span class="why">Two Pointers - fixed n-gap window plus dummy head</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/remove-node-from-end-of-linked-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/remove-node-from-end-of-linked-list/remove-node-from-end-of-linked-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="reorder linked list reorder-linked-list linked list fast/slow midpoint, reverse tail, weave merge  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/reorder-linked-list" target="_blank" rel="noopener noreferrer">Reorder Linked List</a>
+        <span class="why">Fast/slow midpoint, reverse tail, weave merge</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/reorder-linked-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/reorder-linked-list/reorder-linked-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="reverse a linked list reverse-a-linked-list linked list three-pointer iterative reversal, rewiring next in place  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/reverse-a-linked-list" target="_blank" rel="noopener noreferrer">Reverse A Linked List</a>
+        <span class="why">Three-pointer iterative reversal, rewiring next in place</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/reverse-a-linked-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/reverse-a-linked-list/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/reverse-a-linked-list/reverse-a-linked-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Trees">
+  <div class="group-head">
+    <h2>Trees</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>10</b> reshaped</span>
+  </div>
+  <p class="group-note">Recursion that returns something useful from every subtree.</p>
+  <ul>
+    <li data-hay="balanced binary tree balanced-binary-tree trees bottom-up dfs returning height and balance in one pass  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/balanced-binary-tree" target="_blank" rel="noopener noreferrer">Balanced Binary Tree</a>
+        <span class="why">Bottom-up DFS returning height and balance in one pass</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/balanced-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/balanced-binary-tree/balanced-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="binary tree diameter binary-tree-diameter trees post-order dfs - return height, update diameter globally  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/binary-tree-diameter" target="_blank" rel="noopener noreferrer">Binary Tree Diameter</a>
+        <span class="why">Post-order DFS - return height, update diameter globally</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/binary-tree-diameter-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="depth of binary tree depth-of-binary-tree trees dfs post-order fold - depth = 1 + max(child depths)  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/depth-of-binary-tree" target="_blank" rel="noopener noreferrer">Depth Of Binary Tree</a>
+        <span class="why">DFS post-order fold - depth = 1 + max(child depths)</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/depth-of-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/depth-of-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/depth-of-binary-tree/depth-of-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="invert a binary tree invert-a-binary-tree trees post-order recursion - mirror subtrees, then swap  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/invert-a-binary-tree" target="_blank" rel="noopener noreferrer">Invert A Binary Tree</a>
+        <span class="why">Post-order recursion - mirror subtrees, then swap</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal-variant-2.cs" target="_blank" rel="noopener noreferrer">optimal-variant-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/invert-a-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="kth smallest integer in bst kth-smallest-integer-in-bst trees in-order dfs - shared counter, -1 sentinel early exit  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/kth-smallest-integer-in-bst" target="_blank" rel="noopener noreferrer">Kth Smallest Integer In Bst</a>
+        <span class="why">In-order DFS - shared counter, -1 sentinel early exit</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/kth-smallest-integer-in-bst/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/kth-smallest-integer-in-bst/kth-smallest-integer-in-bst-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="level order traversal of binary tree level-order-traversal-of-binary-tree trees dfs preorder + depth index - new row on first visit  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/level-order-traversal-of-binary-tree" target="_blank" rel="noopener noreferrer">Level Order Traversal Of Binary Tree</a>
+        <span class="why">DFS preorder + depth index - new row on first visit</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/level-order-traversal-of-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="lowest common ancestor in binary search tree lowest-common-ancestor-in-binary-search-tree trees bst descent - stop at the first split point tree call-stack needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/lowest-common-ancestor-in-binary-search-tree" target="_blank" rel="noopener noreferrer">Lowest Common Ancestor In Binary Search Tree</a>
+        <span class="why">BST Descent - stop at the first split point</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="same binary tree same-binary-tree trees lockstep dfs on two trees - structural recursion  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/same-binary-tree" target="_blank" rel="noopener noreferrer">Same Binary Tree</a>
+        <span class="why">Lockstep DFS on two trees - structural recursion</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/same-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/same-binary-tree/optimal-variant-2.cs" target="_blank" rel="noopener noreferrer">optimal-variant-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/same-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/same-binary-tree/same-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="subtree of a binary tree subtree-of-a-binary-tree trees dfs anchor scan + full structural equality check  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/subtree-of-a-binary-tree" target="_blank" rel="noopener noreferrer">Subtree Of A Binary Tree</a>
+        <span class="why">DFS anchor scan + full structural equality check</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(m * n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/subtree-of-a-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="valid binary search tree valid-binary-search-tree trees post-order dfs returning (min, max, found) per subtree  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/valid-binary-search-tree" target="_blank" rel="noopener noreferrer">Valid Binary Search Tree</a>
+        <span class="why">Post-order DFS returning (min, max, found) per subtree</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/valid-binary-search-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Heap / Priority Queue">
+  <div class="group-head">
+    <h2>Heap / Priority Queue</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>3</b> reshaped</span>
+  </div>
+  <p class="group-note">You need the best few, not the sorted whole.</p>
+  <ul>
+    <li data-hay="k closest points to origin k-closest-points-to-origin heap / priority queue top-k via bounded max-heap: evict the current farthest  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/k-closest-points-to-origin" target="_blank" rel="noopener noreferrer">K Closest Points To Origin</a>
+        <span class="why">Top-K via bounded max-heap: evict the current farthest</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/k-closest-points-to-origin-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="kth largest integer in a stream kth-largest-integer-in-a-stream heap / priority queue top-k min-heap - size-k heap root is the kth largest  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/kth-largest-integer-in-a-stream" target="_blank" rel="noopener noreferrer">Kth Largest Integer In A Stream</a>
+        <span class="why">Top-K min-heap - size-k heap root is the kth largest</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/kth-largest-integer-in-a-stream/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/kth-largest-integer-in-a-stream/kth-largest-integer-in-a-stream-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+    <li data-hay="last stone weight last-stone-weight heap / priority queue max-heap simulation with negated priorities  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/last-stone-weight" target="_blank" rel="noopener noreferrer">Last Stone Weight</a>
+        <span class="why">Max-heap simulation with negated priorities</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/last-stone-weight/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/last-stone-weight/last-stone-weight-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Intervals">
+  <div class="group-head">
+    <h2>Intervals</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>1</b> reshaped</span>
+  </div>
+  <p class="group-note">Sort by one end, then sweep once.</p>
+  <ul>
+    <li data-hay="merge intervals merge-intervals intervals sort by start, sweep once merging into the last block  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/merge-intervals" target="_blank" rel="noopener noreferrer">Merge Intervals</a>
+        <span class="why">Sort by start, sweep once merging into the last block</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-intervals/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-intervals/merge-intervals-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+<section class="group" data-group="Greedy">
+  <div class="group-head">
+    <h2>Greedy</h2>
+    <span class="group-count"><b class="gdone">0</b> / <b>1</b> reshaped</span>
+  </div>
+  <p class="group-note">The locally best choice is provably the globally best one.</p>
+  <ul>
+    <li data-hay="maximum subarray maximum-subarray greedy kadane - reset the running sum when it goes negative  needs reshape" data-status="stale">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
+        <span class="why">Kadane - reset the running sum when it goes negative</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/maximum-subarray/maximum-subarray-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
+  <p class="empty" id="empty">Nothing matches that. Try a pattern name — <em>sliding window</em>, <em>heap</em>, <em>monotonic</em>.</p>
+
+  <footer class="foot">
+    <span>Generated by <code>scripts/apply.mjs</code>. Grouping rules live in <code>scripts/lib/patterns.mjs</code>.</span>
+    <span>Visualizer standard <code>v2</code></span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var rows = [].slice.call(document.querySelectorAll('li[data-hay]'));
+  var groups = [].slice.call(document.querySelectorAll('.group'));
+  var q = document.getElementById('q');
+  var clear = document.getElementById('clear');
+  var count = document.getElementById('count');
+  var empty = document.getElementById('empty');
+  var filter = 'all';
+
+  function apply(){
+    var needle = q.value.trim().toLowerCase();
+    var terms = needle ? needle.split(/\s+/) : [];
+    var shown = 0;
+    rows.forEach(function(li){
+      var hay = li.getAttribute('data-hay');
+      var okText = terms.every(function(t){ return hay.indexOf(t) >= 0; });
+      var okFilter = filter === 'all' || li.getAttribute('data-status') === filter;
+      var on = okText && okFilter;
+      li.hidden = !on;
+      if (on) shown++;
+    });
+    // A group with nothing left in it is noise, not structure.
+    groups.forEach(function(g){
+      var any = [].slice.call(g.querySelectorAll('li[data-hay]')).some(function(li){ return !li.hidden; });
+      g.hidden = !any;
+    });
+    empty.style.display = shown ? 'none' : 'block';
+    count.textContent = shown === rows.length ? rows.length + ' problems' : shown + ' of ' + rows.length;
+    clear.hidden = !q.value;
+  }
+
+  q.addEventListener('input', apply);
+  clear.addEventListener('click', function(){ q.value = ''; q.focus(); apply(); });
+  // "/" focuses search, the way every list you already use behaves.
+  document.addEventListener('keydown', function(e){
+    if (e.key === '/' && document.activeElement !== q){ e.preventDefault(); q.focus(); }
+    if (e.key === 'Escape' && document.activeElement === q){ q.value = ''; apply(); }
+  });
+  [].slice.call(document.querySelectorAll('.chip')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      filter = btn.getAttribute('data-filter');
+      [].slice.call(document.querySelectorAll('.chip')).forEach(function(b){
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      apply();
+    });
+  });
+  apply();
+})();
+</script>
+</body>
+</html>

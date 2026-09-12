@@ -39,7 +39,7 @@ body{
   color:var(--ink);
   font-family:var(--hand);
   min-height:100vh;
-  padding:32px clamp(18px, 3vw, 56px) 48px;
+  padding:32px clamp(18px, 3vw, 56px) 30px;
 }
 .app{width:100%;max-width:1760px;margin:0 auto;}
 
@@ -233,15 +233,276 @@ button.primary:hover{background:#F7B85F;}
 .pill.good{background:var(--green);color:var(--paper);}
 .note-text{font-size:17px;line-height:1.45;}
 
+/* ==========================================================================
+   Structural panels: tree, linked list, stack/queue, grid, heap.
+   Every one of these reuses the tokens and the state-class names above
+   (hot / good / done / dim / ghost / fresh), so a structural panel is the
+   same drawing as a tile row by construction rather than by resemblance.
+
+   --pscale is the density dial. A panel may ask to be drawn smaller so a
+   big structure fits one screen; panelShell() clamps it before it lands
+   here, so "smaller" can never become "unreadable".
+   ========================================================================== */
+.panel{--pscale:1;}
+.node{
+  position:absolute;box-sizing:border-box;
+  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
+  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transform:translate(-50%,-50%);
+  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
+}
+.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.node.hot{background:var(--orange);}
+.node.in-window{background:var(--orange-soft);}
+.node.good{background:var(--green);color:var(--paper);}
+.node.good .sub{color:var(--paper);}
+.node.done{background:var(--ink);color:var(--paper);}
+.node.done .sub{color:var(--pencil-light);}
+.node.dim{opacity:.4;}
+.node.is-current{box-shadow:3px 3px 0 var(--ink);}
+.node.ghost,.node.nil{
+  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
+  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
+}
+.node.fresh{animation:fill-flash .5s ease;}
+.node.square{border-radius:var(--sk-md);}
+
+/* ---------- tree ---------- */
+.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
+.tree-stage{position:relative;width:max-content;min-width:100%;}
+.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
+.tree-stage .edge{
+  stroke:var(--ink);stroke-width:2;fill:none;
+  transition:stroke .25s ease, opacity .25s ease;
+}
+.tree-stage .edge.dim{opacity:.3;}
+.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
+.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
+.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
+.tree-stage .edge-label{
+  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
+}
+.node-tag{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
+  transition:left .32s ease, top .32s ease, opacity .2s ease;
+}
+.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.node-tag.red{color:var(--red);}
+.node-tag.green{color:var(--green);}
+
+/* ---------- linked list ---------- */
+.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
+.list-scroll{overflow-x:auto;scrollbar-width:thin;}
+.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
+.list-cell{
+  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
+}
+.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
+.list-cell.hot{background:var(--orange);}
+.list-cell.in-window{background:var(--orange-soft);}
+.list-cell.good{background:var(--green);color:var(--paper);}
+.list-cell.good .sub{color:var(--paper);}
+.list-cell.done{background:var(--ink);color:var(--paper);}
+.list-cell.done .sub{color:var(--pencil-light);}
+.list-cell.dim{opacity:.4;}
+.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.list-cell.fresh{animation:fill-flash .5s ease;}
+.list-arrow{
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
+  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
+}
+.list-arrow.back{transform:scaleX(-1);}
+.list-arrow.hot{color:var(--orange);}
+.list-arrow.ghost{color:var(--pencil-light);}
+.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
+.list-null{
+  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
+}
+.list-tag{
+  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;
+}
+.list-tag.visible{opacity:1;}
+.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
+.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.below{bottom:calc(2px * var(--pscale));}
+.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.list-tag.red{color:var(--red);}
+.list-tag.green{color:var(--green);}
+.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
+
+/* ---------- stack / queue buckets ---------- */
+.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
+/* A grid, not a column, so that several buckets of different depths still line
+   their labels up along the top and their floors up along the bottom. Stacked
+   as a plain flex column they drifted against each other and the panel read as
+   three unrelated drawings. */
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
+/* three sides only: the top is open, because that is the whole point of a bucket */
+.bucket-box{
+  align-self:end;
+  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
+  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
+  padding:calc(10px * var(--pscale));
+  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
+}
+.bucket-box::before,.bucket-box::after{
+  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
+}
+.bucket-box::before{left:-2px;}
+.bucket-box::after{right:-2px;}
+.bucket.queue .bucket-box{
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
+  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
+}
+.cell{
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
+.cell.hot{background:var(--orange);}
+.cell.head{background:var(--orange);}
+.cell.good{background:var(--green);color:var(--paper);}
+.cell.good small{color:var(--paper);}
+.cell.done{background:var(--ink);color:var(--paper);}
+.cell.done small{color:var(--pencil-light);}
+.cell.dim{opacity:.42;}
+.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.cell.fresh{animation:fill-flash .5s ease;}
+.cell.popped{animation:pop-fade .55s ease;}
+.bucket-empty{
+  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
+  text-align:center;font-size:15px;color:var(--pencil);
+}
+.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
+/* A normal flex child, appended last, so column-reverse lands it directly above
+   the topmost item. Absolutely positioned against the box it floated at the top
+   of the bucket instead - pointing at empty space above a two-item stack. */
+.bucket-top{
+  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
+  line-height:1;padding:0 2px calc(2px * var(--pscale));
+}
+.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
+
+/* ---------- grid / matrix ---------- */
+.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
+.grid-stage{position:relative;width:max-content;}
+.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
+.grid-tbl th{
+  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
+  padding:0;min-width:calc(20px * var(--pscale));
+}
+.grid-cell{
+  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
+  vertical-align:middle;white-space:nowrap;position:relative;
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.grid-cell.hot{background:var(--orange);}
+.grid-cell.in-window{background:var(--orange-soft);}
+.grid-cell.good{background:var(--green);color:var(--paper);}
+.grid-cell.good .sub{color:var(--paper);}
+.grid-cell.done{background:var(--ink);color:var(--paper);}
+.grid-cell.done .sub{color:var(--pencil-light);}
+.grid-cell.dim{opacity:.4;}
+.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
+.grid-cell.fresh{animation:fill-flash .5s ease;}
+.grid-box{
+  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
+  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
+}
+.grid-box.visible{opacity:1;}
+.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
+
+/* ---------- heap (array and the tree it implies) ---------- */
+.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
+.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
+.heap-slot{
+  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
+.heap-slot.hot{background:var(--orange);}
+.heap-slot.in-window{background:var(--orange-soft);}
+.heap-slot.good{background:var(--green);color:var(--paper);}
+.heap-slot.good .idx{color:var(--paper);}
+.heap-slot.done{background:var(--ink);color:var(--paper);}
+.heap-slot.done .idx{color:var(--pencil-light);}
+.heap-slot.dim{opacity:.4;}
+.heap-slot.fresh{animation:fill-flash .5s ease;}
+.heap-caption{font-size:15px;color:var(--pencil);}
+
 /* ---------- code panel ---------- */
 .code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
 .code .line{padding:1px 8px;border-radius:var(--sk-sm);}
 .code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
-.status{margin-top:16px;padding-top:14px;border-top:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status{margin-bottom:16px;padding-bottom:14px;border-bottom:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
 .status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
 
+/* ---------- code panel: one layer per method ----------
+   The code used to render as one flat block. On a problem with two or three
+   methods that made the right column taller than the screen, so the panels on
+   the left and the line being executed could not be looked at together - which
+   is the entire point of the thing. A layer is a method; the open one is the
+   method the step is inside, which is the same fact the call-stack panel is
+   already showing. */
+.code-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px;}
+.code-head .panel-title{margin:0;}
+.code-head-right{display:flex;align-items:center;gap:12px;}
+.layer-crumb{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
+.layer-crumb b{color:var(--ink);}
+.code-toggle{
+  font-family:var(--hand);font-size:15px;line-height:1;color:var(--ink);background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:5px 11px 7px;cursor:pointer;white-space:nowrap;
+}
+.code-toggle:hover{background:var(--orange-soft);}
+.code-toggle[aria-pressed="true"]{background:var(--orange);}
+/* Height is locked by script to the tallest single layer, so switching layers
+   never resizes the panel - a column that jumps on every step is worse than one
+   that is merely too long. */
+.code-wrap{overflow:auto;scrollbar-width:thin;}
+.layer{border-radius:var(--sk-sm);}
+.layer.open{background:rgba(245,169,63,.07);margin:3px -8px;padding:3px 8px;}
+.layer > .lines{display:none;}
+.layer.open > .lines{display:block;}
+.layer > .stub{
+  display:flex;gap:8px;align-items:baseline;cursor:pointer;color:var(--pencil);
+  padding:1px 8px;border-radius:var(--sk-sm);
+}
+.layer > .stub:hover{background:var(--orange-soft);color:var(--ink);}
+.layer > .stub .caret{font-size:11px;}
+.layer > .stub .sig{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layer.open > .stub{display:none;}
+.code .line.outside{color:var(--pencil-light);}
+
 /* ---------- transport ---------- */
-.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:16px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);}
+/* Pinned to the bottom of the viewport. It used to sit under the whole stage,
+   so its distance from the panels was set by whichever column was taller - on a
+   long solution that put Play a screen and a half below the thing it drives. */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
+  position:sticky;bottom:14px;z-index:30;background:var(--paper);box-shadow:0 3px 0 0 var(--ink);}
 .transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
 #playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
 .speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
@@ -271,9 +532,15 @@ button.primary:hover{background:#F7B85F;}
   <div class="stage">
     <div class="col-left" id="colLeft"></div>
     <aside class="panel">
-      <p class="panel-title">Algorithm</p>
-      <pre class="code" id="codeBlock"></pre>
+      <div class="code-head">
+        <p class="panel-title">Algorithm</p>
+        <div class="code-head-right">
+          <span class="layer-crumb" id="layerCrumb"></span>
+          <button class="code-toggle" id="codeToggle" aria-pressed="false">show all</button>
+        </div>
+      </div>
       <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+      <div class="code-wrap" id="codeWrap"><pre class="code" id="codeBlock"></pre></div>
     </aside>
   </div>
 
@@ -309,6 +576,48 @@ function pNote(title, html){ return {t:'note', title: title, html: html}; }
 function mapChips(map, hot){
   return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
 }
+/* ---- structural panel constructors ----
+   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
+   stack as a bucket, a matrix as a grid - and every one of them uses the same
+   ink, paper and orange as the tile row above, because they all read the same
+   CSS custom properties.
+
+   Each of these accepts an `opts` object as its last argument. `scale` lives
+   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
+   fits one screen. It is clamped on the way in, so it cannot make a panel
+   unreadable however small a number is passed. */
+function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
+function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
+function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
+function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
+function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
+/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
+   the {id, v, parent, side} node list pTree wants. A null does not get children,
+   which is the part that is easy to get wrong by hand. */
+function treeFromLevelOrder(vals){
+  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
+  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
+  const q = ['n0'];
+  let qi = 0, i = 1, made = 1;
+  while (qi < q.length && i < vals.length){
+    const pid = q[qi++];
+    for (const side of ['L','R']){
+      if (i >= vals.length) break;
+      const v = vals[i++];
+      if (v === null || v === undefined) continue;
+      const id = 'n' + (made++);
+      nodes.push({id: id, v: v, parent: pid, side: side});
+      q.push(id);
+    }
+  }
+  return nodes;
+}
+/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
+function heapNodes(values){
+  return values.map((v, i) => ({
+    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
+  }));
+}
 /* ---- input parsing ---- */
 function parseInts(raw, cap){
   const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
@@ -316,6 +625,21 @@ function parseInts(raw, cap){
   const nums = parts.map(Number);
   if (nums.some(n => !Number.isFinite(n))) return null;
   return cap ? nums.slice(0, cap) : nums;
+}
+/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
+   all mean "no node here", because every source writes it differently. */
+function parseLevelOrder(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim());
+  const out = [];
+  for (const s of parts){
+    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    out.push(n);
+  }
+  while (out.length && out[out.length - 1] === null) out.pop();
+  if (!out.length || out[0] === null) return null;
+  return cap ? out.slice(0, cap) : out;
 }
 function randInts(n, lo, hi){
   return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
@@ -582,7 +906,7 @@ const PROBLEM = {
       return steps;
     }
   }]
-};
+};;
 
 /* ==========================================================================
    Shared visualizer engine.
@@ -653,14 +977,139 @@ function buildTabs(){
   });
 }
 
+/* ---------------- code layers ----------------
+   A layer is a method, worked out from the code array itself rather than
+   declared by the problem definition. That matters: it costs the generator
+   nothing, needs no schema field that could be filled in wrong, and applies to
+   every visualizer already written. When the parse finds nothing - a code array
+   that is a bare fragment rather than a class - layers are simply off and the
+   panel renders exactly as it always did. */
+const CTRL_WORD = /^\s*(?:if|else|for|foreach|while|do|switch|case|return|using|lock|try|catch|finally|new)\b/;
+
+function findLayers(code){
+  const out = [];
+  for (let i = 0; i < code.length; i++){
+    const line = code[i];
+    if (line.indexOf('(') < 0) continue;          // a signature has parameters
+    if (/;\s*$/.test(line)) continue;             // a call, not a declaration
+    if (CTRL_WORD.test(line)) continue;           // if (...) is not a method
+    const m = line.match(/(\w+)\s*\(/);
+    if (!m) continue;
+    if (!line.slice(0, line.indexOf(m[0])).trim()) continue;   // needs a return type
+    let open = -1;
+    for (let k = i; k < Math.min(i + 3, code.length); k++){
+      if (code[k].indexOf(';') >= 0) break;
+      if (code[k].indexOf('{') >= 0){ open = k; break; }
+    }
+    if (open < 0) continue;
+    let depth = 0, end = -1;
+    for (let k = open; k < code.length; k++){
+      for (const ch of code[k]){ if (ch === '{') depth++; else if (ch === '}') depth--; }
+      if (depth === 0){ end = k; break; }
+    }
+    if (end < 0 || end - i < 2) continue;         // too small to be worth folding
+    out.push({name: m[1], sig: line.trim(), from: i + 1, to: end + 1});
+    i = end;                                       // nested locals belong to this layer
+  }
+  return out;
+}
+
+const layerOf = (n) => (sol.__layers || []).find(L => n >= L.from && n <= L.to);
+let showAll = false;
+let pinned = new Set();
+let lockedH = 0;
+let lastActive = [];
+
 function loadSolution(){
   sol = PROBLEM.solutions[solIdx];
   $('brandSub').innerHTML = sol.blurb;
   $('legend').innerHTML = (sol.legend || []).map(l =>
     l.cls === null ? '<span>' + l.text + '</span>'
                    : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
-  $('codeBlock').innerHTML = sol.code.map((l, i) =>
-    '<div class="line" data-line="' + (i + 1) + '">' + (l.length ? esc(l) : '&nbsp;') + '</div>').join('');
+
+  sol.__layers = findLayers(sol.code);
+  pinned = new Set();
+  const lineHtml = (n, extra) =>
+    '<div class="line' + (extra || '') + '" data-line="' + n + '">' +
+    (sol.code[n - 1].length ? esc(sol.code[n - 1]) : '&nbsp;') + '</div>';
+
+  if (!sol.__layers.length){
+    $('codeBlock').innerHTML = sol.code.map((l, i) => lineHtml(i + 1)).join('');
+    $('codeToggle').style.display = 'none';
+    $('layerCrumb').textContent = '';
+    $('codeWrap').style.height = '';
+    return;
+  }
+  $('codeToggle').style.display = '';
+
+  let html = '', cursor = 1;
+  sol.__layers.forEach((L, idx) => {
+    while (cursor < L.from) html += lineHtml(cursor++, ' outside');
+    html += '<div class="layer" data-idx="' + idx + '">' +
+            '<div class="stub" data-idx="' + idx + '" role="button" tabindex="0">' +
+              '<span class="caret">&#9656;</span><span class="sig">' + esc(L.sig) + ' { \u2026 }</span>' +
+            '</div><div class="lines">';
+    for (let k = L.from; k <= L.to; k++) html += lineHtml(k);
+    html += '</div></div>';
+    cursor = L.to + 1;
+  });
+  while (cursor <= sol.code.length) html += lineHtml(cursor++, ' outside');
+  $('codeBlock').innerHTML = html;
+
+  $('codeBlock').querySelectorAll('.stub').forEach(el => {
+    const open = () => { pinned.add(Number(el.dataset.idx)); applyLayers(lastActive); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+
+  lockHeight();
+  applyLayers([]);
+}
+
+/* Lock the panel to the tallest SINGLE layer, not to the whole file. Sizing it
+   to the whole file would leave the column exactly as long as it was and fix
+   nothing; letting it size itself per layer makes the page jump on every step. */
+function lockHeight(){
+  const wrap = $('codeWrap'), block = $('codeBlock');
+  const layers = [...block.querySelectorAll('.layer')];
+  wrap.style.height = 'auto';
+  const was = layers.map(el => el.classList.contains('open'));
+  layers.forEach(el => el.classList.remove('open'));
+  let tallest = block.scrollHeight;
+  layers.forEach(el => {
+    el.classList.add('open');
+    tallest = Math.max(tallest, block.scrollHeight);
+    el.classList.remove('open');
+  });
+  layers.forEach((el, i) => el.classList.toggle('open', was[i]));
+  lockedH = Math.max(200, Math.min(tallest + 12, Math.round(window.innerHeight * 0.42)));
+  wrap.style.height = lockedH + 'px';
+}
+
+function applyLayers(active){
+  lastActive = active || [];
+  if (!sol.__layers || !sol.__layers.length) return;
+  const here = lastActive.length ? layerOf(Math.min.apply(null, lastActive)) : null;
+  const hereIdx = here ? sol.__layers.indexOf(here) : -1;
+
+  $('codeBlock').querySelectorAll('.layer').forEach((el) => {
+    const i = Number(el.dataset.idx);
+    el.classList.toggle('open', showAll || i === hereIdx || pinned.has(i));
+  });
+
+  const wrap = $('codeWrap');
+  wrap.style.height = showAll ? Math.round(window.innerHeight * 0.42) + 'px' : lockedH + 'px';
+  $('layerCrumb').innerHTML = showAll
+    ? sol.__layers.length + ' methods'
+    : (here ? 'inside <b>' + esc(here.name) + '</b>' : sol.__layers.length + ' methods');
+
+  const live = $('codeBlock').querySelector('.line.active');
+  if (live){
+    const top = live.offsetTop, bottom = top + live.offsetHeight;
+    if (top < wrap.scrollTop + 8) wrap.scrollTo({top: Math.max(top - 40, 0), behavior: 'smooth'});
+    else if (bottom > wrap.scrollTop + wrap.clientHeight - 8)
+      wrap.scrollTo({top: bottom - wrap.clientHeight + 40, behavior: 'smooth'});
+  }
 }
 
 /* ---------------- panel rendering ---------------- */
@@ -686,6 +1135,9 @@ function renderPanels(panels, animate){
     }
     el.querySelector('.panel-title').innerHTML = p.title || '';
     el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    // The density dial. Clamped here, once, so no renderer has to defend
+    // itself against a panel that asked to be drawn at 0.1.
+    el.style.setProperty('--pscale', pscale(p));
     RENDER[p.t](el.querySelector('.body'), p, animate);
   });
 }
@@ -883,6 +1335,490 @@ RENDER.note = function(body, p){
   n.innerHTML = p.html;
 };
 
+/* ==========================================================================
+   Structural renderers.
+
+   These exist because every panel above this line is a row of boxes. With only
+   those, a tree came out as "nodes grouped by depth" and a stack as a row of
+   chips - the animation was correct and the shape was a lie. The rule they all
+   follow: the PROBLEM object supplies data, the chassis does every bit of
+   layout arithmetic. A generated definition that had to compute its own x and y
+   would be a generated definition that silently drifts.
+   ========================================================================== */
+
+/* The density dial, clamped. A panel may ask to be drawn smaller so a big
+   structure fits one screen; it may not ask to be drawn illegibly. */
+const SCALE_MIN = 0.7;
+function pscale(p){
+  const v = Number(p && p.scale);
+  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
+}
+
+/* Rebuild a container's children only when the *identity* of what it holds
+   changes. Keeping elements between steps is what makes a node glide to its new
+   position instead of blinking there. */
+function keyed(el, key){
+  if (el.dataset.key === key) return false;
+  el.dataset.key = key;
+  el.innerHTML = '';
+  return true;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const mkSvg = (name) => document.createElementNS(SVG_NS, name);
+
+/* ---------------- shared tree layout ----------------
+   Used by both the tree panel and the heap panel, which is a tree with its
+   edges implied by array indices. Leaves take the next free column; a parent
+   centres over its children. Depth comes from the parent chain, so the caller
+   never states a depth and cannot state a wrong one. */
+function layoutTree(nodes, k){
+  const byId = new Map();
+  const kids = new Map();
+  const roots = [];
+  const work = nodes.map((n) => ({
+    id: String(n.id), v: n.v,
+    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
+    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
+    nil: n.v === null || n.v === undefined,
+  }));
+  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
+  work.forEach((n) => {
+    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
+    else { n.parent = null; roots.push(n.id); }
+  });
+  // Left child first when sides are given, otherwise the order they arrived in.
+  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
+  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
+
+  const X = new Map(), D = new Map(), seen = new Set();
+  let col = 0;
+  const walk = (id, d) => {
+    if (seen.has(id)) return;          // malformed data must not hang the page
+    seen.add(id);
+    D.set(id, d);
+    const cs = kids.get(id) || [];
+    if (!cs.length){ X.set(id, col++); return; }
+    cs.forEach((c) => walk(c, d + 1));
+    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
+    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
+  };
+  roots.forEach((r) => { walk(r, 0); col += 0.7; });
+  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
+
+  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
+  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
+  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
+  work.forEach((n) => {
+    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
+    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
+  });
+  return {
+    work, byId,
+    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
+    height: PAD * 2 + NODE + maxD * ROWH,
+  };
+}
+
+/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
+   absolutely positioned node divs, so edges never paint over a value. */
+function drawTree(stage, nodes, p, k){
+  const L = layoutTree(nodes, k);
+  const links = p.links || [];
+  stage.style.width = L.width + 'px';
+  stage.style.height = L.height + 'px';
+
+  let svg = stage.querySelector('svg');
+  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
+  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
+  // positioned in pixels, so anything that scales the edge layer independently
+  // - which min-width:100% on the stage does the moment the tree is narrower
+  // than the panel - draws the edges somewhere the nodes are not.
+  svg.setAttribute('width', L.width);
+  svg.setAttribute('height', L.height);
+  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+
+  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
+    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
+    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
+      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
+                    cls: e.cls || 'ghost', label: e.label || ''})));
+
+  if (keyed(svg, edges.map((e) => e.key).join('|'))){
+    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
+  }
+  edges.forEach((e, i) => {
+    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
+    line.setAttribute('class', 'edge ' + (e.cls || ''));
+    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
+    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
+    text.setAttribute('y', (e.a.py + e.b.py) / 2);
+    text.textContent = e.label || '';
+  });
+
+  const wrapKey = L.work.map((n) => n.id).join('|');
+  let holder = stage.querySelector('.tree-nodes');
+  if (!holder){
+    holder = document.createElement('div');
+    holder.className = 'tree-nodes';
+    stage.appendChild(holder);
+  }
+  if (keyed(holder, wrapKey)){
+    L.work.forEach(() => {
+      const d = document.createElement('div');
+      d.className = 'node';
+      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
+      holder.appendChild(d);
+    });
+  }
+  L.work.forEach((n, i) => {
+    const el = holder.children[i];
+    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
+    el.style.left = n.px + 'px';
+    el.style.top = n.py + 'px';
+    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
+    const sub = el.querySelector('.sub');
+    sub.textContent = n.sub || '';
+    sub.style.display = n.sub ? '' : 'none';
+  });
+
+  // Named markers - root, cur, lca - floating just above their node.
+  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
+  let tagHolder = stage.querySelector('.tree-tags');
+  if (!tagHolder){
+    tagHolder = document.createElement('div');
+    tagHolder.className = 'tree-tags';
+    stage.appendChild(tagHolder);
+  }
+  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
+    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
+  }
+  tags.forEach((t, i) => {
+    const el = tagHolder.children[i];
+    const n = L.byId.get(String(t.id));
+    el.className = 'node-tag ' + (t.cls || '');
+    el.textContent = t.name;
+    el.style.left = n.px + 'px';
+    el.style.top = (n.py - 38 * k) + 'px';
+  });
+}
+
+/* --- tree: a real tree, with edges --- */
+RENDER.tree = function(body, p){
+  const k = pscale(p);
+  let scroll = body.querySelector('.tree-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
+    scroll = body.querySelector('.tree-scroll');
+  }
+  const stage = scroll.querySelector('.tree-stage');
+  if (!p.nodes || !p.nodes.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
+    delete stage.dataset.built;
+    return;
+  }
+  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+  drawTree(stage, p.nodes, p, k);
+};
+
+/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
+RENDER.list = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  let els = [...body.querySelectorAll('.list-row-wrap')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="list-row-wrap"><div class="list-label"></div>' +
+      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
+    els = [...body.querySelectorAll('.list-row-wrap')];
+  }
+  rows.forEach((r, ri) => {
+    const wrap = els[ri];
+    const label = wrap.querySelector('.list-label');
+    label.textContent = r.label || '';
+    label.style.display = r.label ? '' : 'none';
+    const row = wrap.querySelector('.list-row');
+    const svg = row.querySelector('.list-cycle');
+    const nodes = r.nodes || [];
+
+    // One cell per node, an arrow between each pair, and a terminator.
+    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
+    let cells = [...row.querySelectorAll('.list-cell')];
+    if (row.dataset.key !== key){
+      row.dataset.key = key;
+      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
+      nodes.forEach((n, i) => {
+        const c = document.createElement('div');
+        c.className = 'list-cell';
+        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
+        row.appendChild(c);
+        if (i < nodes.length - 1 || r.tail){
+          const a = document.createElement('span');
+          a.className = 'list-arrow';
+          a.textContent = '→';
+          row.appendChild(a);
+        }
+      });
+      if (r.tail){
+        const t = document.createElement('span');
+        t.className = 'list-null';
+        t.textContent = r.tail === true ? '∅' : String(r.tail);
+        row.appendChild(t);
+      }
+      if (!nodes.length){
+        const e = document.createElement('span');
+        e.className = 'chips-empty';
+        e.textContent = r.empty || 'empty';
+        row.appendChild(e);
+      }
+      cells = [...row.querySelectorAll('.list-cell')];
+    }
+
+    nodes.forEach((n, i) => {
+      const c = cells[i];
+      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
+      c.querySelector('.v').textContent = String(n.v);
+      const sub = c.querySelector('.sub');
+      sub.textContent = n.sub || '';
+      sub.style.display = n.sub ? '' : 'none';
+    });
+    // An arrow is a pointer. Reversal problems live or die on being able to see
+    // one go dashed or vanish, so arrows take their own classes.
+    const arrows = [...row.querySelectorAll('.list-arrow')];
+    arrows.forEach((a, i) => {
+      const spec = (r.arrows || [])[i];
+      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
+      a.className = 'list-arrow ' + cls;
+      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
+    });
+
+    // Markers, placed against real measured geometry rather than guessed at.
+    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
+    let marks = [...row.querySelectorAll('.list-tag')];
+    if (marks.length !== tags.length){
+      marks.forEach((m) => m.remove());
+      tags.forEach(() => {
+        const m = document.createElement('span');
+        m.className = 'list-tag';
+        row.appendChild(m);
+      });
+      marks = [...row.querySelectorAll('.list-tag')];
+    }
+    const seen = {};
+    tags.forEach((t, i) => {
+      const m = marks[i];
+      m.textContent = t.name;
+      const cell = cells[t.idx];
+      const below = !!t.below;
+      if (!cell || t.idx < 0 || t.idx === undefined){
+        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
+        return;
+      }
+      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
+      const bucket = (below ? 'b' : 'a') + t.idx;
+      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
+      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
+      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
+    });
+
+    // The back-edge that makes a cycle a cycle.
+    const to = r.cycleTo;
+    const from = cells.length - 1;
+    if (to !== undefined && to !== null && cells[to] && cells[from]){
+      const a = cells[from], b = cells[to];
+      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
+      const y = a.offsetTop + a.offsetHeight;
+      const dip = y + 26 * k;
+      svg.style.display = '';
+      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
+      svg.setAttribute('width', row.scrollWidth);
+      svg.setAttribute('height', row.scrollHeight);
+      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
+      svg.firstChild.setAttribute('d',
+        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
+    } else {
+      svg.style.display = 'none';
+    }
+  });
+};
+
+/* --- stack / queue: a bucket with a floor and an open top --- */
+RENDER.stack = function(body, p, animate){
+  const buckets = p.buckets || [];
+  let box = body.querySelector('.buckets');
+  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
+  let els = [...box.children];
+  if (els.length !== buckets.length){
+    box.innerHTML = buckets.map(() =>
+      '<div class="bucket"><span class="bucket-label"></span>' +
+      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
+      '<span class="bucket-foot"></span></div>').join('');
+    els = [...box.children];
+  }
+  buckets.forEach((b, bi) => {
+    const el = els[bi];
+    const queue = b.mode === 'queue';
+    el.className = 'bucket' + (queue ? ' queue' : '');
+    const label = el.querySelector('.bucket-label');
+    label.textContent = b.label || '';
+    label.style.display = b.label ? '' : 'none';
+    const foot = el.querySelector('.bucket-foot');
+    foot.textContent = b.foot || '';
+    foot.style.display = b.foot ? '' : 'none';
+
+    const inner = el.querySelector('.bucket-box');
+    const items = b.items || [];
+    let cells = [...inner.querySelectorAll('.cell')];
+    let top = inner.querySelector('.bucket-top');
+    if (cells.length !== items.length){
+      cells.forEach((c) => c.remove());
+      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
+      items.forEach(() => {
+        const c = document.createElement('div');
+        c.className = 'cell';
+        inner.appendChild(c);
+      });
+      cells = [...inner.querySelectorAll('.cell')];
+    }
+    // Outside the rebuild, not inside it: a bucket that starts empty and stays
+    // empty never enters that branch, and step -1 empties every bucket. Created
+    // in there, the marker did not exist on the first frame of every stack
+    // panel in the repo, and the whole page died on the first render.
+    if (!top){
+      top = document.createElement('span');
+      top.className = 'bucket-top';
+      inner.appendChild(top);          // last child: column-reverse puts it on top
+    }
+    items.forEach((it, i) => {
+      const c = cells[i];
+      c.className = 'cell ' + (it.cls || '') +
+                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
+      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
+    });
+    const empty = el.querySelector('.bucket-empty');
+    empty.textContent = b.empty || 'empty';
+    empty.style.display = items.length ? 'none' : '';
+    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
+    top.style.display = top.textContent ? '' : 'none';
+  });
+};
+
+/* --- grid: a matrix, drawn as a matrix --- */
+RENDER.grid = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  const colLabels = p.colLabels, rowLabels = p.rowLabels;
+  let stage = body.querySelector('.grid-stage');
+  if (!stage){
+    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
+                     '<div class="grid-box"></div></div></div>';
+    stage = body.querySelector('.grid-stage');
+  }
+  const tbl = stage.querySelector('.grid-tbl');
+  const width = Math.max(0, ...rows.map((r) => r.length));
+  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
+  if (keyed(tbl, key)){
+    let html = '';
+    if (colLabels){
+      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
+              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
+    }
+    for (let r = 0; r < rows.length; r++){
+      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
+      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
+      html += '</tr>';
+    }
+    tbl.innerHTML = html;
+  }
+  const cells = [...tbl.querySelectorAll('.grid-cell')];
+  const at = (r, c) => cells[r * width + c];
+  rows.forEach((row, r) => {
+    for (let c = 0; c < width; c++){
+      const el = at(r, c);
+      if (!el) continue;
+      const raw = row[c];
+      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
+      const missing = it.v === undefined || it.v === null;
+      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
+                     (animate && it.fresh ? ' fresh' : '');
+      el.querySelector('.v').textContent = missing ? '' : String(it.v);
+      const sub = el.querySelector('.sub');
+      sub.textContent = it.sub || '';
+      sub.style.display = it.sub ? '' : 'none';
+    }
+  });
+
+  // A bracket round a sub-rectangle: the search space that is still alive.
+  const bx = stage.querySelector('.grid-box');
+  const b = p.box;
+  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
+    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
+    const pad = 5 * k;
+    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
+    bx.style.left = (a.offsetLeft - pad) + 'px';
+    bx.style.top = (a.offsetTop - pad) + 'px';
+    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
+    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
+  } else {
+    bx.className = 'grid-box';
+  }
+};
+
+/* --- heap: the tree and the array that stores it, side by side ---
+   A heap is the one structure where both views are needed at once: the
+   sift path only makes sense as a tree, and the index arithmetic only
+   makes sense as an array. Showing one without the other is how a heap
+   animation ends up teaching nothing. */
+RENDER.heap = function(body, p, animate){
+  const k = pscale(p);
+  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
+  let wrap = body.querySelector('.heap-wrap');
+  if (!wrap){
+    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
+                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
+    wrap = body.querySelector('.heap-wrap');
+  }
+  const stage = wrap.querySelector('.tree-stage');
+  const cap = wrap.querySelector('.heap-caption');
+  const arr = wrap.querySelector('.heap-array');
+
+  if (!items.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
+    delete stage.dataset.built;
+  } else {
+    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+    const nodes = items.map((it, i) => ({
+      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
+      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
+    }));
+    drawTree(stage, nodes, {
+      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
+      links: p.links,
+    }, k);
+  }
+
+  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
+  cap.style.display = p.showArray === false ? 'none' : '';
+
+  if (p.showArray === false){ arr.style.display = 'none'; return; }
+  arr.style.display = '';
+  let slots = [...arr.children];
+  if (slots.length !== items.length){
+    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
+    slots = [...arr.children];
+  }
+  items.forEach((it, i) => {
+    const s = slots[i];
+    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
+    s.querySelector('.idx').textContent = i;
+    s.querySelector('.v').textContent = String(it.v);
+  });
+};
+
 /* ---------------- playback ---------------- */
 function render(animate){
   if (animate === undefined) animate = true;
@@ -890,6 +1826,7 @@ function render(animate){
   const codeLines = document.querySelectorAll('.code .line');
   if (stepIndex < 0){
     codeLines.forEach(l => l.classList.remove('active'));
+    applyLayers([]);
     $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
     renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
     return;
@@ -897,6 +1834,7 @@ function render(animate){
   const step = steps[stepIndex];
   const active = step.lines || [];
   codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  applyLayers(active);
   $('statusMsg').innerHTML = step.msg;
   renderPanels(step.panels, animate);
 }
@@ -910,6 +1848,13 @@ function blankPanels(panels){
     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
     if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    // A structure is shown in its starting state, not emptied: the whole point
+    // of step -1 on a tree problem is seeing the tree you are about to walk.
+    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
+    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
+    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
+    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
+    if (p.t === 'heap'){ p.items = []; p.tags = []; }
     return p;
   });
 }
@@ -968,6 +1913,16 @@ $('playBtn').addEventListener('click', () => playing ? pause() : play());
 $('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
 $('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
 $('resetBtn').addEventListener('click', resetAll);
+$('codeToggle').addEventListener('click', () => {
+  showAll = !showAll;
+  const b = $('codeToggle');
+  b.textContent = showAll ? 'show one method' : 'show all';
+  b.setAttribute('aria-pressed', String(showAll));
+  applyLayers(lastActive);
+});
+// Re-lock on resize: the cap is a fraction of the viewport, so a window that
+// changed shape leaves the panel measured against a screen that is gone.
+addEventListener('resize', () => { if (sol && sol.__layers && sol.__layers.length){ lockHeight(); applyLayers(lastActive); } });
 document.addEventListener('keydown', e => {
   if (e.target.matches('input, textarea, button')) return;
   if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }

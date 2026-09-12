@@ -277,6 +277,26 @@ no structures on record - run classify --backfill --apply first for shape enforc
 and falls back to advice instead of enforcement. It still works; it just can't refuse a bad
 shape, which is the whole point of the step.
 
+### After a chassis change: reskin, don't regenerate
+
+Every visualizer holds its own copy of the chassis, so improving
+`scripts/templates/visualizer.chassis.html` reaches none of the ones already written. Re-running
+`visualize` would fix that and cost an Opus call per folder to rebuild an animation that was already
+correct.
+
+`reskin` does it for free — it lifts the `PROBLEM` object out and re-splices it onto the current
+chassis:
+
+```powershell
+node scripts/reskin.mjs            # dry run, shows what would change
+node scripts/reskin.mjs --apply
+```
+
+It runs each definition against the new chassis before writing, so a chassis edit that broke
+something is caught rather than applied to all 52 files at once. Hand-built visualizers are skipped
+— they have CSS of their own that re-splicing would throw away — pass `--force` when you want them
+replaced too.
+
 **Do the tree and stack problems early.** `visualize` prefers a finished visualizer of the
 same shape as its worked example, so the first tree one you build becomes the example for
 every tree problem after it. Until one exists it falls back to the array problem and warns
