@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T11:56:52.766Z",
+  "updatedAt": "2026-09-12T12:06:44.415Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -422,15 +422,110 @@
     },
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "45e4716f27293935302424ba70535e165d6ab0b4c6c9685ff50d73722ae2baed": "optimal.cs",
+        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "45e4716f27293935302424ba70535e165d6ab0b4c6c9685ff50d73722ae2baed": "optimal.cs",
+        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "25aed331451d",
+          "renames": [
+            "n->rows",
+            "m->cols",
+            "vis->visited",
+            "cnt->islandCount"
+          ]
+        },
+        "optimal-variant.cs": {
+          "version": 1,
+          "codePrint": "f5039b04b390",
+          "renames": [
+            "n->rows",
+            "m->cols",
+            "vis->visited",
+            "cnt->islandCount",
+            "dRow->rowDelta",
+            "dCol->colDelta",
+            "r->currRow",
+            "c->currCol"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"25aed331451d\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"recursive DFS flood fill\",\"approachKey\":\"dfs-recursive-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f5039b04b390\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"BFS flood fill with queue\",\"approachKey\":\"bfs-queue-flood-fill\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "recursive DFS flood fill",
+          "approachKey": "dfs-recursive-flood-fill",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "matrix",
+            "call-stack"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "BFS flood fill with queue",
+          "approachKey": "bfs-queue-flood-fill",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "matrix",
+            "queue"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"25aed331451d\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"recursive DFS flood fill\",\"approachKey\":\"dfs-recursive-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f5039b04b390\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"BFS flood fill with queue\",\"approachKey\":\"bfs-queue-flood-fill\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "25aed331451d",
+          "optimal-variant.cs": "f5039b04b390"
+        },
+        "structures": [
+          "matrix",
+          "call-stack",
+          "queue"
+        ],
+        "builtAt": "2026-09-12T12:06:44.191Z"
+      }
     },
     "daily-temperatures": {
       "topic": "Data Structures & Algorithms",

@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Time to Buy and Sell — visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
+
+/* "Lemonade & Sweet Tea" (Designing Digitals) is a paid font, so it can't be bundled here.
+   If it's installed on your machine, local() below picks it up automatically. */
+@font-face{
+  font-family:'Lemonade Sweet Tea';
+  src: local('Lemonade & Sweet Tea'), local('Lemonade Sweet Tea'), local('LemonadeSweetTea');
+  font-display: swap;
+}
+
+:root{
+  --paper:#FBF5E9;
+  --ink:#211E1A;
+  --pencil:#8A8175;
+  --pencil-light:#C9C0AF;
+  --orange:#F5A93F;
+  --orange-soft:#FBE3BC;
+  --red:#C94F2E;
+  --green:#5E8C61;
+  --tile:72px;
+  --hand:'Lemonade Sweet Tea','Patrick Hand',cursive;
+  --mono:'Courier Prime', ui-monospace, 'Courier New', monospace;
+  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
+  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
+  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--hand);
+  min-height:100vh;
+  padding:32px clamp(18px, 3vw, 56px) 48px;
+}
+.app{width:100%;max-width:1760px;margin:0 auto;}
+
+/* ---------- header ---------- */
+.topbar{
+  display:flex; flex-wrap:wrap; gap:24px 40px;
+  justify-content:space-between; align-items:flex-end;
+  margin-bottom:18px; padding-bottom:18px;
+  border-bottom:2px solid var(--ink);
+}
+.brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
+.brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
+.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
+.brand-sub code, .status code, .note-text code{
+  font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
+}
+.brand-sub b{font-weight:700;}
+
+.config{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:2px;}
+.field span{font-size:14px;color:var(--pencil);line-height:1;}
+.field input{
+  font-family:var(--mono);font-size:14px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-md);color:var(--ink);padding:9px 12px;
+}
+.field input:focus-visible, button:focus-visible, input[type=range]:focus-visible{
+  outline:3px solid var(--orange);outline-offset:2px;
+}
+button{
+  font-family:var(--hand);font-weight:700;font-size:15px;line-height:1;cursor:pointer;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);color:var(--ink);
+  padding:9px 16px 11px;transition:transform .1s ease, background .15s ease;
+}
+button:hover{background:var(--orange-soft);}
+button:active{transform:translate(1px,1px);}
+button.primary{background:var(--orange);}
+button.primary:hover{background:#F7B85F;}
+
+/* ---------- solution tabs ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.tab{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:9px 18px 11px;text-align:left;background:var(--paper);
+}
+.tab b{font-size:17px;font-weight:700;line-height:1.1;}
+.tab span{font-family:var(--mono);font-size:11px;color:var(--pencil);line-height:1.1;}
+.tab.active{background:var(--orange);box-shadow:3px 3px 0 var(--ink);}
+.tab.active span{color:var(--ink);}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
+.legend span{display:inline-flex;align-items:center;gap:9px;}
+.swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
+.swatch.win{background:var(--orange-soft);}
+.swatch.hot{background:var(--orange);}
+.swatch.done{background:var(--ink);}
+.swatch.good{background:var(--green);}
+.swatch.dim{opacity:.42;}
+.swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
+.col-left{display:flex;flex-direction:column;gap:20px;min-width:0;}
+@media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
+
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
+
+/* ---------- tiles ---------- */
+.array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.array-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
+.array-row.no-ptrs{padding-bottom:8px;}
+.tile{
+  min-width:var(--tile);height:var(--tile);padding:0 6px;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
+}
+.tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
+.tile .val{font-size:24px;font-weight:700;margin-top:6px;white-space:nowrap;}
+.tile .sub{font-size:12px;line-height:1;color:var(--pencil);margin-top:2px;}
+.tile.narrow{min-width:56px;}
+.tile.in-window{background:var(--orange-soft);}
+.tile.hot{background:var(--orange);}
+.tile.good{background:var(--green);color:var(--paper);}
+.tile.good .idx,.tile.good .sub{color:var(--paper);}
+.tile.dim{opacity:.42;}
+.tile.done{background:var(--ink);color:var(--paper);}
+.tile.done .idx,.tile.done .sub{color:var(--pencil-light);}
+.tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.tile.just-popped{animation:pop-fade .55s ease;}
+.tile.just-popped::after{
+  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
+}
+@keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
+@keyframes x-fade{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+
+.window-bracket{
+  position:absolute;top:2px;height:calc(var(--tile) + 16px);
+  border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;
+  transition:left .3s ease, width .3s ease, opacity .2s ease;opacity:0;
+}
+.window-bracket.visible{opacity:1;}
+.window-bracket.dashed{border-style:dashed;border-color:var(--pencil);}
+
+.ptr-marker{
+  position:absolute;bottom:0;transform:translateX(-50%);
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
+}
+.ptr-marker.visible{opacity:1;}
+.ptr-marker::before{content:'↑';display:block;font-size:15px;line-height:1;}
+.ptr-marker.accent{color:var(--orange);text-shadow:0.5px 0 var(--ink);}
+.ptr-marker.accent::before{color:var(--orange);}
+.ptr-marker.red{color:var(--red);}
+.ptr-marker.red::before{color:var(--red);}
+
+/* ---------- chip rows ---------- */
+.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
+.row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
+.chip{
+  font-size:18px;font-weight:600;line-height:1;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.chip small{font-family:var(--mono);font-size:11px;color:var(--pencil);}
+.chip.head{background:var(--orange);}
+.chip.head small{color:var(--ink);}
+.chip.good{background:var(--green);color:var(--paper);}
+.chip.good small{color:var(--paper);}
+.chip.done{background:var(--ink);color:var(--paper);}
+.chip.done small{color:var(--pencil-light);}
+.chip.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.chip.fresh{animation:fill-flash .5s ease;}
+.chips-empty{font-size:16px;color:var(--pencil);}
+
+/* ---------- slots (result row) ---------- */
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;}
+.slot{
+  min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
+  transition:background .3s ease, color .3s ease, border-color .3s;
+}
+.slot.filled{background:var(--ink);border:2px solid var(--ink);color:var(--paper);}
+.slot.fresh{animation:fill-flash .5s ease;}
+@keyframes fill-flash{0%{transform:scale(1.18) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+
+/* ---------- bars ---------- */
+.bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
+.bar{
+  width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  transition:height .3s ease, background .25s ease;
+}
+.bar-wrap.hot .bar{background:var(--orange);}
+.bar-wrap.in-window .bar{background:var(--orange-soft);}
+.bar-wrap.dim{opacity:.35;}
+.bar-wrap .cap{font-size:14px;line-height:1;margin-bottom:4px;}
+.bar-wrap .foot{position:absolute;bottom:-22px;font-size:12px;color:var(--pencil);line-height:1;}
+.water{
+  position:absolute;border:2px dashed var(--orange);background:rgba(245,169,63,.22);
+  border-radius:var(--sk-sm);pointer-events:none;
+  transition:left .3s ease, width .3s ease, height .3s ease, bottom .3s ease, opacity .2s;
+}
+
+/* ---------- ranges (intervals) ---------- */
+.ranges{display:flex;flex-direction:column;gap:8px;}
+.range-line{position:relative;height:34px;}
+.range-bar{
+  position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;white-space:nowrap;
+  transition:left .3s ease, width .3s ease, background .25s ease;
+}
+.range-bar.hot{background:var(--orange);}
+.range-bar.done{background:var(--ink);color:var(--paper);}
+.range-bar.dim{opacity:.4;}
+.range-bar.ghost{border-style:dashed;color:var(--pencil);}
+
+/* ---------- pills ---------- */
+.pills{display:flex;gap:14px;flex-wrap:wrap;font-size:18px;}
+.pill{display:inline-flex;align-items:baseline;gap:8px;padding:3px 16px 6px;border:2px solid var(--ink);border-radius:var(--sk-md);}
+.pill b{font-size:20px;font-family:var(--mono);}
+.pill.accent{background:var(--orange-soft);}
+.pill.hot{background:var(--orange);}
+.pill.good{background:var(--green);color:var(--paper);}
+.note-text{font-size:17px;line-height:1.45;}
+
+/* ==========================================================================
+   Structural panels: tree, linked list, stack/queue, grid, heap.
+   Every one of these reuses the tokens and the state-class names above
+   (hot / good / done / dim / ghost / fresh), so a structural panel is the
+   same drawing as a tile row by construction rather than by resemblance.
+
+   --pscale is the density dial. A panel may ask to be drawn smaller so a
+   big structure fits one screen; panelShell() clamps it before it lands
+   here, so "smaller" can never become "unreadable".
+   ========================================================================== */
+.panel{--pscale:1;}
+.node{
+  position:absolute;box-sizing:border-box;
+  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
+  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transform:translate(-50%,-50%);
+  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
+}
+.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.node.hot{background:var(--orange);}
+.node.in-window{background:var(--orange-soft);}
+.node.good{background:var(--green);color:var(--paper);}
+.node.good .sub{color:var(--paper);}
+.node.done{background:var(--ink);color:var(--paper);}
+.node.done .sub{color:var(--pencil-light);}
+.node.dim{opacity:.4;}
+.node.is-current{box-shadow:3px 3px 0 var(--ink);}
+.node.ghost,.node.nil{
+  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
+  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
+}
+.node.fresh{animation:fill-flash .5s ease;}
+.node.square{border-radius:var(--sk-md);}
+
+/* ---------- tree ---------- */
+.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
+.tree-stage{position:relative;width:max-content;min-width:100%;}
+.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
+.tree-stage .edge{
+  stroke:var(--ink);stroke-width:2;fill:none;
+  transition:stroke .25s ease, opacity .25s ease;
+}
+.tree-stage .edge.dim{opacity:.3;}
+.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
+.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
+.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
+.tree-stage .edge-label{
+  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
+}
+.node-tag{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
+  transition:left .32s ease, top .32s ease, opacity .2s ease;
+}
+.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.node-tag.red{color:var(--red);}
+.node-tag.green{color:var(--green);}
+
+/* ---------- linked list ---------- */
+.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
+.list-scroll{overflow-x:auto;scrollbar-width:thin;}
+.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
+.list-cell{
+  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
+}
+.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
+.list-cell.hot{background:var(--orange);}
+.list-cell.in-window{background:var(--orange-soft);}
+.list-cell.good{background:var(--green);color:var(--paper);}
+.list-cell.good .sub{color:var(--paper);}
+.list-cell.done{background:var(--ink);color:var(--paper);}
+.list-cell.done .sub{color:var(--pencil-light);}
+.list-cell.dim{opacity:.4;}
+.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.list-cell.fresh{animation:fill-flash .5s ease;}
+.list-arrow{
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
+  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
+}
+.list-arrow.back{transform:scaleX(-1);}
+.list-arrow.hot{color:var(--orange);}
+.list-arrow.ghost{color:var(--pencil-light);}
+.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
+.list-null{
+  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
+}
+.list-tag{
+  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;
+}
+.list-tag.visible{opacity:1;}
+.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
+.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.below{bottom:calc(2px * var(--pscale));}
+.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.list-tag.red{color:var(--red);}
+.list-tag.green{color:var(--green);}
+.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
+
+/* ---------- stack / queue buckets ---------- */
+.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
+/* A grid, not a column, so that several buckets of different depths still line
+   their labels up along the top and their floors up along the bottom. Stacked
+   as a plain flex column they drifted against each other and the panel read as
+   three unrelated drawings. */
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
+/* three sides only: the top is open, because that is the whole point of a bucket */
+.bucket-box{
+  align-self:end;
+  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
+  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
+  padding:calc(10px * var(--pscale));
+  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
+}
+.bucket-box::before,.bucket-box::after{
+  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
+}
+.bucket-box::before{left:-2px;}
+.bucket-box::after{right:-2px;}
+.bucket.queue .bucket-box{
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
+  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
+}
+.cell{
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
+.cell.hot{background:var(--orange);}
+.cell.head{background:var(--orange);}
+.cell.good{background:var(--green);color:var(--paper);}
+.cell.good small{color:var(--paper);}
+.cell.done{background:var(--ink);color:var(--paper);}
+.cell.done small{color:var(--pencil-light);}
+.cell.dim{opacity:.42;}
+.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.cell.fresh{animation:fill-flash .5s ease;}
+.cell.popped{animation:pop-fade .55s ease;}
+.bucket-empty{
+  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
+  text-align:center;font-size:15px;color:var(--pencil);
+}
+.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
+/* A normal flex child, appended last, so column-reverse lands it directly above
+   the topmost item. Absolutely positioned against the box it floated at the top
+   of the bucket instead - pointing at empty space above a two-item stack. */
+.bucket-top{
+  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
+  line-height:1;padding:0 2px calc(2px * var(--pscale));
+}
+.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
+
+/* ---------- grid / matrix ---------- */
+.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
+.grid-stage{position:relative;width:max-content;}
+.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
+.grid-tbl th{
+  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
+  padding:0;min-width:calc(20px * var(--pscale));
+}
+.grid-cell{
+  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
+  vertical-align:middle;white-space:nowrap;position:relative;
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.grid-cell.hot{background:var(--orange);}
+.grid-cell.in-window{background:var(--orange-soft);}
+.grid-cell.good{background:var(--green);color:var(--paper);}
+.grid-cell.good .sub{color:var(--paper);}
+.grid-cell.done{background:var(--ink);color:var(--paper);}
+.grid-cell.done .sub{color:var(--pencil-light);}
+.grid-cell.dim{opacity:.4;}
+.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
+.grid-cell.fresh{animation:fill-flash .5s ease;}
+.grid-box{
+  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
+  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
+}
+.grid-box.visible{opacity:1;}
+.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
+
+/* ---------- heap (array and the tree it implies) ---------- */
+.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
+.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
+.heap-slot{
+  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
+.heap-slot.hot{background:var(--orange);}
+.heap-slot.in-window{background:var(--orange-soft);}
+.heap-slot.good{background:var(--green);color:var(--paper);}
+.heap-slot.good .idx{color:var(--paper);}
+.heap-slot.done{background:var(--ink);color:var(--paper);}
+.heap-slot.done .idx{color:var(--pencil-light);}
+.heap-slot.dim{opacity:.4;}
+.heap-slot.fresh{animation:fill-flash .5s ease;}
+.heap-caption{font-size:15px;color:var(--pencil);}
+
+/* ---------- code panel ---------- */
+.code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+.code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+.code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
+.status{margin-top:16px;padding-top:14px;border-top:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
+
+/* ---------- transport ---------- */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:16px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
+#playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
+.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed input{accent-color:var(--orange);}
+.speed .hint{font-size:13px;}
+.progress{margin-left:auto;font-size:17px;color:var(--pencil);}
+.shortcut-note{width:100%;font-size:14px;color:var(--pencil);margin:2px 0 0;}
+.shortcut-note kbd{font-size:11px;border:1.5px solid var(--pencil);padding:0 5px;}
+
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important;transition-duration:.001ms !important;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <p class="brand-note" id="brandNote"></p>
+      <h1 class="brand-title" id="brandTitle"></h1>
+      <p class="brand-sub" id="brandSub"></p>
+    </div>
+    <form class="config" id="configForm"></form>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="legend" id="legend"></div>
+
+  <div class="stage">
+    <div class="col-left" id="colLeft"></div>
+    <aside class="panel">
+      <p class="panel-title">Algorithm</p>
+      <pre class="code" id="codeBlock"></pre>
+      <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+    </aside>
+  </div>
+
+  <div class="transport">
+    <button id="resetBtn" title="Reset" aria-label="Reset">⟲</button>
+    <button id="backBtn" title="Step back" aria-label="Step back">◂</button>
+    <button id="playBtn" title="Play / Pause" aria-label="Play or pause">▶</button>
+    <button id="fwdBtn" title="Step forward" aria-label="Step forward">▸</button>
+    <label class="speed">speed
+      <span class="hint">slow</span>
+      <input type="range" id="speedInput" min="150" max="1800" value="1250" step="50" aria-label="Playback speed, right is faster">
+      <span class="hint">fast</span>
+    </label>
+    <div class="progress" id="progressLabel">0 / 0</div>
+    <p class="shortcut-note">shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step · <kbd>R</kbd> reset</p>
+  </div>
+</div>
+<script>
+/* ---- panel constructors shared by every problem definition ---- */
+function pTiles(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: String(v)}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'tiles', title: title, items: items}, extra || {});
+}
+function pChips(title, rows){ return {t:'chips', title: title, rows: rows}; }
+function pSlots(title, items){ return {t:'slots', title: title, items: items}; }
+function pPills(title, items){ return {t:'pills', title: title, items: items}; }
+function pBars(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: v}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'bars', title: title, items: items}, extra || {});
+}
+function pRanges(title, items, min, max){ return {t:'ranges', title: title, items: items, min: min, max: max}; }
+function pNote(title, html){ return {t:'note', title: title, html: html}; }
+function mapChips(map, hot){
+  return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+}
+/* ---- structural panel constructors ----
+   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
+   stack as a bucket, a matrix as a grid - and every one of them uses the same
+   ink, paper and orange as the tile row above, because they all read the same
+   CSS custom properties.
+
+   Each of these accepts an `opts` object as its last argument. `scale` lives
+   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
+   fits one screen. It is clamped on the way in, so it cannot make a panel
+   unreadable however small a number is passed. */
+function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
+function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
+function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
+function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
+function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
+/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
+   the {id, v, parent, side} node list pTree wants. A null does not get children,
+   which is the part that is easy to get wrong by hand. */
+function treeFromLevelOrder(vals){
+  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
+  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
+  const q = ['n0'];
+  let qi = 0, i = 1, made = 1;
+  while (qi < q.length && i < vals.length){
+    const pid = q[qi++];
+    for (const side of ['L','R']){
+      if (i >= vals.length) break;
+      const v = vals[i++];
+      if (v === null || v === undefined) continue;
+      const id = 'n' + (made++);
+      nodes.push({id: id, v: v, parent: pid, side: side});
+      q.push(id);
+    }
+  }
+  return nodes;
+}
+/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
+function heapNodes(values){
+  return values.map((v, i) => ({
+    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
+  }));
+}
+/* ---- input parsing ---- */
+function parseInts(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+  if (!parts.length) return null;
+  const nums = parts.map(Number);
+  if (nums.some(n => !Number.isFinite(n))) return null;
+  return cap ? nums.slice(0, cap) : nums;
+}
+/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
+   all mean "no node here", because every source writes it differently. */
+function parseLevelOrder(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim());
+  const out = [];
+  for (const s of parts){
+    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    out.push(n);
+  }
+  while (out.length && out[out.length - 1] === null) out.pop();
+  if (!out.length || out[0] === null) return null;
+  return cap ? out.slice(0, cap) : out;
+}
+function randInts(n, lo, hi){
+  return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+}
+function randWord(len, alphabet){
+  const a = alphabet || 'abc';
+  return Array.from({length: len}, () => a[Math.floor(Math.random() * a.length)]).join('');
+}
+
+const PROBLEM = {
+  title: 'Count Number of Islands',
+  note: 'the answer is not how much land there is, but how many times a flood fill had to be started from scratch',
+  inputs: [
+    {id:'g', label:'grid (rows of 0/1)', value:'1100,1001,0011', width:300}
+  ],
+  parse(raw){
+    const rows = String(raw.g).split(/[^01]+/).filter(s => s.length);
+    if (!rows.length) return {ok:false, msg:'Enter rows of 0 and 1, e.g. 1100,1001,0011'};
+    const C = rows[0].length;
+    if (rows.some(r => r.length !== C)) return {ok:false, msg:'Every row needs the same number of cells.'};
+    if (rows.length > 5 || C > 6) return {ok:false, msg:'Keep it to 5 rows and 6 columns or fewer.'};
+    if (rows.length * C > 24) return {ok:false, msg:'Keep it to 24 cells or fewer so the whole run stays watchable.'};
+    const land = rows.join('').split('').filter(ch => ch === '1').length;
+    if (!land) return {ok:false, msg:'Needs at least one land cell, or there is nothing to walk.'};
+    if (land > 10) return {ok:false, msg:'Keep it to 10 land cells or fewer - every one of them is a visit.'};
+    return {
+      ok:true,
+      value:{grid: rows.map(r => r.split(''))},
+      normalized:{g: rows.join(',')}
+    };
+  },
+  shuffle(){
+    for (let tries = 0; tries < 200; tries++){
+      const rows = [];
+      let land = 0;
+      for (let r = 0; r < 3; r++){
+        let s = '';
+        for (let c = 0; c < 4; c++){
+          const bit = Math.random() < 0.42 ? '1' : '0';
+          if (bit === '1') land++;
+          s += bit;
+        }
+        rows.push(s);
+      }
+      if (land >= 3 && land <= 7) return {g: rows.join(',')};
+    }
+    return {g: '1100,1001,0011'};
+  },
+  solutions: [
+  {
+    label: 'Recursive DFS flood fill',
+    badge: 'O(m * n) time · O(m * n) space · recursive DFS · optimal.cs',
+    blurb: 'Two nested loops do the counting; the DFS does the erasing. A walk is only ever started from land that <code>visited</code> has not claimed, and that walk marks every cell reachable from it, so an island is entered exactly once - from whichever of its cells the scan meets first. The answer is the number of times a walk had to be started.',
+    shapeOverride: {skip: ['queue'], reason: 'this version has no queue at all - the pending work lives in the C# call stack, which is the bucket drawn on the right.'},
+    legend: [
+      {cls:'hot', text:'the cell being looked at now'},
+      {cls:'in-window', text:'a Dfs frame is still open on this cell'},
+      {cls:'good', text:'land already claimed by a walk'},
+      {cls:'dim', text:'water - never a seed, never entered'}
+    ],
+    code: [
+      'public int NumIslands(char[][] grid)',
+      '{',
+      '    int rows = grid.Length;',
+      '    int cols = grid[0].Length;',
+      '',
+      '    // Visited array',
+      '    int[,] visited = new int[rows, cols];',
+      '    int islandCount = 0;',
+      '    for (int row = 0; row < rows; row++)',
+      '    {',
+      '        for (int col = 0; col < cols; col++)',
+      '        {',
+      "            if (visited[row, col] == 0 && grid[row][col] == '1')",
+      '            {',
+      '                Dfs(row, col, visited, grid);',
+      '                islandCount++;',
+      '            }',
+      '        }',
+      '    }',
+      '    return islandCount;',
+      '}',
+      '',
+      'private void Dfs(int row, int col, int[,] visited, char[][] grid)',
+      '{',
+      '    int rows = grid.Length;',
+      '    int cols = grid[0].Length;',
+      '',
+      '    //mark this node visisted',
+      '    visited[row, col] = 1;',
+      '',
+      '    //visit all 6 neighbours',
+      '    for (int delRow = -1; delRow <= 1; delRow++)',
+      '    {',
+      '        for (int delCol = -1; delCol <= 1; delCol++)',
+      '        {',
+      '            //exclude the node itself(0,0) and diagonal nodes',
+      '            if (Math.Abs(delRow) == Math.Abs(delCol))',
+      '                continue;',
+      '',
+      '            int nRow = row + delRow;',
+      '            int nCol = col + delCol;',
+      '',
+      '            //invalid neighbour, land and visited validation',
+      '            if (nRow >= 0 && nRow < rows &&',
+      '                nCol >= 0 && nCol < cols &&',
+      '                visited[nRow, nCol] == 0 &&',
+      "                grid[nRow][nCol] == '1')",
+      '            {',
+      '                Dfs(nRow, nCol, visited, grid);',
+      '            }',
+      '        }',
+      '    }',
+      '}'
+    ],
+    simulate(input){
+      const g = input.grid;
+      const R = g.length, C = g[0].length;
+      const vis = Array.from({length: R}, () => Array(C).fill(0));
+      const isle = Array.from({length: R}, () => Array(C).fill(0));
+      const frames = [], steps = [];
+      let count = 0, calls = 0, maxF = 0, scanTxt = 'not started';
+      const rc = (r, c) => r + ',' + c;
+
+      const DELTAS = [];
+      for (let dr = -1; dr <= 1; dr++){
+        for (let dc = -1; dc <= 1; dc++){
+          if (Math.abs(dr) !== Math.abs(dc)) DELTAS.push([dr, dc]);
+        }
+      }
+
+      const panels = (cur, popKey, freshKey) => [
+        pGrid('grid', g.map((row, r) => row.map((v, c) => {
+          let cls = '';
+          if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
+          else if (frames.some(f => f.r === r && f.c === c)) cls = 'in-window';
+          else if (vis[r][c]) cls = 'good';
+          else if (v === '0') cls = 'dim';
+          return {v: v, cls: cls, sub: isle[r][c] ? 'isl ' + isle[r][c] : ''};
+        })), {
+          rowLabels: g.map((_, r) => 'r' + r),
+          colLabels: g[0].map((_, c) => 'c' + c),
+          scale: 0.9
+        }),
+        pStack('call stack', [{
+          label: 'Dfs(row, col)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: 'row, col = ' + rc(f.r, f.c),
+            sub: f.note,
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: freshKey === rc(f.r, f.c),
+            popped: popKey === rc(f.r, f.c) && i === frames.length - 1
+          })),
+          empty: 'no frames - the scan is between islands',
+          foot: 'NumIslands',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'outer scan', v: scanTxt, cls:'hot'},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'Dfs calls', v: calls},
+          {k:'islandCount', v: count, cls: count ? 'good' : ''}
+        ])
+      ];
+
+      steps.push({lines:[7,8,9,11], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>islandCount</code> at 0. The two loops below sweep every cell in reading order, but they are not counting land - they are only looking for a cell that is land <em>and</em> still unclaimed. Each time they find one, they let a walk loose on it, and that walk claims the entire island it belongs to.', panels: panels(null, null, null)});
+
+      const dfs = (r, c, via) => {
+        frames.push({r: r, c: c, note: 'entered, neighbours not scanned yet'});
+        calls++;
+        maxF = Math.max(maxF, frames.length);
+        vis[r][c] = 1;
+        isle[r][c] = count + 1;
+        const lead = via
+          ? 'Line 49 in the frame for <b>' + via + '</b> found this cell to be unvisited land, so it recursed in and parked.'
+          : 'The scan handed this cell in on line 15 as the seed of a new island.';
+        steps.push({lines:[23,28,29], msg: lead + ' The frame for <b>' + rc(r, c) + '</b> opens and line 29 writes <code>visited[' + r + ', ' + c + '] = 1</code> immediately, before a single neighbour is read. Marking on the way <em>in</em> rather than on the way out is what keeps this finite: the cell it came from is already a 1, so the walk cannot turn round and bounce between two neighbours forever.', panels: panels([r, c], null, rc(r, c))});
+
+        const f = frames[frames.length - 1];
+        const log = [];
+        for (const d of DELTAS){
+          const nr = r + d[0], nc = c + d[1];
+          let why = '', ok = false;
+          if (nr < 0 || nr >= R || nc < 0 || nc >= C) why = 'off the grid';
+          else if (vis[nr][nc] === 1) why = 'already visited';
+          else if (g[nr][nc] === '0') why = 'water';
+          else { why = 'unvisited land, recursed'; ok = true; }
+          log.push('(' + d[0] + ',' + d[1] + ') → ' + nr + ',' + nc + ' ' + why);
+          if (ok){
+            f.note = 'parked on line 49, waiting on ' + rc(nr, nc);
+            dfs(nr, nc, rc(r, c));
+            f.note = 'back from ' + rc(nr, nc) + ', resuming the deltas';
+          }
+        }
+        f.note = 'all four neighbours settled';
+        steps.push({lines:[50,51,52,53], msg:'All nine <code>(delRow, delCol)</code> pairs have now been run for <b>' + rc(r, c) + '</b>. Line 37 threw away the five where <code>Math.Abs(delRow) == Math.Abs(delCol)</code> - the cell itself at (0,0) and the four diagonals, which is exactly why islands touching only at a corner stay separate - leaving these four: ' + log.join(' · ') + '. Nothing reachable is left unclaimed, so the method falls off the end, returns nothing, and the frame pops.', panels: panels([r, c], rc(r, c), null)});
+        frames.pop();
+      };
+
+      for (let r = 0; r < R; r++){
+        for (let c = 0; c < C; c++){
+          scanTxt = rc(r, c);
+          if (g[r][c] === '1' && vis[r][c] === 0){
+            steps.push({lines:[13,15], msg:'The scan arrives at <b>' + rc(r, c) + '</b>. Both halves of line 13 hold: <code>visited</code> is still 0 here and the grid holds land. No walk has ever reached this cell, so it cannot belong to an island counted earlier - it must be the first cell of a new one. Line 15 calls <code>Dfs</code> and the whole outer scan freezes until that walk is finished.', panels: panels([r, c], null, null)});
+            dfs(r, c, null);
+            count++;
+            const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);
+            steps.push({lines:[15,16], msg:'The recursion has unwound all the way back to line 15, which means every cell reachable from <b>' + rc(r, c) + '</b> - all <b>' + size + '</b> of them - now carries a 1 in <code>visited</code>. Only now does line 16 run <code>islandCount++</code>, taking it to <b>' + count + '</b>. The increment is per walk started, never per cell: the other ' + (size - 1) + ' cell(s) of this island will be skipped when the scan reaches them.', panels: panels([r, c], null, null)});
+          } else if (g[r][c] === '1'){
+            steps.push({lines:[11,13], msg:'<b>' + rc(r, c) + '</b> is land, but a walk already claimed it for island <b>' + isle[r][c] + '</b>. The first half of the <code>&amp;&amp;</code> on line 13 is false, so the grid is not even read and no new count happens. This is the whole trick: every cell of an island after the first is absorbed by a walk that already ran.', panels: panels([r, c], null, null)});
+          } else {
+            steps.push({lines:[11,13], msg:'<b>' + rc(r, c) + '</b> has never been visited, so the first half of line 13 passes - but <code>grid[' + r + '][' + c + ']</code> is <code>0</code>. Water is never a seed and is never walked into, so <code>visited</code> stays 0 here for the entire run. The scan just steps on.', panels: panels([r, c], null, null)});
+          }
+        }
+      }
+
+      scanTxt = 'finished';
+      steps.push({lines:[19,20], msg:'Both loops have run out and line 20 returns <b>' + count + '</b>. Every one of the ' + (R * C) + ' cells was tested once by the scan, and <code>Dfs</code> ran ' + calls + ' time(s) - once per land cell, never twice, because line 29 marks a cell the instant it is entered. That is the O(m * n) time. The space is the <code>visited</code> array plus the stack, which peaked at ' + maxF + ' frame(s); a single snake-shaped island of land would push that to every cell at once.', panels: panels(null, null, null)});
+      return steps;
+    }
+  },
+  {
+    label: 'BFS flood fill with an explicit queue',
+    badge: 'O(m * n) time · O(m * n) space · BFS · optimal-variant.cs',
+    blurb: 'Same counting rule, different walk: a queue instead of the call stack, so an island is claimed in rings spreading out from the seed rather than down one long arm. The line that matters is marking <code>visited</code> at <em>enqueue</em> time - a cell that two neighbours can both see would otherwise be queued twice and expanded twice.',
+    shapeOverride: {skip: ['call-stack'], reason: 'this version is entirely iterative - the pending work that DFS kept in call frames is held in the queue panel instead.'},
+    legend: [
+      {cls:'hot', text:'the cell just dequeued, being expanded'},
+      {cls:'in-window', text:'marked and sitting in the queue'},
+      {cls:'good', text:'dequeued and finished with'},
+      {cls:'dim', text:'water - never a seed, never enqueued'}
+    ],
+    code: [
+      'public int NumIslands(char[][] grid)',
+      '{',
+      '    int rows = grid.Length;',
+      '    int cols = grid[0].Length;',
+      '    bool[,] visited = new bool[rows, cols];',
+      '    int islandCount = 0;',
+      '',
+      '    int[] rowDelta = { -1, 1, 0, 0 };',
+      '    int[] colDelta = { 0, 0, -1, 1 };',
+      '',
+      '    for (int row = 0; row < rows; row++)',
+      '    {',
+      '        for (int col = 0; col < cols; col++)',
+      '        {',
+      "            if (!visited[row, col] && grid[row][col] == '1')",
+      '            {',
+      '                islandCount++;',
+      '                Queue<(int, int)> queue = new();',
+      '                queue.Enqueue((row, col));',
+      '                visited[row, col] = true; // mark when ENQUEUED',
+      '',
+      '                while (queue.Count > 0)',
+      '                {',
+      '                    var (currRow, currCol) = queue.Dequeue();',
+      '                    for (int i = 0; i < 4; i++)',
+      '                    {',
+      '                        int nRow = currRow + rowDelta[i];',
+      '                        int nCol = currCol + colDelta[i];',
+      '                        if (nRow >= 0 && nRow < rows && nCol >= 0 && nCol < cols &&',
+      "                            !visited[nRow, nCol] && grid[nRow][nCol] == '1')",
+      '                        {',
+      '                            visited[nRow, nCol] = true;',
+      '                            queue.Enqueue((nRow, nCol));',
+      '                        }',
+      '                    }',
+      '                }',
+      '            }',
+      '        }',
+      '    }',
+      '    return islandCount;',
+      '}'
+    ],
+    simulate(input){
+      const g = input.grid;
+      const R = g.length, C = g[0].length;
+      const vis = Array.from({length: R}, () => Array(C).fill(false));
+      const isle = Array.from({length: R}, () => Array(C).fill(0));
+      const RD = [-1, 1, 0, 0], CD = [0, 0, -1, 1];
+      const NAMES = ['up', 'down', 'left', 'right'];
+      const steps = [];
+      let q = [], count = 0, deqs = 0, maxQ = 0, scanTxt = 'not started';
+      const rc = (r, c) => r + ',' + c;
+
+      const qItems = (outgoing, fresh) => {
+        const items = [];
+        if (outgoing){
+          items.push({
+            text: 'row, col = ' + rc(outgoing[0], outgoing[1]),
+            sub: 'dequeued - expanding it now',
+            cls: 'hot',
+            popped: true
+          });
+        }
+        q.forEach((cell, i) => items.push({
+          text: 'row, col = ' + rc(cell[0], cell[1]),
+          sub: (!outgoing && i === 0) ? 'front - next off the queue' : 'marked visited, waiting its turn',
+          cls: (!outgoing && i === 0) ? 'hot' : '',
+          fresh: fresh.indexOf(rc(cell[0], cell[1])) >= 0
+        }));
+        return items;
+      };
+
+      const panels = (cur, outgoing, fresh) => [
+        pGrid('grid', g.map((row, r) => row.map((v, c) => {
+          let cls = '';
+          if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
+          else if (q.some(x => x[0] === r && x[1] === c)) cls = 'in-window';
+          else if (vis[r][c]) cls = 'good';
+          else if (v === '0') cls = 'dim';
+          return {v: v, cls: cls, sub: isle[r][c] ? 'isl ' + isle[r][c] : ''};
+        })), {
+          rowLabels: g.map((_, r) => 'r' + r),
+          colLabels: g[0].map((_, c) => 'c' + c),
+          scale: 0.9
+        }),
+        pStack('queue', [{
+          label: 'Queue of (row, col)',
+          mode: 'queue',
+          items: qItems(outgoing, fresh || []),
+          empty: 'queue empty - the while loop is not running',
+          foot: 'front: Dequeue takes from here',
+          top: 'back: Enqueue adds here'
+        }]),
+        pPills('state', [
+          {k:'outer scan', v: scanTxt, cls:'hot'},
+          {k:'in queue', v: q.length},
+          {k:'biggest queue', v: maxQ},
+          {k:'dequeues', v: deqs},
+          {k:'islandCount', v: count, cls: count ? 'good' : ''}
+        ])
+      ];
+
+      steps.push({lines:[5,6,8,9], msg:'Same setup as the recursive version, with two differences. <code>rowDelta</code> and <code>colDelta</code> spell the four neighbours out directly - index <b>i</b> means ' + NAMES.join(', ') + ' - instead of generating nine offsets and filtering the diagonals out. And the pending work will live in a <code>Queue</code> the code owns, not in the call stack, so nothing here recurses.', panels: panels(null, null, [])});
+
+      for (let r = 0; r < R; r++){
+        for (let c = 0; c < C; c++){
+          scanTxt = rc(r, c);
+          if (g[r][c] === '1' && !vis[r][c]){
+            count++;
+            q = [[r, c]];
+            vis[r][c] = true;
+            isle[r][c] = count;
+            maxQ = Math.max(maxQ, q.length);
+            steps.push({lines:[15,17,19,20], msg:'<b>' + rc(r, c) + '</b> is land that nothing has claimed, so it opens island <b>' + count + '</b>. Note the order against the DFS version: line 17 increments <em>before</em> the walk, not after, which is safe because the walk cannot fail. A fresh queue is built holding just this seed, and line 20 marks it visited the moment it goes in - so it can never be enqueued a second time by one of its own neighbours later.', panels: panels([r, c], null, [rc(r, c)])});
+
+            while (q.length){
+              const cell = q.shift();
+              deqs++;
+              const log = [];
+              const fresh = [];
+              for (let i = 0; i < 4; i++){
+                const nr = cell[0] + RD[i], nc = cell[1] + CD[i];
+                let why;
+                if (nr < 0 || nr >= R || nc < 0 || nc >= C) why = 'off the grid';
+                else if (vis[nr][nc]) why = 'already marked';
+                else if (g[nr][nc] === '0') why = 'water';
+                else {
+                  why = 'land - marked and enqueued';
+                  vis[nr][nc] = true;
+                  isle[nr][nc] = count;
+                  q.push([nr, nc]);
+                  fresh.push(rc(nr, nc));
+                }
+                log.push(NAMES[i] + ' → ' + nr + ',' + nc + ' ' + why);
+              }
+              maxQ = Math.max(maxQ, q.length);
+              const tail = fresh.length
+                ? 'Line 32 marks ' + fresh.length + ' of them visited and line 33 puts them on the <em>back</em> of the queue, behind everything already waiting - that is what makes this breadth-first rather than depth-first. Marking at enqueue time is essential: a cell both of these could reach would otherwise be queued twice and expanded twice.'
+                : 'Nothing new came of it, so this cell is simply finished and the queue got shorter.';
+              steps.push({lines: fresh.length ? [24,29,30,32,33] : [24,29,30], msg:'The <code>while</code> condition still holds, so line 24 takes the oldest entry, <b>' + rc(cell[0], cell[1]) + '</b>, off the front. Its four neighbours in <code>rowDelta</code>/<code>colDelta</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels(cell, cell, fresh)});
+            }
+
+            const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);
+            steps.push({lines:[22,36,37], msg:'<code>queue.Count</code> is 0, so the <code>while</code> on line 22 ends. Every cell reachable from the seed was enqueued exactly once and dequeued exactly once - <b>' + size + '</b> cell(s) for island <b>' + count + '</b> - and all of them are now <code>true</code> in <code>visited</code>. The queue object goes out of scope, and the outer scan picks up where it left off.', panels: panels(null, null, [])});
+          } else if (g[r][c] === '1'){
+            steps.push({lines:[13,15], msg:'<b>' + rc(r, c) + '</b> is land, but island <b>' + isle[r][c] + '</b> already marked it - it was enqueued as somebody’s neighbour. <code>!visited[row, col]</code> is false, the <code>&amp;&amp;</code> short-circuits before the grid is read, and no new island is opened. Without that check every land cell would start its own BFS and the answer would just be the amount of land.', panels: panels([r, c], null, [])});
+          } else {
+            steps.push({lines:[13,15], msg:'<b>' + rc(r, c) + '</b> is unvisited, so the first half of line 15 passes, but the grid holds <code>0</code>. Water never seeds a BFS and the neighbour test on line 30 never lets it into the queue either, so it stays untouched all run.', panels: panels([r, c], null, [])});
+          }
+        }
+      }
+
+      scanTxt = 'finished';
+      steps.push({lines:[39,40], msg:'The scan is done and line 40 returns <b>' + count + '</b> - the same answer the recursive version gives, reached by a different traversal order. There were ' + deqs + ' dequeue(s), one per land cell, each doing four constant-time checks: O(m * n). The space is <code>visited</code> plus the queue, which peaked at ' + maxQ + ' cell(s) - the widest frontier of an island, which for an island shaped like a full block is on the order of the whole grid.', panels: panels(null, null, [])});
+      return steps;
+    }
+  }]
+};
+
+/* ==========================================================================
+   Shared visualizer engine.
+   A problem file defines PROBLEM = { title, note, inputs, parse, shuffle,
+   solutions:[{ label, badge, blurb, legend, code, simulate }] }.
+   simulate(input) returns an array of steps:
+     { lines:[1-based], msg:'html', panels:[ ...panel descriptors... ] }
+   Panel descriptors are declarative; everything below is generic rendering.
+   ========================================================================== */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let solIdx = 0, sol = null, steps = [], stepIndex = -1, playing = false, timer = null;
+
+/* ---------------- header + config form ---------------- */
+function buildHeader(){
+  document.title = PROBLEM.title + ' — visualizer';
+  $('brandTitle').textContent = PROBLEM.title;
+  $('brandNote').textContent = PROBLEM.note || '';
+  const f = $('configForm');
+  f.innerHTML = '';
+  PROBLEM.inputs.forEach(inp => {
+    const d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = '<span>' + esc(inp.label) + '</span>' +
+      '<input id="in_' + inp.id + '" type="' + (inp.type || 'text') + '" value="' + esc(inp.value) +
+      '" spellcheck="false" style="width:' + (inp.width || 210) + 'px" aria-label="' + esc(inp.label) + '">';
+    f.appendChild(d);
+  });
+  const run = document.createElement('button');
+  run.type = 'submit'; run.className = 'primary'; run.textContent = 'Run';
+  f.appendChild(run);
+  if (PROBLEM.shuffle){
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Shuffle';
+    b.addEventListener('click', () => {
+      const vals = PROBLEM.shuffle();
+      PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+      rebuild();
+    });
+    f.appendChild(b);
+  }
+  f.addEventListener('submit', e => { e.preventDefault(); rebuild(); });
+}
+
+function readRaw(){
+  const o = {};
+  PROBLEM.inputs.forEach(i => { o[i.id] = $('in_' + i.id).value; });
+  return o;
+}
+function writeBack(vals){
+  PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+}
+
+/* ---------------- solution tabs ---------------- */
+function buildTabs(){
+  const t = $('tabs');
+  t.innerHTML = '';
+  PROBLEM.solutions.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (i === solIdx ? ' active' : '');
+    b.innerHTML = '<b>' + esc(s.label) + '</b><span>' + esc(s.badge) + '</span>';
+    b.addEventListener('click', () => { if (i === solIdx) return; solIdx = i; buildTabs(); loadSolution(); rebuild(); });
+    t.appendChild(b);
+  });
+}
+
+function loadSolution(){
+  sol = PROBLEM.solutions[solIdx];
+  $('brandSub').innerHTML = sol.blurb;
+  $('legend').innerHTML = (sol.legend || []).map(l =>
+    l.cls === null ? '<span>' + l.text + '</span>'
+                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
+  $('codeBlock').innerHTML = sol.code.map((l, i) =>
+    '<div class="line" data-line="' + (i + 1) + '">' + (l.length ? esc(l) : '&nbsp;') + '</div>').join('');
+}
+
+/* ---------------- panel rendering ---------------- */
+const host = () => $('colLeft');
+
+function panelShell(p){
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.dataset.t = p.t;
+  el.innerHTML = '<p class="panel-title"></p><div class="body"></div>';
+  return el;
+}
+
+function renderPanels(panels, animate){
+  const h = host();
+  while (h.children.length > panels.length) h.removeChild(h.lastChild);
+  panels.forEach((p, i) => {
+    let el = h.children[i];
+    if (!el || el.dataset.t !== p.t){
+      const fresh = panelShell(p);
+      if (el) h.replaceChild(fresh, el); else h.appendChild(fresh);
+      el = fresh;
+    }
+    el.querySelector('.panel-title').innerHTML = p.title || '';
+    el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    // The density dial. Clamped here, once, so no renderer has to defend
+    // itself against a panel that asked to be drawn at 0.1.
+    el.style.setProperty('--pscale', pscale(p));
+    RENDER[p.t](el.querySelector('.body'), p, animate);
+  });
+}
+
+const RENDER = {};
+
+/* --- tiles: an array or string laid out as boxes, with optional bracket + pointers --- */
+RENDER.tiles = function(body, p, animate){
+  let scroll = body.querySelector('.array-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="array-scroll"><div class="array-row">' +
+      '<div class="window-bracket"></div></div></div>';
+    scroll = body.querySelector('.array-scroll');
+  }
+  const row = scroll.querySelector('.array-row');
+  const bracket = row.querySelector('.window-bracket');
+  const ptrs = p.ptrs || [];
+  row.classList.toggle('no-ptrs', ptrs.length === 0);
+
+  let tiles = [...row.querySelectorAll('.tile')];
+  if (tiles.length !== p.items.length){
+    tiles.forEach(t => t.remove());
+    p.items.forEach(() => {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.innerHTML = '<span class="idx"></span><span class="val"></span><span class="sub"></span>';
+      row.appendChild(t);
+    });
+    tiles = [...row.querySelectorAll('.tile')];
+  }
+  p.items.forEach((it, i) => {
+    const t = tiles[i];
+    t.className = 'tile ' + (it.cls || '') + (p.narrow ? ' narrow' : '') +
+                  (animate && it.flash ? ' just-popped' : '');
+    const idx = t.querySelector('.idx'), val = t.querySelector('.val'), sub = t.querySelector('.sub');
+    const top = it.top !== undefined ? it.top : i;
+    idx.textContent = top === '' ? '' : top;
+    val.textContent = it.v;
+    sub.textContent = it.sub || '';
+    sub.style.display = it.sub ? '' : 'none';
+  });
+
+  // window bracket
+  if (p.bracket && tiles[p.bracket.from] && tiles[p.bracket.to] && p.bracket.from <= p.bracket.to){
+    const a = tiles[p.bracket.from], b = tiles[p.bracket.to];
+    bracket.className = 'window-bracket visible' + (p.bracket.dashed ? ' dashed' : '');
+    bracket.style.left = (a.offsetLeft - 4) + 'px';
+    bracket.style.width = (b.offsetLeft + b.offsetWidth - a.offsetLeft + 8) + 'px';
+  } else {
+    bracket.className = 'window-bracket';
+  }
+
+  // pointer markers
+  let marks = [...row.querySelectorAll('.ptr-marker')];
+  if (marks.length !== ptrs.length){
+    marks.forEach(m => m.remove());
+    ptrs.forEach(() => {
+      const m = document.createElement('div');
+      m.className = 'ptr-marker';
+      row.appendChild(m);
+    });
+    marks = [...row.querySelectorAll('.ptr-marker')];
+  }
+  const seen = {};
+  ptrs.forEach((pt, i) => {
+    const m = marks[i];
+    m.textContent = pt.name;
+    const tile = tiles[pt.idx];
+    if (!tile || pt.idx < 0){ m.className = 'ptr-marker ' + (pt.cls || ''); return; }
+    m.className = 'ptr-marker visible ' + (pt.cls || '');
+    const n = (seen[pt.idx] = (seen[pt.idx] || 0) + 1);
+    const nudge = n === 1 ? 0 : (n === 2 ? 20 : -20);
+    m.style.left = (tile.offsetLeft + tile.offsetWidth / 2 + nudge) + 'px';
+  });
+
+  // keep the focused tile in view
+  if (p.focus !== undefined && tiles[p.focus] && scroll.scrollWidth > scroll.clientWidth){
+    const t = tiles[p.focus], left = t.offsetLeft, right = left + t.offsetWidth;
+    if (left < scroll.scrollLeft + 12) scroll.scrollTo({left: Math.max(left - 24, 0), behavior:'smooth'});
+    else if (right > scroll.scrollLeft + scroll.clientWidth - 12)
+      scroll.scrollTo({left: right - scroll.clientWidth + 24, behavior:'smooth'});
+  }
+};
+
+/* --- chips: one or more labelled rows of small boxes (deque, stack, map, heap) --- */
+RENDER.chips = function(body, p, animate){
+  const rows = p.rows;
+  let els = [...body.querySelectorAll('.chip-row')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="chip-row"><span class="row-label left"></span><div class="chips"></div><span class="row-label right"></span></div>').join('');
+    els = [...body.querySelectorAll('.chip-row')];
+  }
+  rows.forEach((r, i) => {
+    const el = els[i];
+    const L = el.querySelector('.left'), R = el.querySelector('.right'), box = el.querySelector('.chips');
+    L.textContent = r.left || ''; L.style.display = r.left ? '' : 'none';
+    R.textContent = r.right || ''; R.style.display = r.right ? '' : 'none';
+    if (!r.items.length){
+      box.innerHTML = '<span class="chips-empty">' + esc(r.empty || 'empty') + '</span>';
+    } else {
+      box.innerHTML = r.items.map(c =>
+        '<span class="chip ' + (c.cls || '') + (animate && c.fresh ? ' fresh' : '') + '">' +
+        esc(c.text) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
+    }
+  });
+};
+
+/* --- slots: the output array, dashes until written --- */
+RENDER.slots = function(body, p, animate){
+  let row = body.querySelector('.slot-row');
+  if (!row){ body.innerHTML = '<div class="slot-row"></div>'; row = body.querySelector('.slot-row'); }
+  let slots = [...row.children];
+  if (slots.length !== p.items.length){
+    row.innerHTML = p.items.map(() => '<div class="slot"></div>').join('');
+    slots = [...row.children];
+  }
+  p.items.forEach((it, i) => {
+    const s = slots[i];
+    const wasFilled = s.classList.contains('filled');
+    const filled = it.text !== null && it.text !== undefined && it.text !== '';
+    s.textContent = filled ? it.text : '—';
+    s.className = 'slot' + (filled ? ' filled' : '') + (it.cls ? ' ' + it.cls : '') +
+                  (filled && !wasFilled && animate ? ' fresh' : '');
+  });
+};
+
+/* --- pills: scalar readouts (l, r, sum, best...) --- */
+RENDER.pills = function(body, p){
+  let box = body.querySelector('.pills');
+  if (!box){ body.innerHTML = '<div class="pills"></div>'; box = body.querySelector('.pills'); }
+  box.innerHTML = p.items.map(it =>
+    '<span class="pill ' + (it.cls || '') + '">' + esc(it.k) + ' = <b>' + esc(it.v) + '</b></span>').join('');
+};
+
+/* --- bars: a histogram, for height/price style problems --- */
+RENDER.bars = function(body, p){
+  let box = body.querySelector('.bars');
+  if (!box){ body.innerHTML = '<div class="bars"><div class="water"></div></div>'; box = body.querySelector('.bars'); }
+  const water = box.querySelector('.water');
+  let wraps = [...box.querySelectorAll('.bar-wrap')];
+  if (wraps.length !== p.items.length){
+    wraps.forEach(w => w.remove());
+    p.items.forEach(() => {
+      const w = document.createElement('div');
+      w.className = 'bar-wrap';
+      w.innerHTML = '<span class="cap"></span><div class="bar"></div><span class="foot"></span>';
+      box.appendChild(w);
+    });
+    wraps = [...box.querySelectorAll('.bar-wrap')];
+  }
+  const max = Math.max(1, ...p.items.map(i => Math.abs(i.v)));
+  p.items.forEach((it, i) => {
+    const w = wraps[i];
+    w.className = 'bar-wrap ' + (it.cls || '');
+    w.querySelector('.cap').textContent = it.v;
+    w.querySelector('.foot').textContent = it.foot !== undefined ? it.foot : i;
+    w.querySelector('.bar').style.height = Math.max(3, (Math.abs(it.v) / max) * 165) + 'px';
+  });
+  if (p.fill && wraps[p.fill.from] && wraps[p.fill.to]){
+    const a = wraps[p.fill.from], b = wraps[p.fill.to];
+    water.style.opacity = 1;
+    water.style.left = (a.offsetLeft + a.offsetWidth * 0.5) + 'px';
+    water.style.width = (b.offsetLeft + b.offsetWidth * 0.5 - a.offsetLeft - a.offsetWidth * 0.5) + 'px';
+    water.style.bottom = '26px';
+    water.style.height = Math.max(3, (p.fill.level / max) * 165) + 'px';
+  } else {
+    water.style.opacity = 0;
+  }
+};
+
+/* --- ranges: intervals on a shared timeline --- */
+RENDER.ranges = function(body, p){
+  let box = body.querySelector('.ranges');
+  if (!box){ body.innerHTML = '<div class="ranges"></div>'; box = body.querySelector('.ranges'); }
+  let lines = [...box.children];
+  if (lines.length !== p.items.length){
+    box.innerHTML = p.items.map(() => '<div class="range-line"><div class="range-bar"></div></div>').join('');
+    lines = [...box.children];
+  }
+  const lo = p.min, hi = Math.max(p.max, p.min + 1);
+  p.items.forEach((it, i) => {
+    const bar = lines[i].querySelector('.range-bar');
+    bar.className = 'range-bar ' + (it.cls || '');
+    bar.textContent = it.label;
+    bar.style.left = ((it.from - lo) / (hi - lo) * 100) + '%';
+    bar.style.width = 'max(72px, ' + ((it.to - it.from) / (hi - lo) * 100) + '%)';
+  });
+};
+
+/* --- note: a free-text panel --- */
+RENDER.note = function(body, p){
+  let n = body.querySelector('.note-text');
+  if (!n){ body.innerHTML = '<div class="note-text"></div>'; n = body.querySelector('.note-text'); }
+  n.innerHTML = p.html;
+};
+
+/* ==========================================================================
+   Structural renderers.
+
+   These exist because every panel above this line is a row of boxes. With only
+   those, a tree came out as "nodes grouped by depth" and a stack as a row of
+   chips - the animation was correct and the shape was a lie. The rule they all
+   follow: the PROBLEM object supplies data, the chassis does every bit of
+   layout arithmetic. A generated definition that had to compute its own x and y
+   would be a generated definition that silently drifts.
+   ========================================================================== */
+
+/* The density dial, clamped. A panel may ask to be drawn smaller so a big
+   structure fits one screen; it may not ask to be drawn illegibly. */
+const SCALE_MIN = 0.7;
+function pscale(p){
+  const v = Number(p && p.scale);
+  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
+}
+
+/* Rebuild a container's children only when the *identity* of what it holds
+   changes. Keeping elements between steps is what makes a node glide to its new
+   position instead of blinking there. */
+function keyed(el, key){
+  if (el.dataset.key === key) return false;
+  el.dataset.key = key;
+  el.innerHTML = '';
+  return true;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const mkSvg = (name) => document.createElementNS(SVG_NS, name);
+
+/* ---------------- shared tree layout ----------------
+   Used by both the tree panel and the heap panel, which is a tree with its
+   edges implied by array indices. Leaves take the next free column; a parent
+   centres over its children. Depth comes from the parent chain, so the caller
+   never states a depth and cannot state a wrong one. */
+function layoutTree(nodes, k){
+  const byId = new Map();
+  const kids = new Map();
+  const roots = [];
+  const work = nodes.map((n) => ({
+    id: String(n.id), v: n.v,
+    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
+    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
+    nil: n.v === null || n.v === undefined,
+  }));
+  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
+  work.forEach((n) => {
+    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
+    else { n.parent = null; roots.push(n.id); }
+  });
+  // Left child first when sides are given, otherwise the order they arrived in.
+  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
+  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
+
+  const X = new Map(), D = new Map(), seen = new Set();
+  let col = 0;
+  const walk = (id, d) => {
+    if (seen.has(id)) return;          // malformed data must not hang the page
+    seen.add(id);
+    D.set(id, d);
+    const cs = kids.get(id) || [];
+    if (!cs.length){ X.set(id, col++); return; }
+    cs.forEach((c) => walk(c, d + 1));
+    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
+    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
+  };
+  roots.forEach((r) => { walk(r, 0); col += 0.7; });
+  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
+
+  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
+  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
+  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
+  work.forEach((n) => {
+    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
+    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
+  });
+  return {
+    work, byId,
+    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
+    height: PAD * 2 + NODE + maxD * ROWH,
+  };
+}
+
+/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
+   absolutely positioned node divs, so edges never paint over a value. */
+function drawTree(stage, nodes, p, k){
+  const L = layoutTree(nodes, k);
+  const links = p.links || [];
+  stage.style.width = L.width + 'px';
+  stage.style.height = L.height + 'px';
+
+  let svg = stage.querySelector('svg');
+  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
+  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
+  // positioned in pixels, so anything that scales the edge layer independently
+  // - which min-width:100% on the stage does the moment the tree is narrower
+  // than the panel - draws the edges somewhere the nodes are not.
+  svg.setAttribute('width', L.width);
+  svg.setAttribute('height', L.height);
+  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+
+  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
+    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
+    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
+      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
+                    cls: e.cls || 'ghost', label: e.label || ''})));
+
+  if (keyed(svg, edges.map((e) => e.key).join('|'))){
+    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
+  }
+  edges.forEach((e, i) => {
+    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
+    line.setAttribute('class', 'edge ' + (e.cls || ''));
+    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
+    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
+    text.setAttribute('y', (e.a.py + e.b.py) / 2);
+    text.textContent = e.label || '';
+  });
+
+  const wrapKey = L.work.map((n) => n.id).join('|');
+  let holder = stage.querySelector('.tree-nodes');
+  if (!holder){
+    holder = document.createElement('div');
+    holder.className = 'tree-nodes';
+    stage.appendChild(holder);
+  }
+  if (keyed(holder, wrapKey)){
+    L.work.forEach(() => {
+      const d = document.createElement('div');
+      d.className = 'node';
+      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
+      holder.appendChild(d);
+    });
+  }
+  L.work.forEach((n, i) => {
+    const el = holder.children[i];
+    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
+    el.style.left = n.px + 'px';
+    el.style.top = n.py + 'px';
+    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
+    const sub = el.querySelector('.sub');
+    sub.textContent = n.sub || '';
+    sub.style.display = n.sub ? '' : 'none';
+  });
+
+  // Named markers - root, cur, lca - floating just above their node.
+  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
+  let tagHolder = stage.querySelector('.tree-tags');
+  if (!tagHolder){
+    tagHolder = document.createElement('div');
+    tagHolder.className = 'tree-tags';
+    stage.appendChild(tagHolder);
+  }
+  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
+    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
+  }
+  tags.forEach((t, i) => {
+    const el = tagHolder.children[i];
+    const n = L.byId.get(String(t.id));
+    el.className = 'node-tag ' + (t.cls || '');
+    el.textContent = t.name;
+    el.style.left = n.px + 'px';
+    el.style.top = (n.py - 38 * k) + 'px';
+  });
+}
+
+/* --- tree: a real tree, with edges --- */
+RENDER.tree = function(body, p){
+  const k = pscale(p);
+  let scroll = body.querySelector('.tree-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
+    scroll = body.querySelector('.tree-scroll');
+  }
+  const stage = scroll.querySelector('.tree-stage');
+  if (!p.nodes || !p.nodes.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
+    delete stage.dataset.built;
+    return;
+  }
+  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+  drawTree(stage, p.nodes, p, k);
+};
+
+/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
+RENDER.list = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  let els = [...body.querySelectorAll('.list-row-wrap')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="list-row-wrap"><div class="list-label"></div>' +
+      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
+    els = [...body.querySelectorAll('.list-row-wrap')];
+  }
+  rows.forEach((r, ri) => {
+    const wrap = els[ri];
+    const label = wrap.querySelector('.list-label');
+    label.textContent = r.label || '';
+    label.style.display = r.label ? '' : 'none';
+    const row = wrap.querySelector('.list-row');
+    const svg = row.querySelector('.list-cycle');
+    const nodes = r.nodes || [];
+
+    // One cell per node, an arrow between each pair, and a terminator.
+    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
+    let cells = [...row.querySelectorAll('.list-cell')];
+    if (row.dataset.key !== key){
+      row.dataset.key = key;
+      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
+      nodes.forEach((n, i) => {
+        const c = document.createElement('div');
+        c.className = 'list-cell';
+        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
+        row.appendChild(c);
+        if (i < nodes.length - 1 || r.tail){
+          const a = document.createElement('span');
+          a.className = 'list-arrow';
+          a.textContent = '→';
+          row.appendChild(a);
+        }
+      });
+      if (r.tail){
+        const t = document.createElement('span');
+        t.className = 'list-null';
+        t.textContent = r.tail === true ? '∅' : String(r.tail);
+        row.appendChild(t);
+      }
+      if (!nodes.length){
+        const e = document.createElement('span');
+        e.className = 'chips-empty';
+        e.textContent = r.empty || 'empty';
+        row.appendChild(e);
+      }
+      cells = [...row.querySelectorAll('.list-cell')];
+    }
+
+    nodes.forEach((n, i) => {
+      const c = cells[i];
+      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
+      c.querySelector('.v').textContent = String(n.v);
+      const sub = c.querySelector('.sub');
+      sub.textContent = n.sub || '';
+      sub.style.display = n.sub ? '' : 'none';
+    });
+    // An arrow is a pointer. Reversal problems live or die on being able to see
+    // one go dashed or vanish, so arrows take their own classes.
+    const arrows = [...row.querySelectorAll('.list-arrow')];
+    arrows.forEach((a, i) => {
+      const spec = (r.arrows || [])[i];
+      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
+      a.className = 'list-arrow ' + cls;
+      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
+    });
+
+    // Markers, placed against real measured geometry rather than guessed at.
+    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
+    let marks = [...row.querySelectorAll('.list-tag')];
+    if (marks.length !== tags.length){
+      marks.forEach((m) => m.remove());
+      tags.forEach(() => {
+        const m = document.createElement('span');
+        m.className = 'list-tag';
+        row.appendChild(m);
+      });
+      marks = [...row.querySelectorAll('.list-tag')];
+    }
+    const seen = {};
+    tags.forEach((t, i) => {
+      const m = marks[i];
+      m.textContent = t.name;
+      const cell = cells[t.idx];
+      const below = !!t.below;
+      if (!cell || t.idx < 0 || t.idx === undefined){
+        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
+        return;
+      }
+      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
+      const bucket = (below ? 'b' : 'a') + t.idx;
+      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
+      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
+      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
+    });
+
+    // The back-edge that makes a cycle a cycle.
+    const to = r.cycleTo;
+    const from = cells.length - 1;
+    if (to !== undefined && to !== null && cells[to] && cells[from]){
+      const a = cells[from], b = cells[to];
+      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
+      const y = a.offsetTop + a.offsetHeight;
+      const dip = y + 26 * k;
+      svg.style.display = '';
+      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
+      svg.setAttribute('width', row.scrollWidth);
+      svg.setAttribute('height', row.scrollHeight);
+      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
+      svg.firstChild.setAttribute('d',
+        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
+    } else {
+      svg.style.display = 'none';
+    }
+  });
+};
+
+/* --- stack / queue: a bucket with a floor and an open top --- */
+RENDER.stack = function(body, p, animate){
+  const buckets = p.buckets || [];
+  let box = body.querySelector('.buckets');
+  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
+  let els = [...box.children];
+  if (els.length !== buckets.length){
+    box.innerHTML = buckets.map(() =>
+      '<div class="bucket"><span class="bucket-label"></span>' +
+      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
+      '<span class="bucket-foot"></span></div>').join('');
+    els = [...box.children];
+  }
+  buckets.forEach((b, bi) => {
+    const el = els[bi];
+    const queue = b.mode === 'queue';
+    el.className = 'bucket' + (queue ? ' queue' : '');
+    const label = el.querySelector('.bucket-label');
+    label.textContent = b.label || '';
+    label.style.display = b.label ? '' : 'none';
+    const foot = el.querySelector('.bucket-foot');
+    foot.textContent = b.foot || '';
+    foot.style.display = b.foot ? '' : 'none';
+
+    const inner = el.querySelector('.bucket-box');
+    const items = b.items || [];
+    let cells = [...inner.querySelectorAll('.cell')];
+    let top = inner.querySelector('.bucket-top');
+    if (cells.length !== items.length){
+      cells.forEach((c) => c.remove());
+      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
+      items.forEach(() => {
+        const c = document.createElement('div');
+        c.className = 'cell';
+        inner.appendChild(c);
+      });
+      cells = [...inner.querySelectorAll('.cell')];
+    }
+    // Outside the rebuild, not inside it: a bucket that starts empty and stays
+    // empty never enters that branch, and step -1 empties every bucket. Created
+    // in there, the marker did not exist on the first frame of every stack
+    // panel in the repo, and the whole page died on the first render.
+    if (!top){
+      top = document.createElement('span');
+      top.className = 'bucket-top';
+      inner.appendChild(top);          // last child: column-reverse puts it on top
+    }
+    items.forEach((it, i) => {
+      const c = cells[i];
+      c.className = 'cell ' + (it.cls || '') +
+                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
+      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
+    });
+    const empty = el.querySelector('.bucket-empty');
+    empty.textContent = b.empty || 'empty';
+    empty.style.display = items.length ? 'none' : '';
+    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
+    top.style.display = top.textContent ? '' : 'none';
+  });
+};
+
+/* --- grid: a matrix, drawn as a matrix --- */
+RENDER.grid = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  const colLabels = p.colLabels, rowLabels = p.rowLabels;
+  let stage = body.querySelector('.grid-stage');
+  if (!stage){
+    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
+                     '<div class="grid-box"></div></div></div>';
+    stage = body.querySelector('.grid-stage');
+  }
+  const tbl = stage.querySelector('.grid-tbl');
+  const width = Math.max(0, ...rows.map((r) => r.length));
+  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
+  if (keyed(tbl, key)){
+    let html = '';
+    if (colLabels){
+      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
+              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
+    }
+    for (let r = 0; r < rows.length; r++){
+      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
+      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
+      html += '</tr>';
+    }
+    tbl.innerHTML = html;
+  }
+  const cells = [...tbl.querySelectorAll('.grid-cell')];
+  const at = (r, c) => cells[r * width + c];
+  rows.forEach((row, r) => {
+    for (let c = 0; c < width; c++){
+      const el = at(r, c);
+      if (!el) continue;
+      const raw = row[c];
+      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
+      const missing = it.v === undefined || it.v === null;
+      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
+                     (animate && it.fresh ? ' fresh' : '');
+      el.querySelector('.v').textContent = missing ? '' : String(it.v);
+      const sub = el.querySelector('.sub');
+      sub.textContent = it.sub || '';
+      sub.style.display = it.sub ? '' : 'none';
+    }
+  });
+
+  // A bracket round a sub-rectangle: the search space that is still alive.
+  const bx = stage.querySelector('.grid-box');
+  const b = p.box;
+  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
+    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
+    const pad = 5 * k;
+    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
+    bx.style.left = (a.offsetLeft - pad) + 'px';
+    bx.style.top = (a.offsetTop - pad) + 'px';
+    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
+    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
+  } else {
+    bx.className = 'grid-box';
+  }
+};
+
+/* --- heap: the tree and the array that stores it, side by side ---
+   A heap is the one structure where both views are needed at once: the
+   sift path only makes sense as a tree, and the index arithmetic only
+   makes sense as an array. Showing one without the other is how a heap
+   animation ends up teaching nothing. */
+RENDER.heap = function(body, p, animate){
+  const k = pscale(p);
+  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
+  let wrap = body.querySelector('.heap-wrap');
+  if (!wrap){
+    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
+                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
+    wrap = body.querySelector('.heap-wrap');
+  }
+  const stage = wrap.querySelector('.tree-stage');
+  const cap = wrap.querySelector('.heap-caption');
+  const arr = wrap.querySelector('.heap-array');
+
+  if (!items.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
+    delete stage.dataset.built;
+  } else {
+    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+    const nodes = items.map((it, i) => ({
+      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
+      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
+    }));
+    drawTree(stage, nodes, {
+      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
+      links: p.links,
+    }, k);
+  }
+
+  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
+  cap.style.display = p.showArray === false ? 'none' : '';
+
+  if (p.showArray === false){ arr.style.display = 'none'; return; }
+  arr.style.display = '';
+  let slots = [...arr.children];
+  if (slots.length !== items.length){
+    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
+    slots = [...arr.children];
+  }
+  items.forEach((it, i) => {
+    const s = slots[i];
+    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
+    s.querySelector('.idx').textContent = i;
+    s.querySelector('.v').textContent = String(it.v);
+  });
+};
+
+/* ---------------- playback ---------------- */
+function render(animate){
+  if (animate === undefined) animate = true;
+  $('progressLabel').textContent = Math.max(stepIndex + 1, 0) + ' / ' + steps.length;
+  const codeLines = document.querySelectorAll('.code .line');
+  if (stepIndex < 0){
+    codeLines.forEach(l => l.classList.remove('active'));
+    $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
+    renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
+    return;
+  }
+  const step = steps[stepIndex];
+  const active = step.lines || [];
+  codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  $('statusMsg').innerHTML = step.msg;
+  renderPanels(step.panels, animate);
+}
+
+// step -1 shows the first step's shape with all highlighting stripped
+function blankPanels(panels){
+  return JSON.parse(JSON.stringify(panels)).map(p => {
+    if (p.t === 'tiles'){ p.items.forEach(i => { i.cls = ''; i.flash = false; }); p.bracket = null; p.ptrs = []; }
+    if (p.t === 'bars'){ p.items.forEach(i => { i.cls = ''; }); p.fill = null; }
+    if (p.t === 'ranges'){ p.items.forEach(i => { i.cls = 'ghost'; }); }
+    if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+    if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+    if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    // A structure is shown in its starting state, not emptied: the whole point
+    // of step -1 on a tree problem is seeing the tree you are about to walk.
+    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
+    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
+    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
+    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
+    if (p.t === 'heap'){ p.items = []; p.tags = []; }
+    return p;
+  });
+}
+
+function stepForward(){ if (stepIndex >= steps.length - 1){ pause(); return; } stepIndex++; render(); if (stepIndex >= steps.length - 1) pause(); }
+function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
+function resetAll(){ pause(); stepIndex = -1; render(false); }
+function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
+function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
+function tick(){
+  if (!playing) return;
+  if (!guard(stepForward)) return;
+  if (stepIndex >= steps.length - 1){ pause(); return; }
+  const s = $('speedInput');
+  timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
+}
+
+function rebuild(){
+  const parsed = PROBLEM.parse(readRaw());
+  if (!parsed.ok){
+    pause(); steps = []; stepIndex = -1;
+    host().innerHTML = '';
+    $('statusMsg').innerHTML = parsed.msg;
+    $('progressLabel').textContent = '0 / 0';
+    return;
+  }
+  if (parsed.normalized) writeBack(parsed.normalized);
+  steps = sol.simulate(parsed.value);
+  stepIndex = -1;
+  pause();
+  host().innerHTML = '';
+  requestAnimationFrame(() => { render(false); requestAnimationFrame(() => render(false)); });
+}
+
+$('playBtn').addEventListener('click', () => playing ? pause() : play());
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
+$('resetBtn').addEventListener('click', resetAll);
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, button')) return;
+  if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); pause(); stepForward(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); pause(); stepBack(); }
+  else if (e.key === 'r' || e.key === 'R'){ resetAll(); }
+});
+window.addEventListener('resize', () => render(false));
+
+buildHeader();
+buildTabs();
+loadSolution();
+rebuild();
+})();
+</script>
+</body>
+</html>
