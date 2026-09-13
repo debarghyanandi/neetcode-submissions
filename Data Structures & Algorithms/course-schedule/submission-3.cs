@@ -22,23 +22,23 @@ public class Solution {
         return true;
     }
 
-    private bool HasCycle(int node, List<int>[] adj, bool[] visited, bool[] pathVisited) {
-        visited[node] = true;
-        pathVisited[node] = true; // stepping onto this node's path
+    private bool HasCycle(int current, List<int>[] adj, bool[] visited, bool[] pathVisited) {
+        visited[current] = true;
+        pathVisited[current] = true; // stepping onto this node's path
 
-        foreach (int nei in adj[node]) {
-            if (pathVisited[nei])
+        foreach (int neighbor in adj[current]) {
+            if (pathVisited[neighbor])
                 return true; // neighbor is still on OUR current path — that's a cycle
 
-            if (!visited[nei]) {
-                if (HasCycle(nei, adj, visited, pathVisited))
+            if (!visited[neighbor]) {
+                if (HasCycle(neighbor, adj, visited, pathVisited))
                     return true;
             }
-            // if visited[nei] is true and pathVisited[nei] is false,
+            // if visited[neighbor] is true and pathVisited[neighbor] is false,
             // it was fully explored elsewhere and proven cycle-free — safe to skip
         }
 
-        pathVisited[node] = false; // stepping OFF this node's path before returning
+        pathVisited[current] = false; // stepping OFF this node's path before returning
         return false;
     }
 }
