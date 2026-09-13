@@ -184,6 +184,18 @@ function ask(prompt, code) {
 
 // ---------------------------------------------------------------- run
 
+/**
+ * The account ran out, not the definition.
+ *
+ * "You've hit your session limit" is not a bad PROBLEM object - it is the same
+ * answer every remaining folder will get, so continuing wastes a call per
+ * folder and, worse, reports each one as `failed` beside the genuine
+ * validation failures. A run once ended "2 written, 2 failed" when nothing was
+ * wrong with either of the two: the subscription had simply reset-time on it.
+ */
+const OUT_OF_BUDGET = /session limit|usage limit|rate limit exceeded|quota|credit balance|insufficient/i;
+let outOfBudget = null;
+
 const state = loadState();
 const all = scanRepo(state);
 let targets = all;
@@ -278,6 +290,10 @@ for (const p of targets) {
     try { r = ask(instructions(p.slug, sols, structures, example, feedback), code); }
     catch (e) {
       console.log(`  attempt ${attempt} FAILED: ${e.message}`);
+      // Out of budget is a property of the account, not of this folder. Record
+      // it and let the loop below stop, rather than asking the same question
+      // once per remaining folder and getting the same refusal each time.
+      if (OUT_OF_BUDGET.test(e.message)) { outOfBudget = e.message; break; }
       // Retry a run that simply ran out of room; do not retry an auth or
       // configuration failure, which will fail identically the second time.
       if (/max_turns|overloaded|rate_limit|timeout/i.test(e.message)) {
@@ -302,7 +318,19 @@ for (const p of targets) {
     }
   }
 
-  if (!result) { console.log(`  giving up on ${p.slug}`); report('visualize', p.slug, 'failed', 'validation rejected both attempts'); failures++; endGroup(); continue; }
+  if (!result) {
+    if (outOfBudget) {
+      console.log(`  stopping: the account is out of budget, not the definition`);
+      report('visualize', p.slug, 'skipped', 'stopped - out of budget, nothing wrong with this folder');
+      endGroup();
+      break;
+    }
+    console.log(`  giving up on ${p.slug}`);
+    report('visualize', p.slug, 'failed', 'validation rejected both attempts');
+    failures++;
+    endGroup();
+    continue;
+  }
   console.log(`  validated  ·  $${spend.toFixed(4)} · ${result.turns} turns`);
 
   if (doApply) {
@@ -323,6 +351,10 @@ for (const p of targets) {
 }
 
 if (doApply && wrote) saveState(state);
-console.log(`${wrote} written, ${failures} failed.\n`);
+if (outOfBudget) {
+  console.log(`\nSTOPPED - ${outOfBudget.trim()}`);
+  console.log('Nothing is wrong with the folders that did not run; name them again after the reset.\n');
+}
+console.log(`${wrote} written, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wrote=${wrote}\n`);
 process.exit(failures ? 1 : 0);

@@ -132,7 +132,14 @@ try {
         (function scan(v, path, depth){
           if (depth > 6 || v === null || v === undefined) return;
           if (typeof v === 'string'){
-            if (/&(?:lt|gt|amp|quot|apos|nbsp|#\\d+);/i.test(v) || /<\\/?[a-z][a-z0-9]*(?:\\s[^>]*)?>/i.test(v)){
+            // NAMED tags only. The first version matched any <Word>, which in a
+            // C# repo means it flagged Stack<TreeNode>, Queue<TreeNode> and
+            // List<int> - ordinary labels - as markup. That rejection cost a
+            // full Opus retry on invert-a-binary-tree before anyone noticed,
+            // and it was inconsistent too: Dictionary<int, Node> slipped
+            // through because of the space. A generic type is not a tag.
+            if (/&(?:lt|gt|amp|quot|apos|nbsp|#\\d+);/i.test(v) ||
+                /<\\/?(?:a|b|i|u|p|em|strong|code|span|div|br|hr|small|sub|sup|pre|kbd|mark|ul|ol|li|img|h[1-6])\\b[^>]*>/i.test(v)){
               E(path + ' is rendered as plain text but contains markup: ' + JSON.stringify(v.slice(0, 60)) +
                 ' - write the characters themselves. Only msg, a panel title and pNote html are HTML.');
             }

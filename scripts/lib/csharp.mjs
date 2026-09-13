@@ -228,10 +228,21 @@ export function sameShape(before, after) {
     // A member name belongs to some other API, and a type name decides what the
     // program costs. Renaming either is a different program, not a tidier one.
     const fixed = fixedIdentifier(A, i, boilerplate);
-    if (fixed && a.v !== b.v) {
-      errors.push(fixed === 'boilerplate'
-        ? `${a.v} -> ${b.v}: ${a.v} is part of the public signature NeetCode gave you - leave it alone`
-        : `${fixed} name changed: ${a.v} -> ${b.v} near: ${near}`);
+    if (fixed) {
+      if (a.v !== b.v) {
+        errors.push(fixed === 'boilerplate'
+          ? `${a.v} -> ${b.v}: ${a.v} is part of the public signature NeetCode gave you - leave it alone`
+          : `${fixed} name changed: ${a.v} -> ${b.v} near: ${near}`);
+      }
+      // Skip the rename bookkeeping below even when the name is UNCHANGED. A
+      // member or a type lives in a different namespace from the locals, and
+      // recording `root.left -> root.left` put "left" into the rename map - so
+      // a local also called `left`, legitimately renamed to `newLeft`, then
+      // read as the same name mapping to two different things.
+      //
+      // That is not a corner case in this repo: every tree solution has locals
+      // called left and right sitting beside node.left and node.right. It
+      // rejected invert-a-binary-tree twice and left the file unlinted.
       continue;
     }
 

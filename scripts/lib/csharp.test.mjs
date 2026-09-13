@@ -165,5 +165,36 @@ same('a queue and a stack are NOT the same solution',
   'public class S { void F() { Queue<int> q = new Queue<int>(); q.Enqueue(1); } }',
   'public class S { void F() { Stack<int> q = new Stack<int>(); q.Push(1); } }', false);
 
+// ---- locals that share a name with a member ------------------------------
+// Every tree solution has locals called left and right sitting beside
+// node.left and node.right. The member is correctly held fixed - but it was
+// also being recorded in the rename map, so the local's legitimate rename read
+// as one name mapping to two things. It rejected invert-a-binary-tree twice
+// and left the file unlinted; a member and a local are different namespaces.
+const TREE_SWAP = [
+  'public class Solution {',
+  '    public TreeNode InvertTree(TreeNode root) {',
+  '        if (root == null) return null;',
+  '        TreeNode left = InvertTree(root.left);',
+  '        TreeNode right = InvertTree(root.right);',
+  '        root.left = right;',
+  '        root.right = left;',
+  '        return root;',
+  '    }',
+  '}',
+].join('\n');
+
+const renamedLocals = TREE_SWAP
+  .replace('TreeNode left = InvertTree(root.left);', 'TreeNode newLeft = InvertTree(root.left);')
+  .replace('TreeNode right = InvertTree(root.right);', 'TreeNode newRight = InvertTree(root.right);')
+  .replace('root.left = right;', 'root.left = newRight;')
+  .replace('root.right = left;', 'root.right = newLeft;');
+
+accepts('a local named left may be renamed beside a member called left', TREE_SWAP, renamedLocals);
+refuses('but swapping which one is assigned is still a different program',
+  TREE_SWAP, TREE_SWAP.replace('root.left = right;', 'root.left = left;'));
+refuses('and the member itself still may not be renamed',
+  TREE_SWAP, TREE_SWAP.replace(/root\.left/g, 'root.lft'));
+
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);
