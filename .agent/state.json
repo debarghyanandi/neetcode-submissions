@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T03:04:11.996Z",
+  "updatedAt": "2026-09-13T04:31:46.857Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2250,6 +2250,17 @@
         },
         "builtAt": "2026-09-06T11:19:01.308Z"
       }
+    },
+    "max-area-of-island": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "max-water-container": {
       "topic": "Data Structures & Algorithms",
