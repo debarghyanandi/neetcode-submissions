@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T04:31:46.857Z",
+  "updatedAt": "2026-09-13T06:50:48.813Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1570,12 +1570,14 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "failed": true,
-          "reason": "member name changed: pq -> minHeap near: k ; this . pq = new PriorityQueue"
+          "codePrint": "e72dc2e1e7df",
+          "renames": [
+            "v->num"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"min-heap of size k via PriorityQueue\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e72dc2e1e7df\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"size-capped min-heap\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1587,24 +1589,33 @@
       "classification": {
         "optimal.cs": {
           "time": "O(n log k)",
-          "space": "O(n)",
-          "algorithm": "min-heap of size k via PriorityQueue",
+          "space": "O(k)",
+          "algorithm": "size-capped min-heap",
           "approachKey": "min-heap-size-k",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "heap"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"min-heap of size k via PriorityQueue\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e72dc2e1e7df\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"size-capped min-heap\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "7ac2d53d1f52"
+          "optimal.cs": "e72dc2e1e7df"
         },
-        "builtAt": "2026-09-10T07:26:23.583Z"
+        "structures": [
+          "array",
+          "heap"
+        ],
+        "builtAt": "2026-09-13T06:48:27.585Z"
       }
     },
     "kth-smallest-integer-in-bst": {
@@ -1680,12 +1691,14 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "codePrint": "04449d586ae7",
-          "renames": []
+          "codePrint": "bf9b9b2bcccd",
+          "renames": [
+            "pq->stoneQueue"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap simulated via min-heap on negated priority\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bf9b9b2bcccd\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap via negated-priority min-heap\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1698,23 +1711,30 @@
         "optimal.cs": {
           "time": "O(n log n)",
           "space": "O(n)",
-          "algorithm": "max-heap simulated via min-heap on negated priority",
+          "algorithm": "max-heap via negated-priority min-heap",
           "approachKey": "heap-simulate-collisions",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "heap"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap simulated via min-heap on negated priority\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bf9b9b2bcccd\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap via negated-priority min-heap\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "04449d586ae7"
+          "optimal.cs": "bf9b9b2bcccd"
         },
-        "builtAt": "2026-09-10T17:13:48.090Z"
+        "structures": [
+          "heap"
+        ],
+        "builtAt": "2026-09-13T06:50:48.811Z"
       }
     },
     "level-order-traversal-of-binary-tree": {

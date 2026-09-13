@@ -651,104 +651,169 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Last Stone Weight',
-  note: 'only the two heaviest stones ever matter, and the leftover goes straight back in',
-  inputs: [{id:'s', label:'stones', value:'2,7,4,1,8,1', width:260}],
+  note: 'every smash reorders the pile, so keep the pile in a heap instead of re-sorting it',
+  inputs: [
+    {id:'stones', label:'stones', value:'2,3,6,2,4', width:260}
+  ],
   parse(raw){
-    const s = parseInts(raw.s, 10);
-    if (!s) return {ok:false, msg:'Enter a valid comma-separated list of stone weights.'};
-    if (s.some(v => v <= 0 || !Number.isInteger(v))) return {ok:false, msg:'Stone weights must be positive whole numbers.'};
-    return {ok:true, value:{s}, normalized:{s: s.join(',')}};
+    const stones = parseInts(raw.stones, 10);
+    if (!stones) return {ok:false, msg:'Enter stone weights as comma-separated whole numbers.'};
+    if (stones.some(s => !Number.isInteger(s) || s < 1 || s > 99)) return {ok:false, msg:'Every stone must be a whole number between 1 and 99.'};
+    if (stones.length < 1) return {ok:false, msg:'Needs at least one stone.'};
+    return {ok:true, value:{stones: stones}, normalized:{stones: stones.join(',')}};
   },
-  shuffle(){ return {s: randInts(5 + Math.floor(Math.random()*3), 1, 10).join(',')}; },
+  shuffle(){
+    return {stones: randInts(4 + Math.floor(Math.random() * 2), 1, 8).join(',')};
+  },
   solutions: [
   {
-    label: 'Max-heap by negated priority',
+    label: 'Max-heap smashing (negated-priority min-heap)',
     badge: 'O(n log n) time · O(n) space · heap · optimal.cs',
-    blurb: 'Every smash needs the two heaviest stones, and the leftover re-enters the same pool — so the collection has to stay sorted-ish while it changes. A heap does that in O(log n) per pop and push. C#\'s <code>PriorityQueue</code> is a <b>min</b>-heap, so each stone is enqueued with priority <code>-weight</code>: the most negative priority leaves first, which is the heaviest stone.',
+    blurb: 'Each round smashes the two <b>heaviest</b> stones, and the leftover goes straight back into the pile — so the order changes after every smash and a one-time sort is useless. A max-heap keeps the two heaviest one pop away, always. C# ships only a min-heap, so the priority is <code>-weight</code>. Equal stones both vanish (the <code>continue</code>); otherwise the difference is enqueued.',
     legend: [
-      {cls:'hot', text:'the two stones being smashed'},
-      {cls:'good', text:'stone just enqueued'},
-      {cls:'dim', text:'resting in the heap'}
+      {cls:'hot', text:'the stone being enqueued / dequeued'},
+      {cls:'in-window', text:'still in the pile'},
+      {cls:'dim', text:'smashed — no longer a stone'},
+      {cls:'ghost', text:'not thrown in yet'},
+      {cls:'good', text:'the survivor'}
     ],
     code: [
-      'PriorityQueue<int, int> pq = new PriorityQueue<int, int>();',
+      'PriorityQueue<int, int> stoneQueue = new PriorityQueue<int, int>();',
       '',
       'for (int i = 0; i < stones.Length; i++)',
       '{',
-      '    pq.Enqueue(stones[i], -stones[i]);  // negate = max-heap',
+      '    stoneQueue.Enqueue(stones[i], -stones[i]);',
       '}',
       '',
-      'while (pq.Count > 1)',
+      'while (stoneQueue.Count > 1)',
       '{',
-      '    int first = pq.Dequeue();',
-      '    int second = pq.Dequeue();',
+      '    int first = stoneQueue.Dequeue();',
+      '    int second = stoneQueue.Dequeue();',
       '',
       '    if (first == second)',
       '        continue;',
       '    else',
       '    {',
       '        var newStone = Math.Abs(first - second);',
-      '        pq.Enqueue(newStone, -newStone);',
+      '        stoneQueue.Enqueue(newStone, -newStone);',
       '    }',
       '}',
       '',
-      'bool hasElement = pq.TryPeek(out int element, out _);',
+      'bool hasElement = stoneQueue.TryPeek(out int element, out _);',
       'return hasElement ? element : 0;'
     ],
     simulate(input){
-      const s = input.s, steps = [];
-      let heap = [];
-      const sorted = () => heap.slice().sort((a, b) => b - a);
-      const board = (arr, hotN, newIdx) => pTiles('Heap — heaviest first', arr, (k) => ({
-        cls: k < hotN ? 'hot' : (k === newIdx ? 'good' : 'dim')
-      }));
-      const pills = (count, a, b, ns) => pPills('', [
-        {k:'pq.Count', v: count, cls:'accent'},
-        {k:'first', v: a === undefined ? '–' : a, cls:'hot'},
-        {k:'second', v: b === undefined ? '–' : b, cls:'hot'},
-        {k:'newStone', v: ns === undefined ? '–' : ns, cls:'good'}
-      ]);
+      const stones = input.stones, steps = [];
+      let heap = [], read = 0, log = [], curFirst = null, curSecond = null, done = false;
 
-      steps.push({lines:[1], msg:'The queue is empty. Note the two type arguments: the <b>element</b> is the stone weight, the <b>priority</b> is a separate number. That split is the whole trick — .NET only ships a min-heap, so the priority will be the negated weight while the stored value stays positive.',
-        panels: [pNote('Why negate?', 'Dequeue always pops the <b>smallest priority</b>. Enqueue stone <code>8</code> with priority <code>-8</code> and stone <code>2</code> with priority <code>-2</code>: since <code>-8 &lt; -2</code>, the 8 comes out first. A max-heap for free, no comparer class.'), pills(0)]});
+      const view = (hotIdxs, freshIdx, tags, caption, hotSrcs) => {
+        const alive = new Set(heap.filter(e => e.src >= 0).map(e => e.src));
+        const hs = new Set(hotSrcs || []);
+        const hot = hotIdxs || [];
+        return [
+          pTiles('stones (input order)', stones, (i) => ({cls:
+            hs.has(i) ? 'hot'
+            : alive.has(i) ? 'in-window'
+            : i >= read ? 'ghost' : 'dim'})),
+          pHeap('max-heap — heaviest stone at the root', heap.map((e, hi) => ({
+            v: e.w,
+            sub: e.src >= 0 ? '' : 'from a smash',
+            cls: hot.indexOf(hi) >= 0 ? 'hot' : (done && hi === 0 ? 'good' : ''),
+            fresh: hi === freshIdx
+          })), {tags: tags || [], caption: caption || '', empty: 'heap is empty', scale: 0.9}),
+          pPills('state', [
+            {k:'heap count', v: heap.length},
+            {k:'heaviest', v: heap.length ? heap[0].w : '–'},
+            {k:'first', v: curFirst === null ? '–' : curFirst, cls: curFirst === null ? '' : 'hot'},
+            {k:'second', v: curSecond === null ? '–' : curSecond, cls: curSecond === null ? '' : 'hot'}
+          ]),
+          pChips('smash log', [{left:'oldest to newest', items: log.map((e, i) => ({
+            text: e.text, sub: e.sub, cls: i === log.length - 1 ? 'hot' : ''
+          })), empty:'nothing smashed yet'}])
+        ];
+      };
 
-      for (let i = 0; i < s.length; i++){
-        heap.push(s[i]);
-        const view = sorted();
-        steps.push({lines:[3,5], msg:'Enqueue stone <b>' + s[i] + '</b> with priority <code>' + (-s[i]) + '</code>. The heap re-shuffles internally in O(log n) — it is <em>not</em> a sorted list, it only guarantees that the minimum priority (= the heaviest stone) sits at the root, which is all the loop below ever asks for.',
-          panels: [board(view, 0, view.indexOf(s[i])), pills(heap.length)]});
-      }
+      const sinkFromRoot = () => {
+        let j = 0, hops = 0;
+        for (;;){
+          const l = 2 * j + 1, r = 2 * j + 2;
+          let big = j;
+          if (l < heap.length && heap[l].w > heap[big].w) big = l;
+          if (r < heap.length && heap[r].w > heap[big].w) big = r;
+          if (big === j) break;
+          const t = heap[j]; heap[j] = heap[big]; heap[big] = t;
+          j = big; hops++;
+        }
+        return hops;
+      };
 
-      steps.push({lines:[8], msg:'All ' + s.length + ' stones are in. The loop runs while <b>at least two</b> stones remain — with one or zero there is nothing left to smash, so the condition is <code>&gt; 1</code>, not <code>&gt; 0</code>.',
-        panels: [board(sorted(), 0, -1), pills(heap.length)]});
+      const popTop = () => {
+        const top = heap[0];
+        const last = heap.pop();
+        if (heap.length) heap[0] = last;
+        const hops = sinkFromRoot();
+        return {w: top.w, src: top.src, hops: hops};
+      };
 
-      while (heap.length > 1){
-        const view = sorted();
-        const first = view[0], second = view[1];
-        steps.push({lines:[10,11], msg:'Two dequeues pull the heaviest <b>' + first + '</b> into <code>first</code> and the next heaviest <b>' + second + '</b> into <code>second</code>. Order matters here: because the heap hands them back in descending weight, <code>first &gt;= second</code> is guaranteed for free.',
-          panels: [board(view, 2, -1), pills(heap.length, first, second)]});
-        heap = view.slice(2);
-        if (first === second){
-          steps.push({lines:[13,14], msg:'<b>' + first + '</b> and <b>' + second + '</b> are equal, so both stones are destroyed and nothing goes back. <code>continue</code> skips the enqueue entirely — the count just dropped by 2, and the loop re-tests <code>pq.Count &gt; 1</code>.',
-            panels: [board(sorted(), 0, -1), pills(heap.length)]});
-        } else {
-          const ns = Math.abs(first - second);
-          heap.push(ns);
-          const v2 = sorted();
-          steps.push({lines:[17,18], msg:'The smash leaves <b>' + first + ' − ' + second + ' = ' + ns + '</b>. (<code>Math.Abs</code> is belt-and-braces — the heap already ordered them.) The survivor is enqueued like any other stone, with priority <code>' + (-ns) + '</code>, so it competes on equal terms next round.',
-            panels: [board(v2, 0, v2.indexOf(ns)), pills(heap.length, first, second, ns)]});
+      const settled = (hops) => hops
+        ? ' The old last element was moved into the empty root and sank ' + hops + ' level' + (hops > 1 ? 's' : '') + ', which is all it takes to make the next-heaviest stone the new root.'
+        : ' The element moved into the root was already heavier than its children, so nothing had to sink.';
+
+      steps.push({lines:[1], msg:'One <code>PriorityQueue</code> holds the whole pile. C# always dequeues the <b>lowest</b> priority, so enqueueing with priority <code>-weight</code> flips it into a max-heap on weight: the heaviest stone is the root. The drawing shows the weights themselves, unnegated, so the biggest number is on top.', panels: view([], -1, [], 'the pile starts empty')});
+
+      for (let i = 0; i < stones.length; i++){
+        read = i + 1;
+        heap.push({w: stones[i], src: i});
+        let hi = heap.length - 1;
+        steps.push({lines:[3, 5], msg:'Stone <b>' + stones[i] + '</b> is thrown in. It lands at index ' + hi + ', the end of the backing array, then sifts up while its parent is <em>lighter</em> — a heavier stone must always sit above a lighter one.', panels: view([hi], hi, [{name:'new', idx:hi, cls:'accent'}], 'just appended, not yet in place', [i])});
+        while (hi > 0 && heap[(hi - 1) >> 1].w < heap[hi].w){
+          const par = (hi - 1) >> 1;
+          const t = heap[par]; heap[par] = heap[hi]; heap[hi] = t;
+          hi = par;
+          steps.push({lines:[5], msg:'Its parent was lighter, so the two swap and stone <b>' + stones[i] + '</b> rises to index ' + hi + '. Only the path up to the root is touched — that is why one insert costs log n and not n.', panels: view([hi], -1, [{name:'new', idx:hi, cls:'accent'}], 'sifting up', [i])});
         }
       }
 
-      const answer = heap.length ? heap[0] : 0;
-      steps.push({lines:[22,23], msg: heap.length
-          ? 'Fewer than two stones remain, so the loop exits. <code>TryPeek</code> reports <b>true</b> and hands back the lone survivor <b>' + answer + '</b> — peek, not dequeue, so the value is read without disturbing the heap.'
-          : 'Fewer than two stones remain — in fact <b>none</b> do, every pair cancelled exactly. <code>TryPeek</code> returns <b>false</b>, and the ternary supplies <b>0</b>; reading <code>element</code> blindly would have handed back an uninitialised default instead.',
-        panels: [board(sorted(), heap.length ? 1 : 0, -1), pills(heap.length)]});
+      steps.push({lines:[8], msg:'All ' + stones.length + ' stones are in, and the heap already knows which is heaviest without anything having been sorted. The loop now runs while <b>two or more</b> stones remain, because a smash needs two — with one or zero left there is nothing to do.', panels: view([], -1, [{name:'root', idx:0, cls:'accent'}], 'ready to smash')});
+
+      let guard = 0;
+      while (heap.length > 1 && guard++ < 40){
+        const a = popTop();
+        curFirst = a.w; curSecond = null;
+        steps.push({lines:[10], msg:'<code>Dequeue</code> hands back the root, the heaviest stone at <b>' + a.w + '</b>. Finding it cost no search at all — the heap has been holding it at index 0 the whole time.' + settled(a.hops), panels: view([], -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'first = ' + a.w)});
+
+        const b = popTop();
+        curSecond = b.w;
+        steps.push({lines:[11], msg:'A second <code>Dequeue</code> takes the new root, <b>' + b.w + '</b> — the heaviest of what was left, so these two really are the pair the problem says to smash together.' + settled(b.hops), panels: view([], -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'second = ' + b.w)});
+
+        if (a.w === b.w){
+          log.push({text: a.w + ' vs ' + b.w, sub:'both destroyed'});
+          steps.push({lines:[13, 14], msg:'They weigh the same, so both are destroyed and nothing comes back. <code>continue</code> skips the enqueue entirely and the pile is two stones smaller — this is the only branch where the count drops by two.', panels: view([], -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], heap.length ? heap.length + ' stones left' : 'the pile is gone')});
+        } else {
+          const w = Math.abs(a.w - b.w);
+          log.push({text: a.w + ' vs ' + b.w, sub:'leaves ' + w});
+          heap.push({w: w, src: -1});
+          let hi = heap.length - 1;
+          steps.push({lines:[15, 17, 18], msg:'The heavier stone survives with <code>' + a.w + ' - ' + b.w + '</code> = <b>' + w + '</b> left of it. That new stone is enqueued like any other, at priority <code>-' + w + '</code>, and it competes for the root on the next round exactly as an original stone would. The pile shrinks by one.', panels: view([hi], hi, [{name:'new', idx:hi, cls:'accent'}], 'new stone of weight ' + w)});
+          while (hi > 0 && heap[(hi - 1) >> 1].w < heap[hi].w){
+            const par = (hi - 1) >> 1;
+            const t = heap[par]; heap[par] = heap[hi]; heap[hi] = t;
+            hi = par;
+            steps.push({lines:[18], msg:'The leftover stone is heavier than its parent, so it keeps rising — to index ' + hi + ' now. Re-sorting the whole pile after a smash would cost n log n; this costs log n.', panels: view([hi], -1, [{name:'new', idx:hi, cls:'accent'}], 'sifting up')});
+          }
+        }
+        curFirst = null; curSecond = null;
+      }
+
+      steps.push({lines:[8, 20], msg:'The condition fails: only <b>' + heap.length + '</b> stone' + (heap.length === 1 ? '' : 's') + ' remain' + (heap.length === 1 ? 's' : '') + ', which is not enough for another smash. Each round removed two stones and put back at most one, so the pile was guaranteed to reach this point.', panels: view([], -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], heap.length ? 'one stone left' : 'nothing left')});
+
+      done = true;
+      const ans = heap.length ? heap[0].w : 0;
+      steps.push({lines:[22, 23], msg:'<code>TryPeek</code> looks without removing and reports <b>' + (heap.length ? 'true' : 'false') + '</b>' + (heap.length ? ', so the surviving stone is the answer.' : ' — every stone annihilated an equal partner, and the problem defines that case as 0.') + ' Answer: <b>' + ans + '</b>. Building the heap cost n log n and each of the ' + log.length + ' round' + (log.length === 1 ? '' : 's') + ' paid a couple of log n pops, giving <b>O(n log n)</b> time in <b>O(n)</b> space.', panels: view([], -1, heap.length ? [{name:'answer', idx:0, cls:'accent'}] : [], heap.length ? 'the last stone' : 'no stone survived')});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.
