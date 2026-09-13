@@ -651,62 +651,71 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Same Binary Tree',
-  note: 'two trees match only if their holes line up too, not just their values',
+  note: 'sameness is a pairwise question - one pair of positions per unit of work, and the walk stops at the first pair that disagrees',
   inputs: [
-    {id:'p', label:'tree p (heap order, x = missing)', value:'1,2,3,4,5', width:200},
-    {id:'q', label:'tree q', value:'1,2,3,4,6', width:200}
+    {id:'p', label:'first tree (level order)', value:'1,2,3,4,5', width:240},
+    {id:'q', label:'second tree (level order)', value:'1,2,3,4,6', width:240}
   ],
   parse(raw){
-    const build = (s) => {
-      const parts = String(s).split(',').map(t => t.trim()).filter(t => t.length).slice(0, 7);
-      if (!parts.length) return 'bad';
-      const out = parts.map(t => (/^(x|n|null|\.|-)$/i.test(t) ? null : Number(t)));
-      if (out.some(v => v !== null && !Number.isFinite(v))) return 'bad';
-      for (let i = 1; i < out.length; i++){
-        if (out[i] !== null && out[(i - 1) >> 1] === null) return 'orphan';
+    const a = parseLevelOrder(raw.p, 31);
+    if (!a) return {ok:false, msg:'Enter a level-order first tree, e.g. 1,2,3,4,5'};
+    const b = parseLevelOrder(raw.q, 31);
+    if (!b) return {ok:false, msg:'Enter a level-order second tree, e.g. 1,2,3,4,6'};
+    const na = treeFromLevelOrder(a), nb = treeFromLevelOrder(b);
+    if (!na.length || !nb.length) return {ok:false, msg:'Both trees need at least a root node.'};
+    if (na.length > 10 || nb.length > 10) return {ok:false, msg:'Keep each tree to 10 nodes or fewer so the whole run stays watchable.'};
+    return {
+      ok:true,
+      value:{p: a, q: b},
+      normalized:{
+        p: a.map(v => v === null ? 'null' : v).join(','),
+        q: b.map(v => v === null ? 'null' : v).join(',')
       }
-      return out;
     };
-    const P = build(raw.p), Q = build(raw.q);
-    if (P === 'bad') return {ok:false, msg:'Tree p: comma-separated values in heap order, with x for a missing node.'};
-    if (P === 'orphan') return {ok:false, msg:'Tree p: a node cannot hang under a missing parent — slot i sits below slot (i−1)/2.'};
-    if (Q === 'bad') return {ok:false, msg:'Tree q: comma-separated values in heap order, with x for a missing node.'};
-    if (Q === 'orphan') return {ok:false, msg:'Tree q: a node cannot hang under a missing parent — slot i sits below slot (i−1)/2.'};
-    const fmt = a => a.map(v => (v === null ? 'x' : v)).join(',');
-    return {ok:true, value:{p:P, q:Q}, normalized:{p: fmt(P), q: fmt(Q)}};
   },
   shuffle(){
-    const t = [];
-    for (let i = 0; i < 7; i++){
-      if (i > 0 && (t[(i - 1) >> 1] === null || Math.random() < 0.25)) t.push(null);
-      else t.push(1 + Math.floor(Math.random() * 9));
-    }
-    const u = t.slice();
-    const live = [];
-    for (let i = 1; i < 7; i++) if (t[i] !== null) live.push(i);
-    if (live.length && Math.random() < 0.7){
-      const j = live[Math.floor(Math.random() * live.length)];
-      if (Math.random() < 0.5){ u[j] = 1 + Math.floor(Math.random() * 9); }
-      else {
-        for (let k = 0; k < 7; k++){ let a = k; while (a > j) a = (a - 1) >> 1; if (a === j) u[k] = null; }
+    const build = (d) => {
+      if (d > 3 || Math.random() < 0.25) return null;
+      return {v: 1 + Math.floor(Math.random() * 9), l: build(d + 1), r: build(d + 1)};
+    };
+    const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
+    const flat = (root) => {
+      const out = [], q = [root];
+      while (q.length){
+        const x = q.shift();
+        if (!x){ out.push(null); continue; }
+        out.push(x.v); q.push(x.l); q.push(x.r);
       }
+      while (out.length && out[out.length - 1] === null) out.pop();
+      return out;
+    };
+    let root = null, n = 0;
+    while (n < 3 || n > 7){ root = build(1); n = count(root); }
+    const a = flat(root);
+    const b = a.slice();
+    if (Math.random() > 0.25 && b.length > 1){
+      const idx = 1 + Math.floor(Math.random() * (b.length - 1));
+      if (b[idx] === null || Math.random() < 0.5) b[idx] = 1 + Math.floor(Math.random() * 9);
+      else b[idx] = null;
     }
-    const fmt = a => a.map(v => (v === null ? 'x' : v)).join(',');
-    return {p: fmt(t), q: fmt(u)};
+    while (b.length && b[b.length - 1] === null) b.pop();
+    if (!b.length) b.push(1);
+    const s = (x) => x.map(v => v === null ? 'null' : v).join(',');
+    return {p: s(a), q: s(b)};
   },
   solutions: [
   {
-    label: 'Recursive DFS, one pair at a time',
-    badge: 'O(n) time · O(h) stack · recursion · optimal.cs',
-    blurb: 'The definition is already recursive: two trees are the same exactly when the roots agree <em>and</em> the left subtrees agree <em>and</em> the right subtrees agree. So each call decides one pair of nodes and hands the rest to two smaller calls, with <code>&&</code> abandoning the right subtree the instant the left disagrees.',
+    label: 'Recursion: one call decides one pair of positions',
+    badge: 'O(n) time · O(n) space · recursive DFS · optimal.cs',
+    blurb: 'Two trees are the same when their roots agree and both pairs of subtrees agree, so one call handles exactly one pair of positions. Both missing is <code>true</code>; one missing, or two different values, is <code>false</code>; anything else is deferred to the two child pairs. The <code>&amp;&amp;</code> abandons the walk at the first disagreement.',
     legend: [
-      {cls:'hot', text:'pair being compared now'},
-      {cls:'win', text:'on the call stack, undecided'},
-      {cls:'good', text:'settled — this pair matched'},
-      {cls:'dim', text:'not visited'}
+      {cls:'hot', text:'the pair being compared now'},
+      {cls:'in-window', text:'callers parked, waiting on this path'},
+      {cls:'good', text:'pair settled: identical'},
+      {cls:'dim', text:'pair came back different'}
     ],
     code: [
-      'bool IsSameTree(TreeNode first, TreeNode second)',
+      'public bool IsSameTree(TreeNode first, TreeNode second)',
       '{',
       '    if (first == null && second == null)',
       '    {',
@@ -714,258 +723,457 @@ const PROBLEM = {
       '    }',
       '    if (first != null && second != null && first.val == second.val)',
       '    {',
-      '        return IsSameTree(first.left, second.left)',
-      '            && IsSameTree(first.right, second.right);',
+      '        return (IsSameTree(first.left, second.left)',
+      '                && IsSameTree(first.right, second.right));',
       '    }',
       '    return false;',
       '}'
     ],
     simulate(input){
-      const P = input.p, Q = input.q, steps = [];
-      let deepest = 0;
-      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
-      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
-      let n = 1; while (n <= deepest) n = n * 2 + 1;
-      const vp = i => (i < P.length ? P[i] : null);
-      const vq = i => (i < Q.length ? Q[i] : null);
-      const show = v => (v === null ? 'null' : String(v));
-      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
-      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
-      const done = {}, active = {}, frames = [];
-      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (active[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
-      const panels = (cur) => [
-        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
-        pTiles('Tree q — same slots', cells(vq), cls(cur)),
-        pSlots('Call stack (outermost → current)', frames.length ? frames.map((f, k) => ({text: path(f), cls: k === frames.length - 1 ? 'hot' : 'win'})) : [{text:'empty', cls:'dim'}]),
-        pPills('', [
-          {k:'first', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
-          {k:'second', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
-          {k:'depth', v: frames.length, cls:'accent'}
+      /* Both trees are keyed by the same thing: the path from the root. That is
+         what the recursion actually compares - a position, not a node. */
+      const mk = (vals, pre) => {
+        const base = treeFromLevelOrder(vals);
+        const path = {}, byPath = {}, nodes = [], info = {};
+        base.forEach(n => {
+          const pp = n.parent === null ? '' : path[n.parent] + n.side;
+          path[n.id] = pp;
+          const id = pre + ':' + (pp || 'root');
+          const node = {id: id, v: n.v, side: n.side,
+            parent: n.parent === null ? null : pre + ':' + (path[n.parent] || 'root')};
+          nodes.push(node); info[id] = node; byPath[pp] = id;
+        });
+        /* Missing children are real arguments to this code, so draw them: a node
+           with v null renders as a dashed empty slot. */
+        base.forEach(n => {
+          const pp = path[n.id];
+          ['L','R'].forEach(side => {
+            if (byPath[pp + side] !== undefined) return;
+            const id = pre + ':' + (pp + side);
+            const node = {id: id, v: null, side: side, parent: pre + ':' + (pp || 'root')};
+            nodes.push(node); info[id] = node; byPath[pp + side] = id;
+          });
+        });
+        return {nodes: nodes, byPath: byPath, info: info};
+      };
+
+      const P = mk(input.p, 'p'), Q = mk(input.q, 'q');
+      const pathOf = (id) => { const s = id.slice(id.indexOf(':') + 1); return s === 'root' ? '' : s; };
+      const spot = (pa) => pa === '' ? 'root' : 'root-' + pa.split('').join('-');
+      const vAt = (t, pa) => { const id = t.byPath[pa]; return id === undefined ? null : t.info[id].v; };
+      const show = (v) => v === null ? 'null' : String(v);
+
+      const state = {}, frames = [], steps = [];
+      let calls = 0, maxF = 0;
+
+      const drawTree = (title, t, cur, tag) => pTree(title, t.nodes.map(n => {
+        const pa = pathOf(n.id);
+        let cls = '';
+        if (cur !== null && pa === cur) cls = 'hot';
+        else if (state[pa] === true) cls = 'good';
+        else if (state[pa] === false) cls = 'dim';
+        else if (frames.some(f => f.path === pa)) cls = 'in-window';
+        return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
+      }), {
+        tags: (cur !== null && t.byPath[cur] !== undefined) ? [{name: tag, id: t.byPath[cur], cls:'accent'}] : [],
+        scale: 0.72
+      });
+
+      const fsub = (f) => {
+        if (f.left === null) return 'waiting on the left pair';
+        if (f.left === false) return 'left pair differed';
+        if (f.right === null) return 'left matched, waiting on the right';
+        return f.right ? 'both pairs matched' : 'right pair differed';
+      };
+
+      const panels = (cur, popPath, freshPath) => [
+        drawTree('first', P, cur, 'first'),
+        drawTree('second', Q, cur, 'second'),
+        pStack('call stack', [{
+          label: 'IsSameTree(first, second)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: show(vAt(P, f.path)) + ' vs ' + show(vAt(Q, f.path)),
+            sub: spot(f.path) + ' · ' + fsub(f),
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.path === freshPath,
+            popped: f.path === popPath && i === frames.length - 1
+          })),
+          empty: 'no frames open',
+          foot: 'first call',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'calls made', v: calls},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'IsSameTree', v: state[''] === undefined ? 'pending' : (state[''] ? 'true' : 'false'),
+           cls: state[''] === undefined ? '' : (state[''] ? 'good' : 'dim')}
         ])
       ];
-      const go = (i) => {
-        frames.push(i); active[i] = true;
-        const a = vp(i), b = vq(i);
-        steps.push({lines:[3], msg:'Call on <b>' + path(i) + '</b>: first = <code>' + show(a) + '</code>, second = <code>' + show(b) + '</code>. The null test comes first because it is the only way the recursion can succeed — two absent children are a legitimate match, so a passing walk always runs <em>off</em> the bottom of the tree.', panels: panels(i)});
+
+      steps.push({lines:[1], msg:'The two trees are compared position by position, and one call owns exactly one position in both of them. Nothing here searches or matches values around - <code>first</code> and <code>second</code> always sit at the same place in their own tree, so the only questions a call can ask are about that one pair. The dashed slots are part of the walk: the code recurses into missing children too, which is why line 3 comes first.', panels: panels(null, null, null)});
+
+      const walk = (pa) => {
+        const a = vAt(P, pa), b = vAt(Q, pa);
+        calls++;
+        frames.push({path: pa, left: null, right: null});
+        maxF = Math.max(maxF, frames.length);
+        const at = spot(pa);
+
         if (a === null && b === null){
-          delete active[i]; done[i] = true;
-          steps.push({lines:[3,5], msg:'Both sides are null → <b>true</b>. There is no value to compare and nothing below to descend into, so this branch is settled without touching the trees again.', panels: panels(i)});
-          frames.pop(); return true;
+          steps.push({lines:[3,5], msg:'Both trees run out at <b>' + at + '</b>, so <code>first</code> and <code>second</code> both arrive as <code>null</code>. Line 3 is asked before anything touches <code>.val</code>, which matters - two absences agree perfectly, and dereferencing either one would throw. The call answers <b>true</b> immediately. Every branch of this walk bottoms out here.', panels: panels(pa, pa, pa)});
+          state[pa] = true; frames.pop(); return true;
         }
-        if (a !== null && b !== null && a === b){
-          steps.push({lines:[7,9], msg:'Both nodes exist and <code>' + a + ' == ' + b + '</code>, so this slot agrees. Equal values here say nothing about the shape underneath, though, so the verdict is deferred to two smaller calls — left children first.', panels: panels(i)});
-          const okL = go(2 * i + 1);
-          if (!okL){
-            delete active[i];
-            steps.push({lines:[9,10], msg:'The left call returned <b>false</b>, so <code>&&</code> short-circuits: the right child of <b>' + path(i) + '</b> is never even examined. One disagreement anywhere sinks the whole tree, so there is nothing left to learn.', panels: panels(i)});
-            frames.pop(); return false;
-          }
-          steps.push({lines:[10], msg:'The left subtree of <b>' + path(i) + '</b> matched, so <code>&&</code> moves on and asks the same question of the right children.', panels: panels(i)});
-          const okR = go(2 * i + 2);
-          delete active[i]; if (okR) done[i] = true;
-          steps.push({lines:[9,10], msg:'Both children of <b>' + path(i) + '</b> have reported back: this subtree is <b>' + (okR ? 'identical' : 'different') + '</b>, and that single boolean is everything the caller needs.', panels: panels(i)});
-          frames.pop(); return okR;
+
+        if (a === null || b === null || a !== b){
+          const why = (a === null || b === null)
+            ? 'one tree has a node at this position and the other does not (<b>' + show(a) + '</b> against <b>' + show(b) + '</b>), so the <code>!= null</code> part of line 7 fails'
+            : 'both nodes exist but carry different values (<b>' + a + '</b> against <b>' + b + '</b>), so the <code>first.val == second.val</code> part of line 7 fails';
+          state[pa] = false;
+          steps.push({lines:[3,7,12], msg:'At <b>' + at + '</b> line 3 does not fire - they are not both null. Line 7 then demands all three things at once, and ' + why + '. There is no <code>else</code> to catch this: control simply falls past the block to line 12 and returns <b>false</b>. Whatever hangs below this position is never examined.', panels: panels(null, pa, null)});
+          frames.pop(); return false;
         }
-        const why = (a === null || b === null)
-          ? 'one tree has a node in this slot and the other does not, so the <em>shapes</em> differ'
-          : 'both nodes exist but ' + a + ' ≠ ' + b;
-        delete active[i];
-        steps.push({lines:[7,12], msg:'The guard fails: ' + why + '. Falling past it lands on <code>return false</code> — the one exit shared by “wrong value” and “wrong shape”, which is why no separate null bookkeeping is needed.', panels: panels(i)});
-        frames.pop(); return false;
+
+        steps.push({lines:[7,9], msg:'<b>' + show(a) + '</b> and <b>' + show(b) + '</b> both sit at <b>' + at + '</b> and agree, so line 7 passes - but agreeing here says nothing about what hangs below, and this call cannot return yet. It parks on line 9 and puts the identical question to the left pair.', panels: panels(pa, null, pa)});
+
+        const f = frames[frames.length - 1];
+        const L = walk(pa + 'L');
+        f.left = L;
+
+        if (!L){
+          state[pa] = false;
+          steps.push({lines:[9,10], msg:'The left pair came back <b>false</b>, and <code>&amp;&amp;</code> short-circuits: the second call on line 10 is never made at all. One disagreement anywhere sinks the whole tree, so there is nothing left to learn from the right side - this is how the walk quits early instead of finishing the traversal. <b>' + at + '</b> returns false.', panels: panels(null, pa, null)});
+          frames.pop(); return false;
+        }
+
+        steps.push({lines:[9,10], msg:'The left pair reported <b>true</b>, so <code>&amp;&amp;</code> has to evaluate its right operand and the second call goes out - same question, right children of <b>' + at + '</b> this time.', panels: panels(pa, null, null)});
+
+        const R = walk(pa + 'R');
+        f.right = R;
+        const ok = L && R;
+        state[pa] = ok;
+        steps.push({lines:[9,10], msg:'Both child pairs have answered (<b>' + (L ? 'true' : 'false') + '</b> and <b>' + (R ? 'true' : 'false') + '</b>), so the subtree rooted at <b>' + at + '</b> is ' + (ok ? 'identical in both trees' : 'not identical') + ' and the frame hands <b>' + (ok ? 'true' : 'false') + '</b> up. It pops, and this position is never looked at again - each pair is decided exactly once, which is the O(n).', panels: panels(null, pa, null)});
+        frames.pop(); return ok;
       };
-      const ans = go(0);
-      steps.push({lines:[ans ? 5 : 12], msg:'The root call returns <b>' + ans + '</b>. Each pair of slots is visited at most once, so the time is O(n); the only extra space is the call stack, one frame per level still open.', panels: panels(-1)});
+
+      const ans = walk('');
+
+      steps.push({lines: ans ? [9,10] : [12], msg:'The root call returns <b>' + (ans ? 'true' : 'false') + '</b>, and that is the answer. It took ' + calls + ' call(s) - one per position visited, counting the empty slots, so O(n)' + (ans ? '' : ', and fewer than the tree has positions, because the short-circuit cut the rest away') + '. The stack peaked at ' + maxF + ' frame(s): that is the O(n) space, the depth of the walk, which on a long thin tree is every node at once.', panels: panels(null, null, null)});
       return steps;
     }
   },
   {
-    label: 'Iterative BFS, two queues in lockstep',
-    badge: 'O(n) time · O(n) queues · level order · optimal-variant-2.cs',
-    blurb: 'Same rule, breadth-first. Both queues receive children in the same order, so a dequeue from each always pairs up the <em>same</em> slot of the two trees. Enqueuing <code>null</code> children is the load-bearing detail: a missing node still occupies its place, so a tree that is merely shifted can never line up value-for-value.',
+    label: 'Two queues: compare a whole level at a time',
+    badge: 'O(n) time · O(n) space · iterative BFS · optimal-variant-2.cs',
+    blurb: 'Feed both trees into their own queue in the same order and position <em>i</em> of one always faces position <em>i</em> of the other, so dequeuing once from each yields a pair to compare. Missing children are enqueued as <code>null</code> too - that is what keeps the queues in step, and it makes a shape difference show up as a null facing a node.',
     legend: [
-      {cls:'hot', text:'pair just dequeued'},
-      {cls:'win', text:'sitting in the queues'},
-      {cls:'good', text:'compared and equal'},
-      {cls:'dim', text:'not enqueued yet'}
+      {cls:'hot', text:'the pair being compared now'},
+      {cls:'in-window', text:'queued, waiting for its level'},
+      {cls:'good', text:'pair accepted as equal'},
+      {cls:'dim', text:'pair that differed'}
     ],
     code: [
-      'var queueP = new Queue<TreeNode>(new[] { p });',
-      'var queueQ = new Queue<TreeNode>(new[] { q });',
-      '',
-      'while (queueP.Count > 0 && queueQ.Count > 0)',
+      'public bool IsSameTree(TreeNode p, TreeNode q)',
       '{',
-      '    for (int i = queueP.Count; i > 0; i--)',
-      '    {',
-      '        var nodeP = queueP.Dequeue();',
-      '        var nodeQ = queueQ.Dequeue();',
+      '    var queueP = new Queue<TreeNode>(new[] { p });',
+      '    var queueQ = new Queue<TreeNode>(new[] { q });',
       '',
-      '        if (nodeP == null && nodeQ == null) continue;',
-      '        if (nodeP == null || nodeQ == null || nodeP.val != nodeQ.val)',
+      '    while (queueP.Count > 0 && queueQ.Count > 0)',
+      '    {',
+      '        for (int i = queueP.Count; i > 0; i--)',
+      '        {',
+      '            var nodeP = queueP.Dequeue();',
+      '            var nodeQ = queueQ.Dequeue();',
+      '',
+      '            if (nodeP == null && nodeQ == null) continue;',
+      '            if (nodeP == null || nodeQ == null || nodeP.val != nodeQ.val)',
+      '            {',
+      '                return false;',
+      '            }',
+      '',
+      '            queueP.Enqueue(nodeP.left);',
+      '            queueP.Enqueue(nodeP.right);',
+      '            queueQ.Enqueue(nodeQ.left);',
+      '            queueQ.Enqueue(nodeQ.right);',
+      '        }',
+      '    }',
+      '',
+      '    return true;',
+      '}'
+    ],
+    simulate(input){
+      const mk = (vals, pre) => {
+        const base = treeFromLevelOrder(vals);
+        const path = {}, byPath = {}, nodes = [], info = {};
+        base.forEach(n => {
+          const pp = n.parent === null ? '' : path[n.parent] + n.side;
+          path[n.id] = pp;
+          const id = pre + ':' + (pp || 'root');
+          const node = {id: id, v: n.v, side: n.side,
+            parent: n.parent === null ? null : pre + ':' + (path[n.parent] || 'root')};
+          nodes.push(node); info[id] = node; byPath[pp] = id;
+        });
+        base.forEach(n => {
+          const pp = path[n.id];
+          ['L','R'].forEach(side => {
+            if (byPath[pp + side] !== undefined) return;
+            const id = pre + ':' + (pp + side);
+            const node = {id: id, v: null, side: side, parent: pre + ':' + (pp || 'root')};
+            nodes.push(node); info[id] = node; byPath[pp + side] = id;
+          });
+        });
+        return {nodes: nodes, byPath: byPath, info: info};
+      };
+
+      const P = mk(input.p, 'p'), Q = mk(input.q, 'q');
+      const pathOf = (id) => { const s = id.slice(id.indexOf(':') + 1); return s === 'root' ? '' : s; };
+      const spot = (pa) => pa === '' ? 'root' : 'root-' + pa.split('').join('-');
+      const vAt = (t, pa) => { const id = t.byPath[pa]; return id === undefined ? null : t.info[id].v; };
+      const show = (v) => v === null ? 'null' : String(v);
+
+      const state = {}, inQ = {'': true}, steps = [];
+      const qp = [''], qq = [''];
+      let pairs = 0, level = 0, maxQ = 1, answer = null;
+
+      const drawTree = (title, t, cur, tag) => pTree(title, t.nodes.map(n => {
+        const pa = pathOf(n.id);
+        let cls = '';
+        if (cur !== null && pa === cur) cls = 'hot';
+        else if (state[pa] === true) cls = 'good';
+        else if (state[pa] === false) cls = 'dim';
+        else if (inQ[pa]) cls = 'in-window';
+        return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
+      }), {
+        tags: (cur !== null && t.byPath[cur] !== undefined) ? [{name: tag, id: t.byPath[cur], cls:'accent'}] : [],
+        scale: 0.72
+      });
+
+      const bucket = (label, arr, t, popping, fresh) => ({
+        label: label,
+        mode: 'queue',
+        items: arr.map((pa, i) => ({
+          text: show(vAt(t, pa)),
+          sub: spot(pa),
+          cls: (popping && i === 0) ? 'hot' : '',
+          fresh: fresh[pa] === true,
+          popped: popping && i === 0
+        })),
+        empty: 'drained',
+        foot: 'front, next out',
+        top: 'back, newest'
+      });
+
+      const panels = (cur, popping, fresh) => [
+        drawTree('p', P, cur, 'nodeP'),
+        drawTree('q', Q, cur, 'nodeQ'),
+        pStack('two queues, kept in lockstep', [
+          bucket('queueP', qp, P, popping, fresh || {}),
+          bucket('queueQ', qq, Q, popping, fresh || {})
+        ]),
+        pPills('state', [
+          {k:'pairs compared', v: pairs},
+          {k:'level', v: level},
+          {k:'queued now', v: qp.length},
+          {k:'widest queue', v: maxQ},
+          {k:'IsSameTree', v: answer === null ? 'pending' : (answer ? 'true' : 'false'),
+           cls: answer === null ? '' : (answer ? 'good' : 'dim')}
+        ])
+      ];
+
+      steps.push({lines:[3,4], msg:'Each queue is seeded with the root of its own tree. The whole method rests on one invariant: the two queues are always filled in the same order, so whatever sits at the front of one faces the same position at the front of the other. Taking one item off each therefore always gives a pair worth comparing.', panels: panels(null, false, {})});
+
+      let stop = false;
+      while (qp.length > 0 && qq.length > 0 && !stop){
+        level++;
+        const n = qp.length;
+        steps.push({lines:[6,8], msg:'Both queues are non-empty, so the loop body runs. Line 8 reads <code>queueP.Count</code> once and freezes <b>i</b> at <b>' + n + '</b> - that snapshot is what makes this level-by-level: exactly the ' + n + ' pair(s) queued right now are handled in this pass, and every child enqueued while it runs waits for the next one.', panels: panels(null, false, {})});
+
+        for (let k = 0; k < n; k++){
+          const pa = qp[0];
+          const a = vAt(P, pa), b = vAt(Q, pa);
+          const at = spot(pa);
+
+          if (a === null && b === null){
+            steps.push({lines:[10,11,13], msg:'The two fronts come off together and both are <code>null</code> - that is what a missing child at <b>' + at + '</b> looks like once it has been enqueued. Line 13 accepts the pair as equal and <code>continue</code> skips the rest of the body, so nothing is enqueued. That is precisely how the queues eventually drain and the loop can end.', panels: panels(pa, true, {})});
+            qp.shift(); qq.shift(); pairs++; delete inQ[pa]; state[pa] = true;
+            continue;
+          }
+
+          steps.push({lines:[10,11], msg:'One item comes off the front of each queue. Because both were fed in the same order, these two are the same position in the two trees: <b>' + show(a) + '</b> from <code>p</code> against <b>' + show(b) + '</b> from <code>q</code>, at <b>' + at + '</b>.', panels: panels(pa, true, {})});
+          qp.shift(); qq.shift(); pairs++; delete inQ[pa];
+
+          if (a === null || b === null || a !== b){
+            const why = (a === null || b === null)
+              ? 'one of them is <code>null</code> while the other is a real node, so the trees differ in shape here'
+              : 'both are real but hold <b>' + a + '</b> and <b>' + b + '</b>, so they differ in value';
+            state[pa] = false; answer = false; stop = true;
+            steps.push({lines:[14,16], msg:'Line 14 catches this pair: ' + why + '. Note the order of the three tests - the null checks come before <code>nodeP.val</code> is read, so the value comparison only ever runs on two real nodes. Line 16 returns <b>false</b> straight out of both loops, leaving whatever is still queued uninspected.', panels: panels(null, false, {})});
+            break;
+          }
+
+          state[pa] = true;
+          const kids = [pa + 'L', pa + 'R'];
+          const fresh = {};
+          kids.forEach(c => { qp.push(c); qq.push(c); inQ[c] = true; fresh[c] = true; });
+          maxQ = Math.max(maxQ, qp.length);
+          steps.push({lines:[14,19,20,21,22], msg:'Both are real and both hold <b>' + a + '</b>, so line 14 finds nothing wrong and the body falls through to the enqueues. All four children go in - left then right, on each queue in the same order - and the missing ones go in as <code>null</code> rather than being skipped. Skipping them would let the two queues drift apart and start pairing up unrelated positions.', panels: panels(pa, false, fresh)});
+        }
+      }
+
+      if (!stop){
+        answer = true;
+        steps.push({lines:[6,26], msg:'The queues are empty: the last level held nothing but null-against-null pairs, which enqueue nothing, so the <code>while</code> condition finally fails and line 26 returns <b>true</b>. Every position was compared once - ' + pairs + ' pair(s) - and the queues never held more than ' + maxQ + ' item(s). That peak is the widest level of the tree, which is where this version differs from the recursive one: BFS pays for width, DFS pays for depth.', panels: panels(null, false, {})});
+      }
+      return steps;
+    }
+  },
+  {
+    label: 'One explicit stack of pairs, same walk without recursion',
+    badge: 'O(n) time · O(n) space · iterative DFS · optimal-variant.cs',
+    blurb: 'The recursion carries one thing per call - a pair of nodes - so it can be replaced by a stack of tuples with no extra bookkeeping. Pop a pair, judge it, push its two child pairs. Pushing right before left puts left on top, so the popping order is the same pre-order the recursive version takes, and a mismatch returns from inside the loop.',
+    legend: [
+      {cls:'hot', text:'the pair being compared now'},
+      {cls:'in-window', text:'pair sitting on the stack, not yet judged'},
+      {cls:'good', text:'pair accepted as equal'},
+      {cls:'dim', text:'pair that differed'}
+    ],
+    code: [
+      'public bool IsSameTree(TreeNode root1, TreeNode root2)',
+      '{',
+      '    var stack = new Stack<(TreeNode, TreeNode)>();',
+      '    stack.Push((root1, root2));',
+      '',
+      '    while (stack.Count > 0)',
+      '    {',
+      '        var (node1, node2) = stack.Pop();',
+      '',
+      '        if (node1 == null && node2 == null) continue;',
+      '        if (node1 == null || node2 == null || node1.val != node2.val)',
       '        {',
       '            return false;',
       '        }',
-      '',
-      '        queueP.Enqueue(nodeP.left);',
-      '        queueP.Enqueue(nodeP.right);',
-      '        queueQ.Enqueue(nodeQ.left);',
-      '        queueQ.Enqueue(nodeQ.right);',
+      '        stack.Push((node1.right, node2.right));',
+      '        stack.Push((node1.left, node2.left));',
       '    }',
-      '}',
       '',
-      'return true;'
+      '    return true;',
+      '}'
     ],
     simulate(input){
-      const P = input.p, Q = input.q, steps = [];
-      let deepest = 0;
-      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
-      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
-      let n = 1; while (n <= deepest) n = n * 2 + 1;
-      const vp = i => (i < P.length ? P[i] : null);
-      const vq = i => (i < Q.length ? Q[i] : null);
-      const show = v => (v === null ? 'null' : String(v));
-      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
-      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
-      const done = {}, front = {0:true};
-      const qidx = [0];
-      let level = 0;
-      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (front[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
-      const panels = (cur) => [
-        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
-        pTiles('Tree q — same slots', cells(vq), cls(cur)),
-        pChips('Queues, front → back', [
-          {left:'queueP', items: qidx.map((i, k) => ({text: show(vp(i)), sub: path(i), cls: k === 0 ? 'head' : ''})), empty:'(empty)'},
-          {left:'queueQ', items: qidx.map((i, k) => ({text: show(vq(i)), sub: path(i), cls: k === 0 ? 'head' : ''})), empty:'(empty)'}
-        ]),
-        pPills('', [
-          {k:'level', v: level, cls:'accent'},
-          {k:'nodeP', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
-          {k:'nodeQ', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
-          {k:'queued', v: qidx.length}
+      const mk = (vals, pre) => {
+        const base = treeFromLevelOrder(vals);
+        const path = {}, byPath = {}, nodes = [], info = {};
+        base.forEach(n => {
+          const pp = n.parent === null ? '' : path[n.parent] + n.side;
+          path[n.id] = pp;
+          const id = pre + ':' + (pp || 'root');
+          const node = {id: id, v: n.v, side: n.side,
+            parent: n.parent === null ? null : pre + ':' + (path[n.parent] || 'root')};
+          nodes.push(node); info[id] = node; byPath[pp] = id;
+        });
+        base.forEach(n => {
+          const pp = path[n.id];
+          ['L','R'].forEach(side => {
+            if (byPath[pp + side] !== undefined) return;
+            const id = pre + ':' + (pp + side);
+            const node = {id: id, v: null, side: side, parent: pre + ':' + (pp || 'root')};
+            nodes.push(node); info[id] = node; byPath[pp + side] = id;
+          });
+        });
+        return {nodes: nodes, byPath: byPath, info: info};
+      };
+
+      const P = mk(input.p, 'p'), Q = mk(input.q, 'q');
+      const pathOf = (id) => { const s = id.slice(id.indexOf(':') + 1); return s === 'root' ? '' : s; };
+      const spot = (pa) => pa === '' ? 'root' : 'root-' + pa.split('').join('-');
+      const vAt = (t, pa) => { const id = t.byPath[pa]; return id === undefined ? null : t.info[id].v; };
+      const show = (v) => v === null ? 'null' : String(v);
+
+      const state = {}, onS = {'': true}, steps = [];
+      const st = [''];
+      let pops = 0, maxS = 1, answer = null;
+
+      const drawTree = (title, t, cur, tag) => pTree(title, t.nodes.map(n => {
+        const pa = pathOf(n.id);
+        let cls = '';
+        if (cur !== null && pa === cur) cls = 'hot';
+        else if (state[pa] === true) cls = 'good';
+        else if (state[pa] === false) cls = 'dim';
+        else if (onS[pa]) cls = 'in-window';
+        return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
+      }), {
+        tags: (cur !== null && t.byPath[cur] !== undefined) ? [{name: tag, id: t.byPath[cur], cls:'accent'}] : [],
+        scale: 0.72
+      });
+
+      const panels = (cur, popping, fresh) => [
+        drawTree('root1', P, cur, 'node1'),
+        drawTree('root2', Q, cur, 'node2'),
+        pStack('stack of pairs', [{
+          label: 'Stack<(TreeNode, TreeNode)>',
+          mode: 'stack',
+          items: st.map((pa, i) => ({
+            text: '(' + show(vAt(P, pa)) + ', ' + show(vAt(Q, pa)) + ')',
+            sub: spot(pa),
+            cls: (popping && i === st.length - 1) ? 'hot' : '',
+            fresh: (fresh || {})[pa] === true,
+            popped: popping && i === st.length - 1
+          })),
+          empty: 'empty, the loop is over',
+          foot: 'bottom',
+          top: 'next to pop'
+        }]),
+        pPills('state', [
+          {k:'pairs popped', v: pops},
+          {k:'stack height', v: st.length},
+          {k:'deepest stack', v: maxS},
+          {k:'IsSameTree', v: answer === null ? 'pending' : (answer ? 'true' : 'false'),
+           cls: answer === null ? '' : (answer ? 'good' : 'dim')}
         ])
       ];
-      steps.push({lines:[1,2], msg:'Each queue is seeded with its own root. Two queues rather than one pair-queue, but they are filled and drained in exactly the same order, so position <b>k</b> of <code>queueP</code> always describes the same slot as position <b>k</b> of <code>queueQ</code>.', panels: panels(-1)});
-      let dead = false, ans = true;
-      while (qidx.length && !dead){
-        const count = qidx.length;
-        steps.push({lines:[4,6], msg:'Level ' + level + ' holds <b>' + count + '</b> pair' + (count === 1 ? '' : 's') + '. The <code>for</code> loop snapshots that count up front, so the children enqueued during this pass are processed as the <em>next</em> level instead of being swept into this one. The <code>while</code> checks both counts, but they can never diverge — every step enqueues to both queues or to neither.', panels: panels(-1)});
-        for (let t = 0; t < count; t++){
-          const i = qidx.shift(); delete front[i];
-          const a = vp(i), b = vq(i);
-          if (a === null && b === null){
-            done[i] = true;
-            steps.push({lines:[8,9,11], msg:'Dequeued slot <b>' + path(i) + '</b>: null on both sides. <code>continue</code> skips the enqueues, so nothing below a shared gap is ever queued — that is what stops the queues from growing forever.', panels: panels(i)});
-            continue;
-          }
-          if (a === null || b === null || a !== b){
-            const why = (a === null || b === null)
-              ? 'one tree has a node here and the other has a gap, so the shapes differ'
-              : 'both exist but ' + a + ' ≠ ' + b;
-            ans = false; dead = true;
-            steps.push({lines:[8,9,12,14], msg:'Dequeued slot <b>' + path(i) + '</b>: ' + why + '. Return <b>false</b> at once — the ' + qidx.length + ' pair' + (qidx.length === 1 ? '' : 's') + ' still queued cannot undo a disagreement.', panels: panels(i)});
-            break;
-          }
-          done[i] = true;
-          steps.push({lines:[8,9,12], msg:'Dequeued slot <b>' + path(i) + '</b>: both nodes present and <code>' + a + ' == ' + b + '</code>, so the guard lets it through and this position is confirmed.', panels: panels(i)});
-          qidx.push(2 * i + 1, 2 * i + 2);
-          front[2 * i + 1] = true; front[2 * i + 2] = true;
-          steps.push({lines:[17,18,19,20], msg:'Push both children of <b>' + path(i) + '</b> onto each queue — <code>null</code> children included, unconditionally. Skipping nulls would let a value slide into a neighbour’s slot and two differently shaped trees would compare as equal.', panels: panels(i)});
-        }
-        if (!dead) level++;
-      }
-      steps.push({lines:[ans ? 24 : 14], msg: ans
-        ? 'The queues drained together with no disagreement, so every slot of both trees was checked → <b>true</b>. Time O(n); the queues hold at most one level at a time, which for a wide tree is O(n).'
-        : 'The answer is <b>false</b>, decided at level ' + level + ' without touching the rest of the trees. Time is still O(n) worst case, and the space is whatever the widest level reached.',
-        panels: panels(-1)});
-      return steps;
-    }
-  },
-  {
-    label: 'Iterative DFS with an explicit stack of pairs',
-    badge: 'O(n) time · O(h) stack · explicit stack · optimal-variant.cs',
-    blurb: 'The recursion’s call stack, written out by hand as a stack of node <em>pairs</em>. Right is pushed before left so left pops first, which reproduces the recursive version’s preorder exactly. When a pair disagrees, the function returns with entries still on the stack — that leftover is precisely the work <code>&&</code> short-circuits away.',
-    legend: [
-      {cls:'hot', text:'pair just popped'},
-      {cls:'win', text:'waiting on the stack'},
-      {cls:'good', text:'compared and equal'},
-      {cls:'dim', text:'never pushed'}
-    ],
-    code: [
-      'var stack = new Stack<(TreeNode, TreeNode)>();',
-      'stack.Push((root1, root2));',
-      '',
-      'while (stack.Count > 0)',
-      '{',
-      '    var (node1, node2) = stack.Pop();',
-      '',
-      '    if (node1 == null && node2 == null) continue;',
-      '    if (node1 == null || node2 == null || node1.val != node2.val)',
-      '    {',
-      '        return false;',
-      '    }',
-      '    stack.Push((node1.right, node2.right));',
-      '    stack.Push((node1.left, node2.left));',
-      '}',
-      '',
-      'return true;'
-    ],
-    simulate(input){
-      const P = input.p, Q = input.q, steps = [];
-      let deepest = 0;
-      for (let i = 0; i < P.length; i++) if (P[i] !== null) deepest = Math.max(deepest, i);
-      for (let i = 0; i < Q.length; i++) if (Q[i] !== null) deepest = Math.max(deepest, i);
-      let n = 1; while (n <= deepest) n = n * 2 + 1;
-      const vp = i => (i < P.length ? P[i] : null);
-      const vq = i => (i < Q.length ? Q[i] : null);
-      const show = v => (v === null ? 'null' : String(v));
-      const path = i => { if (i === 0) return 'root'; let s = '', k = i; while (k > 0){ s = (k % 2 === 1 ? 'L' : 'R') + s; k = (k - 1) >> 1; } return s; };
-      const cells = f => Array.from({length: n}, (_, i) => (f(i) === null ? 'x' : String(f(i))));
-      const done = {}, front = {0:true};
-      const st = [0];
-      const cls = (cur) => (i) => ({cls: i === cur ? 'hot' : (front[i] ? 'win' : (done[i] ? 'good' : 'dim'))});
-      const panels = (cur) => [
-        pTiles('Tree p — heap order, x = missing node', cells(vp), cls(cur)),
-        pTiles('Tree q — same slots', cells(vq), cls(cur)),
-        pChips('Stack of pairs, bottom → top', [
-          {left:'stack', right:'top is rightmost', items: st.map((i, k) => ({text: show(vp(i)) + ' / ' + show(vq(i)), sub: path(i), cls: k === st.length - 1 ? 'head' : ''})), empty:'(empty)'}
-        ]),
-        pPills('', [
-          {k:'node1', v: cur >= 0 ? show(vp(cur)) : '–', cls:'hot'},
-          {k:'node2', v: cur >= 0 ? show(vq(cur)) : '–', cls:'hot'},
-          {k:'stack size', v: st.length, cls:'accent'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'One stack of <b>tuples</b>, seeded with the two roots. Pairing the nodes inside a single stack entry is what keeps the two walks aligned — there is no way for one tree to advance a step ahead of the other.', panels: panels(-1)});
-      let dead = false, ans = true;
-      while (st.length && !dead){
-        const i = st.pop(); delete front[i];
-        steps.push({lines:[4,6], msg:'Pop <b>' + path(i) + '</b>: <code>node1 = ' + show(vp(i)) + '</code>, <code>node2 = ' + show(vq(i)) + '</code>. Because the stack is LIFO, this is the deepest-left pair outstanding — the same node the recursive version would be sitting on right now.', panels: panels(i)});
-        const a = vp(i), b = vq(i);
+
+      steps.push({lines:[3,4], msg:'The stack holds tuples, not nodes - and that is the whole trick, because a call in the recursive version also carried exactly one pair. Seeding it with <code>(root1, root2)</code> is the same as the outermost call. From here the loop just drains work items until one of them fails or none are left.', panels: panels(null, false, {})});
+
+      while (st.length > 0){
+        const pa = st[st.length - 1];
+        const a = vAt(P, pa), b = vAt(Q, pa);
+        const at = spot(pa);
+
         if (a === null && b === null){
-          done[i] = true;
-          steps.push({lines:[8], msg:'Both null: agreement by absence. <code>continue</code> pushes no children, which is this version’s equivalent of the recursion hitting its base case and returning true.', panels: panels(i)});
+          steps.push({lines:[6,8,10], msg:'The top pair comes off, and both halves are <code>null</code> - the trees simply end together at <b>' + at + '</b>. Line 10 treats that as agreement and <code>continue</code> jumps back to the loop test without pushing anything. Work items that push nothing are what let the stack shrink to empty.', panels: panels(pa, true, {})});
+          st.pop(); pops++; delete onS[pa]; state[pa] = true;
           continue;
         }
+
+        steps.push({lines:[6,8], msg:'The stack is not empty, so line 8 pops the top pair and destructures it into <code>node1</code> and <code>node2</code>: <b>' + show(a) + '</b> against <b>' + show(b) + '</b>, both at <b>' + at + '</b>. The tuple guarantees the two nodes belong to the same position - nothing has to be recomputed to know that.', panels: panels(pa, true, {})});
+        st.pop(); pops++; delete onS[pa];
+
         if (a === null || b === null || a !== b){
           const why = (a === null || b === null)
-            ? 'one side is a node and the other is a gap — the shapes disagree'
-            : 'both are present but ' + a + ' ≠ ' + b;
-          ans = false; dead = true;
-          steps.push({lines:[9,11], msg:'The guard fires: ' + why + '. Return <b>false</b> with <b>' + st.length + '</b> pair' + (st.length === 1 ? '' : 's') + ' still on the stack — abandoned work, exactly what <code>&&</code> short-circuits past in the recursive form.', panels: panels(i)});
+            ? 'one side is <code>null</code> and the other is a real node, so the shapes diverge here'
+            : 'both nodes exist but hold <b>' + a + '</b> and <b>' + b + '</b>';
+          state[pa] = false; answer = false;
+          steps.push({lines:[11,13], msg:'Line 11 rejects this pair: ' + why + '. The two null tests are sequenced before <code>node1.val</code> for a reason - by the time the value comparison is reached, both references are known to be real. Line 13 returns <b>false</b> from inside the loop, abandoning everything still on the stack: that is this version of the short-circuit.', panels: panels(null, false, {})});
           break;
         }
-        done[i] = true;
-        st.push(2 * i + 2, 2 * i + 1);
-        front[2 * i + 2] = true; front[2 * i + 1] = true;
-        steps.push({lines:[9,13,14], msg:'<code>' + a + ' == ' + b + '</code> with both nodes present, so this slot is settled and the children of <b>' + path(i) + '</b> go on the stack. Right is pushed <em>first</em> so left ends up on top and is popped next — reverse the two pushes and the traversal order changes, though the final true/false answer would not.', panels: panels(i)});
+
+        state[pa] = true;
+        const fresh = {};
+        st.push(pa + 'R'); onS[pa + 'R'] = true; fresh[pa + 'R'] = true;
+        st.push(pa + 'L'); onS[pa + 'L'] = true; fresh[pa + 'L'] = true;
+        maxS = Math.max(maxS, st.length);
+        steps.push({lines:[11,15,16], msg:'This pair agrees, so the work splits in two: the right children are pushed first and the left children second, which leaves the left pair on top. That ordering is not cosmetic - it makes the pops come out in the same left-first order the recursive version visits, so the two produce identical walks. Missing children are pushed as <code>null</code> and are dealt with by line 10 when their turn comes.', panels: panels(pa, false, fresh)});
       }
-      steps.push({lines:[ans ? 17 : 11], msg: ans
-        ? 'The stack emptied without a single guard failing, so every reachable pair of slots matched → <b>true</b>. Time O(n), and the stack never holds more than about one entry per level of depth.'
-        : 'The answer is <b>false</b>. Same verdict and same visiting order as the recursion, with the frames stored on the heap instead of the call stack — which is what makes this version safe on a tree deep enough to overflow it.',
-        panels: panels(-1)});
+
+      if (answer === null){
+        answer = true;
+        steps.push({lines:[6,19], msg:'The stack has run dry - every pair that was pushed has been judged and none of them failed - so the loop test on line 6 falls through to line 19 and returns <b>true</b>. It popped ' + pops + ' pair(s), one per position including the empty slots, and never held more than ' + maxS + ' at once. That peak tracks the depth of the tree, exactly what the recursive version was spending on call frames.', panels: panels(null, false, {})});
+      }
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

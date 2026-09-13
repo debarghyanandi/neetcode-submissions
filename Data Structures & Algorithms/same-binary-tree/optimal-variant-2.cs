@@ -1,13 +1,13 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant-2.cs  O(n) time / O(n) space
-// -  iterative BFS with two queues, level-by-level compare   [bfs-compare]
-// -  ties with optimal-variant.cs on O(n) time / O(n) space
+// -  iterative BFS with two queues, level-by-level compare
+// -  [bfs-pairwise-compare]
+// -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (from submission-2)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Each node enqueued/dequeued once; queue width can reach O(n) at the
-// -  widest level, a mechanism distinct from the stack-based DFS
-// -  approaches.
+// -  each node enqueued/dequeued once from twin queues advanced in
+// -  lockstep, including null placeholders to preserve shape
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -43,80 +43,64 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Lockstep BFS - twin queues, nulls enqueued as placeholders
+ PATTERN : BFS lockstep - two queues, nulls as placeholders
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-2.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 WHY THIS PATTERN
-  Tree equality is a positional claim: whatever sits at position k of p must
-  match position k of q in both value and existence. Any traversal order proves
-  that, provided both trees are walked in the identical order and missing
-  children are visible rather than skipped. Two queues advanced in lockstep give
-  exactly that. The recursive form does the same comparison on the call stack;
-  this version moves the frontier onto the heap, so depth costs nothing - a
-  10^5-node right-skewed chain walks fine here and would blow the stack in the
-  naive recursion. That is the real reason to keep this variant around.
+  Tree identity is a shape claim plus a value claim. Walking both trees in the
+  same order and comparing position by position settles both at once, so the
+  traversal order itself is the proof - no serialization, no hashing. queueP and
+  queueQ are stepped in exact lockstep: one Dequeue from each per iteration, so
+  the i-th node pulled from queueP and the i-th from queueQ are always the same
+  coordinate in their respective trees.
 INVARIANT
-  queueP.Count == queueQ.Count everywhere either queue is touched. True at entry
-  (one seed each, p and q). Inside the body every iteration dequeues exactly one
-  from each, and the four Enqueue calls all sit under the same branch - either
-  both queues grow by two or neither grows at all. There is no path that pushes
-  to one without pushing to the other. That single fact carries two things: it
-  makes the bound taken from queueP.Count legal to apply to queueQ.Dequeue(),
-  and it makes the && in the while condition redundant, since one queue emptying
-  implies the other did.
-ALGORITHM
-  1. Seed queueP with p and queueQ with q. A null seed is not special-cased - it
-  falls into the same null handling as any other node.
-  2. Freeze the level width as i = queueP.Count, then process that many pairs.
-  3. nodeP == null && nodeQ == null: this position agrees and is a dead end.
-  continue, enqueue nothing.
-  4. Exactly one null, or nodeP.val != nodeQ.val: the trees disagree at this
-  position. return false, no need to look further.
-  5. Both non-null and equal: enqueue left then right of each, nulls included,
-  so the next level's slots stay aligned.
-  6. Both queues drain together. Falling out of the while means every position
-  on every level agreed - return true. Two null trees hit this on the first
-  pass: one pair, both null, continue, queues empty, true.
-NULLS ARE DATA
-  Guarding the Enqueue calls with a null check would quietly break the whole
-  thing. p = [1,2] and q = [1,null,2] produce the same value sequence in BFS
-  order once nulls are dropped, and would compare equal despite being different
-  trees. Enqueueing null pins every node's children into fixed slots, so the
-  left-versus-right distinction survives into the next level and a shape
-  mismatch surfaces as a one-null-one-node pair. The price is that the queue
-  carries a null for every absent child - each leaf contributes two of them.
+  queueP.Count == queueQ.Count at the top of every iteration. It holds initially
+  (both seeded with one element) and is preserved by the body: each pass
+  dequeues exactly one from each, and either enqueues two into each (the matched
+  non-null case) or two into neither (the both-null continue, and the return
+  false path exits). Everything else in the method leans on this. It is why
+  bounding the inner loop with queueP.Count is safe for queueQ.Dequeue(), and
+  why the while condition testing both counts is redundant - either test alone
+  would do.
+WHY THE NULLS GO IN
+  queueP.Enqueue(nodeP.left) runs unconditionally, so nulls sit in the queue as
+  real entries. That is what encodes shape. Drop them - enqueue only non-null
+  children - and take p = node 1 with left child 2 versus q = node 1 with right
+  child 2: each queue receives exactly one entry holding value 2, every
+  comparison passes, and the method wrongly returns true. With nulls kept,
+  queueP holds [2, null] and queueQ holds [null, 2], and the next level hits
+  nodeP != null with nodeQ == null and returns false. The null placeholder is
+  the only thing distinguishing a left child from a right child here.
+THE THREE-WAY CHECK
+  Order matters in the two guards. Both-null is tested first and continues,
+  which is the accept case for a missing subtree. The second line then catches
+  exactly one null (mismatched shape) and, only once both are known non-null,
+  dereferences val. Reversing them would null-deref on the both-null pair. Note
+  also that the seed accepts p == null and q == null with no special case: the
+  first iteration compares them, continues, and the queues drain to the final
+  return true.
+TERMINATION
+  Each non-null node is dequeued once and enqueues two entries; each null is
+  dequeued once and enqueues nothing. So total enqueues are bounded at 1 + 2n
+  and every entry is dequeued exactly once - the loop cannot spin. The both-null
+  continue is the drain: a tree of n nodes puts n+1 nulls into the queue as its
+  frontier, and those nulls consume themselves without producing successors.
 WATCH OUT
   for (int i = queueP.Count; i > 0; i--) evaluates queueP.Count once, in the
-  initializer, before the body starts enqueueing into that same queue. That is
-  the point of the descending form. But notice that nothing in this method uses
-  the level boundary - no per-level accumulator, no depth counter, no result
-  flushed at the end of a row. The inner for loop is inherited from the
-  level-order template and does no work here; collapsing it to a plain while
-  (queueP.Count > 0) that dequeues one pair per turn is behaviorally identical.
-  The correctness rests on the pairwise lockstep, not on levels, so do not let
-  the batching mislead you into thinking level alignment is what is being
-  checked.
-FOLLOW-UPS
-  Why two queues instead of one Queue<(TreeNode, TreeNode)> of pairs? A single
-  queue of tuples makes the count invariant structural instead of something you
-  have to argue - there is no way to desynchronize. Say so before the
-  interviewer does; the two-queue version is the one that needs the proof.
-  Swap BFS for a stack and you get the iterative DFS variant with the same shape
-  and the same null-placeholder requirement.
-  Mirror problem (Symmetric Tree): same skeleton, but seed both queues from the
-  same root's two children and enqueue in opposite orders - left.left against
-  right.right, left.right against right.left.
-  Subtree of Another Tree: this method becomes the inner predicate, called at
-  every candidate root.
-TRIGGER
-  Reach for lockstep twin-queue BFS when two structures must be compared
-  position by position and recursion depth is a stated or suspected risk -
-  degenerate skewed trees, or an environment where stack depth is capped. If
-  depth is bounded and you just want the answer, the three-line recursion is
-  easier to write correctly and harder to get wrong. Choose this one for a
-  reason you can name, not by default.
+  initializer. That snapshot is load-bearing: the body grows queueP, so a
+  condition of the form i < queueP.Count re-read each pass would chase a moving
+  target and never exit. Also note the level grouping this for loop creates is
+  decorative - nothing in the body reads the level boundary, and collapsing it
+  to a flat while over the queue would behave identically.
+WHY THIS ROUTE OVER RECURSION
+  The recursive DFS on this problem does the same work, but its stack depth
+  tracks tree height, so a 10^4-node right spine risks blowing the call stack.
+  Here a skewed tree keeps the queue at roughly two entries per level, and the
+  peak cost lands on the widest level instead - a real trade, not a wash. The
+  price is bookkeeping: two explicit containers and the count invariant to
+  maintain, versus one line of recursion.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

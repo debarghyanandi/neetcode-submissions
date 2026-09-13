@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T07:37:25.111Z",
+  "updatedAt": "2026-09-13T08:05:36.942Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3231,32 +3231,23 @@
         "optimal.cs": {
           "version": 1,
           "codePrint": "06a6c0453e9e",
-          "renames": [
-            "p->first",
-            "q->second"
-          ]
+          "renames": []
         },
         "optimal-variant.cs": {
           "version": 1,
           "codePrint": "0801c6b09dbf",
-          "renames": [
-            "p->root1",
-            "q->root2"
-          ]
+          "renames": []
         },
         "optimal-variant-2.cs": {
           "version": 1,
           "codePrint": "689324c4e7fa",
-          "renames": [
-            "q1->queueP",
-            "q2->queueQ"
-          ]
+          "renames": []
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3280,33 +3271,46 @@
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "recursive DFS, pairwise compare",
-          "approachKey": "dfs-compare",
+          "approachKey": "dfs-pairwise-compare",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "iterative DFS with explicit stack, pairwise compare",
-          "approachKey": "dfs-compare",
+          "approachKey": "dfs-pairwise-compare",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "stack"
+          ]
         },
         "optimal-variant-2.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "iterative BFS with two queues, level-by-level compare",
-          "approachKey": "bfs-compare",
+          "approachKey": "bfs-pairwise-compare",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "queue"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant-2.cs",
@@ -3317,7 +3321,13 @@
           "optimal-variant-2.cs": "689324c4e7fa",
           "optimal-variant.cs": "0801c6b09dbf"
         },
-        "builtAt": "2026-09-07T05:10:27.113Z"
+        "structures": [
+          "tree",
+          "call-stack",
+          "queue",
+          "stack"
+        ],
+        "builtAt": "2026-09-13T08:05:36.939Z"
       }
     },
     "search-2d-matrix": {
