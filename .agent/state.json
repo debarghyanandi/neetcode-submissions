@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T11:57:59.316Z",
+  "updatedAt": "2026-09-13T15:04:33.450Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1678,7 +1678,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"in-order DFS, early-stop via sentinel propagation\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive in-order DFS with early-stop sentinel\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1691,7 +1691,7 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "in-order DFS, early-stop via sentinel propagation",
+          "algorithm": "recursive in-order DFS with early-stop sentinel",
           "approachKey": "inorder-traversal-early-stop",
           "correct": true,
           "bruteForce": false,
@@ -1702,16 +1702,21 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"in-order DFS, early-stop via sentinel propagation\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive in-order DFS with early-stop sentinel\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "d7fd1f9a1680"
         },
-        "builtAt": "2026-09-10T04:52:57.313Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-13T15:00:39.552Z"
       }
     },
     "last-stone-weight": {
@@ -1802,9 +1807,7 @@
         "optimal.cs": {
           "version": 1,
           "codePrint": "8bf36e8e529a",
-          "renames": [
-            "DFS->Traverse"
-          ]
+          "renames": []
         },
         "optimal-variant.cs": {
           "version": 1,
@@ -1813,8 +1816,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion tracking depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-by-level using queue size snapshot\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion carrying depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, snapshotting queue size per level\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1832,44 +1835,51 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "DFS recursion tracking depth as level index",
+          "algorithm": "DFS recursion carrying depth as level index",
           "approachKey": "dfs-track-level",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "call-stack",
-            "array"
+            "array",
+            "call-stack"
           ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS with queue, level-by-level using queue size snapshot",
+          "algorithm": "BFS with queue, snapshotting queue size per level",
           "approachKey": "bfs-queue-level-size",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "queue",
-            "array"
+            "array",
+            "queue"
           ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion tracking depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-by-level using queue size snapshot\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion carrying depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, snapshotting queue size per level\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
         ],
         "prints": {
-          "optimal.cs": "f30a147572ac",
+          "optimal.cs": "8bf36e8e529a",
           "optimal-variant.cs": "e3520d78f033"
         },
-        "builtAt": "2026-09-08T00:58:02.815Z"
+        "structures": [
+          "tree",
+          "array",
+          "call-stack",
+          "queue"
+        ],
+        "builtAt": "2026-09-13T15:04:33.449Z"
       }
     },
     "linked-list-cycle-detection": {

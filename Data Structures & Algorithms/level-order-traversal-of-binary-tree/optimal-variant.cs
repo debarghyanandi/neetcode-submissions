@@ -1,13 +1,14 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  BFS with queue, level-by-level using queue size snapshot
+// -  BFS with queue, snapshotting queue size per level
 // -  [bfs-queue-level-size]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Each node enqueued/dequeued once (plus null children), queue holds up
-// -  to O(n) entries at the widest level.
+// -  Each node (plus null children) enqueued/dequeued exactly once; queue
+// -  holds up to O(n) entries at the widest level, giving O(n) time and
+// -  space.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -47,71 +48,62 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS by level - null-padded queue, snapshotted count
+ PATTERN : BFS queue with null placeholders, size snapshot per level
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
+WHAT MAKES THIS THE VARIANT
+  The usual BFS tests a child for null before enqueueing it. This one does the
+  opposite: queue.Enqueue(node.left) and queue.Enqueue(node.right) fire
+  unconditionally, so the queue is allowed to hold nulls, and the filtering
+  happens on the consuming side with if (node != null). That single move
+  relocates the null test from producer to consumer, and correctness then rests
+  entirely on two guards further down: the if (node != null) skip and the if
+  (level.Count > 0) skip. Recall the file by that trade, not by the BFS.
 INVARIANT
-  At the top of every while pass, the queue holds exactly the child slots
-  produced by the previous pass: each real node of the current level,
-  interleaved with null placeholders where a parent was missing a child. Nothing
-  from an older level is still in there, and nothing from the next level has
-  been added yet. So queue.Count at that instant is precisely the number of
-  dequeues needed to drain this level - the level boundary is a number, never a
-  marker you have to search for.
-WHY THE COUNTDOWN LOOP IS THE WHOLE TRICK
+  At the top of every while iteration, the queue holds exactly the child slots
+  produced by the previous level: one entry for every real node at the current
+  depth, plus one null entry for every missing child of the level above. So
+  queue.Count at that moment is a slot count, not a node count. Reading it into
+  i makes the for loop drain precisely that frontier; everything enqueued during
+  the drain sits behind the boundary and belongs to the next iteration.
+WHY THE LOOP BOUND IS CORRECT
   for (int i = queue.Count; i > 0; i--) evaluates queue.Count once, in the
-  initializer, before any child is enqueued. i is a frozen copy of the level
-  width; the condition i > 0 compares against a local, so the bound cannot drift
-  while the body grows the queue. Write it the natural-looking way instead - for
-  (int i = 0; i < queue.Count; i++) - and the bound slides forward every time
-  you enqueue two children, so the loop never exits until the whole tree is
-  drained and result collapses to a single level containing every node.
-THE NULL-PADDED QUEUE
-  This version enqueues node.left and node.right unconditionally and moves the
-  null test to the dequeue side (if (node != null)). Two consequences follow
-  directly. First, every leaf contributes two nulls, so the queue carries up to
-  about twice the widest level's worth of entries rather than exactly the widest
-  level. Second, after the deepest real level is processed the queue is
-  non-empty - it holds only nulls - so the while loop runs one extra phantom
-  pass that dequeues them all and builds an empty level. That pass is inherent
-  to the design, not a defect.
-THE TWO GUARDS ARE NOT EQUALLY LOAD-BEARING
-  if (level.Count > 0) is doing real work: it is what swallows the phantom pass.
-  Delete it and result ends with a spurious empty list on every non-empty input.
-  The early if (root == null) return result is, by contrast, redundant. Trace
-  it: a null root gets enqueued, the single pass dequeues it, the node != null
-  test skips it, level stays empty, the guard drops it, the queue is now empty
-  and the while exits with an empty result. Same answer. Keep the check as a
-  statement of intent and a one-comparison fast path, but do not claim it as the
-  reason null input is safe - the guard below is.
-TRACE ON 3 / 9 20 / NULL NULL 15 7
-  1. queue [3]. i=1: pop 3, level [3], push 9,20. result [[3]].
-  2. queue [9,20]. i=2: pop 9, level [9], push null,null; pop 20, level [9,20],
-  push 15,7. result gains [9,20]. queue [null,null,15,7].
-  3. i=4: two nulls popped and discarded, then 15 and 7 append to level and push
-  four nulls. result gains [15,7]. queue is four nulls.
-  Note what pass 3 proves: the padding nulls left by level 2 sit in the same
-  queue pass as the real nodes of level 3, and because i was snapshotted at 4
-  they are consumed by exactly that pass rather than leaking into the next one.
-  4. i=4: four nulls, level empty, guard discards, queue empty, loop exits.
-WATCH OUT
-  The null-sentinel variant of level-order BFS - enqueue one null after each
-  level and treat a dequeued null as end-of-level - is incompatible with this
-  file. Here null already means "absent child", so a sentinel null would be
-  indistinguishable from padding and every level boundary would fire at the
-  wrong place. If you want to switch to sentinels, you must first go back to
-  testing node.left != null before enqueueing. Pick one meaning for null in the
-  queue and hold it.
-FOLLOW-UPS THIS SHAPE INVITES
-  Every per-level variant reuses the snapshotted for loop untouched and changes
-  only what happens to level. Bottom-up order: result.Insert(0, level), or build
-  as here and reverse at the end. Zigzag: level.Reverse() on alternate passes,
-  toggled by result.Count % 2. Right-side view: take the last element of level.
-  Maximum width: compare level.Count. Average per level: sum level. The only
-  thing the interviewer can attack is the boundary logic, and that is the one
-  line you must be able to justify from memory.
+  initializer, and then counts down against a fixed number. The two Enqueue
+  calls in the body grow the queue without moving the target. Write it instead
+  as for (int i = 0; i < queue.Count; i++) and Count is re-read on every test,
+  so the children you just appended get pulled into the same level list and the
+  whole tree collapses into one row. This is the most likely follow-up question
+  on the file: state that the bound is a snapshot, not a live read.
+WHY LEVEL.COUNT > 0 IS LOAD-BEARING
+  The deepest real level enqueues only nulls - one or two per leaf, never zero.
+  The queue is therefore non-empty, so while runs one extra time, dequeues that
+  all-null frontier, adds nothing to level, and enqueues nothing. Without the
+  guard, result would end with a stray empty list and be wrong by one element.
+  That same all-null pass is also what terminates the algorithm: a null dequeue
+  produces no successors, so the queue drains and cannot refill.
+THE ROOT NULL CHECK IS REDUNDANT
+  if (root == null) return result is defensive, not required. Delete it and the
+  null-root case still works: the queue starts as [null], the first pass
+  dequeues it, if (node != null) skips it, level stays empty, if (level.Count >
+  0) drops it, the queue is empty, and an empty result is returned. Worth
+  knowing so you can answer honestly if asked which checks are structural - only
+  the two inside the loop are.
+WHAT THIS COSTS
+  Total enqueues are roughly 2n + 1 rather than n, and the queue peaks near
+  twice the maximum tree width because the null siblings occupy slots alongside
+  the real ones. The asymptotics do not move, but if an interviewer asks what
+  you would change, the answer is to test each child before enqueueing: that
+  removes the null filter, removes the empty-level guard, removes the extra
+  trailing pass, and halves peak queue occupancy. This variant exists to show
+  the pattern, not to beat the direct form.
+TRIGGER
+  Reach for snapshot-the-queue-size BFS whenever the output is grouped by depth
+  rather than flattened - right side view, level averages, zigzag ordering,
+  minimum depth, bottom-up levels. The instant the problem says per level, the
+  fixed-count inner drain is the shape you want; the level list that gets
+  appended to result is just the accumulator hung off it.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
