@@ -33,57 +33,78 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Iterative DFS - explicit stack, swap children in place
+ PATTERN : Iterative DFS - explicit stack, swap children on pop
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-2.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 WHY THIS PATTERN
-  The recursive version of this problem is three lines, so the only reason to
-  write the loop is control over the stack. Recursion depth here equals tree
-  height, and a degenerate tree (every node has one child) drives that to n and
-  blows the CLR call stack. Stack<TreeNode> moves the same frames onto the heap,
-  where the only limit is memory. That is the whole argument for this file - it
-  buys robustness on skewed input, nothing else.
+  Inverting a tree is a pure per-node action: at every node, left and right
+  trade places, and nothing else about the tree changes. So this is a full
+  traversal with one constant-time operation at each stop, and the only real
+  design choice is how you walk the nodes. The Stack<TreeNode> here stands in
+  for the call stack of the recursive version, which is the point of this
+  variant: recursion depth on a skewed tree is bounded by the thread's stack,
+  while an explicit stack is bounded only by heap memory.
 CORRECTNESS ARGUMENT
-  Two claims. (1) Every node is pushed exactly once: root is pushed before the
-  loop, and each node pushes its two children only at the moment it is popped,
-  and each node has exactly one parent, so it is pushed by exactly one pop. (2)
-  Every popped node has its two child pointers swapped. Together, every node in
-  the tree gets its children swapped exactly once, which is the definition of
-  the inverted tree. Nothing here depends on the order pops happen in.
-INVARIANT
-  The body of the loop touches only node.left and node.right - it never reads or
-  writes any pointer inside the subtrees hanging off them. So the swap at one
-  node commutes with the swap at any other node. That is why LIFO vs FIFO does
-  not matter, and why swapping before pushing is safe: the pushes read node.left
-  and node.right after the swap, so they push the two children in the other
-  order, but it is still the same two children. Swap-then-push and
-  push-then-swap enqueue identical sets.
-WALK THE POINTERS
-  leftChild exists because this is a plain three-step swap and C# has no
-  tuple-free way around it here. Drop it and write node.left = node.right first,
-  and both fields now point at the original right child - the original left
-  subtree is unreachable and lost. If you want it terser, (node.left,
-  node.right) = (node.right, node.left) is the same three steps with the temp
-  hidden by the compiler.
+  Two facts do all the work.
+
+  1. Every node is pushed exactly once. In a tree each node is the child of
+  exactly one parent, so it is reached by exactly one of the two guarded pushes;
+  root is pushed once explicitly. Push-once plus pop-once means each node is
+  swapped exactly once - never skipped, never double-swapped (a second swap
+  would undo the first).
+
+  2. The swap at a node writes only that node's left and right fields. Swaps at
+  two different nodes touch disjoint memory, so they commute. Order of
+  visitation is therefore irrelevant to the result - preorder, postorder, level
+  order all produce the same tree.
+THE SWAP
+  leftChild exists because node.left = node.right destroys the old left pointer
+  before you can save it. Without the temp, writing node.left = node.right then
+  node.right = node.left leaves both fields pointing at the original right
+  subtree and the entire left subtree is dropped from the tree - no crash, no
+  infinite loop, just a silently wrong answer that a small symmetric test case
+  can still pass. After the two assignments, node.left holds what used to be the
+  right subtree.
+PUSH ORDER IS A NON-ISSUE
+  The two pushes read node.left and node.right AFTER the reassignment, so what
+  actually goes on the stack is the original right child first, then the
+  original left. That looks like a bug on a skim, but the swap only relabels
+  which pointer names which subtree - the set of children is identical before
+  and after. The same two subtrees get visited either way; moving the pushes
+  above the swap would only flip the pop order, which point 2 of the correctness
+  argument already showed does not matter.
 WATCH OUT
-  The null handling is split across two places and both are load-bearing. The
-  guard at the top returns null for an empty tree, so root is never pushed as
-  null. Inside the loop, children are filtered by the two if-checks before being
-  pushed, so the stack only ever holds non-null references and node.Pop() needs
-  no null test. If you move the null check to the pop site instead, you must
-  remove it from the push site or you are paying for it twice - just do not do
-  neither. Also note the stack peaks at roughly the widest level of the tree, so
-  a bushy tree costs more here than a skewed one, which is the opposite of the
-  recursive version's cost profile.
-THE FOLLOW-UP
-  Expect: change it to BFS. Swap Stack for Queue<TreeNode>, Push for Enqueue,
-  Pop for Dequeue, Count stays - the loop body is otherwise unchanged, precisely
-  because of the commuting-swaps argument above. Expect also: does the caller
-  see the change? Yes - root is mutated in place and the returned reference is
-  the same object that was passed in, so any other reference the caller holds to
-  that tree now sees the inverted version. There is no copy.
+  The if (root == null) return null; guard is load-bearing, not defensive
+  decoration. Both pushes are null-checked, so no null ever enters the stack and
+  node inside the loop is guaranteed non-null. Remove the top guard and a null
+  root gets pushed, popped, and node.left throws a NullReferenceException on the
+  first iteration.
+
+  Second: this mutates in place and hands back the same object the caller passed
+  in. root is never reassigned - only children's pointers are. Any reference the
+  caller was holding to a subtree is now hanging off the opposite side of its
+  parent.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  "Make it BFS." It is a one-line edit: change Stack<TreeNode> to
+  Queue<TreeNode> and Push/Pop to Enqueue/Dequeue. Nothing else moves, and the
+  correctness argument above carries over unchanged because it never depended on
+  order.
+
+  "What does the stack actually hold at peak?" Shape-dependent. On a left-skewed
+  chain, each pop pushes exactly one node, so the stack never holds more than
+  one node at a time - precisely the case where the recursive version would nest
+  n frames. The worst case is the wide one: a perfect tree accumulates roughly
+  the bottom level, about n/2 nodes.
+TRIGGER
+  Reach for this shape when the task is "mirror", "flip", or "invert" a tree, or
+  any transform where each node's update depends only on that node's own fields.
+  When per-node work is independent, skip the debate about traversal order and
+  pick whichever container is easiest to reason about. Contrast with problems
+  where the update depends on children's results (height, diameter, sum of
+  subtree) - those need a genuine postorder and this pop-and-mutate loop will
+  not do.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

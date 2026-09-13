@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  DFS recursion tracking depth/level   [dfs-track-level]
+// #  DFS recursion tracking depth as level index   [dfs-track-level]
 // #  ties with optimal-variant.cs on O(n) time / O(n) space
 // #
-// #  YOU SOLVED THIS YOURSELF (from submission-0)
+// #  YOU SOLVED THIS YOURSELF
 // #
 // #  Visits each node once via preorder DFS, appending to the list for its
-// #  level; recursion stack depth is O(h) which is O(n) worst case for a
+// #  depth; recursion stack depth is O(h) which is O(n) worst case for a
 // #  skewed tree.
 // ##########################################################################
 
@@ -20,11 +20,11 @@ public class Solution
         if (root == null)
             return res;
 
-        DFS(root, 0);
+        Traverse(root, 0);
         return res;
     }
 
-    private void DFS(TreeNode root, int level)
+    private void Traverse(TreeNode root, int level)
     {
         if (root == null)
             return;
@@ -40,81 +40,89 @@ public class Solution
 
         res[level].Add(root.val);
 
-        DFS(root.left, level + 1);
-        DFS(root.right, level + 1);
+        Traverse(root.left, level + 1);
+        Traverse(root.right, level + 1);
     }
 }
 
 /*
 ================================================================================
- PATTERN : DFS preorder + depth index - new row on first visit
+ PATTERN : DFS preorder carrying a depth index into res[level]
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  Level order does not require a queue. It requires that every value land in the
-  bucket for its depth, and that within a bucket the values sit left to right.
-  DFS gets both if you carry the depth down as the level parameter and let res
-  double as the bucket list. The line that makes it work is the res.Count ==
-  level test: it is the "have I ever been this deep before" question, answered
-  without a visited set, a depth counter, or a pre-pass to measure height.
+  Level order is usually reached for with a queue, but the queue only exists to
+  discover which level a node belongs to. Here the level is already known: it is
+  handed down the recursion as the second parameter of Traverse, incremented
+  once per edge. Once you carry the depth explicitly, you no longer need to
+  visit nodes in level order at all - you only need each node to land in the
+  right bucket. That frees the traversal to be a plain preorder recursion, which
+  is shorter than the BFS version and has no queue bookkeeping.
 INVARIANT
-  At every entry into DFS, level <= res.Count.
+  At every call to Traverse(root, level) with root != null: res.Count >= level,
+  and res.Count == level exactly when this is the first node ever visited at
+  that depth.
 
-  It holds at the root: level 0, res empty, 0 <= 0. It is preserved because
-  level only ever grows by exactly 1 per recursive call, and the moment level
-  equals res.Count the code appends one list, restoring level < res.Count before
-  res[level] is touched. So res.Count is exactly the number of distinct depths
-  already reached, and res[level] can never throw an out-of-range. Note the
-  check is == and not >=; anything else would be papering over a broken
-  invariant rather than relying on it.
-CORRECTNESS - WHY THE ROWS COME OUT LEFT TO RIGHT
-  This is the follow-up an interviewer will actually ask, because DFS visiting
-  order looks nothing like level order.
+  The lower bound holds by induction. The root is called with level 0 and
+  res.Count >= 0 trivially. Any child is called with level + 1, and the parent
+  has just executed the res.Add / res[level].Add pair, so res.Count >= level + 1
+  when the child runs. res.Count is therefore never smaller than level, which is
+  what makes res[level].Add safe - the index is always in range after the guard.
 
-  Take two nodes u and v at the same depth, with u to the left of v. Let a be
-  their lowest common ancestor. Since they are distinct and equally deep,
-  neither is an ancestor of the other, so u sits in a.left's subtree and v sits
-  in a.right's subtree. DFS(a) runs DFS(a.left, ...) to completion before
-  DFS(a.right, ...), so u's Add fires before v's Add. Both Adds target the same
-  res[level] and List.Add appends. Therefore the row is built in left-to-right
-  order. The preorder-vs-inorder choice does not matter for the row contents -
-  only that left recurses before right.
-THE TRAP
-  res is an instance field, not a local. Nothing clears it. Call LevelOrder
-  twice on the same Solution object and the second call appends onto the first
-  result's rows - a genuine bug that a judge harness hides because it constructs
-  a fresh Solution per test case. The null-root branch makes it visible: it
-  returns the same shared, possibly non-empty list. The fix is to make res a
-  local passed into DFS, or to assign res = new List<List<int>>() at the top of
-  LevelOrder.
+  The equality half is the trick: lists are only ever appended to the end of
+  res, so res.Count is the number of levels touched so far, i.e. 1 + the deepest
+  level seen. res.Count == level means this level has not been reached yet, so
+  create its list. If res.Count > level, the list already exists and we just
+  append.
+ALGORITHM
+  1. If root is null, return res as-is (empty on a fresh Solution).
+  2. Call Traverse(root, 0).
+  3. In Traverse: null check, return.
+  4. If res.Count == level, push a new empty List<int> - this is the first node
+  at this depth.
+  5. Append root.val to res[level].
+  6. Recurse into root.left with level + 1, then root.right with level + 1.
+  7. Return res.
+WHY THE ORDER WITHIN A LEVEL IS CORRECT
+  This is the follow-up an interviewer will push on, because left-to-right
+  output is not obviously preserved once you abandon BFS.
 
-  Second, smaller point: the null guard in LevelOrder is redundant with the one
-  at the top of DFS. It is harmless, but if you keep it, keep it for the early
-  return, not for safety.
-WATCH OUT - THE SPACE IS RECURSION, NOT JUST OUTPUT
-  The output alone is n ints spread across the rows. The extra cost is the call
-  stack, which is one frame per level of depth: fine on a balanced tree, but a
-  fully skewed tree (every node has only a left child) puts n frames on the
-  stack and can actually overflow it in C#, where you cannot raise the limit
-  from inside the method. The BFS-with-a-Queue version has the same asymptotic
-  space (the widest level can hold about n/2 nodes) but spends it on the heap
-  instead of the stack. That is the real trade you are making here, and it is
-  the honest answer if asked which version you would ship.
-WHAT THIS UNLOCKS
-  The res.Count == level idiom generalizes to any "first node encountered at
-  each depth" problem, and those are common follow-ups:
+  Take two nodes u and v at the same depth with u to the left of v. Walk up from
+  both until their paths meet at their lowest common ancestor a. u descends into
+  a.left and v into a.right - if they descended the same way, a would not be the
+  meeting point. Preorder visits the entire a.left subtree before touching
+  a.right, so u is visited before v. Appends to res[level] happen in visit
+  order, so u.val sits before v.val in that list.
 
-  1. Right side view: recurse right before left and, instead of appending, only
-  act when res.Count == level - the first node reached at each depth is then the
-  rightmost one.
-  2. Max depth: res.Count after the traversal is the height.
-  3. Level sums or averages: replace the row list with a running total indexed
-  by level.
+  The argument rests entirely on the line order in step 6: left recursed before
+  right. Swap those two lines and every level comes out mirrored. It is the only
+  place the output order is enforced.
+WATCH OUT
+  res is an instance field initialized at construction, not a local. Traverse
+  mutates it as a side effect and LevelOrder never clears it. Call LevelOrder
+  twice on the same Solution object and the second call appends into the lists
+  left behind by the first, producing garbage. The judge constructs a fresh
+  Solution per test case so this passes, but it is the first thing a reviewer
+  flags. Fix is one line: res = new List<List<int>>() at the top of LevelOrder,
+  or make res a local and pass it into Traverse.
 
-  Each is the same skeleton with the Add line swapped, which is why it is worth
-  remembering as a shape rather than as this one problem's answer.
+  The null-root early return has the same smell - it hands back whatever res
+  currently holds rather than a guaranteed empty list.
+
+  Separately, recursion depth tracks the height of the tree, so a degenerate
+  chain of left children can exhaust the call stack. The queue-based BFS is
+  iterative and has no such ceiling; that is the real argument for preferring it
+  outside an interview.
+TRIGGER
+  Reach for depth-carrying DFS whenever the answer is indexed by level but does
+  not require processing levels in order: bottom-up level order (build res
+  identically, then reverse it), right side view (keep the last value written
+  into each res[level], or recurse right before left and take the first), max
+  level sum, level averages. Reach for a real BFS queue instead when you must
+  stop early at some level, need the node count of the current level while you
+  are processing it, or cannot risk the stack depth.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

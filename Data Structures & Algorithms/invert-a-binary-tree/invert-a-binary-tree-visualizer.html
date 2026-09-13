@@ -651,308 +651,399 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Invert a Binary Tree',
-  note: 'one independent swap per node — which order you visit them in is entirely your choice',
-  inputs: [{id:'t', label:'tree (level order, n = empty)', value:'4,2,7,1,3,6,9', width:300}],
+  note: 'every node does the same one small thing - trade its two children - and a swap here never depends on a swap there, so the visiting order is free',
+  inputs: [
+    {id:'t', label:'tree (level order)', value:'4,2,7,1,3', width:260}
+  ],
   parse(raw){
-    const parts = String(raw.t).split(',').map(s => s.trim()).filter(s => s.length);
-    if (!parts.length) return {ok:false, msg:'Enter a level-order tree, e.g. 4,2,7,1,3,6,9.'};
-    if (parts.length > 15) parts.length = 15;
-    const toks = [];
-    for (let i = 0; i < parts.length; i++){
-      const s = parts[i].toLowerCase();
-      if (s === 'n' || s === 'null' || s === '-' || s === '.' || s === '#'){ toks.push(null); continue; }
-      const v = Number(s);
-      if (!Number.isFinite(v)) return {ok:false, msg:'Use numbers, or n for an empty slot.'};
-      toks.push(v);
-    }
-    if (toks[0] === null) return {ok:false, msg:'The root cannot be empty.'};
-    for (let i = 1; i < toks.length; i++){
-      if (toks[i] !== null && toks[(i - 1) >> 1] === null){
-        return {ok:false, msg:'Slot ' + i + ' has a value but its parent slot is empty. This is a full level-order array, so the children of an empty slot must be empty too.'};
-      }
-    }
-    while (toks.length && toks[toks.length - 1] === null) toks.pop();
-    if (toks.filter(x => x !== null).length < 2) return {ok:false, msg:'Needs at least two nodes for the inversion to show anything.'};
-    return {ok:true, value:{t: toks}, normalized:{t: toks.map(x => x === null ? 'n' : x).join(',')}};
+    const vals = parseLevelOrder(raw.t, 31);
+    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 4,2,7,1,3'};
+    const nodes = treeFromLevelOrder(vals);
+    if (!nodes.length) return {ok:false, msg:'The tree needs at least a root node.'};
+    if (nodes.length > 9) return {ok:false, msg:'Keep the tree to 9 nodes or fewer so the whole run stays watchable.'};
+    return {
+      ok:true,
+      value:{t: vals},
+      normalized:{t: vals.map(v => v === null ? 'null' : v).join(',')}
+    };
   },
   shuffle(){
-    const vals = randInts(7, 1, 9);
-    const toks = [vals[0], vals[1], vals[2]];
-    for (let i = 3; i < 7; i++) toks.push(Math.random() < 0.72 ? vals[i] : null);
-    while (toks.length && toks[toks.length - 1] === null) toks.pop();
-    return {t: toks.map(x => x === null ? 'n' : x).join(',')};
+    const build = (d) => {
+      if (d > 3 || Math.random() < 0.3) return null;
+      return {v: 1 + Math.floor(Math.random() * 9), l: build(d + 1), r: build(d + 1)};
+    };
+    const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
+    const flat = (root) => {
+      const out = [], q = [root];
+      while (q.length){
+        const x = q.shift();
+        if (!x){ out.push(null); continue; }
+        out.push(x.v); q.push(x.l); q.push(x.r);
+      }
+      while (out.length && out[out.length - 1] === null) out.pop();
+      return out;
+    };
+    let root = null, n = 0;
+    while (n < 3 || n > 6){ root = build(1); n = count(root); }
+    return {t: flat(root).map(v => v === null ? 'null' : v).join(',')};
   },
   solutions: [
   {
-    label: 'Recursive DFS, swap on the way back up',
-    badge: 'O(n) time · O(n) space · recursion · optimal.cs',
-    blurb: 'A tree is inverted when every node has its two children swapped — nothing else about it changes. Recursion gets that almost for free: mirror the right subtree, mirror the left subtree, then write the results back <b>crossed over</b>. The two assignments <em>are</em> the swap, so no temp pointer is needed.',
+    label: 'Recursion: invert both sides, then cross them over',
+    badge: 'O(n) time · O(n) space · recursive post-order DFS · optimal.cs',
+    blurb: 'One call owns one node. It sends the right child off to be inverted, then the left, and only once both have come back does it assign them to the opposite sides. Capturing the two returned roots in locals first is what removes the need for a temp swap, and a <code>null</code> argument returns itself - an inverted empty subtree is still empty.',
     legend: [
-      {cls:'hot', text:'the call running right now'},
-      {cls:'head', text:'frame waiting on its children'},
-      {cls:'good', text:'inverted and returned'},
-      {cls:'dim', text:'not reached yet / empty slot'}
+      {cls:'hot', text:'the node this call owns'},
+      {cls:'in-window', text:'callers parked, waiting on this path'},
+      {cls:'good', text:'children swapped, call returned'}
     ],
     code: [
       'public TreeNode InvertTree(TreeNode root)',
       '{',
       '    if (root == null)',
       '    {',
-      '        return root;          // base case: nothing to mirror',
+      '        return root;',
       '    }',
-      '',
-      '    TreeNode left  = InvertTree(root.right);',
+      '    TreeNode left = InvertTree(root.right);',
       '    TreeNode right = InvertTree(root.left);',
-      '',
-      '    root.left  = left;',
+      '    root.left = left;',
       '    root.right = right;',
       '',
       '    return root;',
       '}'
     ],
     simulate(input){
-      const steps = [];
-      const nodes = input.t.map((v, i) => v === null ? null : {v: v, id: i, left: null, right: null});
-      nodes.forEach((nd, i) => { if (nd){ nd.left = nodes[2 * i + 1] || null; nd.right = nodes[2 * i + 2] || null; } });
-      const root = nodes[0];
-      const state = {};
-      nodes.forEach(nd => { if (nd) state[nd.id] = 'dim'; });
-      const layout = () => {
-        const levels = []; let cur = [root], d = 0;
-        while (cur.some(x => x) && d < 5){
-          levels.push(cur);
-          const nx = [];
-          cur.forEach(x => { nx.push(x ? x.left : null); nx.push(x ? x.right : null); });
-          cur = nx; d++;
-        }
-        return levels;
+      const base = treeFromLevelOrder(input.t);
+      const val = {}, kids = {};
+      base.forEach(n => { val[n.id] = n.v; kids[n.id] = {L: null, R: null}; });
+      base.forEach(n => { if (n.parent !== null) kids[n.parent][n.side] = n.id; });
+      const rootId = base.length ? base[0].id : null;
+
+      const done = {}, frames = [], steps = [];
+      let calls = 0, swaps = 0, maxF = 0;
+      const lab = (id) => (id === null || val[id] === undefined) ? 'null' : String(val[id]);
+
+      /* The picture is rebuilt from the live child pointers on every step, because
+         the pointers are the only thing that changes here - no node ever moves. */
+      const draw = (cur) => {
+        const out = [];
+        const klass = (id) => {
+          if (id === cur) return 'hot';
+          if (done[id]) return 'good';
+          if (frames.some(f => f.id === id)) return 'in-window';
+          return '';
+        };
+        const emit = (id, parent, side) => {
+          out.push({id: id, v: val[id], parent: parent, side: side, cls: klass(id)});
+          ['L','R'].forEach(s => {
+            const c = kids[id][s];
+            if (c === null){
+              /* A missing child is a real argument to this method, so draw it:
+                 v null renders as a dashed empty slot. */
+              const sid = id + '/' + s;
+              out.push({id: sid, v: null, parent: id, side: s, cls: sid === cur ? 'hot' : ''});
+            } else emit(c, id, s);
+          });
+        };
+        if (rootId !== null) emit(rootId, null, null);
+        return out;
       };
-      const tree = () => pChips('Tree (pointers rewired in place)', layout().map((row, d) => ({
-        left: 'depth ' + d,
-        items: row.map(n => n ? {text: String(n.v), cls: state[n.id] || ''} : {text: '·', cls: 'dim'})
-      })));
-      const frames = [];
-      let calls = 0, swaps = 0, nulls = 0;
-      const panels = () => [
-        tree(),
-        pSlots('Call stack (bottom → top)', frames.length
-          ? frames.map((f, i) => ({text: f, cls: i === frames.length - 1 ? 'hot' : 'head'}))
-          : [{text: '(empty)', cls: 'dim'}]),
-        pPills('', [
-          {k:'live frames', v: frames.length},
+
+      const panels = (cur, popId, freshId) => [
+        pTree('tree · same nodes, re-pointed', draw(cur), {
+          tags: cur === null ? [] : [{name:'root', id: cur, cls:'accent'}],
+          scale: 0.75
+        }),
+        pStack('call stack', [{
+          label: 'InvertTree(root)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: lab(f.id),
+            sub: f.note,
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.id === freshId,
+            popped: f.id === popId && i === frames.length - 1
+          })),
+          empty: 'no frames open',
+          foot: 'first call',
+          top: 'running now'
+        }]),
+        pPills('state', [
           {k:'calls made', v: calls},
-          {k:'nodes swapped', v: swaps, cls:'good'},
-          {k:'null returns', v: nulls}
+          {k:'swaps done', v: swaps},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF}
         ])
       ];
-      steps.push({lines:[1], msg:'The whole job is “every node trades its two children”. Nothing about that decision depends on the rest of the tree, so a node can be handled the moment its two subtrees are already mirrored — which is exactly what a post-order recursion delivers.', panels: panels()});
-      const invert = (node, where) => {
+
+      steps.push({lines:[1,3], msg:'Inverting a tree does not build a new tree: every node in the answer is the node that was already there, holding its two child pointers the other way round. One call owns exactly one node, and it does its own swap <em>last</em> - after both subtrees below it have already been inverted. The dashed slots count too: the recursion is handed a missing child just as readily as a real one, which is why line 3 is the first question asked.', panels: panels(null, null, null)});
+
+      const walk = (id, slotId, where) => {
         calls++;
-        frames.push(node ? 'Invert(' + node.v + ')' : 'Invert(null)');
-        if (!node){
-          nulls++;
-          steps.push({lines:[3,5], msg:'<code>' + where + '</code> is empty, so the call returns <code>null</code> right back. This is the base case that stops the recursion, and it is also the correct answer — an empty subtree mirrored is still empty. Every leaf spends two calls here.', panels: panels()});
+        const fid = id === null ? slotId : id;
+        frames.push({id: fid, note: 'just entered'});
+        maxF = Math.max(maxF, frames.length);
+
+        if (id === null){
+          steps.push({lines:[3,5], msg:'This call was handed ' + where + ', and there is nothing there - <code>root</code> arrives as <code>null</code>. Line 3 catches it before a single <code>.left</code> or <code>.right</code> is read, which is the only thing standing between this walk and a null dereference. Line 5 hands the null straight back, and that is a real answer, not a special case: an empty subtree inverted is still an empty subtree, so the caller can store it as-is. Every branch bottoms out here.', panels: panels(fid, fid, fid)});
           frames.pop();
           return null;
         }
-        state[node.id] = 'hot';
-        steps.push({lines:[3,8], msg:'Node <b>' + node.v + '</b> (' + where + ') is real, so the base case is skipped. It cannot swap yet — its subtrees must be inverted first. Note the crossing is already in the naming: the result of <code>InvertTree(root.right)</code> is stored in a local called <code>left</code>.', panels: panels()});
-        state[node.id] = 'head';
-        const l = invert(node.right, 'root.right of ' + node.v);
-        const r = invert(node.left, 'root.left of ' + node.v);
-        state[node.id] = 'hot';
-        node.left = l;
-        node.right = r;
-        swaps++;
-        state[node.id] = 'good';
-        steps.push({lines:[11,12,14], msg:'Both subtrees came back mirrored, so node <b>' + node.v + '</b> finishes the job: <code>root.left = left</code> plants the inverted right subtree on the left, and <code>root.right = right</code> does the reverse. No temp pointer is needed because both children were captured in locals <em>before</em> either field was overwritten. Returning <code>root</code> hands this finished subtree to the parent frame.', panels: panels()});
+
+        const L0 = kids[id].L, R0 = kids[id].R;
+        const v = lab(id);
+        frames[frames.length - 1].note = 'waiting on the right subtree';
+        steps.push({lines:[3,7], msg:'<b>' + v + '</b> is a real node, so line 3 does not fire and the work starts. Line 7 reads <code>root.right</code> - <b>' + lab(R0) + '</b> - and hands it to a fresh call. Reading it <em>now</em> matters: line 10 is going to overwrite that field, and this call captured the original first. The frame parks here, unable to assign anything until the subtree below reports back inverted.', panels: panels(id, null, id)});
+
+        walk(R0, id + '/R', 'the right child of <b>' + v + '</b>');
+
+        frames[frames.length - 1].note = 'right done, waiting on the left';
+        steps.push({lines:[7,8], msg:'The right subtree came back fully inverted and its root, <b>' + lab(R0) + '</b>, is now sitting in the local called <code>left</code> - named for where it is going, not where it came from. Line 8 asks the identical question of <code>root.left</code>, which is still the original <b>' + lab(L0) + '</b>, because nothing has been assigned to this node yet.', panels: panels(id, null, null)});
+
+        walk(L0, id + '/L', 'the left child of <b>' + v + '</b>');
+
+        kids[id].L = R0; kids[id].R = L0;
+        swaps++; done[id] = true;
+        steps.push({lines:[9,10,12], msg:'Both subtrees under <b>' + v + '</b> are inverted, so this frame finally does its own one piece of work: <code>root.left</code> takes <b>' + lab(R0) + '</b> and <code>root.right</code> takes <b>' + lab(L0) + '</b>. The two locals are what make this safe without a temp variable - both originals were captured on lines 7 and 8, long before either field was written. Line 12 returns <b>' + v + '</b> itself: the node identity never changes, only where it points.', panels: panels(id, id, null)});
         frames.pop();
-        return node;
+        return id;
       };
-      invert(root, 'the root');
-      steps.push({lines:[14], msg:'Stack empty, tree fully mirrored: <b>' + swaps + '</b> swaps and <b>' + nulls + '</b> null returns, ' + calls + ' calls total — one per node plus one per empty child slot, so O(n). The extra space is the call stack itself, which is the tree height (O(n) for a degenerate tree).', panels: panels()});
+
+      walk(rootId, null, 'the root of the whole tree');
+
+      steps.push({lines:[12], msg:'The outermost call returns the very node it was given, now the root of a mirrored tree. It cost ' + calls + ' call(s) - one per node plus one per empty slot, so O(n) - and exactly ' + swaps + ' swap(s), one per node, because no node is ever visited twice. The stack peaked at ' + maxF + ' frame(s), which is the depth of the tree: that is the O(n) space, and on a tree that is one long chain it really is every node at once.', panels: panels(null, null, null)});
       return steps;
     }
   },
   {
-    label: 'Iterative DFS with an explicit stack',
-    badge: 'O(n) time · O(n) space · stack · optimal-variant-2.cs',
-    blurb: 'The recursion\'s only real contribution is “reach every node once”, and a stack does that without call frames. Pop a node, swap its two child pointers through a temp, push whichever children exist so they get the same treatment. Because each swap touches one node only, the visit order is free.',
+    label: 'One explicit stack, same walk without recursion',
+    badge: 'O(n) time · O(n) space · iterative DFS · optimal-variant-2.cs',
+    blurb: 'A call in the recursive version carried one thing - a node - so a stack of nodes replaces it outright. Pop a node, swap its children, push the children that exist. This version swaps on the way down rather than on the way back up, and gets the same tree, because one node swapping its own two pointers cannot disturb any other node.',
     legend: [
-      {cls:'hot', text:'node popped this step'},
-      {cls:'head', text:'sitting on the stack'},
-      {cls:'good', text:'already swapped'},
-      {cls:'dim', text:'not reached yet / empty slot'}
+      {cls:'hot', text:'the node being swapped now'},
+      {cls:'in-window', text:'on the stack, not yet swapped'},
+      {cls:'good', text:'children already traded places'}
     ],
     code: [
-      'if (root == null) return null;',
-      '',
-      'Stack<TreeNode> stack = new Stack<TreeNode>();',
-      'stack.Push(root);',
-      '',
-      'while (stack.Count > 0)',
+      'public TreeNode InvertTree(TreeNode root)',
       '{',
-      '    TreeNode node = stack.Pop();',
-      '',
-      '    TreeNode leftChild = node.left;   // save before overwrite',
-      '    node.left  = node.right;',
-      '    node.right = leftChild;',
-      '',
-      '    if (node.left  != null) stack.Push(node.left);',
-      '    if (node.right != null) stack.Push(node.right);',
-      '}',
-      '',
-      'return root;'
+      '    if (root == null) return null;',
+      '    Stack<TreeNode> stack = new Stack<TreeNode>();',
+      '    stack.Push(root);',
+      '    while (stack.Count > 0)',
+      '    {',
+      '        TreeNode node = stack.Pop();',
+      '        TreeNode leftChild = node.left;',
+      '        node.left = node.right;',
+      '        node.right = leftChild;',
+      '        if (node.left != null) stack.Push(node.left);',
+      '        if (node.right != null) stack.Push(node.right);',
+      '    }',
+      '    return root;',
+      '}'
     ],
     simulate(input){
-      const steps = [];
-      const nodes = input.t.map((v, i) => v === null ? null : {v: v, id: i, left: null, right: null});
-      nodes.forEach((nd, i) => { if (nd){ nd.left = nodes[2 * i + 1] || null; nd.right = nodes[2 * i + 2] || null; } });
-      const root = nodes[0];
-      const state = {};
-      nodes.forEach(nd => { if (nd) state[nd.id] = 'dim'; });
-      const layout = () => {
-        const levels = []; let cur = [root], d = 0;
-        while (cur.some(x => x) && d < 5){
-          levels.push(cur);
-          const nx = [];
-          cur.forEach(x => { nx.push(x ? x.left : null); nx.push(x ? x.right : null); });
-          cur = nx; d++;
-        }
-        return levels;
+      const base = treeFromLevelOrder(input.t);
+      const val = {}, kids = {};
+      base.forEach(n => { val[n.id] = n.v; kids[n.id] = {L: null, R: null}; });
+      base.forEach(n => { if (n.parent !== null) kids[n.parent][n.side] = n.id; });
+      const rootId = base.length ? base[0].id : null;
+
+      const done = {}, onS = {}, steps = [];
+      const st = [{id: rootId, sub: 'the root'}];
+      onS[rootId] = true;
+      let pops = 0, swaps = 0, maxS = 1;
+      const lab = (id) => id === null ? 'null' : String(val[id]);
+
+      /* Only real nodes are ever pushed here - the guards on lines 12 and 13 see
+         to that - so the drawing has no empty slots in it. */
+      const draw = (cur) => {
+        const out = [];
+        const klass = (id) => {
+          if (id === cur) return 'hot';
+          if (done[id]) return 'good';
+          if (onS[id]) return 'in-window';
+          return '';
+        };
+        const emit = (id, parent, side) => {
+          out.push({id: id, v: val[id], parent: parent, side: side, cls: klass(id)});
+          ['L','R'].forEach(s => { const c = kids[id][s]; if (c !== null) emit(c, id, s); });
+        };
+        if (rootId !== null) emit(rootId, null, null);
+        return out;
       };
-      const tree = () => pChips('Tree (pointers rewired in place)', layout().map((row, d) => ({
-        left: 'depth ' + d,
-        items: row.map(n => n ? {text: String(n.v), cls: state[n.id] || ''} : {text: '·', cls: 'dim'})
-      })));
-      const stack = [];
-      let swaps = 0, popped = 0, cur = '–';
-      const panels = () => [
-        tree(),
-        pSlots('Stack (bottom → top, top pops next)', stack.length
-          ? stack.map((n, i) => ({text: String(n.v), cls: i === stack.length - 1 ? 'head' : ''}))
-          : [{text: '(empty)', cls: 'dim'}]),
-        pPills('', [
-          {k:'popped', v: cur, cls:'hot'},
-          {k:'stack size', v: stack.length},
-          {k:'nodes swapped', v: swaps, cls:'good'},
-          {k:'nodes done', v: popped}
+
+      const panels = (cur, popping, fresh) => [
+        pTree('tree · same nodes, re-pointed', draw(cur), {
+          tags: cur === null ? [] : [{name:'node', id: cur, cls:'accent'}],
+          scale: 0.78
+        }),
+        pStack('explicit stack', [{
+          label: 'stack of nodes',
+          mode: 'stack',
+          items: st.map((it, i) => ({
+            text: lab(it.id),
+            sub: it.sub,
+            cls: (popping && i === st.length - 1) ? 'hot' : '',
+            fresh: (fresh || {})[it.id] === true,
+            popped: popping && i === st.length - 1
+          })),
+          empty: 'empty, the loop is over',
+          foot: 'bottom',
+          top: 'next to pop'
+        }]),
+        pPills('state', [
+          {k:'nodes popped', v: pops},
+          {k:'swaps done', v: swaps},
+          {k:'stack height', v: st.length},
+          {k:'deepest stack', v: maxS}
         ])
       ];
-      stack.push(root);
-      state[root.id] = 'head';
-      steps.push({lines:[1,3,4], msg:'The root is seeded onto the stack. From here the loop invariant is simple: the stack holds every node that has been discovered but not yet swapped, so the tree is finished exactly when the stack drains.', panels: panels()});
-      while (stack.length){
-        const node = stack.pop();
-        cur = node.v;
-        popped++;
-        state[node.id] = 'hot';
-        const oldLeft = node.left, oldRight = node.right;
-        const leftChild = node.left;
-        node.left = node.right;
-        node.right = leftChild;
-        swaps++;
-        steps.push({lines:[8,10,11,12], msg:'Popped node <b>' + node.v + '</b> and swapped its children: ' + (oldLeft ? '<b>' + oldLeft.v + '</b>' : 'null') + ' and ' + (oldRight ? '<b>' + oldRight.v + '</b>' : 'null') + ' trade places. <code>leftChild</code> exists purely because <code>node.left = node.right</code> destroys the old left pointer — without the copy the second assignment would write the value back onto itself.', panels: panels()});
-        if (node.left){ stack.push(node.left); state[node.left.id] = 'head'; }
-        if (node.right){ stack.push(node.right); state[node.right.id] = 'head'; }
-        state[node.id] = 'good';
-        steps.push({lines:[14,15], msg:'Now push the surviving children so they get their own swap. The swap already happened, so <code>node.left</code> is the <em>original</em> right child and goes on first — leaving the original left child on top, popped next. That reversal changes the traversal order but not the result: each node\'s swap is independent of every other node\'s.', panels: panels()});
+
+      steps.push({lines:[3,4,5], msg:'The root is not null, so line 3 lets the method through and the stack is seeded with it. A work item here is a single node and nothing else - no parent, no depth, no sibling - because swapping two pointers is entirely local business. That is the whole reason the recursion can be thrown away so cheaply: there was never anything else in a stack frame worth keeping.', panels: panels(null, false, {})});
+
+      while (st.length){
+        const id = st[st.length - 1].id;
+        const v = lab(id);
+        steps.push({lines:[6,8], msg:'The stack is not empty, so line 8 lifts the top item off: <b>' + v + '</b>. LIFO is what makes this depth-first - the node pushed most recently is the one taken next, so the walk plunges down one side before it ever comes back for the other. The order is not load-bearing for correctness, only for which picture you watch.', panels: panels(id, true, {})});
+        st.pop(); onS[id] = false; pops++;
+
+        const L0 = kids[id].L, R0 = kids[id].R;
+        kids[id].L = R0; kids[id].R = L0;
+        swaps++; done[id] = true;
+        steps.push({lines:[9,10,11], msg:'Line 9 copies <code>node.left</code> (<b>' + lab(L0) + '</b>) into <code>leftChild</code>, and that one local is the entire trick: line 10 overwrites <code>node.left</code>, so without the copy line 11 would write the new left value back into the right and leave both sides pointing at the same subtree. After the two assignments <b>' + v + '</b> holds <b>' + lab(R0) + '</b> on the left and <b>' + lab(L0) + '</b> on the right. Note that it swaps <em>before</em> looking below - the recursive version swaps after, and both land on the same tree.', panels: panels(id, false, {})});
+
+        const nl = kids[id].L, nr = kids[id].R;
+        const fresh = {};
+        if (nl !== null){ st.push({id: nl, sub: 'left child of ' + v}); onS[nl] = true; fresh[nl] = true; }
+        if (nr !== null){ st.push({id: nr, sub: 'right child of ' + v}); onS[nr] = true; fresh[nr] = true; }
+        maxS = Math.max(maxS, st.length);
+
+        let why;
+        if (nl === null && nr === null) why = 'Both children of <b>' + v + '</b> are null, so neither guard fires and nothing is pushed. That is how the stack drains: a leaf is work that creates no more work.';
+        else if (nl === null || nr === null) why = 'Only one side has a node, so only one guard fires and one item goes on. The <code>!= null</code> tests mean the stack holds nothing but real nodes, which is why the loop body can dereference <code>node</code> on line 9 without checking it first.';
+        else why = 'Both guards fire and both children go on. What they are now is the subtlety: line 12 pushes <code>node.left</code>, which after the swap is the subtree that was on the <em>right</em> a moment ago. Line 13 pushes what is now the right side last, so that is what line 8 takes next.';
+        steps.push({lines:[12,13], msg: why + ' Either way this node is finished forever - it is popped once, swapped once, and never looked at again.', panels: panels(id, false, fresh)});
       }
-      cur = '–';
-      steps.push({lines:[18], msg:'Stack empty after <b>' + popped + '</b> pops and <b>' + swaps + '</b> swaps — one of each per node. The tree is mirrored and <code>root</code> is still the same object, only its pointers moved. Space is the stack, which peaks at the tree\'s widest unexplored frontier rather than the call stack.', panels: panels()});
+
+      steps.push({lines:[6,15], msg:'The stack has run dry, so the loop test on line 6 fails and line 15 returns the same <code>root</code> reference that came in - the pointers under it have all moved, but the variable never did. It popped ' + pops + ' node(s) and made ' + swaps + ' swap(s), one apiece, and never held more than ' + maxS + ' node(s) at once. That peak tracks the depth of the tree, exactly what the recursive version was spending on call frames.', panels: panels(null, false, {})});
       return steps;
     }
   },
   {
-    label: 'BFS with a queue, level by level',
-    badge: 'O(n) time · O(n) space · queue · optimal-variant.cs',
-    blurb: 'Swapping a node\'s two pointers leaves both subtrees untouched, so the n swaps are fully independent and commute — any visit order is correct. A queue takes them level by level: dequeue, swap the two pointers through a temp, enqueue the children that exist. Same work, a wide frontier instead of a deep one.',
+    label: 'A queue: swap a whole level at a time',
+    badge: 'O(n) time · O(n) space · BFS · optimal-variant.cs',
+    blurb: 'Change the container from a stack to a queue and the code is otherwise identical - which is the point. Each node still swaps its own two pointers and enqueues whichever children exist, so the tree ends up mirrored whether the walk goes deep first or wide first. Only the peak memory differs: a queue pays for the widest level, a stack for the deepest path.',
     legend: [
-      {cls:'hot', text:'node dequeued this step'},
-      {cls:'head', text:'waiting in the queue'},
-      {cls:'good', text:'already swapped'},
-      {cls:'dim', text:'not reached yet / empty slot'}
+      {cls:'hot', text:'the node being swapped now'},
+      {cls:'in-window', text:'queued, waiting its turn'},
+      {cls:'good', text:'children already traded places'}
     ],
     code: [
-      'if (root == null) return null;',
-      '',
-      'Queue<TreeNode> queue = new Queue<TreeNode>();',
-      'queue.Enqueue(root);',
-      '',
-      'while (queue.Count > 0)',
+      'public TreeNode InvertTree(TreeNode root)',
       '{',
-      '    TreeNode current = queue.Dequeue();',
-      '',
-      '    TreeNode leftChild = current.left;',
-      '    current.left  = current.right;',
-      '    current.right = leftChild;',
-      '',
-      '    if (current.left  != null) queue.Enqueue(current.left);',
-      '    if (current.right != null) queue.Enqueue(current.right);',
-      '}',
-      '',
-      'return root;'
+      '    if (root == null) return null;',
+      '    Queue<TreeNode> queue = new Queue<TreeNode>();',
+      '    queue.Enqueue(root);',
+      '    while (queue.Count > 0)',
+      '    {',
+      '        TreeNode node = queue.Dequeue();',
+      '        TreeNode leftChild = node.left;',
+      '        node.left = node.right;',
+      '        node.right = leftChild;',
+      '        if (node.left != null) queue.Enqueue(node.left);',
+      '        if (node.right != null) queue.Enqueue(node.right);',
+      '    }',
+      '    return root;',
+      '}'
     ],
     simulate(input){
-      const steps = [];
-      const nodes = input.t.map((v, i) => v === null ? null : {v: v, id: i, left: null, right: null});
-      nodes.forEach((nd, i) => { if (nd){ nd.left = nodes[2 * i + 1] || null; nd.right = nodes[2 * i + 2] || null; } });
-      const root = nodes[0];
-      const state = {};
-      nodes.forEach(nd => { if (nd) state[nd.id] = 'dim'; });
-      const layout = () => {
-        const levels = []; let cur = [root], d = 0;
-        while (cur.some(x => x) && d < 5){
-          levels.push(cur);
-          const nx = [];
-          cur.forEach(x => { nx.push(x ? x.left : null); nx.push(x ? x.right : null); });
-          cur = nx; d++;
-        }
-        return levels;
+      const base = treeFromLevelOrder(input.t);
+      const val = {}, kids = {};
+      base.forEach(n => { val[n.id] = n.v; kids[n.id] = {L: null, R: null}; });
+      base.forEach(n => { if (n.parent !== null) kids[n.parent][n.side] = n.id; });
+      const rootId = base.length ? base[0].id : null;
+
+      const done = {}, inQ = {}, steps = [];
+      const q = [{id: rootId, sub: 'the root'}];
+      inQ[rootId] = true;
+      let outs = 0, swaps = 0, maxQ = 1;
+      const lab = (id) => id === null ? 'null' : String(val[id]);
+
+      const draw = (cur) => {
+        const out = [];
+        const klass = (id) => {
+          if (id === cur) return 'hot';
+          if (done[id]) return 'good';
+          if (inQ[id]) return 'in-window';
+          return '';
+        };
+        const emit = (id, parent, side) => {
+          out.push({id: id, v: val[id], parent: parent, side: side, cls: klass(id)});
+          ['L','R'].forEach(s => { const c = kids[id][s]; if (c !== null) emit(c, id, s); });
+        };
+        if (rootId !== null) emit(rootId, null, null);
+        return out;
       };
-      const tree = () => pChips('Tree (pointers rewired in place)', layout().map((row, d) => ({
-        left: 'depth ' + d,
-        items: row.map(n => n ? {text: String(n.v), cls: state[n.id] || ''} : {text: '·', cls: 'dim'})
-      })));
-      const queue = [];
-      let swaps = 0, done = 0, cur = '–';
-      const panels = () => [
-        tree(),
-        pSlots('Queue (front → back, front leaves next)', queue.length
-          ? queue.map((n, i) => ({text: String(n.v), cls: i === 0 ? 'head' : ''}))
-          : [{text: '(empty)', cls: 'dim'}]),
-        pPills('', [
-          {k:'dequeued', v: cur, cls:'hot'},
-          {k:'queue size', v: queue.length},
-          {k:'nodes swapped', v: swaps, cls:'good'},
-          {k:'nodes done', v: done}
+
+      const panels = (cur, popping, fresh) => [
+        pTree('tree · same nodes, re-pointed', draw(cur), {
+          tags: cur === null ? [] : [{name:'node', id: cur, cls:'accent'}],
+          scale: 0.78
+        }),
+        pStack('breadth-first frontier', [{
+          label: 'queue of nodes',
+          mode: 'queue',
+          items: q.map((it, i) => ({
+            text: lab(it.id),
+            sub: it.sub,
+            cls: (popping && i === 0) ? 'hot' : '',
+            fresh: (fresh || {})[it.id] === true,
+            popped: popping && i === 0
+          })),
+          empty: 'drained, the loop is over',
+          foot: 'front, next out',
+          top: 'back, newest'
+        }]),
+        pPills('state', [
+          {k:'nodes handled', v: outs},
+          {k:'swaps done', v: swaps},
+          {k:'queued now', v: q.length},
+          {k:'widest queue', v: maxQ}
         ])
       ];
-      queue.push(root);
-      state[root.id] = 'head';
-      steps.push({lines:[1,3,4], msg:'Root goes into the queue. FIFO instead of LIFO is the only difference from the stack version — the queue holds discovered-but-unswapped nodes, and because children are enqueued behind everything already waiting, the tree comes out one depth level at a time.', panels: panels()});
-      while (queue.length){
-        const node = queue.shift();
-        cur = node.v;
-        done++;
-        state[node.id] = 'hot';
-        const oldLeft = node.left, oldRight = node.right;
-        const leftChild = node.left;
-        node.left = node.right;
-        node.right = leftChild;
-        swaps++;
-        steps.push({lines:[8,10,11,12], msg:'Dequeued node <b>' + node.v + '</b> from the front and swapped its two pointers: ' + (oldLeft ? '<b>' + oldLeft.v + '</b>' : 'null') + ' and ' + (oldRight ? '<b>' + oldRight.v + '</b>' : 'null') + '. The <code>leftChild</code> copy is mandatory — the first assignment overwrites <code>current.left</code>, so the old value has to be saved a line earlier.', panels: panels()});
-        if (node.left){ queue.push(node.left); state[node.left.id] = 'head'; }
-        if (node.right){ queue.push(node.right); state[node.right.id] = 'head'; }
-        state[node.id] = 'good';
-        steps.push({lines:[14,15], msg:'Enqueue the children that exist. They are read <em>after</em> the swap, so <code>current.left</code> is the original right child — the two subtrees enter the queue in mirrored order. Harmless: each one still gets exactly one swap of its own, and swapping a parent never disturbs what lies below it.', panels: panels()});
+
+      steps.push({lines:[3,4,5], msg:'Same guard, same seeding, one different container. Everything the stack version relied on still holds: an item is one node, and the only thing a node needs in order to be inverted is itself. A queue hands them back oldest-first, so this walk sweeps level by level instead of diving - and because no swap depends on any other swap, that reordering changes nothing about the answer.', panels: panels(null, false, {})});
+
+      while (q.length){
+        const id = q[0].id;
+        const v = lab(id);
+        steps.push({lines:[6,8], msg:'The queue is not empty, so line 8 takes from the <em>front</em>: <b>' + v + '</b>. That single word is the whole difference from the stack version - FIFO means everything enqueued earlier is handled before anything enqueued just now, so a level is always finished before the next one starts.', panels: panels(id, true, {})});
+        q.shift(); inQ[id] = false; outs++;
+
+        const L0 = kids[id].L, R0 = kids[id].R;
+        kids[id].L = R0; kids[id].R = L0;
+        swaps++; done[id] = true;
+        steps.push({lines:[9,10,11], msg:'<code>leftChild</code> saves <b>' + lab(L0) + '</b> before line 10 destroys the field it came from; line 11 then puts it on the right. Three lines, no temp swap helper, and the node comes out holding <b>' + lab(R0) + '</b> left and <b>' + lab(L0) + '</b> right. Nothing below <b>' + v + '</b> has been touched yet, and nothing needs to have been - those subtrees will each swap their own children when their turn at the front comes.', panels: panels(id, false, {})});
+
+        const nl = kids[id].L, nr = kids[id].R;
+        const fresh = {};
+        if (nl !== null){ q.push({id: nl, sub: 'left child of ' + v}); inQ[nl] = true; fresh[nl] = true; }
+        if (nr !== null){ q.push({id: nr, sub: 'right child of ' + v}); inQ[nr] = true; fresh[nr] = true; }
+        maxQ = Math.max(maxQ, q.length);
+
+        let why;
+        if (nl === null && nr === null) why = 'Neither guard fires - <b>' + v + '</b> is a leaf, so it enqueues nothing at all. Items that add no items are what let the queue empty out and the loop stop.';
+        else if (nl === null || nr === null) why = 'One side is null, so exactly one child joins the back of the queue. Skipping the nulls is what keeps the queue free of empty slots, so line 9 can read <code>node.left</code> unguarded.';
+        else why = 'Both children go to the back of the queue, in their post-swap positions: line 12 enqueues <code>node.left</code>, which is the subtree that sat on the right until a moment ago. They wait behind everything already queued, which is why this finishes the current level first.';
+        steps.push({lines:[12,13], msg: why + ' <b>' + v + '</b> itself is done for good - each node is dequeued once and swapped once, which is the O(n).', panels: panels(id, false, fresh)});
       }
-      cur = '–';
-      steps.push({lines:[18], msg:'Queue drained: <b>' + done + '</b> nodes, <b>' + swaps + '</b> swaps, every node touched once → O(n). Peak queue size is the widest level of the tree, up to about n/2 leaves, so the space is O(n) — the same bound as the recursion, just paid for by breadth instead of depth.', panels: panels()});
+
+      steps.push({lines:[6,15], msg:'The queue is drained: the last level was all leaves, which enqueue nothing, so line 6 finally fails and line 15 returns the original <code>root</code>. ' + outs + ' node(s) handled, ' + swaps + ' swap(s) - identical to the other two versions - but the queue peaked at ' + maxQ + ' item(s), and that peak is the widest level of the tree rather than its depth. On a broad shallow tree this costs more than the stack; on a long thin one, far less.', panels: panels(null, false, {})});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

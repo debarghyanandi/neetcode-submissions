@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  BFS level-order traversal, count levels   [bfs-level-order]
+// -  BFS level-order traversal counting levels   [bfs-level-order-count]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (was optimal.cs)
+// -  Reference solution - not one you solved yourself
 // -
-// -  queue visits each node once; worst-case queue size scales with the
-// -  widest level, up to O(n)
+// -  each node enqueued/dequeued once; queue holds at most the widest
+// -  level, O(n) worst case
 // --------------------------------------------------------------------------
 
 //Breadth-First Search (BFS) find level.
@@ -44,68 +44,56 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS level-order - count levels, not depths
+ PATTERN : BFS level-order - count levels via size snapshot
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 WHY THIS PATTERN
-  Max depth is the number of levels in the tree, so you never need a per-node
-  depth value at all. If you can drain the queue one full level at a time, the
-  answer is just how many times you drained it. That reframing is the whole
-  solution: level is a counter of completed drains, not a maximum of anything.
+  The short route to max depth is recursion: 1 + max(MaxDepth(left),
+  MaxDepth(right)). This file deliberately takes the iterative road. The win is
+  that nothing here recurses, so a degenerate tree - 100k nodes each with only a
+  left child - cannot overflow the call stack the way the recursive version can.
+  The cost is the queue: this trades call frames for heap storage, and for a
+  bushy tree the queue holds a whole bottom level at once, which the recursive
+  version never materializes. Neither wins outright; pick by the shape you fear.
 INVARIANT
-  At the top of each while iteration, queue holds exactly the nodes at depth
-  level+1 (1-indexed), and nothing else.
-
-  Base: before the first iteration queue holds root alone (depth 1) and level ==
-  0.
-  Step: the inner for loop runs exactly levelSize times, dequeuing every node of
-  the current level and enqueuing every non-null child. Those children are
-  precisely the next level, so after level++ the invariant holds again.
-  Exit: queue empties only when the last level produced no children, so level
-  equals the count of levels, which is the max depth.
+  At the top of every while iteration, queue contains exactly the non-null nodes
+  at one depth, and nothing else. level counts the depths already fully drained.
+  Each pass of the body consumes precisely that depth and enqueues precisely the
+  next one, preserving the invariant. Therefore when queue.Count hits 0, no
+  further depth exists, and level equals the number of depths that held at least
+  one node - which is the max depth.
 ALGORITHM
-  1. Enqueue root, but only if it is non-null. level starts at 0.
-  2. While queue is non-empty: capture levelSize = queue.Count BEFORE touching
-  the queue.
-  3. Loop i from 0 to levelSize-1: dequeue node, enqueue node.left and
-  node.right if each is non-null.
-  4. level++ once per outer iteration, after the level is fully drained.
+  1. If root is non-null, seed queue with it; otherwise leave queue empty.
+  2. While the queue is non-empty: snapshot levelSize = queue.Count.
+  3. Dequeue exactly levelSize nodes. For each, enqueue node.left and node.right
+  if non-null.
+  4. Increment level once after the inner for loop, not once per node.
   5. Return level.
-WATCH OUT
-  levelSize must be snapshotted. Writing for (int i = 0; i < queue.Count; i++)
-  instead reads a Count that shrinks by one dequeue and grows by up to two
-  enqueues on every pass, so the loop bleeds into the next level and level stops
-  counting levels. This is the single line the whole correctness argument rests
-  on.
-
-  The null guards on enqueue are load-bearing too, not defensive noise. If nulls
-  entered the queue, queue.Count would no longer be a count of real nodes,
-  levelSize would overcount, and the final drain of an all-null level would add
-  a phantom level to the answer.
-
-  The root == null guard is what makes the empty tree return 0: skip the
-  enqueue, the while loop never runs, level stays 0. Enqueuing an unchecked root
-  would instead crash on node.left.
-DFS TRADE-OFF
-  The recursive form, 1 + Max(MaxDepth(root.left), MaxDepth(root.right)), ties
-  this on time and is shorter. What it holds is different: the call stack grows
-  with the tree's height, while this queue grows with the tree's widest level.
-  On a degenerate list-shaped tree of 10^5 nodes, recursion risks a stack
-  overflow and this queue never holds more than one node. On a perfect tree the
-  positions flip - the queue holds roughly half the nodes at the bottom level
-  while the stack stays at log n. Pick by the shape you expect, and say so when
-  asked.
-FOLLOW-UP HOOK
-  You can also do BFS with (node, depth) pairs and track a running max, skipping
-  levelSize entirely. Same asymptotics, but it stores a depth alongside every
-  queued node and loses the level boundary. Keep the levelSize form: the moment
-  a question asks for anything per level - level order lists, right side view,
-  minimum depth via early return at the first leaf - the boundary is already
-  there. Minimum depth in particular is where BFS beats DFS outright, since you
-  can return level as soon as you dequeue a node with no children instead of
-  exploring the whole tree.
+WHY LEVELSIZE IS SNAPSHOTTED
+  This single line carries the whole algorithm. queue.Count is read once, before
+  the for loop, and stored. The loop body mutates the same queue it is draining,
+  so if the loop condition re-read queue.Count each iteration it would keep
+  chasing the newly enqueued children, drain the entire tree in one pass, and
+  return 1 for every non-empty tree. The frozen levelSize is the boundary marker
+  that tells one depth from the next; there is no sentinel node and no depth
+  stored per node because the count does that job.
+EDGE CASES
+  Null root: the guard skips the Enqueue, the while never runs, and 0 is
+  returned - correct, and note that without the guard a null would be enqueued
+  and the first Dequeue would dereference it. Single leaf: one pass, both
+  children null so nothing is enqueued, level becomes 1. The null checks sit at
+  the enqueue site, not the dequeue site, which is why node is used unguarded
+  after Dequeue - the queue is guaranteed to contain no nulls.
+INTERVIEW FOLLOW-UP
+  If the question flips to min depth, BFS stops being a tie and becomes strictly
+  better: return level + 1 the moment you dequeue a node with node.left == null
+  && node.right == null, because BFS reaches the shallowest leaf before
+  descending further. Max depth has no such early exit - every node must be
+  visited either way. If asked for the values level by level, this skeleton is
+  already the answer: allocate a List of size levelSize inside the while and add
+  node.val in the for loop.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

@@ -1,14 +1,14 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  in-order traversal with early return propagation
+// -  in-order DFS, early-stop via sentinel propagation
 // -  [inorder-traversal-early-stop]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  recurses left-root-right, propagating a found value up through return
-// -  codes to stop early, but worst-case recursion depth and node visits
-// -  are O(n) for a skewed tree or large k
+// -  recurses left-root-right counting visited nodes, returning early once
+// -  the k-th is found, but worst case (skewed tree or large k) still
+// -  visits O(n) nodes and recurses O(n) deep
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -37,68 +37,75 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : In-order DFS - shared counter, -1 sentinel early exit
+ PATTERN : In-order DFS, visit counter plus -1 sentinel return
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  A BST's in-order walk (left, node, right) emits values in ascending order. So
-  "k-th smallest" reduces to "k-th node touched by an in-order walk" - no
-  sorting, no extra list. The only state needed is a count of how many nodes
-  have already been emitted, which is what visitedCount holds.
+  The BST property says every value in root.left is smaller than root.val and
+  every value in root.right is larger. Nothing local to a node tells you its
+  rank, so you cannot navigate straight to the answer without extra bookkeeping.
+  What you can do is drain the left subtree completely before touching root,
+  which emits values in ascending order; the k-th value emitted is the answer.
+  That is why the recursion order here is left, then self, then right, and never
+  anything else.
+ALGORITHM
+  1. Empty node: return -1, meaning "answer not in here".
+  2. Recurse left first and capture the result in left.
+  3. If left != -1 the answer was already found below; return it immediately and
+  touch nothing else.
+  4. Otherwise the entire left subtree has been counted, so increment
+  visitedCount for root itself.
+  5. If visitedCount == k, root is the answer; return root.val.
+  6. Otherwise recurse right and return whatever it gives back (possibly -1).
 INVARIANT
-  At the moment the line visitedCount++ executes for a given node, every node
-  with a smaller value has already been counted, and no node with a larger value
-  has. That is exactly what makes the equality test visitedCount == k correct
-  rather than approximate: the counter is a rank, not just a tally. It holds
-  because the left recursive call has fully returned before the increment, and
-  the right call has not yet started.
-HOW THE ANSWER PROPAGATES
-  Read the method as returning either a found value or the sentinel -1 for "not
-  found in this subtree".
-  1. Empty subtree: return -1 immediately, nothing counted.
-  2. Recurse left. If it came back non-sentinel, the answer was already located
-  deeper; return it untouched. Crucially this skips visitedCount++, so no node
-  is counted twice on the way up the stack.
-  3. Otherwise this node is the next in sorted order: increment, and if the rank
-  now equals k, this node's val is the answer.
-  4. Otherwise the answer lies to the right; tail into the right subtree and
-  pass its result up verbatim.
-  Once a match is found, every remaining frame is a pure pass-through, so the
-  traversal stops doing real work.
-THE TRAP - THE SENTINEL IS A VALUE
-  -1 does double duty: it means "empty/not found" and it is also a legal int
-  that root.val could hold. If any node stores -1 and it happens to be the k-th
-  smallest, step 3 returns -1, and the caller's check left != -1 reads that as
-  "not found" and keeps walking - wrong answer, silently. This works here only
-  because the problem constrains node values to be non-negative. If an
-  interviewer removes that constraint, the fix is to return a nullable int
-  (int?) or to return a bool found plus an out int result, so "found" is carried
-  out of band from the value.
-THE OTHER TRAP - MUTABLE INSTANCE STATE
-  visitedCount is a field on Solution, not a local or a ref parameter. It is
-  initialized to 0 exactly once, when the object is constructed. Calling
-  KthSmallest twice on the same Solution instance gives a wrong result the
-  second time, because the counter starts where the first call left it. A judge
-  harness that news up a fresh Solution per test case hides this; a caller that
-  reuses the object, or two threads sharing it, does not. Say this out loud in
-  an interview before being asked - it is the standard follow-up to any solution
-  that keeps traversal state in a field.
-FOLLOW-UP - REPEATED QUERIES
-  If asked "what if the tree is modified often and KthSmallest is called many
-  times?", the counter approach is the wrong shape: each query re-walks up to k
-  nodes from scratch. The answer is to augment every node with the size of its
-  subtree. Then a query descends once: compare k against left subtree size to
-  decide go left, stop here, or go right with k reduced - one root-to-node path
-  per query, and insert/delete updates the sizes along the path they already
-  touch.
+  At the instant visitedCount++ executes at some node, every node in the whole
+  tree holding a smaller value has already been incremented exactly once, and no
+  node holding a larger value has been touched. So immediately after that
+  increment, visitedCount equals the 1-based rank of root.val among all values
+  in the tree. The test visitedCount == k is therefore an exact rank test, not
+  an approximation, and it fires at exactly one node. This is the sentence to
+  say out loud when asked to prove the code correct.
+WHY THE EARLY RETURN IS LOAD-BEARING
+  The check if (left != -1) return left is not an optimization, it is required
+  for correctness. Delete it and the recursion keeps unwinding upward, keeps
+  running visitedCount++ at every ancestor, and visitedCount climbs past k. The
+  equality test never fires again, the already-found value is discarded, and the
+  call returns -1. Because the increment sits after this check, no node ordered
+  after the answer is ever counted, and the right subtree of every ancestor on
+  the path back up is skipped.
+THE -1 SENTINEL
+  -1 carries two meanings at once: "this subtree is empty" and "the answer is
+  not in this subtree". Unifying them is what keeps the code this short. It is
+  only safe because the problem constrains node values to 0 <= val <= 10^4.
+  Loosen that and it breaks concretely: if the answer node holds -1, its parent
+  reads left == -1, treats the found answer as a miss, increments visitedCount
+  past k, and walks right, returning a wrong value or -1. The fixes are to
+  return int? and test HasValue, or to switch to a bool TryKthSmallest with an
+  out int result. Expect this exact question from an interviewer.
+SHARED MUTABLE COUNTER
+  visitedCount is an instance field rather than a parameter because a plain int
+  parameter is passed by value, so sibling recursive calls would each get their
+  own copy and the count would not accumulate across the traversal. The cost is
+  that it is never reset: calling KthSmallest twice on the same Solution object
+  makes the second call start from the first call's leftover count, so it
+  overshoots k and returns -1. The method is also not safe to call concurrently
+  on one instance. Cleaner alternatives that keep the sharing but drop the
+  hidden state: pass ref int visited to a private helper, or capture a local in
+  a closure.
+FOLLOW-UP
+  If the tree is queried many times and mutated between queries, this approach
+  is the wrong shape because every query re-walks from the root. Store a subtree
+  node count in each node, then at each step compare k against size(root.left) +
+  1 to decide left, self, or right, and repair the counts along the insert or
+  delete path. That answers a query in O(h).
 
-  A second common follow-up is "do it without recursion": push left spine onto
-  an explicit stack, pop, decrement k, push the popped node's right spine,
-  repeat. Same order, same early stop, but it removes both problems above - the
-  counter is a local, and there is no sentinel because the loop returns directly
-  from the pop.
+  The other follow-up is to rewrite this iteratively with an explicit
+  Stack<TreeNode>, pushing left spines and popping k times. That version needs
+  no sentinel value and no field, so both traps above vanish. Also note the
+  failure mode of this code when k exceeds the number of nodes: it returns -1
+  silently rather than signaling an error.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
