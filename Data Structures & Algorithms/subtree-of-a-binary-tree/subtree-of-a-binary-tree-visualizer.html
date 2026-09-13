@@ -651,97 +651,74 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Subtree of a Binary Tree',
-  note: 'a subtree is an exact copy, so every node gets tried as the anchor',
+  note: 'one recursion picks where to look, a second checks whether the pattern sits exactly there',
   inputs: [
-    {id:'r', label:'root (level order, n = null)', value:'3,4,5,1,2', width:280},
-    {id:'s', label:'subRoot', value:'4,1,2', width:200}
+    {id:'t', label:'root (level order)', value:'3,5,4,null,null,1,2', width:300},
+    {id:'s', label:'subRoot (level order)', value:'4,1,2', width:220}
   ],
   parse(raw){
-    const toTokens = (s, cap) => {
-      const parts = String(s).split(',').map(t => t.trim()).filter(t => t.length);
-      if (!parts.length) return null;
-      const out = [];
-      for (let i = 0; i < parts.length && out.length < cap; i++){
-        const low = parts[i].toLowerCase();
-        if (low === 'n' || low === 'null' || low === '#' || low === '.'){ out.push(null); continue; }
-        if (!/^-?\d+$/.test(parts[i])) return null;
-        out.push(Number(parts[i]));
-      }
-      return out;
-    };
-    const build = (tok) => {
-      const list = [];
-      if (!tok.length || tok[0] === null) return {root:null, list:list};
-      const mk = (v, depth, path) => {
-        const n = {v:v, left:null, right:null, depth:depth, path:path, id:list.length};
-        list.push(n);
-        return n;
-      };
-      const root = mk(tok[0], 0, 'root');
-      const q = [root];
-      let i = 1;
-      while (q.length && i < tok.length){
-        const n = q.shift();
-        const base = n.path === 'root' ? '' : n.path;
-        if (i < tok.length){
-          const t = tok[i++];
-          if (t !== null){ n.left = mk(t, n.depth + 1, base + 'L'); q.push(n.left); }
-        }
-        if (i < tok.length){
-          const t = tok[i++];
-          if (t !== null){ n.right = mk(t, n.depth + 1, base + 'R'); q.push(n.right); }
-        }
-      }
-      return {root:root, list:list};
-    };
-    const rt = toTokens(raw.r, 15);
-    const st = toTokens(raw.s, 7);
-    if (!rt) return {ok:false, msg:'root: comma-separated values in level order, n for a missing child.'};
-    if (!st) return {ok:false, msg:'subRoot: comma-separated values in level order, n for a missing child.'};
-    if (rt[0] === null) return {ok:false, msg:'root cannot start with n — the tree needs a real root.'};
-    if (st[0] === null) return {ok:false, msg:'subRoot cannot start with n — an empty subRoot is not animated here.'};
-    const R = build(rt), S = build(st);
-    const show = (tok) => tok.map(t => t === null ? 'n' : String(t)).join(',');
+    const rv = parseLevelOrder(raw.t, 31);
+    if (!rv) return {ok:false, msg:'Enter a level-order tree for root, e.g. 3,5,4,null,null,1,2'};
+    const sv = parseLevelOrder(raw.s, 15);
+    if (!sv) return {ok:false, msg:'Enter a level-order tree for subRoot, e.g. 4,1,2'};
+    const rn = treeFromLevelOrder(rv), sn = treeFromLevelOrder(sv);
+    if (!rn.length) return {ok:false, msg:'The root tree needs at least a root node.'};
+    if (!sn.length) return {ok:false, msg:'subRoot needs at least one node - this code is never asked about an empty pattern.'};
+    if (rn.length > 11) return {ok:false, msg:'Keep the root tree to 11 nodes or fewer so the whole anchor scan stays watchable.'};
+    if (sn.length > 6) return {ok:false, msg:'Keep subRoot to 6 nodes or fewer - it is re-walked at every anchor.'};
     return {
-      ok: true,
-      value: {root: R.root, rootList: R.list, sub: S.root, subList: S.list},
-      normalized: {r: show(rt), s: show(st)}
+      ok:true,
+      value:{rootVals: rv, subVals: sv},
+      normalized:{
+        t: rv.map(v => v === null ? 'null' : v).join(','),
+        s: sv.map(v => v === null ? 'null' : v).join(',')
+      }
     };
   },
   shuffle(){
-    const gen = (n) => {
-      if (n <= 0) return null;
-      const left = Math.floor(Math.random() * n);
-      return {v: 1 + Math.floor(Math.random() * 9), left: gen(left), right: gen(n - 1 - left)};
+    const grow = (d) => {
+      if (d > 3 || Math.random() < 0.32) return null;
+      return {v: 1 + Math.floor(Math.random() * 5), l: grow(d + 1), r: grow(d + 1)};
     };
-    const ser = (node) => {
-      const out = [], q = [node];
+    const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
+    const enc = (x) => {
+      const out = [], q = [x];
       while (q.length){
-        const n = q.shift();
-        if (!n){ out.push('n'); continue; }
-        out.push(String(n.v));
-        q.push(n.left);
-        q.push(n.right);
+        const y = q.shift();
+        if (!y){ out.push(null); continue; }
+        out.push(y.v); q.push(y.l); q.push(y.r);
       }
-      while (out.length && out[out.length - 1] === 'n') out.pop();
-      return out.join(',');
+      while (out.length && out[out.length - 1] === null) out.pop();
+      return out;
     };
-    const root = gen(5 + Math.floor(Math.random() * 2));
+    let root = null, n = 0;
+    while (n < 4 || n > 8){ root = grow(1); n = count(root); }
     const all = [];
-    (function walk(n){ if (!n) return; all.push(n); walk(n.left); walk(n.right); })(root);
-    const pick = all[Math.floor(Math.random() * all.length)];
-    return {r: ser(root), s: Math.random() < 0.6 ? ser(pick) : ser(gen(2 + Math.floor(Math.random() * 2)))};
+    (function go(x){ if (!x) return; all.push(x); go(x.l); go(x.r); })(root);
+    const small = all.filter(x => count(x) <= 4 && count(x) >= 1);
+    const pick = small.length ? small[Math.floor(Math.random() * small.length)] : root;
+    const sub = enc(pick);
+    if (Math.random() < 0.4){
+      const spots = [];
+      sub.forEach((v, i) => { if (v !== null) spots.push(i); });
+      const i = spots[Math.floor(Math.random() * spots.length)];
+      sub[i] = 1 + ((sub[i] + Math.floor(Math.random() * 4)) % 5);
+    }
+    return {
+      t: enc(root).map(v => v === null ? 'null' : v).join(','),
+      s: sub.map(v => v === null ? 'null' : v).join(',')
+    };
   },
   solutions: [
   {
-    label: 'Try every node as the anchor',
-    badge: 'O(m · n) time · O(n) space · double recursion · optimal.cs',
-    blurb: 'A subtree is not just a node with the right value — it must be an <em>exact</em> copy, same shape and same values all the way down. So there is nothing to precompute: walk the big tree, and at each node ask “does all of subRoot sit here?” with a second recursion that steps through both trees in lockstep and quits the instant they disagree.',
+    label: 'Anchor at every node, compare both trees in lockstep',
+    badge: 'O(m * n) time · O(n + m) space · anchor DFS + tree equality · optimal.cs',
+    blurb: 'Two recursions, not one. <code>IsSubtree</code> only chooses <em>where</em> to look: at each node of <code>root</code> it asks whether the pattern starts exactly here, and if not it drops the anchor onto each child. <code>IsSameTree</code> answers <em>whether</em>, walking both trees in lockstep and dying at the first disagreement - so every anchor may cost a full pattern walk.',
     legend: [
-      {cls:'hot', text:'pair being compared right now'},
-      {cls:'win', text:'anchor — where this match attempt starts'},
-      {cls:'good', text:'pairs agreed so far in this attempt'},
-      {cls:'dim', text:'anchor already ruled out'}
+      {cls:'hot', text:'the node the running call is looking at'},
+      {cls:'in-window', text:'anchors parked, waiting on the search below'},
+      {cls:'good', text:'matched here'},
+      {cls:'dim', text:'ruled out - the pattern is not this'}
     ],
     code: [
       'public bool IsSubtree(TreeNode root, TreeNode subRoot)',
@@ -751,10 +728,10 @@ const PROBLEM = {
       '',
       '    if (IsSameTree(root, subRoot))',
       '        return true;',
+      '',
       '    else',
       '    {',
-      '        return IsSubtree(root.left, subRoot)',
-      '            || IsSubtree(root.right, subRoot);',
+      '        return IsSubtree(root.left, subRoot) || IsSubtree(root.right, subRoot);',
       '    }',
       '}',
       '',
@@ -765,128 +742,240 @@ const PROBLEM = {
       '',
       '    if (first != null && second != null && first.val == second.val)',
       '        return IsSameTree(first.left, second.left)',
-      '            && IsSameTree(first.right, second.right);',
+      '               && IsSameTree(first.right, second.right);',
       '    return false;',
       '}'
     ],
     simulate(input){
-      const steps = [];
-      const rootList = input.rootList, subList = input.subList, sub = input.sub;
-      let anchor = null, firstNode = null, secondNode = null, answer = null;
-      let matchedR = {}, matchedS = {};
-      const rejected = {};
-      const stack = [];
-      const label = (n) => n ? n.v + ' [' + n.path + ']' : 'null';
-      const treePanel = (title, list, clsOf) => {
-        const rows = [];
-        list.forEach(n => {
-          if (!rows[n.depth]) rows[n.depth] = {left:'depth ' + n.depth, items:[]};
-          rows[n.depth].items.push({text:String(n.v), sub:n.path, cls: clsOf(n) || ''});
+      /* Both trees get their missing children drawn as dashed empty slots,
+         because both recursions really do call themselves on null. */
+      const build = (vals, pre) => {
+        const base = treeFromLevelOrder(vals).map(n => ({
+          id: pre + n.id, v: n.v, parent: n.parent ? pre + n.parent : null, side: n.side
+        }));
+        const info = {}, kid = {};
+        base.forEach(n => { info[n.id] = n; });
+        base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+        const nodes = base.slice();
+        let seq = 0;
+        base.forEach(n => {
+          ['L','R'].forEach(side => {
+            if (!(kid[n.id] || {})[side]){
+              const e = {id: pre + 'e' + (seq++), v: null, parent: n.id, side: side};
+              nodes.push(e);
+              info[e.id] = e;
+              (kid[n.id] = kid[n.id] || {})[side] = e.id;
+            }
+          });
         });
-        const kept = rows.filter(Boolean);
-        return pChips(title, kept.length ? kept : [{left:'—', items:[], empty:'empty'}]);
+        return {nodes: nodes, info: info, kid: kid, root: base[0].id};
       };
-      const panels = () => {
-        const shown = stack.slice(-6);
+
+      const A = build(input.rootVals, 'a');
+      const B = build(input.subVals, 'b');
+      const kidOf = (T, id, s) => (T.kid[id] || {})[s] || null;
+      const shownA = (id) => A.info[id].v === null ? 'null' : String(A.info[id].v);
+      const shownB = (id) => B.info[id].v === null ? 'null' : String(B.info[id].v);
+
+      const steps = [];
+      const aFrames = [], sFrames = [];
+      const anchorSame = {}, anchorRes = {};
+      let cmpA = {}, cmpB = {};
+      let curAnchor = null, curA = null, curB = null;
+      let subCalls = 0, sameCalls = 0, cmps = 0, maxA = 0, maxS = 0, skey = 0;
+
+      const verdict = (x) => x === null ? 'pending' : (x ? 'true' : 'false');
+
+      const panels = (o) => {
+        o = o || {};
+        const tagsA = [];
+        if (curAnchor) tagsA.push({name:'anchor', id: curAnchor, cls:'accent'});
+        if (curA && curA !== curAnchor) tagsA.push({name:'first', id: curA});
+        const done = anchorRes[A.root];
         return [
-          treePanel('root', rootList, (n) =>
-            n === firstNode ? 'hot'
-            : matchedR[n.id] ? 'good'
-            : n === anchor ? 'win'
-            : rejected[n.id] ? 'dim' : ''),
-          treePanel('subRoot', subList, (n) =>
-            n === secondNode ? 'hot'
-            : matchedS[n.id] ? 'good' : ''),
-          pSlots('call stack', shown.length
-            ? shown.map((s, i) => ({text:s, cls: i === shown.length - 1 ? 'hot' : ''}))
-            : [{text:'(returned to the caller)', cls:'dim'}]),
-          pPills('', [
-            {k:'anchor', v: anchor ? label(anchor) : '–', cls:'accent'},
-            {k:'first', v: firstNode ? String(firstNode.v) : 'null', cls:'hot'},
-            {k:'second', v: secondNode ? String(secondNode.v) : 'null', cls:'hot'},
-            {k:'anchors ruled out', v: Object.keys(rejected).length},
-            {k:'answer', v: answer === null ? '…' : String(answer), cls:'good'}
+          pTree('root', A.nodes.map(n => {
+            let cls = '';
+            if (n.id === curA) cls = 'hot';
+            else if (cmpA[n.id] !== undefined) cls = cmpA[n.id] ? 'good' : 'dim';
+            else if (n.id === curAnchor) cls = 'hot';
+            else if (n.v !== null && anchorSame[n.id] !== undefined) cls = anchorSame[n.id] ? 'good' : 'dim';
+            else if (aFrames.some(f => f.id === n.id)) cls = 'in-window';
+            return {
+              id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
+              sub: (n.v !== null && anchorSame[n.id] !== undefined)
+                ? (anchorSame[n.id] ? 'pattern starts here' : 'not the pattern') : ''
+            };
+          }), {tags: tagsA, scale: 0.72}),
+          pTree('subRoot (the pattern)', B.nodes.map(n => {
+            let cls = '';
+            if (n.id === curB) cls = 'hot';
+            else if (cmpB[n.id] !== undefined) cls = cmpB[n.id] ? 'good' : 'dim';
+            return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls};
+          }), {tags: curB ? [{name:'second', id: curB, cls:'accent'}] : [], scale: 0.8}),
+          pStack('call stacks', [
+            {
+              label: 'IsSubtree(root, subRoot)',
+              mode: 'stack',
+              items: aFrames.map((f, i) => ({
+                text: 'root = ' + shownA(f.id),
+                sub: A.info[f.id].v === null
+                  ? 'null anchor, answers at once'
+                  : (f.same === null
+                      ? 'asking IsSameTree'
+                      : (f.same
+                          ? 'same tree, returns true'
+                          : 'left ' + verdict(f.left) + ' | right ' + verdict(f.right))),
+                cls: i === aFrames.length - 1 ? 'hot' : '',
+                fresh: f.id === o.freshA,
+                popped: f.id === o.poppedA && i === aFrames.length - 1
+              })),
+              empty: 'no anchors open',
+              foot: 'IsSubtree',
+              top: 'running now'
+            },
+            {
+              label: 'IsSameTree(first, second)',
+              mode: 'stack',
+              items: sFrames.map((f, i) => ({
+                text: shownA(f.a) + ' vs ' + shownB(f.b),
+                sub: f.left === null
+                  ? 'checking this pair'
+                  : (f.left ? 'left side matched, now the right' : 'left side differed'),
+                cls: i === sFrames.length - 1 ? 'hot' : '',
+                fresh: f.key === o.freshS,
+                popped: f.key === o.poppedS && i === sFrames.length - 1
+              })),
+              empty: 'no comparison running',
+              foot: 'IsSubtree',
+              top: 'running now'
+            }
+          ]),
+          pPills('state', [
+            {k:'anchor', v: curAnchor ? shownA(curAnchor) : (done === undefined ? 'not started' : 'done'), cls:'hot'},
+            {k:'comparing', v: curA ? shownA(curA) + ' vs ' + shownB(curB) : 'idle'},
+            {k:'IsSubtree calls', v: subCalls},
+            {k:'IsSameTree calls', v: sameCalls},
+            {k:'comparisons started', v: cmps},
+            {k:'deepest stacks', v: maxA + ' + ' + maxS},
+            {k:'IsSubtree', v: done === undefined ? 'pending' : (done ? 'true' : 'false'),
+             cls: done === undefined ? '' : (done ? 'good' : 'dim')}
           ])
         ];
       };
-      const push = (lines, msg) => { if (steps.length < 160) steps.push({lines:lines, msg:msg, panels: panels()}); };
 
-      const same = (a, b) => {
-        stack.push('IsSameTree(' + (a ? a.v : 'null') + ', ' + (b ? b.v : 'null') + ')');
-        firstNode = a; secondNode = b;
-        let res;
-        if (a === null && b === null){
-          push([17,18], 'Both walks ran out of tree at the <b>same</b> moment. That agreement is itself a match, so return <b>true</b> — shape has to line up, not only values.');
-          res = true;
-        } else if (a !== null && b !== null && a.v === b.v){
-          matchedR[a.id] = 1; matchedS[b.id] = 1;
-          push([20,21], 'Values agree (<b>' + a.v + '</b> = <b>' + b.v + '</b>), but that settles only this one pair. The <code>&amp;&amp;</code> demands that both halves below agree too, so descend into the left children first.');
-          const l = same(a.left, b.left);
-          let r = false;
-          if (l){
-            r = same(a.right, b.right);
-          } else {
-            firstNode = a; secondNode = b;
-            push([21,22], 'The left halves disagreed, so <code>&amp;&amp;</code> never evaluates the right comparison — whatever hangs off the right children cannot rescue a copy that is already broken.');
-          }
-          res = l && r;
+      steps.push({lines:[1,6,11], msg:'The question is whether <code>subRoot</code> sits anywhere inside <code>root</code>, and the code splits it in two. <code>IsSubtree</code> only decides <em>where</em> to look: line 6 asks whether the pattern starts exactly at this node, and if not, line 11 drops the anchor onto each child in turn. <code>IsSameTree</code> answers <em>whether</em>, walking both trees in lockstep. Line 3 is the only null guard the anchor scan needs - a null <code>root</code> against a real pattern is an instant false, and a null against a null would fall through to line 18 and be true. The dashed slots are real calls: both recursions step into missing children.', panels: panels({})});
+
+      const same = (aid, bid) => {
+        const f = {a: aid, b: bid, key: 'k' + (skey++), left: null};
+        sFrames.push(f);
+        sameCalls++;
+        maxS = Math.max(maxS, sFrames.length);
+        curA = aid; curB = bid;
+        const av = A.info[aid].v, bv = B.info[bid].v;
+        let r;
+
+        if (av === null && bv === null){
+          steps.push({lines:[17,18], msg:'Both walks ran off the bottom at the same moment: <code>first</code> and <code>second</code> are both <code>null</code>. Line 18 calls that a match - two absent subtrees are identical - and returns <b>true</b>. Every true in this comparison is built out of these.', panels: panels({freshS: f.key, poppedS: f.key})});
+          r = true;
+        } else if (av === null || bv === null){
+          steps.push({lines:[17,20,23], msg:'One side ran out and the other did not: <b>' + shownA(aid) + '</b> against <b>' + shownB(bid) + '</b>. Line 17 wants both null and line 20 wants both non-null, so neither fires and line 23 returns <b>false</b>. This is the check that stops the pattern from matching a subtree that merely starts the same way - shape has to agree, not just values.', panels: panels({freshS: f.key, poppedS: f.key})});
+          r = false;
+        } else if (av !== bv){
+          steps.push({lines:[20,23], msg:'Both nodes exist, but <code>first.val</code> is <b>' + av + '</b> and <code>second.val</code> is <b>' + bv + '</b>. The conjunction on line 20 fails on the value test, so the children are never visited and line 23 returns <b>false</b> immediately. A comparison dies at the first disagreement, which is why most anchors cost far less than a whole pattern walk.', panels: panels({freshS: f.key, poppedS: f.key})});
+          r = false;
         } else {
-          const reason = (a === null || b === null)
-            ? 'One side ran out of nodes while the other still holds <b>' + (a ? a.v : b.v) + '</b> — equal values so far, but different <em>shape</em>, which is not a copy'
-            : 'The values disagree here (<b>' + a.v + '</b> ≠ <b>' + b.v + '</b>)';
-          push([23], reason + ', so return <b>false</b> at once and skip everything underneath.');
-          res = false;
+          steps.push({lines:[20,21], msg:'Both nodes exist and both hold <b>' + av + '</b>, so line 20 passes. Agreeing here proves nothing on its own - the trees still have to agree everywhere below - so line 21 pushes the lockstep one level down, taking the left child of each tree together.', panels: panels({freshS: f.key})});
+          const L = same(kidOf(A, aid, 'L'), kidOf(B, bid, 'L'));
+          f.left = L;
+          let R = null;
+          if (L) R = same(kidOf(A, aid, 'R'), kidOf(B, bid, 'R'));
+          r = L && R === true;
+          curA = aid; curB = bid;
+          let why;
+          if (!L) why = 'Its left halves came back <b>different</b>, and <code>&amp;&amp;</code> short-circuits - the right call on line 22 never happens at all.';
+          else if (!R) why = 'Its left halves matched, so line 22 ran, and the right halves came back <b>different</b>. Both sides have to hold, so the pair fails.';
+          else why = 'Both sides came back the same, so this pair - and everything beneath it - is an exact copy of the pattern here.';
+          steps.push({lines:[21,22], msg:'The pair <b>' + shownA(aid) + ' vs ' + shownB(bid) + '</b> can finally answer. ' + why + ' It hands <b>' + (r ? 'true' : 'false') + '</b> up and its frame pops.', panels: panels({poppedS: f.key})});
         }
-        firstNode = a; secondNode = b;
-        stack.pop();
-        return res;
+
+        sFrames.pop();
+        cmpA[aid] = r; cmpB[bid] = r;
+        return r;
       };
 
-      const isSub = (node) => {
-        stack.push('IsSubtree(' + (node ? node.v : 'null') + ')');
-        anchor = node; firstNode = null; secondNode = null;
-        let res;
-        if (node === null){
-          push([3,4], 'The walk fell off the bottom: <code>root</code> is <b>null</b> while <code>subRoot</code> still has nodes, so nothing here can contain it → <b>false</b>. This guard is also what keeps line 10 safe — without it the code would read <code>root.left</code> off a null node.');
-          res = false;
-        } else {
-          matchedR = {}; matchedS = {};
-          push([6], 'Anchor at <code>' + label(node) + '</code>. Ask the only question a node can answer: is the tree hanging off it an <em>exact</em> copy of <code>subRoot</code>? <code>IsSameTree</code> decides that by walking both trees in lockstep.');
-          const ok = same(node, sub);
-          firstNode = null; secondNode = null; anchor = node;
-          if (ok){
-            push([6,7], 'Every pair agreed, so <code>IsSameTree</code> is <b>true</b>: <code>subRoot</code> sits exactly at <code>' + label(node) + '</code>. Return <b>true</b> and unwind — no other anchor has to be tried.');
-            res = true;
-          } else {
-            matchedR = {}; matchedS = {};
-            rejected[node.id] = 1;
-            push([8,10,11], 'No copy rooted at <code>' + label(node) + '</code>. That rules out this node as an anchor but says nothing about its descendants, so recurse left; <code>||</code> reaches the right child only if the left half comes back false.');
-            const l = isSub(node.left);
-            let r = false;
-            if (l){
-              anchor = node; firstNode = null; secondNode = null;
-              push([10,11], 'The left recursion already returned <b>true</b>, so <code>||</code> short-circuits and <code>IsSubtree(root.right, subRoot)</code> is never called — the entire right subtree of <code>' + label(node) + '</code> goes unvisited.');
-            } else {
-              r = isSub(node.right);
-            }
-            res = l || r;
-          }
-        }
-        stack.pop();
-        return res;
+      const compare = (anchorId) => {
+        cmpA = {}; cmpB = {};
+        cmps++;
+        const r = same(anchorId, B.root);
+        curA = null; curB = null;
+        return r;
       };
 
-      push([1,6], 'Nothing about a node can be judged locally: <code>subRoot</code> has to appear with identical shape and identical values. So the plan is brute but exact — treat every node of <code>root</code> as a candidate anchor, and at each one run a full lockstep comparison against <code>subRoot</code>.');
-      const result = isSub(input.root);
-      answer = result;
-      anchor = null; firstNode = null; secondNode = null;
-      matchedR = {}; matchedS = {};
-      stack.length = 0;
-      steps.push({lines: result ? [7] : [10,11], msg:'Answer: <b>' + result + '</b>. Each of the <b>m</b> nodes in <code>root</code> can become an anchor and each attempt compares up to all <b>n</b> nodes of <code>subRoot</code>, which is the <b>O(m · n)</b>. The only storage is the two recursion stacks, so O(height) — O(n) when the tree is a spindle.', panels: panels()});
+      const anchor = (id) => {
+        const f = {id: id, same: null, left: null, right: null};
+        aFrames.push(f);
+        subCalls++;
+        maxA = Math.max(maxA, aFrames.length);
+        curAnchor = id;
+
+        if (A.info[id].v === null){
+          const side = A.info[id].side === 'L' ? 'left' : 'right';
+          steps.push({lines:[3,4], msg:'The ' + side + ' child of <b>' + shownA(A.info[id].parent) + '</b> does not exist, so <code>root</code> arrives as <code>null</code> while <code>subRoot</code> is still a real node. Line 3 catches exactly that pair and returns <b>false</b> without ever reaching line 11, where <code>root.left</code> would have thrown. The scan pays one call per missing child too.', panels: panels({freshA: id, poppedA: id})});
+          anchorRes[id] = false;
+          aFrames.pop();
+          return false;
+        }
+
+        const v = shownA(id);
+        steps.push({lines:[3,6], msg:'The anchor moves to <b>' + v + '</b>. <code>root</code> is not null so line 3 does nothing, and line 6 hands both roots to <code>IsSameTree</code>: does the whole of <code>subRoot</code> sit here, starting at <b>' + v + '</b>? Nothing learned at an earlier anchor is reused - the comparison restarts from scratch, and that restart is where the m x n comes from.', panels: panels({freshA: id})});
+
+        const m = compare(id);
+        f.same = m;
+        anchorSame[id] = m;
+        curAnchor = id;
+
+        if (m){
+          steps.push({lines:[6,7], msg:'The comparison came back <b>true</b>: the whole of <code>subRoot</code> sits at <b>' + v + '</b>, node for node and null for null. Line 7 returns <b>true</b> at once, and that true now rides back up through every waiting <code>||</code> on line 11 without another node being touched.', panels: panels({poppedA: id})});
+          anchorRes[id] = true;
+          aFrames.pop();
+          return true;
+        }
+
+        steps.push({lines:[9,11], msg:'The comparison came back <b>false</b>, so the pattern does not start at <b>' + v + '</b>. That says nothing about the nodes underneath, so line 11 asks the whole question again one level down: <code>IsSubtree(root.left, subRoot)</code> runs first, and this frame parks until it answers.', panels: panels({})});
+
+        const L = anchor(kidOf(A, id, 'L'));
+        f.left = L;
+        curAnchor = id;
+
+        if (L){
+          steps.push({lines:[11], msg:'The left call returned <b>true</b>, so <code>||</code> short-circuits: <code>IsSubtree(root.right, subRoot)</code> is never evaluated and the entire right side of <b>' + v + '</b> goes unvisited. One hit anywhere below is all the answer needs.', panels: panels({poppedA: id})});
+          anchorRes[id] = true;
+          aFrames.pop();
+          return true;
+        }
+
+        steps.push({lines:[11], msg:'The left call came back <b>false</b> - nothing in that half starts the pattern - so <code>||</code> is forced to evaluate its right operand, and the anchor moves to the right child of <b>' + v + '</b>.', panels: panels({})});
+
+        const R = anchor(kidOf(A, id, 'R'));
+        f.right = R;
+        curAnchor = id;
+
+        steps.push({lines:[11], msg:'Both calls under <b>' + v + '</b> have answered: left <b>false</b>, right <b>' + (R ? 'true' : 'false') + '</b>. Line 11 returns <b>' + (R ? 'true' : 'false') + '</b> and this frame pops, handing that verdict to whoever anchored above it.', panels: panels({poppedA: id})});
+
+        anchorRes[id] = R;
+        aFrames.pop();
+        return R;
+      };
+
+      const ans = anchor(A.root);
+      curAnchor = null; curA = null; curB = null;
+
+      steps.push({lines: ans ? [6,7] : [11], msg:'The root frame returns <b>' + (ans ? 'true' : 'false') + '</b>. It took ' + subCalls + ' <code>IsSubtree</code> call(s) - one per node plus one per empty slot - which started ' + cmps + ' comparison(s) costing ' + sameCalls + ' <code>IsSameTree</code> call(s) between them. That product is the O(m * n) bound: in the worst case every node of <code>root</code> drags the whole of <code>subRoot</code> through a full lockstep walk, and short-circuiting is the only thing that keeps the real cost below it. The space is the two stacks, which peaked at ' + maxA + ' and ' + maxS + ' frame(s) - the heights of the two trees, O(n + m).', panels: panels({})});
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

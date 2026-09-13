@@ -1,107 +1,94 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  pre-order recursion passing down valid (lower,upper) bounds
+// -  pre-order DFS passing down valid (lower,upper) bounds
 // -  [bounds-topdown]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (from submission-3)
+// -  Reference solution - not one you solved yourself
 // -
-// -  each node checked once against inherited long-typed bounds, avoiding
-// -  int overflow; recursion stack is O(n) worst case for a skewed tree
+// -  each node checked once against inherited bounds; recursion depth O(n)
+// -  worst case for skewed tree
 // --------------------------------------------------------------------------
 
 public class Solution
 {
     public bool IsValidBST(TreeNode root)
     {
-        return Validate(root, long.MinValue, long.MaxValue);
+        return IsWithinBounds(root, long.MinValue, long.MaxValue);
     }
 
-    private bool Validate(TreeNode node, long lower, long upper)
+    private bool IsWithinBounds(TreeNode node, long lower, long upper)
     {
         if (node == null) return true;
         if (node.val <= lower || node.val >= upper) return false;
 
-        return Validate(node.left, lower, node.val) &&
-               Validate(node.right, node.val, upper);
+        return IsWithinBounds(node.left, lower, node.val) &&
+               IsWithinBounds(node.right, node.val, upper);
     }
 }
 
 /*
 ================================================================================
- PATTERN : DFS carrying an inherited (lower, upper) bound
+ PATTERN : Top-down DFS carrying an open (lower, upper) interval
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-3.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 WHY THIS PATTERN
-  BST validity is a global property, but the tempting check is local: confirm
-  each node is greater than its left child and less than its right child. That
-  is not enough. Take root 5, left child 4, and 4's right child 6. Every
-  parent/child pair passes, yet 6 lives in the root's left subtree and must be
-  under 5. Validate fixes this by shipping the ancestors' constraints down the
-  recursion as lower and upper, so 6 arrives with upper = 5 and is rejected.
-INVARIANT
-  Whenever Validate(node, lower, upper) is called, every value in node's subtree
-  is required to satisfy lower < value < upper. IsValidBST seeds the root with
-  (long.MinValue, long.MaxValue), meaning unconstrained. The node tests itself
-  against that window, then hands each child a narrowed one.
-
-  Why the window is sufficient rather than just necessary: along any
-  root-to-node path, lower is the value of the closest ancestor we turned right
-  at and upper is the value of the closest ancestor we turned left at. Those are
-  the tightest of all ancestor constraints - every other ancestor's bound is
-  looser and already implied. So checking two numbers per node checks the node
-  against the whole path above it.
-BOUND UPDATES
-  Exactly one bound moves per descent, and node.val is always the new one:
-    left -> Validate(node.left, lower, node.val) upper tightens, lower is
-    inherited unchanged
-    right -> Validate(node.right, node.val, upper) lower tightens, upper is
-    inherited unchanged
-  Once node.val is installed as a bound it is never re-tested; the strict
-  comparison at the child does that work. The null case returns true, which
-  doubles as the leaf terminator and as the verdict for an empty tree. The &&
-  short-circuits, so a failing left subtree means the right subtree is never
-  walked.
-WHY THE BOUNDS ARE LONG
-  node.val is int, but lower and upper are long. That is deliberate. With int
-  bounds and int.MinValue as the open sentinel, a perfectly valid tree whose
-  root holds int.MinValue would fail node.val <= lower on the very first
-  comparison - the sentinel collides with real data. Widening to long parks both
-  sentinels one step outside the reachable int range, so the root's test can
-  never fire spuriously.
-
-  The alternative, if an interviewer bans the widening trick, is nullable bounds
-  (int?) with null meaning unbounded, at the cost of a null check before each
-  comparison.
-STRICT INEQUALITY
-  node.val <= lower and node.val >= upper reject equality on both sides, so
-  duplicate values anywhere in the tree are invalid under this definition. If
-  asked to permit duplicates in the left subtree, only the upper test relaxes:
-  node.val > upper becomes the failure condition, and node.val >= upper is
-  dropped. Getting this backwards - relaxing both - lets equal values sit on
-  either side and destroys the ordering.
-THE OTHER ROUTE
-  The equivalent classic is an in-order traversal: a tree is a BST exactly when
-  in-order yields a strictly increasing sequence, so you keep a prev pointer and
-  compare each visited value against it. Same tree walk, but the verdict comes
-  from the emitted sequence instead of from inherited windows. Its edge is that
-  Morris threading can run it with O(1) auxiliary space, which the bounds
-  recursion cannot match. Its cost is the mutable prev state and the same
-  long/nullable sentinel problem for the first node.
-WATCH OUT
-  Recursion depth here tracks tree height, not a balanced log. A degenerate tree
-  - values inserted in sorted order, so a right-leaning chain of 10^5 nodes - is
-  exactly the shape that makes each Validate frame stack up. If a problem
-  statement admits that size, convert to an explicit Stack of (node, lower,
-  upper) triples; the logic transfers unchanged.
-TRIGGER
-  Reach for bound propagation whenever a node's legality depends on ancestors
-  you have already passed, not just on its immediate neighbors. The recall
-  phrase is "pass the feasible interval down." Same machinery drives
-  range-restricted BST queries, trimming a BST to a value range, and
-  constructing or counting BSTs over an interval.
+  BST-ness is not a property you can check one parent at a time. A node deep in
+  the left subtree is constrained by every ancestor it hangs under, not just its
+  immediate parent. The fix is to carry that accumulated constraint down the
+  recursion: IsWithinBounds receives the exact range the current node is allowed
+  to occupy, so each node is validated against all of its ancestors in one
+  comparison pair.
+THE INVARIANT
+  When IsWithinBounds(node, lower, upper) is called, lower and upper are the
+  intersection of every ancestor constraint on node's subtree: lower < every
+  value in the subtree < upper. The recursion preserves this. Going left, the
+  window narrows to (lower, node.val) because everything left of node must stay
+  below it while still respecting the inherited lower. Going right, it narrows
+  to (node.val, upper). The window only ever shrinks, and node.val itself
+  becomes the new wall on the side it splits.
+ALGORITHM
+  1. Seed the root with the widest possible window: IsWithinBounds(root,
+  long.MinValue, long.MaxValue).
+  2. A null node vacuously satisfies any window, so return true.
+  3. Reject immediately if node.val <= lower or node.val >= upper.
+  4. Recurse left with upper tightened to node.val, recurse right with lower
+  tightened to node.val, and require both.
+  5. The && short-circuits, so a violation in the left subtree stops the right
+  subtree from being walked at all.
+WHY LONG AND NOT INT
+  The sentinels must be values no node can equal, and the comparisons here are
+  non-strict (<=, >=). If the bounds were int.MinValue and int.MaxValue, a
+  legitimate single-node tree whose root holds int.MinValue would hit node.val
+  <= lower and be rejected. Widening to long puts the sentinels strictly outside
+  the range of any int val. The alternative, if you were forced to stay in int,
+  is nullable bounds (long?/int?) or passing the bounding TreeNode references
+  and skipping the check when null.
+WHY THE COMPARISONS ARE STRICT
+  node.val <= lower and node.val >= upper reject equality, which encodes the
+  no-duplicates definition of a BST. A node equal to an ancestor fails: if
+  node.val equals the parent that set the wall, it lands exactly on lower or
+  upper. If the problem variant allowed duplicates on one side, exactly one of
+  these two comparisons would relax to < or >, and which one it is tells you
+  which side duplicates live on.
+THE TRAP
+  The tempting wrong answer is a purely local check: node.val > node.left.val
+  and node.val < node.right.val, recursed everywhere. It passes on trees that
+  are not BSTs. Take root 5 with left child 4, and give that 4 a right child of
+  6. Locally 5 > 4 holds and 6 > 4 holds, so the local check accepts, but 6 sits
+  in the left subtree of 5 and must be below 5. The bounds version catches it: 6
+  arrives with the window (4, 5) inherited from both ancestors and fails 6 >= 5.
+FOLLOW-UP
+  Two questions an interviewer reaches for next. First, the other route to the
+  same bound: an in-order traversal of a BST emits values in strictly increasing
+  order, so you validate by keeping one prev variable and rejecting any val <=
+  prev. Same work, no bounds threading, but you must handle the first node's
+  absent prev. Second, this version recurses once per node, so a fully skewed
+  tree drives recursion depth equal to node count; converting to an explicit
+  Stack of (node, lower, upper) triples removes the call-stack dependency
+  without changing the logic.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

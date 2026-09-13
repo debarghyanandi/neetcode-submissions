@@ -651,66 +651,77 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Valid Binary Search Tree',
-  note: 'a node is not a BST root just because it beats its own two children',
-  inputs: [{id:'t', label:'tree (level order, null = empty slot)', value:'5,4,6,null,null,3,7', width:300}],
+  note: 'two ways to police the same rule - carry facts up from the children, or carry a legal window down to them',
+  inputs: [
+    {id:'t', label:'tree (level order)', value:'5,3,8,1,4,null,9', width:320}
+  ],
   parse(raw){
-    let parts = String(raw.t).split(',').map(s => s.trim()).filter(s => s.length);
-    if (!parts.length) return {ok:false, msg:'Enter a level-order tree, e.g. 5,4,6,null,null,3,7.'};
-    parts = parts.slice(0, 15);
-    const vals = parts.map(s => /^(null|nil|n|x|\.|·)$/i.test(s) ? null : Number(s));
-    if (vals.some(v => v !== null && (!Number.isFinite(v) || Math.floor(v) !== v))) {
-      return {ok:false, msg:'Values must be whole numbers, or null for an empty slot.'};
-    }
-    if (vals[0] === null) return {ok:false, msg:'The root cannot be empty.'};
-    for (let i = 1; i < vals.length; i++){
-      if (vals[i] !== null && vals[(i - 1) >> 1] === null){
-        return {ok:false, msg:'Slot ' + i + ' has a value but its parent slot is empty. This layout is positional: the children of slot i are 2i+1 and 2i+2.'};
-      }
-    }
-    return {ok:true, value:{vals}, normalized:{t: vals.map(v => v === null ? 'null' : v).join(',')}};
+    const vals = parseLevelOrder(raw.t, 31);
+    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 5,3,8,1,4,null,9'};
+    const nodes = treeFromLevelOrder(vals);
+    if (!nodes.length) return {ok:false, msg:'Needs at least a root node.'};
+    if (nodes.length > 10) return {ok:false, msg:'Keep it to 10 nodes or fewer - the second solution visits every empty slot too, so the run grows fast.'};
+    return {
+      ok:true,
+      value:{vals: vals},
+      normalized:{t: vals.map(v => v === null ? 'null' : v).join(',')}
+    };
   },
   shuffle(){
-    const pool = [];
-    while (pool.length < 7){
-      const n = 1 + Math.floor(Math.random() * 40);
-      if (pool.indexOf(n) < 0) pool.push(n);
+    const picks = [];
+    const want = 4 + Math.floor(Math.random() * 4);
+    while (picks.length < want){
+      const v = 1 + Math.floor(Math.random() * 40);
+      if (picks.indexOf(v) < 0) picks.push(v);
     }
-    pool.sort((a, b) => a - b);
-    const arr = [];
-    [3,1,4,0,5,2,6].forEach((slot, k) => { arr[slot] = pool[k]; });
-    if (Math.random() < 0.55){
-      const i = 1 + Math.floor(Math.random() * 6);
-      const j = 1 + Math.floor(Math.random() * 6);
-      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    let root = null;
+    const ins = (node, v) => {
+      if (!node) return {v: v, l: null, r: null};
+      if (v < node.v) node.l = ins(node.l, v); else node.r = ins(node.r, v);
+      return node;
+    };
+    picks.forEach(v => { root = ins(root, v); });
+    /* about half the time, break one value so the run ends on false */
+    if (Math.random() < 0.45){
+      const all = [];
+      (function collect(x){ if (!x) return; all.push(x); collect(x.l); collect(x.r); })(root);
+      all[Math.floor(Math.random() * all.length)].v = 1 + Math.floor(Math.random() * 40);
     }
-    if (Math.random() < 0.35) arr[3 + Math.floor(Math.random() * 4)] = null;
-    return {t: arr.map(v => (v === null || v === undefined) ? 'null' : v).join(',')};
+    const out = [], q = [root];
+    while (q.length){
+      const x = q.shift();
+      if (!x){ out.push(null); continue; }
+      out.push(x.v); q.push(x.l); q.push(x.r);
+    }
+    while (out.length && out[out.length - 1] === null) out.pop();
+    return {t: out.map(v => v === null ? 'null' : v).join(',')};
   },
   solutions: [
   {
-    label: 'Report each subtree min and max upward',
-    badge: 'O(n) time · O(h) stack · post-order · optimal.cs',
-    blurb: 'A node is a BST root only if <b>every</b> value on its left is below it and every value on its right is above it — checking the two child nodes is not enough. So each call answers with its subtree summary <code>(min, max, found)</code>, and the parent tests those extremes, which stand in for the entire subtree in one comparison.',
+    label: 'Post-order: each subtree reports (min, max, found)',
+    badge: 'O(n) time · O(n) space · post-order DFS · optimal.cs',
+    blurb: 'A node cannot judge itself from its children\'s verdicts alone - it needs the largest value hiding in the left subtree and the smallest in the right. So one call returns all three: <code>(min, max, found)</code>. An empty child answers <code>(int.MaxValue, int.MinValue, true)</code>, a deliberately backwards pair that loses every comparison a parent can make against it.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'ancestor waiting on this call'},
-      {cls:'good', text:'already returned its (min, max)'},
-      {cls:'dim', text:'not reached yet / empty slot'}
+      {cls:'in-window', text:'callers parked, waiting on this path'},
+      {cls:'good', text:'subtree is a BST: range known'},
+      {cls:'dim', text:'subtree came back not a BST'}
     ],
     code: [
       'public bool IsValidBST(TreeNode root)',
       '{',
-      '    var result = IsValidBSTWithMinMax(root);',
-      '    return result.found;',
+      '    var info = IsValidBSTWithMinMax(root);',
+      '    return info.found;',
       '}',
       '',
+      '// one call returns the subtree min, its max, and the verdict',
       'public (int min, int max, bool found) IsValidBSTWithMinMax(TreeNode root)',
       '{',
-      '    if (root == null)                       // empty subtree',
+      '    if (root == null)',
       '        return (int.MaxValue, int.MinValue, true);',
       '',
       '    if (root.right == null && root.left == null)',
-      '        return (root.val, root.val, true);  // leaf',
+      '        return (root.val, root.val, true);',
       '',
       '    var left  = IsValidBSTWithMinMax(root.left);',
       '    var right = IsValidBSTWithMinMax(root.right);',
@@ -723,259 +734,320 @@ const PROBLEM = {
       '',
       '    int min = Math.Min(left.min, root.val);',
       '    int max = Math.Max(right.max, root.val);',
-      '',
       '    return (min, max, true);',
       '}'
     ],
     simulate(input){
-      const vals = input.vals, n = vals.length, steps = [];
-      const has = (i) => i >= 0 && i < n && vals[i] !== null;
-      const disp = vals.map(v => v === null ? '·' : v);
-      const done = {};
-      const stack = [];
-      let cur = -1;
+      const base = treeFromLevelOrder(input.vals);
+      const info = {}, kid = {}, leaf = {};
+      base.forEach(n => { info[n.id] = n; });
+      base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+      base.forEach(n => { const k = kid[n.id] || {}; leaf[n.id] = !k.L && !k.R; });
+      /* Line 13 answers for a leaf before any call is made, so a leaf's two null
+         children are never visited and are not drawn. A half-node does recurse
+         into its missing side, so that one gets a dashed empty slot. */
+      const nodes = base.slice();
+      let seq = 0;
+      base.forEach(n => {
+        if (leaf[n.id]) return;
+        ['L','R'].forEach(side => {
+          if (!(kid[n.id] || {})[side]){
+            const e = {id:'e' + (seq++), v: null, parent: n.id, side: side};
+            nodes.push(e); info[e.id] = e; leaf[e.id] = false;
+            (kid[n.id] = kid[n.id] || {})[side] = e.id;
+          }
+        });
+      });
+      const child = (id, s) => (kid[id] || {})[s] || null;
 
-      const sv = (v) => v === Infinity ? 'MaxValue' : (v === -Infinity ? 'MinValue' : String(v));
-      const tup = (r) => r.found ? '(' + sv(r.min) + ', ' + sv(r.max) + ', true)' : '(0, 0, false)';
+      const MAX = 2147483647, MIN = -2147483648;
+      const num = (x) => x === MAX ? 'int.MaxValue' : (x === MIN ? 'int.MinValue' : String(x));
+      const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
 
-      const chipItems = () => {
-        const out = [];
-        for (let k = 0; k < n; k++){
-          if (!done[k]) continue;
-          out.push({
-            text: has(k) ? String(vals[k]) : 'empty ' + k,
-            sub: tup(done[k]),
-            cls: done[k].found ? '' : 'head'
-          });
-        }
-        return out.length ? out : [{text:'—', sub:'nothing has returned yet'}];
+      const res = {}, frames = [], steps = [];
+      let calls = 0, maxF = 0;
+      const fmt = (r) => r ? (r.found ? '(' + num(r.min) + ', ' + num(r.max) + ')' : 'not a BST') : 'waiting';
+      const caller = () => {
+        if (frames.length < 2) return null;
+        const p = frames[frames.length - 2];
+        return {v: shown(p.id), line: p.left === null ? 16 : 17};
+      };
+      const parkedNote = () => {
+        const c = caller();
+        return c ? ' Its caller, <b>' + c.v + '</b>, is frozen on line ' + c.line + ' until this triple comes back.' : '';
       };
 
-      const panels = (pills) => {
-        const out = [
-          pTiles('Tree in level order — children of slot i are 2i+1 and 2i+2', disp, (k) => ({
-            cls: k === cur ? 'hot'
-               : !has(k) ? 'dim'
-               : stack.indexOf(k) >= 0 ? 'in-window'
-               : done[k] ? 'good'
-               : 'dim'
+      const panels = (curId, popId, freshId) => [
+        pTree('tree', nodes.map(n => {
+          const r = res[n.id];
+          let cls = '';
+          if (n.id === curId) cls = 'hot';
+          else if (n.v === null) cls = '';
+          else if (r) cls = r.found ? 'good' : 'dim';
+          else if (frames.some(f => f.id === n.id)) cls = 'in-window';
+          let sub = '';
+          if (r) sub = n.v === null ? 'empty pair' : (r.found ? num(r.min) + '..' + num(r.max) : 'not a BST');
+          return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls, sub: sub};
+        }), {
+          tags: curId ? [{name:'root', id: curId, cls:'accent'}] : [],
+          scale: 0.75
+        }),
+        pStack('call stack', [{
+          label: 'IsValidBSTWithMinMax(root)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: 'root = ' + shown(f.id),
+            sub: info[f.id].v === null
+              ? 'null, sentinel pair'
+              : (leaf[f.id]
+                  ? 'leaf, answers at once'
+                  : 'left ' + fmt(f.left) + ' | right ' + fmt(f.right)),
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.id === freshId,
+            popped: f.id === popId && i === frames.length - 1
           })),
-          pChips('Returned subtree summaries — (min, max, found)', [{items: chipItems()}])
-        ];
-        if (pills && pills.length) out.push(pPills('', pills));
-        return out;
+          empty: 'no frames open',
+          foot: 'IsValidBST',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'running', v: curId ? shown(curId) : (res['n0'] ? 'done' : 'not started'), cls:'hot'},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'calls made', v: calls},
+          {k:'IsValidBST', v: res['n0'] ? (res['n0'].found ? 'true' : 'false') : 'pending',
+           cls: res['n0'] ? (res['n0'].found ? 'good' : 'dim') : ''}
+        ])
+      ];
+
+      steps.push({lines:[1,3,4], msg:'<code>IsValidBST</code> is only a wrapper: it calls <code>IsValidBSTWithMinMax(root)</code> and keeps <code>.found</code>, throwing the other two fields away. Those exist for the parents, not for the answer - a node cannot tell whether it is a legal BST root from its children\'s verdicts alone, it needs the <em>largest</em> value anywhere in its left subtree and the <em>smallest</em> anywhere in its right. The dashed slots below are the missing children of half-nodes, which this code really does call on; a leaf has none drawn, because line 13 answers before it ever recurses.', panels: panels(null, null, null)});
+
+      const walk = (id) => {
+        frames.push({id: id, left: null, right: null});
+        calls++;
+        maxF = Math.max(maxF, frames.length);
+
+        if (info[id].v === null){
+          const side = info[id].side === 'L' ? 'left' : 'right';
+          steps.push({lines:[10,11], msg:'<b>' + shown(info[id].parent) + '</b> has no ' + side + ' child, but it is not a leaf either, so line 13 did not apply and line ' + (side === 'left' ? 16 : 17) + ' called into the empty side anyway. Line 11 answers <code>(int.MaxValue, int.MinValue, true)</code>. The pair is backwards on purpose: the parent will test <code>left.max &gt;= root.val</code> and <code>right.min &lt;= root.val</code>, and a max of <code>int.MinValue</code> or a min of <code>int.MaxValue</code> loses both, so a missing child can never veto anything.' + parkedNote(), panels: panels(id, id, id)});
+          res[id] = {min: MAX, max: MIN, found: true};
+          frames.pop();
+          return res[id];
+        }
+
+        const v = info[id].v;
+
+        if (leaf[id]){
+          steps.push({lines:[13,14], msg:'<b>' + v + '</b> has no children at all, so line 13 fires before any recursion: a single node is a BST, and the smallest and largest value it covers are both <b>' + v + '</b>, hence <code>(' + v + ', ' + v + ', true)</code>. This shortcut is why leaves show no dashed slots - their two null children are never visited.' + parkedNote(), panels: panels(id, id, id)});
+          res[id] = {min: v, max: v, found: true};
+          frames.pop();
+          return res[id];
+        }
+
+        steps.push({lines:[8,10,13,16], msg:'A frame opens for <b>' + v + '</b>. It is neither null nor a leaf, so it falls past both shortcuts and parks on line 16: it cannot say a word until it has both children\'s <code>(min, max, found)</code> triples. Note that lines 16 and 17 both run unconditionally - this version walks the entire tree even when the left subtree has already failed.' + parkedNote(), panels: panels(id, null, id)});
+
+        const f = frames[frames.length - 1];
+        const L = walk(child(id, 'L'));
+        f.left = L;
+        const R = walk(child(id, 'R'));
+        f.right = R;
+
+        let lines, msg;
+        if (!L.found || L.max >= v){
+          res[id] = {min: 0, max: 0, found: false};
+          lines = [19,20];
+          if (!L.found){
+            msg = 'Both children have answered. Line 19 reads <code>!left.found</code> first and it is already <b>true</b>, so <code>||</code> short-circuits and the comparison <code>left.max &gt;= root.val</code> is never evaluated - the left subtree broke the rule somewhere below and nothing above can repair it. Line 20 hands back <code>(0, 0, false)</code>; the zeros are junk nobody reads, because every ancestor tests <code>found</code> before it touches a bound.';
+          } else {
+            msg = 'Both children have answered. The left subtree is a perfectly good BST on its own, but the largest value inside it is <b>' + num(L.max) + '</b>, which is not below <b>' + v + '</b> - so line 19 fires and <b>' + v + '</b> returns <code>(0, 0, false)</code>. This is exactly why <code>max</code> is dragged upward: a check that only compared <b>' + v + '</b> with its immediate children would have waved this tree through.';
+          }
+        } else if (!R.found || R.min <= v){
+          res[id] = {min: 0, max: 0, found: false};
+          lines = [19,22,23];
+          if (!R.found){
+            msg = 'Line 19 passed - the left subtree is a BST with max ' + num(L.max) + ', below <b>' + v + '</b>. But line 22 sees <code>!right.found</code>, so <code>||</code> short-circuits there and line 23 returns <code>(0, 0, false)</code>. The failure from below now rides up to the root untouched, one frame at a time.';
+          } else {
+            msg = 'Line 19 passed, but line 22 does not: the right subtree is a valid BST whose <em>smallest</em> value is <b>' + num(R.min) + '</b>, and that is not above <b>' + v + '</b>. Some node buried on the right is too small for this ancestor, which is the failure a parent-child-only check always misses. Line 23 returns <code>(0, 0, false)</code>.';
+          }
+        } else {
+          const mn = Math.min(L.min, v), mx = Math.max(R.max, v);
+          res[id] = {min: mn, max: mx, found: true};
+          lines = [19,22,25,26,27];
+          const leftPhrase = L.max === MIN
+            ? 'the left side is empty, so its <code>max</code> is the <code>int.MinValue</code> sentinel and line 19 cannot trip'
+            : 'the left subtree is a BST and its max <b>' + num(L.max) + '</b> is below <b>' + v + '</b>';
+          const rightPhrase = R.min === MAX
+            ? 'the right side is empty, so its <code>min</code> is the <code>int.MaxValue</code> sentinel and line 22 cannot trip'
+            : 'the right subtree is a BST and its min <b>' + num(R.min) + '</b> is above <b>' + v + '</b>';
+          msg = 'Both children have answered, so <b>' + v + '</b> can judge itself: ' + leftPhrase + ', and ' + rightPhrase + '. Both guards pass, so lines 25 and 26 compose the range this subtree covers: min = Math.Min(' + num(L.min) + ', ' + v + ') = <b>' + num(mn) + '</b>, max = Math.Max(' + num(R.max) + ', ' + v + ') = <b>' + num(mx) + '</b>. Only <code>left.min</code> and <code>right.max</code> are consulted, because in a valid BST the smallest value is the leftmost node and the largest is the rightmost. Line 27 returns the triple and the frame pops for good.';
+        }
+        steps.push({lines: lines, msg: msg, panels: panels(id, id, null)});
+
+        frames.pop();
+        return res[id];
       };
 
-      steps.push({lines:[1,3], msg:'<code>IsValidBST</code> is only a wrapper. The helper returns three facts about a whole subtree — its smallest value, its largest value, and whether it is a BST — and the wrapper keeps just the flag.', panels: panels([{k:'answer', v:'pending'}])});
+      walk('n0');
 
-      const walk = (i) => {
-        stack.push(i);
-        cur = i;
-
-        if (!has(i)){
-          const r = {min: Infinity, max: -Infinity, found: true};
-          steps.push({lines:[9,10], msg:'Slot ' + i + ' is empty, so it returns <code>(int.MaxValue, int.MinValue, true)</code>. Those sentinels are picked so a missing child can never object: the parent test <code>left.max &gt;= root.val</code> becomes <code>MinValue &gt;= val</code> (false), and <code>right.min &lt;= root.val</code> becomes <code>MaxValue &lt;= val</code> (false).',
-            panels: panels([{k:'returns', v:'(MaxValue, MinValue, true)', cls:'good'}])});
-          done[i] = r;
-          stack.pop();
-          return r;
-        }
-
-        const v = vals[i], L = 2 * i + 1, R = 2 * i + 2;
-        steps.push({lines:[7,8], msg:'Enter the call for node <b>' + v + '</b> (slot ' + i + '). It owes its caller the min and max of <em>everything</em> beneath it, so it cannot answer until both children have answered first — this is a post-order walk.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'depth', v: stack.length - 1}])});
-
-        if (!has(L) && !has(R)){
-          const r = {min: v, max: v, found: true};
-          steps.push({lines:[12,13], msg:'Node <b>' + v + '</b> is a leaf, so its subtree is a single value: trivially a BST whose min and max are both <b>' + v + '</b>. This shortcut is what ends the recursion — without it the two empty children would return sentinels and the arithmetic below would land on exactly the same tuple.',
-            panels: panels([{k:'node', v: v, cls:'hot'}, {k:'returns', v:'(' + v + ', ' + v + ', true)', cls:'good'}])});
-          done[i] = r;
-          stack.pop();
-          return r;
-        }
-
-        steps.push({lines:[15], msg:'Node <b>' + v + '</b> has at least one child, so the left side is explored first. Note that both child calls are plain assignments: the code will run the right call too, no matter what the left one says.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'now', v:'descend left'}])});
-        const left = walk(L);
-        cur = i;
-
-        steps.push({lines:[16], msg:'The left side came back as <code>' + tup(left) + '</code>. The right call fires <b>unconditionally</b> — there is no early exit here, so a broken left subtree still costs a full right-side traversal. Every node is visited exactly once either way.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'left', v: tup(left)}, {k:'now', v:'descend right'}])});
-        const right = walk(R);
-        cur = i;
-
-        const leftBad = !left.found || left.max >= v;
-        if (leftBad){
-          const r = {min:0, max:0, found:false};
-          steps.push({lines:[18,19], msg: (!left.found
-              ? 'The left subtree already reported <b>false</b>, and invalidity never heals on the way up — node <b>' + v + '</b> returns <code>(0, 0, false)</code> as well.'
-              : '<code>left.max</code> is <b>' + sv(left.max) + '</b>, the largest value anywhere on the left, and it is not below <b>' + v + '</b>. One comparison rejects the whole subtree, which is exactly the point of carrying extremes upward.'),
-            panels: panels([{k:'node', v: v, cls:'hot'}, {k:'left.max', v: sv(left.max)}, {k:'returns', v:'(0, 0, false)'}])});
-          done[i] = r;
-          stack.pop();
-          return r;
-        }
-        steps.push({lines:[18], msg:'Left check passes: <code>left.max = ' + sv(left.max) + '</code> is strictly below <b>' + v + '</b>' + (has(L) ? '' : ' (the sentinel MinValue, since there is no left child)') + ', and the left subtree reported itself valid. Duplicates are rejected too — <code>&gt;=</code>, not <code>&gt;</code>.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'left', v: tup(left)}, {k:'test', v:'left.max < ' + v, cls:'good'}])});
-
-        const rightBad = !right.found || right.min <= v;
-        if (rightBad){
-          const r = {min:0, max:0, found:false};
-          steps.push({lines:[21,22], msg: (!right.found
-              ? 'The right subtree already reported <b>false</b>, so node <b>' + v + '</b> returns <code>(0, 0, false)</code> too.'
-              : '<code>right.min</code> is <b>' + sv(right.min) + '</b> — the smallest value anywhere on the right, possibly several levels down — and it is not above <b>' + v + '</b>. A parent-vs-child check would have waved this through; the subtree extreme is what catches it.'),
-            panels: panels([{k:'node', v: v, cls:'hot'}, {k:'right.min', v: sv(right.min)}, {k:'returns', v:'(0, 0, false)'}])});
-          done[i] = r;
-          stack.pop();
-          return r;
-        }
-        steps.push({lines:[21], msg:'Right check passes: <code>right.min = ' + sv(right.min) + '</code> is strictly above <b>' + v + '</b>' + (has(R) ? '' : ' (the sentinel MaxValue, since there is no right child)') + '. Both sides are clean, so the subtree rooted at <b>' + v + '</b> is a BST.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'right', v: tup(right)}, {k:'test', v: v + ' < right.min', cls:'good'}])});
-
-        const mn = Math.min(left.min, v), mx = Math.max(right.max, v);
-        const r = {min: mn, max: mx, found: true};
-        steps.push({lines:[24,25,27], msg:'Now summarise. The smallest value here is <code>Math.Min(left.min, ' + v + ')</code> = <b>' + sv(mn) + '</b>: only the left side can hold anything smaller, and when it is missing its <code>MaxValue</code> sentinel loses the Min so the node keeps its own value. Symmetrically the largest is <code>Math.Max(right.max, ' + v + ')</code> = <b>' + sv(mx) + '</b>. The tuple <code>' + tup(r) + '</code> goes up.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'min', v: sv(mn), cls:'accent'}, {k:'max', v: sv(mx), cls:'accent'}, {k:'returns', v: tup(r), cls:'good'}])});
-        done[i] = r;
-        stack.pop();
-        return r;
-      };
-
-      const res = walk(0);
-      cur = -1;
-      steps.push({lines:[3,4], msg:'The root returned <code>' + tup(res) + '</code>, so the answer is <b>' + (res.found ? 'true' : 'false') + '</b>. Every node was entered once and did O(1) work; the only memory is the recursion stack, one frame per level.',
-        panels: panels([{k:'IsValidBST', v: res.found ? 'true' : 'false', cls:'good'}])});
+      const root = res['n0'];
+      steps.push({lines:[3,4], msg:'The root\'s triple lands on line 3 and line 4 keeps only <code>found</code>: <b>' + (root.found ? 'true' : 'false') + '</b>. ' + calls + ' call(s) ran - one per node plus one per empty slot under a half-node - and each did constant work once its children had spoken, so O(n) time. The stack peaked at ' + maxF + ' frame(s), the depth of the tree, which is the O(n) space on a long thin tree. The sentinels are safe only because node values stay inside ' + '[-1000000000, 1000000000]; with values reaching int.MinValue this trick breaks, which is what the second solution avoids by using long.', panels: panels(null, null, null)});
       return steps;
     }
   },
   {
-    label: 'Push a legal (lower, upper) window down',
-    badge: 'O(n) time · O(h) stack · pre-order · optimal-variant.cs',
-    blurb: 'Same fact, opposite direction: rather than hauling extremes up, hand every node the open interval it is allowed to live in. Stepping left tightens <code>upper</code> to the parent, stepping right tightens <code>lower</code>. Each node needs one test, and a violation is caught the instant that node is visited.',
+    label: 'Pre-order: pass a legal (lower, upper) window down',
+    badge: 'O(n) time · O(n) space · pre-order DFS · optimal-variant.cs',
+    blurb: 'Turn the question around: instead of carrying facts up, carry a permit down. The root may be anything, everything in a node\'s left subtree must be under it, everything in its right subtree above it. A node is checked against the window it inherited in O(1) and hands each child a tighter one - so the global rule is enforced locally, all the way down.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'ancestor on the call stack'},
-      {cls:'good', text:'inside its window, subtree cleared'},
-      {cls:'dim', text:'not visited / empty slot'}
+      {cls:'in-window', text:'callers parked, waiting on this path'},
+      {cls:'good', text:'subtree cleared its window'},
+      {cls:'dim', text:'node fell outside its window'}
     ],
     code: [
       'public bool IsValidBST(TreeNode root)',
       '{',
-      '    return Validate(root, long.MinValue, long.MaxValue);',
+      '    return IsWithinBounds(root, long.MinValue, long.MaxValue);',
       '}',
       '',
-      'private bool Validate(TreeNode node, long lower, long upper)',
+      'private bool IsWithinBounds(TreeNode node, long lower, long upper)',
       '{',
       '    if (node == null) return true;',
       '    if (node.val <= lower || node.val >= upper) return false;',
       '',
-      '    return Validate(node.left, lower, node.val) &&',
-      '           Validate(node.right, node.val, upper);',
+      '    return IsWithinBounds(node.left, lower, node.val) &&',
+      '           IsWithinBounds(node.right, node.val, upper);',
       '}'
     ],
     simulate(input){
-      const vals = input.vals, n = vals.length, steps = [];
-      const has = (i) => i >= 0 && i < n && vals[i] !== null;
-      const disp = vals.map(v => v === null ? '·' : v);
-      const cleared = {};
-      const stack = [];
-      let cur = -1;
+      const base = treeFromLevelOrder(input.vals);
+      const info = {}, kid = {};
+      base.forEach(n => { info[n.id] = n; });
+      base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+      /* Every missing child is a real call here - line 8 is where most of this
+         recursion ends - so every empty slot is drawn. */
+      const nodes = base.slice();
+      let seq = 0;
+      base.forEach(n => {
+        ['L','R'].forEach(side => {
+          if (!(kid[n.id] || {})[side]){
+            const e = {id:'e' + (seq++), v: null, parent: n.id, side: side};
+            nodes.push(e); info[e.id] = e;
+            (kid[n.id] = kid[n.id] || {})[side] = e.id;
+          }
+        });
+      });
+      const child = (id, s) => (kid[id] || {})[s] || null;
 
-      const f = (x) => x === -Infinity ? 'long.MinValue' : (x === Infinity ? 'long.MaxValue' : String(x));
-      const s = (x) => x === -Infinity ? '−∞' : (x === Infinity ? '+∞' : String(x));
-      const onStack = (k) => stack.some(e => e.i === k);
+      const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
+      const lo = (x) => x === null ? '-inf' : String(x);
+      const hi = (x) => x === null ? '+inf' : String(x);
+      const win = (a, b) => '(' + lo(a) + ', ' + hi(b) + ')';
 
-      const stackChips = () => {
-        if (!stack.length) return [{text:'—', sub:'stack empty'}];
-        return stack.map((e, idx) => ({
-          text: has(e.i) ? String(vals[e.i]) : 'null',
-          sub: s(e.lo) + ' … ' + s(e.hi),
-          cls: idx === stack.length - 1 ? 'head' : ''
-        }));
+      const res = {}, wins = {}, frames = [], steps = [];
+      let calls = 0, maxF = 0;
+      const parkedNote = () => {
+        if (frames.length < 2) return '';
+        const p = frames[frames.length - 2];
+        return ' Its caller, <b>' + shown(p.id) + '</b>, is parked on line ' + (p.left === null ? 11 : 12) + ' waiting for this bool.';
       };
 
-      const panels = (pills) => {
-        const out = [
-          pTiles('Tree in level order — children of slot i are 2i+1 and 2i+2', disp, (k) => ({
-            cls: k === cur ? 'hot'
-               : !has(k) ? 'dim'
-               : onStack(k) ? 'in-window'
-               : cleared[k] ? 'good'
-               : 'dim'
+      const panels = (curId, popId, freshId) => [
+        pTree('tree', nodes.map(n => {
+          const r = res[n.id];
+          let cls = '';
+          if (n.id === curId) cls = 'hot';
+          else if (n.v === null) cls = '';
+          else if (r !== undefined) cls = r ? 'good' : 'dim';
+          else if (frames.some(f => f.id === n.id)) cls = 'in-window';
+          return {
+            id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
+            sub: (n.v !== null && wins[n.id]) ? wins[n.id] : ''
+          };
+        }), {
+          tags: curId ? [{name:'node', id: curId, cls:'accent'}] : [],
+          scale: 0.72
+        }),
+        pStack('call stack', [{
+          label: 'IsWithinBounds(node, lower, upper)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: 'node = ' + shown(f.id),
+            sub: 'window ' + win(f.lo, f.hi),
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.id === freshId,
+            popped: f.id === popId && i === frames.length - 1
           })),
-          pChips('Call stack — each node with the (lower, upper) it was handed', [{items: stackChips()}])
-        ];
-        if (pills && pills.length) out.push(pPills('', pills));
-        return out;
-      };
+          empty: 'no frames open',
+          foot: 'IsValidBST',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'running', v: curId ? shown(curId) : (res['n0'] !== undefined ? 'done' : 'not started'), cls:'hot'},
+          {k:'window', v: frames.length ? win(frames[frames.length - 1].lo, frames[frames.length - 1].hi) : '-'},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'calls made', v: calls},
+          {k:'IsValidBST', v: res['n0'] !== undefined ? (res['n0'] ? 'true' : 'false') : 'pending',
+           cls: res['n0'] !== undefined ? (res['n0'] ? 'good' : 'dim') : ''}
+        ])
+      ];
 
-      steps.push({lines:[1,3], msg:'The root may hold anything, so it starts with the widest possible window, <code>(long.MinValue, long.MaxValue)</code>. The bounds are <code>long</code> rather than <code>int</code> on purpose: a node value of <code>int.MinValue</code> would otherwise sit exactly on the bound and be rejected by the <code>&lt;=</code> test.',
-        panels: panels([{k:'lower', v:'−∞'}, {k:'upper', v:'+∞'}])});
+      steps.push({lines:[1,3], msg:'Line 3 starts the walk with the widest possible permit: <code>lower = long.MinValue</code>, <code>upper = long.MaxValue</code>, drawn below as <code>(-inf, +inf)</code>. They are <code>long</code>, not <code>int</code>, so that a node holding <code>int.MinValue</code> still sits strictly inside the starting window - no sentinel can collide with real data. From here every call answers one narrow question: is this node inside the window it inherited, and is everything beneath it?', panels: panels(null, null, null)});
 
-      let failed = -1;
+      const walk = (id, a, b) => {
+        frames.push({id: id, lo: a, hi: b, left: null});
+        calls++;
+        maxF = Math.max(maxF, frames.length);
 
-      const validate = (i, lo, hi) => {
-        stack.push({i: i, lo: lo, hi: hi});
-        cur = i;
-
-        if (!has(i)){
-          steps.push({lines:[8], msg:'Slot ' + i + ' is empty. An empty tree is vacuously a BST, so it returns <b>true</b> without looking at the window at all — this is the base case that ends every branch.',
-            panels: panels([{k:'node', v:'null'}, {k:'returns', v:'true', cls:'good'}])});
-          stack.pop();
+        if (info[id].v === null){
+          const side = info[id].side === 'L' ? 'left' : 'right';
+          steps.push({lines:[6,8], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>node</code> arrives as <code>null</code> and line 8 returns <b>true</b> immediately - an empty subtree cannot break any rule, whatever window it was handed. Most of the calls in this run end right here, which is why the dashed slots are worth drawing.' + parkedNote(), panels: panels(id, id, id)});
+          res[id] = true;
+          frames.pop();
           return true;
         }
 
-        const v = vals[i];
-        steps.push({lines:[6,7], msg:'Enter <code>Validate(node ' + v + ', ' + f(lo) + ', ' + f(hi) + ')</code>. That window is the promise made by every ancestor above: to be legal here, <b>' + v + '</b> must land strictly between <b>' + s(lo) + '</b> and <b>' + s(hi) + '</b>.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'lower', v: s(lo)}, {k:'upper', v: s(hi)}])});
+        const v = info[id].v;
+        wins[id] = win(a, b);
+        const tooSmall = (a !== null && v <= a), tooBig = (b !== null && v >= b);
 
-        if (v <= lo || v >= hi){
-          failed = i;
-          steps.push({lines:[9], msg:'Node <b>' + v + '</b> breaks its window: ' + (v <= lo ? '<code>' + v + ' &lt;= ' + s(lo) + '</code>' : '<code>' + v + ' &gt;= ' + s(hi) + '</code>') + '. The bound it violates was set by an ancestor, not by its parent — this is precisely the value a parent-vs-child check would have missed. Return <b>false</b>.',
-            panels: panels([{k:'node', v: v, cls:'hot'}, {k:'window', v: s(lo) + ' … ' + s(hi)}, {k:'returns', v:'false'}])});
-          stack.pop();
+        if (tooSmall || tooBig){
+          res[id] = false;
+          steps.push({lines:[6,9], msg:'<b>' + v + '</b> is checked against its inherited window <code>' + win(a, b) + '</code> and fails: it is ' + (tooSmall ? 'not above the lower bound <b>' + lo(a) + '</b>, which some ancestor set when this path turned right' : 'not below the upper bound <b>' + hi(b) + '</b>, which some ancestor set when this path turned left') + '. That ancestor may be several levels up - the window is how its authority reaches down here. Line 9 returns <b>false</b>.' + parkedNote(), panels: panels(id, id, id)});
+          frames.pop();
           return false;
         }
 
-        steps.push({lines:[9], msg:'<b>' + v + '</b> sits strictly inside ' + s(lo) + ' … ' + s(hi) + ', so this node is fine. Both comparisons are strict-by-exclusion (<code>&lt;=</code> and <code>&gt;=</code> reject), which is how duplicate values get turned away.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'test', v:'passes', cls:'good'}])});
+        steps.push({lines:[9,11], msg:'<b>' + v + '</b> sits strictly inside <code>' + win(a, b) + '</code>, so line 9 lets it through and line 11 recurses left with a tightened window <code>' + win(a, v) + '</code>: the lower bound is inherited unchanged, and <b>' + v + '</b> itself becomes the new ceiling, because everything in a left subtree must stay under it. No work is deferred and nothing comes back up but a bool - the whole check happened here, in constant time.' + parkedNote(), panels: panels(id, null, id)});
 
-        steps.push({lines:[11], msg:'Descend left. Everything down there must stay below <b>' + v + '</b>, so <code>upper</code> tightens to ' + v + ' while <code>lower</code> is inherited unchanged as ' + s(lo) + '. The window only ever narrows going down.',
-          panels: panels([{k:'left gets', v: s(lo) + ' … ' + v, cls:'accent'}])});
-        const okL = validate(2 * i + 1, lo, v);
-        cur = i;
+        const f = frames[frames.length - 1];
+        const L = walk(child(id, 'L'), a, v);
+        f.left = L;
 
-        if (!okL){
-          steps.push({lines:[11,12], msg:'The left call returned <b>false</b>. Because the two calls are joined by <code>&amp;&amp;</code>, C# short-circuits: <code>Validate(node.right, ...)</code> is <b>never invoked</b>, and the right subtree of <b>' + v + '</b> stays unvisited. The false rides straight up to the root.',
-            panels: panels([{k:'node', v: v, cls:'hot'}, {k:'right subtree', v:'skipped'}, {k:'returns', v:'false'}])});
-          stack.pop();
+        if (!L){
+          res[id] = false;
+          steps.push({lines:[11], msg:'The left call returned <b>false</b>, and <code>&amp;&amp;</code> short-circuits: line 12 never runs, so the entire right subtree of <b>' + v + '</b> is never visited at all. One violation anywhere collapses the rest of the walk - a real difference from the post-order version, which always explores both sides before it checks anything.', panels: panels(id, id, null)});
+          frames.pop();
           return false;
         }
 
-        steps.push({lines:[12], msg:'Left side cleared, so the right call runs. Everything down there must stay above <b>' + v + '</b>: <code>lower</code> tightens to ' + v + ' and <code>upper</code> is inherited as ' + s(hi) + '.',
-          panels: panels([{k:'right gets', v: v + ' … ' + s(hi), cls:'accent'}])});
-        const okR = validate(2 * i + 2, v, hi);
-        cur = i;
-
-        steps.push({lines:[11,12], msg: okR
-            ? 'Both calls returned true, so the whole subtree at <b>' + v + '</b> is a BST and <b>true</b> goes up to its caller.'
-            : 'The right call returned <b>false</b>, so the <code>&amp;&amp;</code> is false and node <b>' + v + '</b> reports failure upward. Nothing can undo it on the way back.',
-          panels: panels([{k:'node', v: v, cls:'hot'}, {k:'returns', v: okR ? 'true' : 'false', cls: okR ? 'good' : ''}])});
-        if (okR) cleared[i] = true;
-        stack.pop();
-        return okR;
+        const R = walk(child(id, 'R'), v, b);
+        res[id] = R;
+        steps.push({lines:[11,12], msg:'Left came back <b>true</b>, so line 12 ran with the mirrored window <code>' + win(v, b) + '</code> - <b>' + v + '</b> as the new floor, the old ceiling kept - and it returned <b>' + (R ? 'true' : 'false') + '</b>. <code>true &amp;&amp; ' + (R ? 'true' : 'false') + '</code> is <b>' + (R ? 'true' : 'false') + '</b>, so the whole subtree rooted at <b>' + v + '</b> ' + (R ? 'is a valid BST' : 'is rejected') + ' and the frame pops.', panels: panels(id, id, null)});
+        frames.pop();
+        return R;
       };
 
-      const ok = validate(0, -Infinity, Infinity);
-      cur = -1;
-      steps.push({lines:[3], msg:'Answer: <b>' + (ok ? 'true' : 'false') + '</b>' + (ok
-          ? '. Every node was tested once against a window carrying the full history of turns taken to reach it — no subtree summaries, just two longs per frame.'
-          : ', decided at node <b>' + (failed >= 0 ? vals[failed] : '?') + '</b>. Once one window is broken the recursion stops descending and unwinds, so the dimmed slots were never even looked at.'),
-        panels: panels([{k:'IsValidBST', v: ok ? 'true' : 'false', cls:'good'}])});
+      walk('n0', null, null);
+
+      const root = res['n0'];
+      const unseen = base.filter(n => res[n.id] === undefined).length;
+      steps.push({lines:[3], msg:'The root\'s bool reaches line 3: <b>' + (root ? 'true' : 'false') + '</b>. ' + calls + ' call(s) ran' + (unseen ? ', and ' + unseen + ' node(s) were never visited at all - the short-circuit on line 11 cut them off' : ', one per node plus one per empty slot') + '. Each did a single comparison, so O(n) time; the stack peaked at ' + maxF + ' frame(s), the depth of the tree, so O(n) space. Compared with the post-order version, nothing has to be measured and returned upward - the constraint travels downward instead, which is why this one can stop early.', panels: panels(null, null, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

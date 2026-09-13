@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T06:54:52.813Z",
+  "updatedAt": "2026-09-13T07:37:25.111Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3535,7 +3535,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive tree match at every node\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS anchor scan + recursive tree equality check\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3547,24 +3547,33 @@
       "classification": {
         "optimal.cs": {
           "time": "O(m * n)",
-          "space": "O(n)",
-          "algorithm": "recursive tree match at every node",
+          "space": "O(n + m)",
+          "algorithm": "DFS anchor scan + recursive tree equality check",
           "approachKey": "tree-compare-each-node",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive tree match at every node\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS anchor scan + recursive tree equality check\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "67281e8f59a4"
         },
-        "builtAt": "2026-09-10T06:41:38.706Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-13T07:33:24.396Z"
       }
     },
     "three-integer-sum": {
@@ -3779,20 +3788,22 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "codePrint": "327d55c799c7",
+          "codePrint": "7a5febcdd654",
           "renames": [
-            "res->result"
+            "result->info"
           ]
         },
         "optimal-variant.cs": {
           "version": 1,
-          "codePrint": "2156d092b67a",
-          "renames": []
+          "codePrint": "0ddd9629624d",
+          "renames": [
+            "Validate->IsWithinBounds"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order recursion computing subtree min/max bottom-up\",\"approachKey\":\"minmax-bottomup\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"pre-order recursion passing down valid (lower,upper) bounds\",\"approachKey\":\"bounds-topdown\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7a5febcdd654\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning subtree (min,max,valid)\",\"approachKey\":\"minmax-bottomup\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0ddd9629624d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"pre-order DFS passing down valid (lower,upper) bounds\",\"approachKey\":\"bounds-topdown\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3810,34 +3821,47 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "post-order recursion computing subtree min/max bottom-up",
+          "algorithm": "post-order DFS returning subtree (min,max,valid)",
           "approachKey": "minmax-bottomup",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "pre-order recursion passing down valid (lower,upper) bounds",
+          "algorithm": "pre-order DFS passing down valid (lower,upper) bounds",
           "approachKey": "bounds-topdown",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order recursion computing subtree min/max bottom-up\",\"approachKey\":\"minmax-bottomup\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"pre-order recursion passing down valid (lower,upper) bounds\",\"approachKey\":\"bounds-topdown\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7a5febcdd654\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning subtree (min,max,valid)\",\"approachKey\":\"minmax-bottomup\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0ddd9629624d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"pre-order DFS passing down valid (lower,upper) bounds\",\"approachKey\":\"bounds-topdown\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
         ],
         "prints": {
-          "optimal.cs": "327d55c799c7",
-          "optimal-variant.cs": "2156d092b67a"
+          "optimal.cs": "7a5febcdd654",
+          "optimal-variant.cs": "0ddd9629624d"
         },
-        "builtAt": "2026-09-08T06:38:32.167Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-13T07:37:25.109Z"
       }
     },
     "validate-parentheses": {

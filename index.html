@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">11</span> / 56</b></div>
-      <div class="bar"><span id="bar" style="width:19.6%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">13</span> / 56</b></div>
+      <div class="bar"><span id="bar" style="width:23.2%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -587,7 +587,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Trees">
   <div class="group-head">
     <h2>Trees</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>10</b> reshaped</span>
+    <span class="group-count"><b class="gdone">4</b> / <b>10</b> reshaped</span>
   </div>
   <p class="group-note">Recursion that returns something useful from every subtree.</p>
   <ul>
@@ -671,24 +671,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
       </span>
     </li>
-    <li data-hay="subtree of a binary tree subtree-of-a-binary-tree trees dfs anchor scan + full structural equality check  needs reshape" data-status="stale">
+    <li data-hay="subtree of a binary tree subtree-of-a-binary-tree trees dfs anchor walk + full tree-equality check at each node tree call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/subtree-of-a-binary-tree" target="_blank" rel="noopener noreferrer">Subtree Of A Binary Tree</a>
-        <span class="why">DFS anchor scan + full structural equality check</span>
+        <span class="why">DFS anchor walk + full tree-equality check at each node</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(m * n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/subtree-of-a-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+        <span class="cx" title="time / space">O(m * n) &middot; O(n + m)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/subtree-of-a-binary-tree/subtree-of-a-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
-    <li data-hay="valid binary search tree valid-binary-search-tree trees post-order dfs returning (min, max, found) per subtree  needs reshape" data-status="stale">
+    <li data-hay="valid binary search tree valid-binary-search-tree trees post-order dfs returning (min, max, found) upward tree call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/valid-binary-search-tree" target="_blank" rel="noopener noreferrer">Valid Binary Search Tree</a>
-        <span class="why">Post-order DFS returning (min, max, found) per subtree</span>
+        <span class="why">Post-order DFS returning (min, max, found) upward</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/valid-binary-search-tree/valid-binary-search-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
   </ul>
