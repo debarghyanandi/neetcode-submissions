@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T06:50:48.813Z",
+  "updatedAt": "2026-09-13T06:54:52.813Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2273,14 +2273,66 @@
     },
     "max-area-of-island": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs"
+      },
+      "fingerprints": {
+        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "failed": true,
+          "reason": "size renamed inconsistently: maxArea then areaCount"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill, track max island size\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "DFS flood fill, track max island size",
+          "approachKey": "dfs-flood-fill",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "matrix",
+            "call-stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill, track max island size\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "29b21450bf63"
+        },
+        "structures": [
+          "matrix",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-13T06:54:52.565Z"
+      }
     },
     "max-water-container": {
       "topic": "Data Structures & Algorithms",
