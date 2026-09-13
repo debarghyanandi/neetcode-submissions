@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">7</span> / 55</b></div>
-      <div class="bar"><span id="bar" style="width:12.7%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">8</span> / 55</b></div>
+      <div class="bar"><span id="bar" style="width:14.5%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -787,18 +787,18 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Intervals">
   <div class="group-head">
     <h2>Intervals</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>1</b> reshaped</span>
+    <span class="group-count"><b class="gdone">1</b> / <b>1</b> reshaped</span>
   </div>
   <p class="group-note">Sort by one end, then sweep once.</p>
   <ul>
-    <li data-hay="merge intervals merge-intervals intervals sort by start, sweep once merging into the last block  needs reshape" data-status="stale">
+    <li data-hay="merge intervals merge-intervals intervals sort by start, then one-pass merge into the last block array interval current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/merge-intervals" target="_blank" rel="noopener noreferrer">Merge Intervals</a>
-        <span class="why">Sort by start, sweep once merging into the last block</span>
+        <span class="why">Sort by start, then one-pass merge into the last block</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-intervals/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-intervals/merge-intervals-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
   </ul>
