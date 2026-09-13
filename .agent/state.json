@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-12T17:53:06.759Z",
+  "updatedAt": "2026-09-13T02:56:29.904Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2347,30 +2347,37 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
           "algorithm": "Kadane's algorithm, rolling max",
-          "approachKey": "kadane",
+          "approachKey": "kadane-max-subarray",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "Kadane's recurrence materialized into a DP array",
-          "approachKey": "kadane",
+          "approachKey": "kadane-max-subarray",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -2385,6 +2392,7 @@
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -2393,7 +2401,11 @@
           "optimal.cs": "66de7d2dfc7c",
           "suboptimal.cs": "c1ca1d30ac1a"
         },
-        "builtAt": "2026-09-11T05:02:02.646Z"
+        "structures": [
+          "array",
+          "dp-table"
+        ],
+        "builtAt": "2026-09-13T02:56:29.901Z"
       }
     },
     "merge-intervals": {

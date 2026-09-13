@@ -651,29 +651,31 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Maximum Subarray',
-  note: 'a running total that has gone negative is dead weight — drop it',
-  inputs: [{id:'nums', label:'nums', value:'-2,1,-3,4,-1,2,1,-5,4', width:300}],
+  note: 'a negative prefix is dead weight - drop it and start again',
+  inputs: [{id:'nums', label:'nums', value:'-2,1,-3,4,-1,2,1,-5,4', width:280}],
   parse(raw){
-    const nums = parseInts(raw.nums, 12);
-    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (nums.some(v => !Number.isInteger(v))) return {ok:false, msg:'Values must be whole numbers.'};
-    return {ok:true, value:{nums}, normalized:{nums: nums.join(',')}};
+    const a = parseInts(raw.nums, 10);
+    if (!a) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
+    if (a.length < 2) return {ok:false, msg:'Needs at least two numbers.'};
+    return {ok:true, value:{nums:a}, normalized:{nums: a.join(',')}};
   },
-  shuffle(){ return {nums: randInts(7 + Math.floor(Math.random()*3), -6, 8).join(',')}; },
+  shuffle(){
+    return {nums: randInts(8 + Math.floor(Math.random() * 2), -6, 9).join(',')};
+  },
   solutions: [
   {
-    label: 'Kadane — one rolling sum',
-    badge: 'O(n) time · O(1) space · Kadane · optimal.cs',
-    blurb: 'A subarray ending at index <b>i</b> is either <code>nums[i]</code> alone or <code>nums[i]</code> glued onto the best run ending at <b>i−1</b> — and gluing only pays while that run\'s sum is positive. So a single int carries the entire past: keep it while it helps, reset it to 0 the moment it turns negative.',
+    label: "Kadane's algorithm, one rolling sum",
+    badge: "O(n) time · O(1) space · Kadane's · optimal.cs",
+    blurb: 'The best subarray ending at <b>i</b> is either <code>nums[i]</code> alone or <code>nums[i]</code> glued onto the best run ending at <b>i−1</b>. Gluing only helps while that run is positive, so one int carries the whole past: the moment <code>currentSum</code> goes negative it is thrown away and a fresh run starts. <code>maxSum</code> just keeps the largest seen.',
     legend: [
-      {cls:'hot', text:'current element'},
-      {cls:'in-window', text:'run feeding currentSum'},
-      {cls:'good', text:'best run found so far'},
+      {cls:'hot', text:'number - the element being added'},
+      {cls:'in-window', text:'the current run (currentSum)'},
+      {cls:'good', text:'best subarray so far'},
       {cls:'dim', text:'not yet reached'}
     ],
     code: [
-      'int maxSum = nums[0];      // must be a real element: handles all-negative input',
-      'int currentSum = 0;        // best sum of a subarray ending at the current index',
+      'int maxSum = nums[0];   // a real element: handles all-negative input',
+      'int currentSum = 0;     // best sum of a subarray ending here',
       '',
       'foreach (int number in nums)',
       '{',
@@ -690,71 +692,67 @@ const PROBLEM = {
     ],
     simulate(input){
       const a = input.nums, steps = [];
-      let maxSum = a[0], cur = 0, start = 0, bs = 0, be = 0;
-      const panels = (i) => [
-        pTiles('nums', a, (k) => ({
-          cls: k === i ? 'hot'
-             : (i >= 0 && k >= start && k < i) ? 'in-window'
-             : (k >= bs && k <= be) ? 'good'
-             : (i >= 0 && k > i) ? 'dim' : ''
-        })),
-        pPills('', [
-          {k:'index', v: i >= 0 ? i : '–', cls:'hot'},
-          {k:'nums[i]', v: i >= 0 ? a[i] : '–'},
-          {k:'currentSum', v: cur, cls:'accent'},
-          {k:'maxSum', v: maxSum, cls:'good'},
-          {k:'best run', v: 'nums[' + bs + '..' + be + ']'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'<code>maxSum</code> is seeded with <b>' + a[0] + '</b> — a real element, not 0 — because the answer must be a <em>non-empty</em> subarray: if every value is negative the best answer is the least bad single element. <code>currentSum</code> starts at <b>0</b>, meaning “no run carried in yet”.', panels: panels(-1)});
+      let cur = 0, best = a[0], runStart = 0, bs = 0, be = 0;
+      const panels = (i) => {
+        const extra = {};
+        if (i >= 0){
+          extra.ptrs = [{name:'number', idx:i, cls:'hot'}];
+          extra.bracket = {from: runStart, to: i};
+        } else if (be >= bs){
+          extra.bracket = {from: bs, to: be, dashed: true};
+        }
+        return [
+          pTiles('nums', a, (k) => ({cls:
+              k === i ? 'hot'
+            : (i >= 0 && k >= runStart && k < i) ? 'in-window'
+            : (i >= 0 && k > i) ? 'dim'
+            : (k >= bs && k <= be) ? 'good'
+            : ''
+          }), extra),
+          pPills('state', [
+            {k:'currentSum', v: cur, cls:'hot'},
+            {k:'run starts at', v: i >= 0 ? runStart : '-'},
+            {k:'maxSum', v: best, cls:'good'},
+            {k:'best subarray', v: bs + '..' + be}
+          ])
+        ];
+      };
+      steps.push({lines:[1,2], msg:'<code>maxSum</code> starts at <code>nums[0]</code> = <b>' + a[0] + '</b>, not at <b>0</b>: a subarray must contain at least one element, so on an all-negative input the answer is the least bad element. <code>currentSum</code> starts at <b>0</b> because no run is open yet.', panels: panels(-1)});
       for (let i = 0; i < a.length; i++){
-        const v = a[i];
-        let lines, msg;
         if (cur < 0){
-          const dropped = cur;
-          cur = v; start = i;
-          lines = [8,9,11,12];
-          msg = 'The run carried into index ' + i + ' summed to <b>' + dropped + '</b>. Anything built on top of a negative prefix would score higher without it, so line 9 throws the whole prefix away and a fresh run begins here: <code>currentSum = ' + v + '</code>.';
-        } else if (i === 0){
-          cur = v;
-          lines = [8,11,12];
-          msg = 'Nothing precedes index 0, so <code>currentSum</code> is still 0 and the first element is simply added: the best run ending at index 0 is <b>' + v + '</b>, the element by itself.';
-        } else {
-          const before = cur;
-          cur = before + v;
-          lines = [8,11,12];
-          msg = 'The run ending at index ' + (i - 1) + ' sums to <b>' + before + '</b>, which is not negative — carrying it forward can only help — so index ' + i + ' extends it: <code>' + before + ' + (' + v + ') = ' + cur + '</code>.';
+          const old = cur;
+          cur = 0; runStart = i;
+          steps.push({lines:[8,9], msg:'The run so far sums to <b>' + old + '</b>, which is negative. Carrying it into index ' + i + ' would drag every later sum down by ' + (-old) + ', and cutting it off costs nothing — a subarray may start anywhere. So the prefix is dropped <b>permanently</b> and a fresh run opens at index ' + i + '.', panels: panels(i)});
         }
-        if (cur > maxSum){
-          maxSum = cur; bs = start; be = i;
-          msg += ' That beats the previous best, so <code>maxSum</code> becomes <b>' + maxSum + '</b> from <code>nums[' + bs + '..' + be + ']</code>.';
-        } else {
-          msg += ' It does not beat <code>maxSum</code>, which stays <b>' + maxSum + '</b>.';
-        }
-        steps.push({lines: lines, msg: msg, panels: panels(i)});
+        cur += a[i];
+        const better = cur > best;
+        if (better){ best = cur; bs = runStart; be = i; }
+        steps.push({lines:[11,12], msg:'Add <b>' + a[i] + '</b>. The best subarray <em>ending</em> at index ' + i + ' is indices ' + runStart + '..' + i + ', summing to <b>' + cur + '</b>' + (better ? ' — that beats the old maximum, so <code>maxSum</code> becomes <b>' + cur + '</b>.' : '; <code>maxSum</code> stays <b>' + best + '</b>. The run is kept anyway because it is still positive and could grow.'), panels: panels(i)});
       }
-      steps.push({lines:[15], msg:'Every index got one chance to be the <em>end</em> of the answer, and the best run ending at each index needed only the previous one — so the answer is <b>' + maxSum + '</b> from <code>nums[' + bs + '..' + be + ']</code>. One pass, two ints, no array of history at all.', panels: panels(-1)});
+      steps.push({lines:[15], msg:'Every index was asked one question — extend or restart — and each answer took O(1). The largest sum is <b>' + best + '</b>, from indices ' + bs + '..' + be + '. Two ints held the entire history.', panels: panels(-1)});
       return steps;
     }
   },
   {
     label: 'Materialize the recurrence into a DP array',
-    badge: 'O(n) time · O(n) space · DP array · suboptimal.cs',
-    blurb: 'Same recurrence written out longhand: <code>bestEndingAt[i] = max(nums[i], nums[i] + bestEndingAt[i−1])</code>. Storing every value makes the induction visible — each cell reads exactly one neighbour — but since only that one neighbour is ever read, the whole array is O(n) memory doing a single int\'s job.',
+    badge: 'O(n) time · O(n) space · DP table · suboptimal.cs',
+    blurb: 'The same recurrence, written down instead of collapsed: <code>bestEndingAt[i] = max(nums[i], nums[i] + bestEndingAt[i−1])</code> — start fresh at <b>i</b>, or extend the best run ending just before it. Cloning <code>nums</code> seeds every single-element case for free. One pass fills the table, a second takes its largest entry.',
     legend: [
-      {cls:'hot', text:'cell being written / read'},
-      {cls:'in-window', text:'settled bestEndingAt value'},
-      {cls:'good', text:'largest value found'},
-      {cls:'dim', text:'still just the seed nums[i]'}
+      {cls:'hot', text:'cell being written or read'},
+      {cls:'in-window', text:'bestEndingAt[i-1] - the run being extended'},
+      {cls:'good', text:'settled / current maximum'},
+      {cls:'ghost', text:'still the seed value from nums'},
+      {cls:'dim', text:'not in play'}
     ],
     code: [
-      'int[] bestEndingAt = (int[])nums.Clone();   // seeded with the subarray [i] alone',
+      '// bestEndingAt[i] = the largest sum of any subarray that ENDS at i.',
+      '// Seeded with nums itself: the single-element subarray [i].',
+      'int[] bestEndingAt = (int[])nums.Clone();',
       '',
       'for (int i = 1; i < nums.Length; i++)',
       '{',
       '    // Either start fresh at i, or extend the best run ending at i-1.',
-      '    bestEndingAt[i] = Math.Max(nums[i],',
-      '        nums[i] + bestEndingAt[i - 1]);',
+      '    bestEndingAt[i] = Math.Max(nums[i], nums[i] + bestEndingAt[i - 1]);',
       '}',
       '',
       'int maxSum = bestEndingAt[0];',
@@ -769,47 +767,61 @@ const PROBLEM = {
     simulate(input){
       const a = input.nums, n = a.length, steps = [];
       const dp = a.slice();
-      let maxSum = a[0], bestIdx = -1;
-      const panels = (i, phase) => [
-        pTiles('nums', a, (k) => ({cls: k === i ? 'hot' : (phase === 1 && k === i - 1) ? 'in-window' : ''})),
-        pTiles('bestEndingAt', dp, (k) => ({
-          cls: k === i ? 'hot'
-             : phase === 0 ? (k === 0 ? 'in-window' : 'dim')
-             : phase === 1 ? (k < i ? 'in-window' : 'dim')
-             : (k === bestIdx ? 'good' : (i < 0 || k < i) ? 'in-window' : 'dim')
-        })),
-        pPills('', [
-          {k:'i', v: i >= 0 ? i : '–', cls:'hot'},
-          {k:'nums[i]', v: i >= 0 ? a[i] : '–'},
-          {k:'bestEndingAt[i-1]', v: (phase === 1 && i > 0) ? dp[i - 1] : '–'},
-          {k:'bestEndingAt[i]', v: i >= 0 ? dp[i] : '–', cls:'accent'},
-          {k:'maxSum', v: phase === 2 ? maxSum : '–', cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1], msg:'<code>Clone()</code> seeds every cell with the element itself, because the one-element subarray <code>[nums[i]]</code> always ends at <b>i</b> and is always legal. Only index 0 is already final — nothing sits to its left, so the best run ending there is <b>' + a[0] + '</b>. The rest are placeholders the loop will overwrite.', panels: panels(-1, 0)});
+      const numsRow = (i) => pTiles('nums', a, (k) => ({cls:
+          k === i ? 'hot'
+        : (i >= 0 && k === i - 1) ? 'in-window'
+        : (i >= 0 && k > i) ? 'dim'
+        : ''
+      }), i >= 0 ? {ptrs:[{name:'i', idx:i, cls:'hot'}]} : {});
+      const dpBuild = (i) => pTiles('bestEndingAt', dp, (k) => ({cls:
+          k === i ? 'hot'
+        : k === i - 1 ? 'in-window'
+        : k < i ? 'good'
+        : 'ghost'
+      }), {ptrs:[{name:'i', idx:i, cls:'hot'}]});
+      steps.push({lines:[1,2,3], msg:'<code>Clone()</code> copies <code>nums</code> into <code>bestEndingAt</code>. That is not laziness: the subarray consisting of index <b>i</b> alone already ends at <b>i</b> and sums to <code>nums[i]</code>, so every cell starts at a legal answer. Index <b>0</b> is already final — nothing comes before it to extend.',
+        panels: [
+          numsRow(-1),
+          pTiles('bestEndingAt', dp, (k) => ({cls: k === 0 ? 'good' : 'ghost'})),
+          pNote('the table', 'Each cell answers one question: <em>of all subarrays that END here, which sums highest?</em> The overall answer is the largest cell, but it cannot be read off until every cell is settled.')
+        ]});
       for (let i = 1; i < n; i++){
-        const prev = dp[i - 1], fresh = a[i], extend = a[i] + prev;
+        const fresh = a[i];
+        const extend = a[i] + dp[i - 1];
+        const took = extend > fresh;
         dp[i] = Math.max(fresh, extend);
-        const verdict = extend > fresh
-          ? 'The left neighbour contributes <b>' + prev + '</b>, so extending wins'
-          : extend < fresh
-            ? 'The left neighbour contributes <b>' + prev + '</b>, dragging the total down, so starting fresh wins'
-            : 'Both options tie, so it makes no difference';
-        steps.push({lines:[6,7], msg:'Index ' + i + ' has exactly two candidates: start a new run here (<code>' + fresh + '</code>) or glue this element onto the best run ending at ' + (i - 1) + ' (<code>' + fresh + ' + ' + prev + ' = ' + extend + '</code>). ' + verdict + ': <code>bestEndingAt[' + i + '] = ' + dp[i] + '</code>. Note that only cell ' + (i - 1) + ' was read — every other stored value is already dead weight.', panels: panels(i, 1)});
+        steps.push({lines:[5,8], msg:'At index ' + i + ': starting fresh gives <b>' + fresh + '</b>, extending the best run ending at ' + (i - 1) + ' gives ' + a[i] + ' + ' + dp[i - 1] + ' = <b>' + extend + '</b>. ' + (took ? 'Extending wins, because <code>bestEndingAt[' + (i - 1) + ']</code> = ' + dp[i - 1] + ' is positive and adds to the total.' : 'Starting fresh wins — <code>bestEndingAt[' + (i - 1) + ']</code> = ' + dp[i - 1] + ' is not positive, so dragging it along would only subtract.') + ' The cell settles at <b>' + dp[i] + '</b>.',
+          panels: [
+            numsRow(i),
+            dpBuild(i),
+            pPills('this cell', [
+              {k:'start fresh', v: fresh},
+              {k:'extend', v: extend, cls: took ? 'good' : 'dim'},
+              {k:'bestEndingAt[' + i + ']', v: dp[i], cls:'hot'}
+            ])
+          ]});
       }
-      steps.push({lines:[10], msg:'The table answers “best run <em>ending</em> at i”, never “best run anywhere”, so a second pass over the finished array is needed. <code>maxSum</code> starts at <code>bestEndingAt[0] = ' + a[0] + '</code> — a real subarray sum, so an all-negative input still returns its largest element rather than 0.', panels: panels(-1, 2)});
-      bestIdx = 0;
-      for (let j = 0; j < n; j++){
-        const better = dp[j] > maxSum;
-        const before = maxSum;
-        if (better){ maxSum = dp[j]; bestIdx = j; }
-        steps.push({lines:[14], msg:'<code>bestEndingAt[' + j + '] = ' + dp[j] + '</code>' + (better ? ' beats <b>' + before + '</b>, so the answer now ends at index ' + j + ' with sum <b>' + maxSum + '</b>.' : ' does not beat <b>' + maxSum + '</b>, so the running answer is unchanged — the best subarray does not end at index ' + j + '.'), panels: panels(j, 2)});
+      let best = dp[0], bestIdx = 0;
+      const dpScan = (s) => pTiles('bestEndingAt', dp, (k) => ({cls:
+          k === s ? 'hot'
+        : k === bestIdx ? 'good'
+        : k < s ? 'done'
+        : ''
+      }), s >= 0 ? {ptrs:[{name:'sum', idx:s, cls:'hot'}]} : {});
+      steps.push({lines:[11], msg:'The table is complete. Each entry is the best subarray ending at that index, and <em>every</em> subarray ends somewhere — so the answer is guaranteed to be one of these cells. <code>maxSum</code> is seeded with <code>bestEndingAt[0]</code> = <b>' + dp[0] + '</b> so an all-negative table still returns a real element.',
+        panels: [numsRow(-1), dpScan(-1), pPills('state', [{k:'maxSum', v: best, cls:'good'}])]});
+      for (let s = 0; s < n; s++){
+        const better = dp[s] > best;
+        if (better){ best = dp[s]; bestIdx = s; }
+        steps.push({lines:[13,15], msg:'Cell ' + s + ' holds <b>' + dp[s] + '</b>' + (better ? ' — higher than anything seen, so <code>maxSum</code> becomes <b>' + dp[s] + '</b>.' : '; <code>maxSum</code> stays <b>' + best + '</b>.'),
+          panels: [numsRow(-1), dpScan(s), pPills('state', [{k:'sum', v: dp[s], cls:'hot'}, {k:'maxSum', v: best, cls:'good'}, {k:'from cell', v: bestIdx}])]});
       }
-      steps.push({lines:[17], msg:'The largest value in the table is <b>' + maxSum + '</b>, at index ' + bestIdx + ' — the best subarray ends there. Correct, and still O(n) time, but the array held ' + n + ' numbers when only <code>bestEndingAt[i-1]</code> was ever read: collapse it to one rolling int and this becomes the O(1)-space version.', panels: panels(-1, 2)});
+      steps.push({lines:[18], msg:'Answer <b>' + best + '</b>, the best subarray ending at index ' + bestIdx + '. Identical to Kadane’s and identical in time — but only <code>bestEndingAt[i - 1]</code> was ever read, so the other n − 1 cells were stored and never looked at again. Collapsing the array into a single rolling int is the optimal version.',
+        panels: [numsRow(-1), dpScan(-1), pPills('state', [{k:'maxSum', v: best, cls:'good'}, {k:'extra space', v: n + ' ints'}])]});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

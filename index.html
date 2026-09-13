@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">6</span> / 55</b></div>
-      <div class="bar"><span id="bar" style="width:10.9%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">7</span> / 55</b></div>
+      <div class="bar"><span id="bar" style="width:12.7%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -764,6 +764,26 @@ li + li{border-top:2px dashed var(--pencil-light);}
   </ul>
 </section>
 
+<section class="group" data-group="1-D DP">
+  <div class="group-head">
+    <h2>1-D DP</h2>
+    <span class="group-count"><b class="gdone">1</b> / <b>1</b> reshaped</span>
+  </div>
+  <p class="group-note">A row of subproblem answers, each built from the ones before it.</p>
+  <ul>
+    <li data-hay="maximum subarray maximum-subarray 1-d dp kadane - drop a negative running sum, keep the best array dp-table current" data-status="current">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
+        <span class="why">Kadane - drop a negative running sum, keep the best</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/maximum-subarray/maximum-subarray-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
 <section class="group" data-group="Intervals">
   <div class="group-head">
     <h2>Intervals</h2>
@@ -778,26 +798,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-intervals/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-intervals/merge-intervals-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
-      </span>
-    </li>
-  </ul>
-</section>
-
-<section class="group" data-group="Greedy">
-  <div class="group-head">
-    <h2>Greedy</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>1</b> reshaped</span>
-  </div>
-  <p class="group-note">The locally best choice is provably the globally best one.</p>
-  <ul>
-    <li data-hay="maximum subarray maximum-subarray greedy kadane - reset the running sum when it goes negative  needs reshape" data-status="stale">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
-        <span class="why">Kadane - reset the running sum when it goes negative</span>
-      </span>
-      <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/maximum-subarray/maximum-subarray-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
         <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
       </span>
     </li>
