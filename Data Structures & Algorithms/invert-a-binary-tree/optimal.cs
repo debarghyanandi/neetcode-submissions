@@ -30,79 +30,62 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Post-order DFS - reattach swapped children on unwind
+ PATTERN : DFS recursion - swap child pointers, mutate in place
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The mirror of a tree is defined recursively: the left subtree of mirror(T) is
-  the mirror of T.right, and its right subtree is the mirror of T.left.
-  InvertTree is a literal transcription of that definition -
-  InvertTree(root.right) becomes the new left, InvertTree(root.left) becomes the
-  new right.
-
-  No node value is ever read and no comparison is made, so nothing forces a
-  particular visit order. Every node just needs its two child pointers exchanged
-  exactly once, which is why a plain traversal suffices and no BST ordering
-  logic appears here.
-INVARIANT
-  InvertTree(x) returns x itself, with everything under x already fully
-  mirrored.
-
-  That holds by induction: null is trivially mirrored, and for a non-null root
-  both recursive calls have returned before the first assignment executes, so
-  left already points at a finished mirrored subtree and right already points at
-  a finished mirrored subtree when root.left = left and root.right = right run.
-  The node is fixed up on the way back up the stack, never on the way down - the
-  subtrees below it are never touched again after its own assignments.
+  Inverting a tree is defined recursively: the mirror of a node is that node
+  with its two subtrees swapped and each subtree itself mirrored. That
+  definition maps one-to-one onto a recursive call per node, so there is nothing
+  to design - you write the definition down. No traversal order needs to be
+  chosen and no auxiliary structure is needed, because the work at a node
+  (swapping two pointers) does not depend on anything outside that node.
+WHAT THE RETURN VALUE ACTUALLY IS
+  InvertTree always returns the same node object it was handed - the null branch
+  returns root (which is null there), and the tail returns root. It never
+  allocates and never picks a different node to hand back. So left is exactly
+  root.right and right is exactly root.left, already inverted underneath. The
+  last three lines are therefore a plain swap of root.left and root.right; the
+  locals named left and right are standing in for the temp variable of a swap.
+  Reading it weeks later: this is not a rebuild, it is in-place pointer surgery
+  on the tree the caller passed in. The caller's root reference stays valid,
+  which is why returning root at all is a convenience, not a necessity.
 THE TRAP
-  The two locals left and right are load-bearing, not style. The tempting
-  compression
-
-    root.left = InvertTree(root.right);
-    root.right = InvertTree(root.left);
-
-  is wrong. Line 1 overwrites root.left, so line 2 reads the value just stored -
-  the already-inverted right subtree - and re-inverts it back into place while
-  the original left subtree is dropped entirely. On a tree like 4(2,7) you would
-  get 7 under both slots and 2 gone.
-
-  By capturing both results in locals first and assigning afterwards, the read
-  of root.right and the read of root.left both happen against the untouched
-  node. This is the standard aliasing hazard: two reads and two writes to the
-  same object, so the reads must be sequenced before the writes.
-BASE CASE AND TERMINATION
-  if (root == null) return root; returns null - the same value the caller stores
-  into a leaf's child slot, so leaves need no special case. A leaf makes two
-  calls that both return null, then assigns null over null: correct and
-  harmless.
-
-  Each call recurses on strictly smaller subtrees and a finite tree has finite
-  depth, so recursion bottoms out. Nothing is allocated - the return value is
-  the same root reference that came in, so the caller's handle to the tree stays
-  valid and the inversion is in place.
-FOLLOW-UPS TO EXPECT
-  1. Do it iteratively. BFS with a Queue<TreeNode>: dequeue a node, swap its two
-  children through a temp, enqueue each non-null child. A Stack<TreeNode> works
-  identically - order does not matter, per WHY THIS PATTERN.
-
-  2. Why does the recursive version risk a stack overflow? A degenerate tree
-  (every node has only a right child) drives the call chain as deep as the tree
-  is tall, and .NET will not tail-call-optimize this anyway since the recursive
-  calls are not in tail position - work follows them. The iterative version
-  moves that frontier to the heap.
-
-  3. Could this return void? Yes - swap root.left and root.right in place, then
-  recurse on both. The return value here exists only so the parent frame has
-  something to assign.
+  The bug this shape avoids is clobbering. If you write root.left =
+  InvertTree(root.right) and then root.right = InvertTree(root.left), the second
+  line reads root.left AFTER it was overwritten, so you recurse into the
+  already-inverted right subtree and lose the original left subtree entirely.
+  Capturing both results into locals before doing any assignment to root makes
+  the read-then-write ordering explicit and immune to that. Same reason a swap
+  needs a temp. This is the single thing an interviewer will poke at, and it is
+  also the thing that is easy to get wrong when you retype this from memory in a
+  hurry.
+CORRECTNESS
+  Induction on height. Base case: root == null, nothing to mirror, returning
+  null is correct. Inductive step: assume the two recursive calls correctly
+  mirror the subtrees rooted at root.right and root.left. After they return,
+  root.left points at the mirrored old right subtree and root.right points at
+  the mirrored old left subtree - which is precisely the mirror of root. Every
+  node is passed to exactly one call (each child pointer is followed once), so
+  every node gets swapped exactly once; swapping twice would restore the
+  original, so the once-only property matters.
+FOLLOW-UP
+  Two likely asks. (1) Do it iteratively: push root on a Stack<TreeNode> (or
+  Queue for BFS), pop a node, swap its two children with a temp, push the
+  non-null children. Order of visitation is irrelevant, which is why BFS and DFS
+  both work here - unusual, and worth saying out loud. (2) What breaks on a
+  degenerate input: a tree that is one long chain of left children forces one
+  nested frame per node, so a sufficiently deep skewed tree overflows the call
+  stack where the explicit-stack version would not. That is the honest argument
+  for the iterative rewrite - not speed.
 TRIGGER
-  Reach for this shape when the transformation is defined structurally on each
-  node in terms of its children and needs no information from outside the
-  subtree: mirror a tree, check symmetry, compute a depth or sum, build a
-  mirrored copy. The tell is that a node's answer is a pure function of its
-  children's answers, which forces the post-order shape - do all the recursion
-  first, then commit the writes.
+  Reach for this shape whenever the transformation at a node is local (touches
+  only that node and its immediate child pointers) and the subtree results are
+  independent. Mirror, clone, sum, height, count-nodes all fit. The tell that it
+  does NOT fit: the work at a node needs information from a sibling or from an
+  ancestor's state, which forces a passed-down parameter or a global.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

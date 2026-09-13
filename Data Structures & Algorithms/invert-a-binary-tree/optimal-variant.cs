@@ -1,20 +1,21 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  BFS with queue, swap children   [bfs-queue-swap]
+// -  iterative BFS with queue, swap children   [bfs-queue-swap]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  each node enqueued and dequeued exactly once, swapping its two
-// -  children on dequeue; queue peaks at the widest level, up to ~n/2 for a
-// -  balanced tree
+// -  each node enqueued and dequeued exactly once, swapping children on
+// -  dequeue; queue can hold up to ~n/2 nodes at the widest level
 // --------------------------------------------------------------------------
 
 public class Solution {
     //BFS
     public TreeNode InvertTree(TreeNode root)
     {
-        if (root == null) return null;
+        if (root == null)
+            return null;
+
         Queue<TreeNode> queue = new Queue<TreeNode>();
         queue.Enqueue(root);
         while (queue.Count > 0)
@@ -23,8 +24,10 @@ public class Solution {
             TreeNode leftChild = node.left;
             node.left = node.right;
             node.right = leftChild;
-            if (node.left != null) queue.Enqueue(node.left);
-            if (node.right != null) queue.Enqueue(node.right);
+            if (node.left != null)
+                queue.Enqueue(node.left);
+            if (node.right != null)
+                queue.Enqueue(node.right);
         }
         return root;
     }
@@ -32,69 +35,84 @@ public class Solution {
 
 /*
 ================================================================================
- PATTERN : Iterative BFS - swap each node's children at dequeue
+ PATTERN : BFS level-order - swap children at each dequeued node
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
-WHY THIS PATTERN
-  Inverting a tree is a purely local edit: every node needs the same
-  constant-time change, swapping its two child pointers. Nothing about one
-  node's swap depends on the result of another's. So the algorithm reduces to
-  "visit every node exactly once, apply the edit" - and any complete traversal
-  will do. The queue here is just the visit-everything driver, chosen because it
-  needs no call stack.
-INVARIANT
-  At the top of every while iteration: every node already dequeued has had its
-  children swapped, and every node sitting in queue has not yet been touched but
-  is reachable and will be. The queue also holds each node at most once - in a
-  tree each node has exactly one parent, so it can only ever be enqueued by that
-  parent's iteration, and root is seeded once before the loop. That is what
-  makes "each node swapped exactly once" true, and why the loop terminates: each
-  iteration removes one node and adds only nodes never before added.
-CORRECTNESS - WHY ORDER IS FREE
-  The mirror of a tree is defined recursively (new left = mirror of old right),
-  which makes it look like the order of work matters. It does not. Swapping
-  node.left and node.right rearranges the arrangement of node's descendants but
-  does not change which nodes are descendants of node - the same two subtrees
-  hang off it either way. So the set of pending swaps is identical no matter
-  when node is processed. Since every node gets swapped exactly once (see the
-  invariant), the final tree is the mirror regardless of whether you go
-  breadth-first, depth-first, or in any arbitrary order. That is a genuinely
-  useful thing to be able to say out loud in an interview.
+WHY THIS WORKS
+  Mirroring is defined top-down: mirror(node) has left = mirror(old right) and
+  right = mirror(old left). Unrolled over the whole tree, that is exactly
+  "exchange the two child pointers of every node, exactly once."
+
+  The swap at a node touches only that node's two fields, and no other node
+  reads those fields. So no node's swap depends on whether any other node has
+  been swapped yet. Any enumeration that visits every node once produces the
+  same result - the queue is just one such enumeration.
+
+  The check: after the loop, the node you reach by walking left-right-left from
+  root is the node you originally reached by right-left-right. Depth is
+  preserved, the path is bit-flipped.
+ALGORITHM
+  1. Guard root == null and return null - the only null check outside the loop.
+  2. Enqueue root.
+  3. While queue.Count > 0: dequeue node, stash leftChild = node.left, assign
+  node.left = node.right, then node.right = leftChild.
+  4. Enqueue node.left if non-null, then node.right if non-null.
+  5. Return root - the same object that came in, mutated.
+THE SWAP-THEN-ENQUEUE SUBTLETY
+  The two enqueue guards read node.left and node.right after the assignment.
+  This is safe: a swap exchanges the two fields, so the unordered pair
+  {node.left, node.right} is identical before and after. The same two children
+  get queued, just in mirrored order - and since order does not matter (see the
+  invariant), the result is unaffected.
+
+  The bug to watch for is enqueuing leftChild and node.right instead. The line
+  node.right = leftChild has already aliased them, so you would enqueue the
+  original left child twice and never descend the original right subtree at all.
+  leftChild is dead the instant that assignment runs - do not reuse it below.
+WHY BFS RATHER THAN RECURSION
+  The recursive two-line version is shorter, but its call stack is as deep as
+  the tree is tall. A degenerate 10^5-node chain - every node with only a right
+  child - overflows it, while this queue holds at most one node at a time on
+  that same input.
+
+  The trade runs the other way on a perfectly balanced tree: the queue peaks at
+  the widest level, roughly half the nodes, where recursion would have held only
+  log n frames. Pick BFS when the input can be skewed, recursion when you know
+  the tree is bushy and shallow.
+
+  Because correctness does not depend on visit order, swapping Queue for Stack
+  and Enqueue/Dequeue for Push/Pop gives an iterative DFS that is equally
+  correct and bounds memory by height instead of width.
 WATCH OUT
-  1. leftChild is not optional. Writing node.left = node.right first destroys
-  the only reference to the original left subtree; the temp is the entire reason
-  this works.
-  2. The two enqueues read node.left and node.right AFTER the swap, so they
-  enqueue the old right subtree then the old left subtree. Harmless - it is the
-  same pair of nodes, just visited in the opposite order within the level, and
-  by the argument above order is irrelevant.
-  3. The null guards on enqueue are load-bearing, not cosmetic. A null in the
-  queue would be dequeued and immediately dereferenced at node.left, throwing
-  NullReferenceException.
-  4. The root == null early return handles the empty tree; without it
-  queue.Enqueue(root) would put a null in and hit the same crash on the first
-  iteration.
-  5. This mutates the caller's tree in place and returns the same root object,
-  not a copy. Any reference the caller held is now pointing at an inverted tree.
-VERSUS THE RECURSIVE VERSION
-  The obvious solution is a three-line recursive DFS. It is shorter and does the
-  same amount of work. The one real difference is where the bookkeeping lives:
-  recursion consumes call stack proportional to tree height, so a degenerate
-  chain-shaped tree can blow the stack, while this version's queue is bounded by
-  the widest level and never touches the stack. The tradeoff runs the other way
-  on a balanced tree, where recursion depth stays logarithmic but the queue can
-  hold roughly half the nodes at the bottom level. Neither dominates; pick BFS
-  when you are worried about depth, recursion when you are worried about width.
+  This mutates the caller's tree in place. root is never reassigned, so the
+  returned reference is the same object the caller passed in - any other
+  variable pointing at that tree now sees it inverted. The return statement
+  satisfies the signature; it does not hand back a copy.
+
+  The queue never holds null, since filtering happens at enqueue. The
+  alternative - enqueue unconditionally and skip nulls after dequeue - is
+  equally correct but moves the branch inside the loop body; do not mix the two
+  and end up with neither check.
+INTERVIEW FOLLOW-UPS
+  "Make it non-destructive." Then local swapping is no longer enough - you must
+  allocate a new TreeNode per visit and wire its left to the copy of the old
+  right. BFS still works but the queue has to carry pairs of (source node,
+  destination node).
+
+  "Is the tree a mirror of itself?" Different problem - do not invert then
+  compare, that destroys the input and costs two passes. Walk two pointers down
+  in tandem, comparing a.left against b.right.
+
+  "What if nodes had parent pointers?" The swap would no longer be purely local;
+  each child's parent link is unchanged here, but any sibling-order-dependent
+  field would need fixing in the same visit.
 TRIGGER
-  Reach for this shape whenever a tree transform is node-local and
-  order-independent - mirror, mark every node, sum or clamp values, attach
-  parent pointers. The tell is that you can describe the operation on a single
-  node without referring to what any other node became. If the operation DOES
-  depend on a child's post-transform state (computing heights, pruning subtrees,
-  returning a value upward), this bare queue loop is the wrong tool and you want
-  a post-order DFS instead.
+  Reach for this shape when the transformation at each node is independent of
+  its neighbours - a pure local edit repeated over every node. The moment a
+  node's update needs a value computed from its children, order stops being free
+  and you need post-order recursion instead of a queue.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

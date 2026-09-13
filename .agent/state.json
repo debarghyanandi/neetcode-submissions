@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T15:06:02.747Z",
+  "updatedAt": "2026-09-13T15:19:27.739Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1267,15 +1267,13 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "failed": true,
-          "reason": "right renamed inconsistently: right then invertedLeft"
+          "codePrint": "eb5f76e2a52e",
+          "renames": []
         },
         "optimal-variant.cs": {
           "version": 1,
           "codePrint": "f6f65284be4d",
-          "renames": [
-            "current->node"
-          ]
+          "renames": []
         },
         "optimal-variant-2.cs": {
           "version": 1,
@@ -1285,7 +1283,7 @@
       },
       "headerSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS, swap children\",\"approachKey\":\"recursive-dfs-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
         "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, swap children\",\"approachKey\":\"iterative-dfs-stack-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
@@ -1321,7 +1319,7 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS with queue, swap children",
+          "algorithm": "iterative BFS with queue, swap children",
           "approachKey": "bfs-queue-swap",
           "correct": true,
           "bruteForce": false,
@@ -1346,7 +1344,7 @@
       "teachSignatures": {
         "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS, swap children\",\"approachKey\":\"recursive-dfs-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
         "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, swap children\",\"approachKey\":\"iterative-dfs-stack-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1366,7 +1364,7 @@
           "stack",
           "queue"
         ],
-        "builtAt": "2026-09-13T11:57:56.733Z"
+        "builtAt": "2026-09-13T15:19:27.736Z"
       }
     },
     "is-anagram": {
