@@ -25,6 +25,7 @@ import { stripHeader } from './lib/header.mjs';
 import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
+import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -114,7 +115,13 @@ if (!targets.length) {
 
 console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - teaching blocks, model ${model}, ${targets.length} folder(s)\n`);
 
+if (haltIfStopped('teach', targets.map((p) => p.slug))) process.exit(1);
+
 let failures = 0, wrote = 0, skipped = 0;
+// Set when the ACCOUNT runs out rather than a file going wrong. Every file
+// after it would get the same refusal, so the loops below stop instead of
+// buying the same answer once per file - and summarise.mjs fails the run.
+let outOfBudget = null;
 
 for (const p of targets) {
   group(p.path);
@@ -158,7 +165,18 @@ for (const p of targets) {
 
     let r;
     try { r = ask(p.dir, file, ctx); }
-    catch (e) { console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`); report('teach', p.slug, 'failed', `${file}: ${e.message.slice(0,70)}`); failures++; continue; }
+    catch (e) {
+      console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`);
+      if (isOutOfBudget(e)) {
+        outOfBudget = e.message;
+        budgetStop('teach', e.message);
+        report('teach', p.slug, 'skipped', `${file}: stopped - out of budget, nothing wrong with this file`);
+        break;
+      }
+      report('teach', p.slug, 'failed', `${file}: ${e.message.slice(0,70)}`);
+      failures++;
+      continue;
+    }
 
     const block = buildTeachingBlock(r.out, ctx);
     console.log(`  ${file.padEnd(22)} ${r.out.sections.length} section(s), ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
@@ -179,9 +197,11 @@ for (const p of targets) {
     wrote++;
   }
   endGroup();
+  if (outOfBudget) break;
 }
 
 if (doApply && wrote) saveState(state);
-console.log(`${wrote} written, ${skipped} left alone, ${failures} failed.\n`);
+if (outOfBudget) announceBudget(outOfBudget);
+console.log(`${wrote} written, ${skipped} left alone, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wrote=${wrote}\n`);
-process.exit(failures ? 1 : 0);
+process.exit(failures || outOfBudget ? 1 : 0);

@@ -29,6 +29,7 @@ import { sameShape } from './lib/csharp.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { LINT_FORMAT } from './lib/lint-rules.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
+import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 
 
 const argv = process.argv.slice(2);
@@ -160,7 +161,13 @@ if (!targets.length) { console.log('\nNothing to lint.\n'); process.exit(0); }
 
 console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - lint, model ${model}, ${targets.length} folder(s)\n`);
 
+if (haltIfStopped('lint', targets.map((p) => p.slug))) process.exit(1);
+
 let failures = 0, changed = 0, clean = 0;
+// The account, not the file. Recording a lint failure here would be a lie that
+// costs money later: a file marked `failed: true` is never retried without
+// --force, so one session limit would permanently retire a perfectly good file.
+let outOfBudget = null;
 const touchedSlugs = new Set();
 
 for (const p of targets) {
@@ -188,7 +195,11 @@ for (const p of targets) {
     for (let attempt = 1; attempt <= 2 && !result; attempt++) {
       let r;
       try { r = ask(body, feedback); }
-      catch (e) { console.log(`  ${file.padEnd(22)} attempt ${attempt} FAILED: ${e.message}`); break; }
+      catch (e) {
+        console.log(`  ${file.padEnd(22)} attempt ${attempt} FAILED: ${e.message}`);
+        if (isOutOfBudget(e)) { outOfBudget = e.message; budgetStop('lint', e.message); }
+        break;
+      }
       spend += r.cost ?? 0;
       const check = sameShape(body, r.code);
       if (check.ok) result = { ...r, renames: check.renames };
@@ -201,6 +212,14 @@ for (const p of targets) {
         'And one name is one name: whatever you call it, call it that in every method it appears in.',
       ];
       }
+    }
+
+    // Before the failure bookkeeping: an out-of-budget stop must not be written
+    // into state.json as a file that lint has given up on.
+    if (!result && outOfBudget) {
+      console.log(`  ${file.padEnd(22)} left untouched - out of budget, not the file`);
+      report('lint', p.slug, 'skipped', `${file}: stopped - out of budget, nothing wrong with this file`);
+      break;
     }
 
     if (!result) {
@@ -240,12 +259,14 @@ for (const p of targets) {
     }
   }
   endGroup();
+  if (outOfBudget) break;
 }
 
 if (doApply) saveState(state);
-console.log(`${changed} file(s) changed, ${clean} already linted, ${failures} failed.\n`);
+if (outOfBudget) announceBudget(outOfBudget);
+console.log(`${changed} file(s) changed, ${clean} already linted, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
   appendFileSync(process.env.GITHUB_OUTPUT, `slugs=${[...touchedSlugs].join(',')}\n`);
 }
-process.exit(failures ? 1 : 0);
+process.exit(failures || outOfBudget ? 1 : 0);

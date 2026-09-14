@@ -28,6 +28,7 @@ import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
 import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
+import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -193,7 +194,6 @@ function ask(prompt, code) {
  * validation failures. A run once ended "2 written, 2 failed" when nothing was
  * wrong with either of the two: the subscription had simply reset-time on it.
  */
-const OUT_OF_BUDGET = /session limit|usage limit|rate limit exceeded|quota|credit balance|insufficient/i;
 let outOfBudget = null;
 
 const state = loadState();
@@ -247,6 +247,8 @@ if (limit) targets = targets.slice(0, limit);
 if (!targets.length) { console.log('\nNothing to build - every problem already has a visualizer.\n'); process.exit(0); }
 
 console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, ${targets.length} folder(s)\n`);
+if (haltIfStopped('visualize', targets.map((p) => p.slug))) process.exit(1);
+
 let failures = 0, wrote = 0;
 
 for (const p of targets) {
@@ -293,7 +295,7 @@ for (const p of targets) {
       // Out of budget is a property of the account, not of this folder. Record
       // it and let the loop below stop, rather than asking the same question
       // once per remaining folder and getting the same refusal each time.
-      if (OUT_OF_BUDGET.test(e.message)) { outOfBudget = e.message; break; }
+      if (isOutOfBudget(e)) { outOfBudget = e.message; budgetStop('visualize', e.message); break; }
       // Retry a run that simply ran out of room; do not retry an auth or
       // configuration failure, which will fail identically the second time.
       if (/max_turns|overloaded|rate_limit|timeout/i.test(e.message)) {
@@ -351,10 +353,7 @@ for (const p of targets) {
 }
 
 if (doApply && wrote) saveState(state);
-if (outOfBudget) {
-  console.log(`\nSTOPPED - ${outOfBudget.trim()}`);
-  console.log('Nothing is wrong with the folders that did not run; name them again after the reset.\n');
-}
+if (outOfBudget) announceBudget(outOfBudget);
 console.log(`${wrote} written, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wrote=${wrote}\n`);
 process.exit(failures ? 1 : 0);

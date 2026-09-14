@@ -32,6 +32,7 @@ import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
 import { report, group, endGroup } from './lib/report.mjs';
+import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { renameInVisualizer } from './lib/visualizer.mjs';
 import { STRUCTURES, STRUCTURE_HELP } from './lib/shapes.mjs';
 
@@ -283,9 +284,15 @@ if (targets.length === 0) {
 console.log(doApply
   ? `\nAPPLY - ${targets.length} folder(s). Files WILL be renamed and re-headered.\n`
   : `\nDRY RUN - ${targets.length} folder(s). No file will be modified.\n`);
+if (haltIfStopped('classify', targets.map((p) => p.slug))) process.exit(1);
+
 let failures = 0;
 let touched = 0;
 const applied = [];
+// The account ran out, not the folder. Kept apart from `failures` on purpose:
+// a folder that was never asked has not failed, and calling it a failure is
+// what made a session limit look like four broken problems.
+let outOfBudget = null;
 
 for (const p of targets) {
   group(p.path);
@@ -325,6 +332,13 @@ for (const p of targets) {
     res = classify(p.dir, files);
   } catch (e) {
     console.log(`  FAILED: ${e.message}\n`);
+    if (isOutOfBudget(e)) {
+      outOfBudget = e.message;
+      budgetStop('classify', e.message);
+      report('classify', p.slug, 'skipped', 'stopped - out of budget, nothing wrong with this folder');
+      endGroup();
+      break;
+    }
     report('classify', p.slug, 'failed', e.message.split('\n')[0].slice(0, 90));
     failures++;
     endGroup();
@@ -528,6 +542,9 @@ if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `applied=${applied.join(',')}\n`);
 }
 
-console.log(failures ? `${failures} folder(s) failed.\n` : 'All folders classified.\n');
+if (outOfBudget) announceBudget(outOfBudget);
+console.log(failures ? `${failures} folder(s) failed.\n`
+  : outOfBudget ? 'Stopped part-way; the folders that ran are fine.\n'
+  : 'All folders classified.\n');
 if (doApply) console.log('Review with: git status && git diff --cached\n');
-process.exit(failures ? 1 : 0);
+process.exit(failures || outOfBudget ? 1 : 0);

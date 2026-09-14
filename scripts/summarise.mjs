@@ -9,6 +9,7 @@
  */
 
 import { readFileSync, existsSync, appendFileSync } from 'node:fs';
+import { stopped } from './lib/budget.mjs';
 
 const out = [];
 const w = (l = '') => out.push(l);
@@ -36,6 +37,35 @@ const why = trigger === 'push' ? `**a push** by \`${actor}\``
 w(`Started by ${why}.`);
 if (trigger === 'push' && headMsg) w(`Triggering commit: \`${headMsg}\``);
 w();
+
+// ---------------------------------------------------------------- did it run out
+//
+// This is the whole reason summarise.mjs can fail the run. Every model step
+// carries continue-on-error, because one bad folder should not throw away the
+// three good ones processed before it - but that also means a run that did
+// almost nothing because the subscription had hit its limit came out GREEN. It
+// happened on a 2am schedule: lint ran, committed its renames, classify was
+// refused, teach and visualize found nothing to do, and the badge said success.
+//
+// This step runs with `if: always()` and WITHOUT continue-on-error, so it is
+// the one place in the workflow that can say "no, that was not a success"
+// without touching a protected workflow file.
+const budget = stopped();
+
+// First thing under the heading, before the detail. The one fact that changes
+// what you do next: nothing below is a verdict on the code.
+if (budget) {
+  w('> [!CAUTION]');
+  w(`> ### 🛑 Stopped early — the account ran out of budget during \`${budget.step}\``);
+  w('>');
+  w(`> \`${budget.message.replace(/`/g, "'")}\``);
+  w('>');
+  w('> Everything finished before that point was kept and committed. Folders marked ⏭️ below');
+  w('> were never asked, and nothing is wrong with them — name them again after the reset.');
+  w('>');
+  w('> **The run is marked failed so it does not read as a success.**');
+  w();
+}
 
 let detect = null;
 if (detectFile && existsSync(detectFile)) {
@@ -117,7 +147,7 @@ if (rows.size) {
     w(`| \`${slug}\` | ${cols.join(' | ')} | ${problems || '—'} |`);
   }
   w();
-  w('✅ done · ⏭️ looked at, nothing needed · ⚠️ refused, needs a decision · ❌ failed · · not run');
+  w('✅ done · ⏭️ skipped — nothing needed, or not attempted · ⚠️ refused, needs a decision · ❌ failed · · not run');
   w();
 
   w('<details><summary>What each step did, folder by folder</summary>');
@@ -144,3 +174,10 @@ if (rows.size) {
 const target = env('GITHUB_STEP_SUMMARY');
 if (target) appendFileSync(target, out.join('\n') + '\n');
 else console.log(out.join('\n'));
+
+// The only non-zero exit here. A summary that cannot be written is not worth
+// failing a run over; a run that quietly did nothing is.
+if (budget) {
+  console.log(`::error::the pipeline stopped during ${budget.step} - out of budget: ${budget.message}`);
+  process.exit(1);
+}
