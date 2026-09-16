@@ -28,6 +28,16 @@ is('"rotated" is not "rotting"',
   g('find-minimum-in-rotated-sorted-array', 'Binary Search on the Break - compare mid against right'),
   'Binary Search');
 
+is('rotting-fruit is a graph, not a stack - a queue on a grid is BFS',
+  g('rotting-fruit', 'Multi-source BFS on a grid - time carried per node', ['array', 'matrix', 'queue']),
+  'Graphs');
+is('and it is still a graph on its slug alone, before it is classified',
+  g('rotting-fruit', '', []),
+  'Graphs');
+is('a queue alone still does not make something a graph',
+  g('implement-queue-using-stacks', 'Two Stacks - lazy drain, refill only when output empty', ['stack', 'queue']),
+  'Stack');
+
 // ---- the ordering the rules depend on ------------------------------------
 is('a monotonic deque is a window technique, not a stack one',
   g('sliding-window-maximum', 'Monotonic deque of indices - front is the window max'),

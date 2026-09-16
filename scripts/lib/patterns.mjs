@@ -96,9 +96,14 @@ const RULES = [
 
   { group: 'Graphs', test: (c) =>
       has(c.structures, 'graph', 'union-find') ||
-      // Spelled out rather than /rot/, which matches "(rot)ated-sorted-array".
-      /island|graph|connected-component|course-schedule|clone-graph|pacific|rotting-orange/.test(c.slug) ||
-      /adjacen|flood fill|union.find|disjoint set|topological/.test(c.pattern) },
+      // A grid walked with a queue is BFS over a graph whose edges are the 4 neighbours.
+      // Without this, rotting-fruit (matrix + queue, no "graph" in its PATTERN line) fell
+      // through to Stack, whose rule matches any queue.
+      (has(c.structures, 'matrix') && has(c.structures, 'queue')) ||
+      // Spelled out rather than /rot/, which matches "(rot)ated-sorted-array". NeetCode renamed
+      // rotting-oranges to rotting-fruit, so both spellings are listed.
+      /island|graph|connected-component|course-schedule|clone-graph|pacific|rotting-orange|rotting-fruit/.test(c.slug) ||
+      /adjacen|flood fill|union.find|disjoint set|topological|multi-source bfs|breadth.first/.test(c.pattern) },
 
   { group: 'Tries', test: (c) => has(c.structures, 'trie') || /trie|prefix-tree/.test(c.slug) },
 
