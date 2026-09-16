@@ -55,10 +55,53 @@ const fileOnly = arg('--file');
 // state normally; it is how a folder gets finished after a failed run stopped before teach.
 const unfinished = has('--unfinished');
 
+/**
+ * Read a stream-json run: every event on its own line, the last `result` event being the
+ * same envelope --output-format json would have returned.
+ *
+ * Why stream-json: a call that needs an extra turn only says "3 turns" in the envelope, and
+ * the saved response lived in .agent/tmp on the runner, which is deleted with it. The stream
+ * carries the conversation itself - including the tool result that told the model its first
+ * answer was rejected - so the reason can be printed straight into the CI log.
+ */
+function parseStream(text) {
+  const events = [];
+  for (const line of String(text ?? '').split(/\r?\n/)) {
+    if (!line.startsWith('{')) continue;
+    try { events.push(JSON.parse(line)); } catch { /* partial line */ }
+  }
+  const env = [...events].reverse().find((e) => e.type === 'result') ?? null;
+  if (env && env.structured_output === undefined) {
+    // Fall back to the last structured-output tool call, should the result event not carry it.
+    for (const e of [...events].reverse()) {
+      const call = (e.type === 'assistant' ? e.message?.content ?? [] : []).find((b) => b.type === 'tool_use');
+      if (call?.input && typeof call.input === 'object') { env.structured_output = call.input; break; }
+    }
+  }
+  return { events, env };
+}
+
+/** What happened between the first answer and the last: rejected tool results and any text. */
+function extraTurnReasons(events) {
+  const out = [];
+  for (const e of events) {
+    for (const b of e.message?.content ?? []) {
+      if (b.type === 'tool_result' && b.is_error) {
+        const t = Array.isArray(b.content) ? b.content.map((c) => c.text ?? '').join(' ') : String(b.content ?? '');
+        out.push(`tool rejected: ${t.replace(/\s+/g, ' ').slice(0, 300)}`);
+      }
+      if (e.type === 'assistant' && b.type === 'text' && b.text?.trim()) {
+        out.push(`model said: ${b.text.replace(/\s+/g, ' ').slice(0, 200)}`);
+      }
+    }
+  }
+  return out;
+}
+
 function ask(dir, file, ctx) {
   const args = [
     '-p', TEACH_INSTRUCTIONS(ctx),
-    '--output-format', 'json',
+    '--output-format', 'stream-json', '--verbose',
     '--json-schema', JSON.stringify(SECTIONS_SCHEMA),
     '--permission-mode', 'dontAsk',
     '--max-turns', '8',
@@ -71,26 +114,27 @@ function ask(dir, file, ctx) {
     raw = execFileSync('claude', args, {
       input: stripHeader(splitTrailingTeach(readFileSync(join(dir, file), 'utf8')).code).body,
       encoding: 'utf8',
-      maxBuffer: 32 * 1024 * 1024,
+      maxBuffer: 64 * 1024 * 1024,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (e) {
-    let env = null;
-    try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
+    const { env } = parseStream(e.stdout);
     const why = env
       ? `${env.terminal_reason ?? env.subtype ?? 'error'} - ${String(env.result ?? '').slice(0, 300)}`
       : String(e.stderr || e.message).slice(0, 300);
     throw new Error(`claude failed (exit ${e.status}): ${why}`);
   }
-  const env = JSON.parse(raw);
-  // A clean structured answer takes 2 turns. More means something was retried - a schema
-  // rejection or a refused tool call - and each extra turn re-sends the whole conversation.
-  // Keep the full envelope so the cause can be read rather than guessed.
+  const { events, env } = parseStream(raw);
+  if (!env) throw new Error(`no result event in the stream (${events.length} events)`);
+  // A clean structured answer takes 2 turns. More means something was retried, and the extra
+  // request re-sends the conversation so far. Print why, in the log, where it survives the runner.
   if ((env.num_turns ?? 0) > 2) {
+    const reasons = extraTurnReasons(events);
+    console.log(`  note: ${env.num_turns} turns - ${reasons.length ? 'why:' : 'no rejection found in the stream'}`);
+    for (const r of reasons.slice(0, 4)) console.log(`        ${r}`);
     try {
       mkdirSync(join(REPO, '.agent', 'tmp'), { recursive: true });
-      writeFileSync(join(REPO, '.agent', 'tmp', 'teach-extra-turns.json'), raw, 'utf8');
-      console.log(`  note: ${env.num_turns} turns - full response saved to .agent/tmp/teach-extra-turns.json`);
+      writeFileSync(join(REPO, '.agent', 'tmp', 'teach-extra-turns.jsonl'), raw, 'utf8');
     } catch { /* diagnostics only */ }
   }
   const out = env.structured_output;

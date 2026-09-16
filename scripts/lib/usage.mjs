@@ -40,6 +40,8 @@ export function usageOf(env) {
     cacheWrite: u.cache_creation_input_tokens ?? 0,
     cacheRead: u.cache_read_input_tokens ?? 0,
     out: u.output_tokens ?? 0,
+    // Thinking is billed as output and is part of `out`, not extra to it.
+    thinking: u.output_tokens_details?.thinking_tokens ?? 0,
     // Which cache lifetime the writes used. A 1-hour write costs 2x input, a 5-minute one 1.25x.
     ttl: (u.cache_creation?.ephemeral_1h_input_tokens ?? 0) > 0 ? '1h'
       : (u.cache_creation?.ephemeral_5m_input_tokens ?? 0) > 0 ? '5m' : null,
@@ -51,13 +53,14 @@ export const addUsage = (a, b) => ({
   cacheWrite: (a?.cacheWrite ?? 0) + (b?.cacheWrite ?? 0),
   cacheRead: (a?.cacheRead ?? 0) + (b?.cacheRead ?? 0),
   out: (a?.out ?? 0) + (b?.out ?? 0),
+  thinking: (a?.thinking ?? 0) + (b?.thinking ?? 0),
   ttl: b?.ttl ?? a?.ttl ?? null,
 });
 
 const n = (x) => Number(x ?? 0).toLocaleString('en-US');
 
 export const usageLine = (u) =>
-  `tokens: in ${n(u?.in)} · cache write ${n(u?.cacheWrite)}${u?.ttl ? ` (${u.ttl})` : ''} · cache read ${n(u?.cacheRead)} · out ${n(u?.out)}`;
+  `tokens: in ${n(u?.in)} · cache write ${n(u?.cacheWrite)}${u?.ttl ? ` (${u.ttl})` : ''} · cache read ${n(u?.cacheRead)} · out ${n(u?.out)}${u?.thinking ? ` (thinking ${n(u.thinking)})` : ''}`;
 
 /**
  * The lean call: our own one-line system prompt, and no tools.
