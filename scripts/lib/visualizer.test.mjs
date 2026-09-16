@@ -10,7 +10,8 @@
  *   node scripts/lib/visualizer.test.mjs
  */
 
-import { renameInVisualizer } from './visualizer.mjs';
+import { renameInVisualizer, structuresFor } from './visualizer.mjs';
+import { coverage } from './shapes.mjs';
 
 let pass = 0, fail = 0;
 const is = (name, got, want) => {
@@ -54,6 +55,21 @@ is('a three-way rotation is applied once',
     'optimal-variant-2.cs': 'optimal.cs',
   }).html,
   "a=optimal-variant.cs b=optimal-variant-2.cs c=optimal.cs");
+
+// ---- each solution is held to its own file's structures ------------------
+// reverse-a-linked-list: the iterative file is a linked list, the recursive one also a call stack.
+const UNION = ['linked-list', 'call-stack'];
+const PER = [['linked-list'], ['linked-list', 'call-stack']];
+is('the iterative tab needs only its own structures',
+  JSON.stringify(structuresFor(0, UNION, PER)), JSON.stringify(['linked-list']));
+is('so drawing a list and no call stack passes, with no waiver',
+  coverage(structuresFor(0, UNION, PER), ['list'], null).errors.length, 0);
+is('the recursive tab still must draw its call stack',
+  coverage(structuresFor(1, UNION, PER), ['list'], null).errors.length > 0, true);
+is('a solution with nothing recorded falls back to the union',
+  JSON.stringify(structuresFor(0, UNION, [[], PER[1]])), JSON.stringify(UNION));
+is('and with no per-solution list at all, nothing changes',
+  JSON.stringify(structuresFor(1, UNION, null)), JSON.stringify(UNION));
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

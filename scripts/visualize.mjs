@@ -337,7 +337,8 @@ for (const p of targets) {
     used = addUsage(used, r.usage);
     reportCost('visualize', p.slug, r.cost, r.usage);
     console.log(`  attempt ${attempt}: $${(r.cost ?? 0).toFixed(4)} · ${r.turns} turns · ${usageLine(r.usage)}`);
-    const v = validate(r.src, structures);
+    // Each solution is checked against its OWN file's structures - see structuresFor.
+    const v = validate(r.src, structures, sols.map((s) => s.structures ?? []));
     if (!v.errors.length) {
       result = r;
       for (const [k, n] of Object.entries(v.stats)) console.log(`      ${k}: ${n}`);

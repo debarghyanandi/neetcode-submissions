@@ -49,7 +49,21 @@ function helpersFromChassis() {
  * failure: the visualizer highlights nothing and looks merely dull, so nobody
  * reports it.
  */
-export function validate(problemSource, structures = []) {
+/**
+ * What ONE solution must draw: its own file's recorded structures, when classify recorded them.
+ *
+ * The check used to hold every solution to the UNION of all files. reverse-a-linked-list has an
+ * iterative file (linked-list) and a recursive one (linked-list + call-stack), so the iterative tab
+ * was rejected for not drawing a call stack it does not have. The retry went to Opus, which only
+ * wrote a waiver saying so: $0.49 and 3.5 minutes spent proving the rule wrong. The union is still
+ * the fallback for a solution with nothing recorded, so an older classification is not let off.
+ */
+export function structuresFor(si, structures = [], perSolution = null) {
+  const own = Array.isArray(perSolution) ? perSolution[si] : null;
+  return Array.isArray(own) && own.length ? own : structures;
+}
+
+export function validate(problemSource, structures = [], perSolution = null) {
   const problems = [];
   const tmp = join(REPO, '.agent', 'tmp');
   mkdirSync(tmp, { recursive: true });
@@ -333,11 +347,11 @@ process.stdout.write(JSON.stringify(out));
   // Only structures that HAVE a renderer are ever enforced, and any panel that
   // can draw one satisfies it. Which panel remains the model's call.
   const waived = [];
-  for (const sol of res.solutions ?? []) {
-    const c = coverage(structures, sol.types ?? [], sol.override);
+  (res.solutions ?? []).forEach((sol, si) => {
+    const c = coverage(structuresFor(si, structures, perSolution), sol.types ?? [], sol.override);
     for (const e of c.errors) res.errors.push(`${sol.where}: ${e}`);
     for (const w of c.waived) waived.push(`${sol.label ?? sol.where}: ${w} (declared: ${String(sol.override?.reason ?? '').trim()})`);
-  }
+  });
   res.waived = waived;
   return res;
 }
