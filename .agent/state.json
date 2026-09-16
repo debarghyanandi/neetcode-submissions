@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T19:43:00.673Z",
+  "updatedAt": "2026-09-16T20:35:20.518Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3327,7 +3327,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"find middle (slow/fast), reverse second half, merge alternately\",\"approachKey\":\"middle-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Fast/slow midpoint, reverse recursively, merge alternately\",\"approachKey\":\"fast-slow-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3340,23 +3340,32 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "find middle (slow/fast), reverse second half, merge alternately",
-          "approachKey": "middle-reverse-merge",
+          "algorithm": "Fast/slow midpoint, reverse recursively, merge alternately",
+          "approachKey": "fast-slow-reverse-merge",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "linked-list",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"find middle (slow/fast), reverse second half, merge alternately\",\"approachKey\":\"middle-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Fast/slow midpoint, reverse recursively, merge alternately\",\"approachKey\":\"fast-slow-reverse-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "dbb7370936f4"
         },
-        "builtAt": "2026-09-06T01:51:26.444Z"
+        "structures": [
+          "linked-list",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-16T20:35:20.516Z"
       }
     },
     "reverse-a-linked-list": {

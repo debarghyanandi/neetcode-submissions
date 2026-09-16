@@ -651,198 +651,243 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Reorder Linked List',
-  note: 'the back half only cooperates once it is pointing backwards',
-  inputs: [{id:'v', label:'values', value:'1,2,3,4,5,6,7', width:260}],
+  note: 'a linked list only points forward, so weaving it into first, last, second, second-last, ... takes three tricks stacked together: find the middle, reverse the back half so it can be walked from its own end, then splice the two halves together one node at a time.',
+  inputs: [
+    {id:'l', label:'list (head to tail)', value:'1,2,3,4,5', width:280}
+  ],
   parse(raw){
-    const v = parseInts(raw.v, 9);
-    if (!v) return {ok:false, msg:'Enter a valid comma-separated list of node values.'};
-    if (v.length < 3) return {ok:false, msg:'Needs at least three nodes to be worth reordering.'};
-    return {ok:true, value:{v}, normalized:{v: v.join(',')}};
+    const vals = parseInts(raw.l, 9);
+    if (!vals) return {ok:false, msg:'Enter a comma-separated list, e.g. 1,2,3,4,5'};
+    if (vals.length < 3) return {ok:false, msg:'Give at least 3 nodes so there is a real second half to reverse.'};
+    if (vals.length > 7) return {ok:false, msg:'Keep it to 7 nodes or fewer so the whole run stays watchable.'};
+    return {ok:true, value:{vals: vals}, normalized:{l: vals.join(',')}};
   },
-  shuffle(){ return {v: randInts(5 + Math.floor(Math.random()*4), 1, 30).join(',')}; },
+  shuffle(){
+    return {l: randInts(3 + Math.floor(Math.random() * 4), 1, 9).join(',')};
+  },
   solutions: [
   {
-    label: 'Split at the middle, reverse the back, weave',
-    badge: 'O(n) time · O(n) space · two pointers + recursion · optimal.cs',
-    blurb: 'The target order pairs the first node with the last, the second with the second-last — a backwards walk a singly linked list cannot do. So stop fighting it: cut at the middle, <b>reverse</b> the back half so its last node comes first, then weave one node from each list. Three linear passes, no array of nodes.',
+    label: 'Fast/slow midpoint, reverse recursively, merge alternately',
+    badge: 'O(n) time · O(n) space · fast/slow + recursive reverse + merge · optimal.cs',
+    blurb: 'Fast and slow pointers find the middle in one pass. The second half is cut off and reversed by recursion, then merged back in by splicing one node from each half alternately. Three linear passes give O(n) time; the recursion frames make it O(n) space, not O(1).',
     legend: [
-      {cls:'hot', text:'slow / first / current frame'},
-      {cls:'in-window', text:'fast / second'},
-      {cls:'good', text:'already reversed or woven'},
-      {cls:'dim', text:'not reached yet'}
+      {cls:'hot', text:'the pointer or frame active right now'},
+      {cls:'good', text:'a node whose recursive reversal has finished'},
+      {cls:'in-window', text:'a frame parked on the stack, waiting on a child call'},
+      {cls:'dim', text:'a second-half node the recursion has not reached yet'}
     ],
     code: [
-      'ListNode slow = head, fast = head;',
-      '',
-      'while (fast != null && fast.next != null)',
+      'public class Solution',
       '{',
-      '    slow = slow.next;',
-      '    fast = fast.next.next;',
-      '}   // slow now sits on the middle node',
-      '',
-      'ListNode second = slow.next;   // split into two lists',
-      'slow.next = null;',
-      'second = ReverseList(second);',
-      '',
-      'ListNode first = head;',
-      'while (second != null)',
-      '{',
-      '    ListNode firstNext = first.next;',
-      '    ListNode secondNext = second.next;',
-      '',
-      '    first.next = second;      // weave in one from the back',
-      '    second.next = firstNext;',
-      '',
-      '    first = firstNext;',
-      '    second = secondNext;',
-      '}',
-      '',
-      'private ListNode ReverseList(ListNode head)   // recursive',
-      '{',
-      '    if (head == null) return head;',
-      '',
-      '    ListNode newHead = head;',
-      '    if (head.next != null)',
+      '    public void ReorderList(ListNode head)',
       '    {',
-      '        newHead = ReverseList(head.next);',
-      '        head.next.next = head;   // point the next node back',
+      '        ListNode slow = head;',
+      '        ListNode fast = head;',
+      '',
+      '        while (fast != null && fast.next != null)',
+      '        {',
+      '            slow = slow.next;',
+      '            fast = fast.next.next;',
+      '        }',
+      '        // slow is at middle',
+      '',
+      '        // cut the list',
+      '        ListNode second = slow.next;',
+      '        slow.next = null;',
+      '        second = ReverseList(second);',
+      '',
+      '        ListNode first = head;',
+      '',
+      '        while (second != null)',
+      '        {',
+      '            ListNode firstNext = first.next;',
+      '            ListNode secondNext = second.next;',
+      '',
+      '            first.next = second;',
+      '            second.next = firstNext;',
+      '',
+      '            first = firstNext;',
+      '            second = secondNext;',
+      '        }',
       '    }',
-      '    head.next = null;',
-      '    return newHead;',
+      '',
+      '    private ListNode ReverseList(ListNode head)',
+      '    {',
+      '        if (head == null)',
+      '            return head;',
+      '',
+      '        ListNode newHead = head;',
+      '        if (head.next != null)',
+      '        {',
+      '            newHead = ReverseList(head.next);',
+      '            head.next.next = head;',
+      '        }',
+      '        head.next = null;',
+      '        return newHead;',
+      '    }',
       '}'
     ],
     simulate(input){
-      const vals = input.v, n = vals.length, steps = [];
-      const nxt = vals.map((_, i) => (i + 1 < n ? i + 1 : null));
-      const chain = (start) => {
-        const out = []; let c = start, guard = 0;
-        while (c !== null && c !== undefined && guard++ <= n){ out.push(c); c = nxt[c]; }
+      const vals = input.vals, n = vals.length;
+      const next = vals.map((_, i) => (i + 1 < n ? i + 1 : null));
+      const steps = [];
+      const frames = [{label: 'ReorderList(head)', idx: null}];
+      const doneSet = new Set();
+
+      const showV = (i) => (i === null || i === undefined ? 'null' : String(vals[i]));
+
+      const chainFrom = (start) => {
+        const out = [];
+        let cur = start, guard = 0;
+        while (cur !== null && cur !== undefined && guard++ <= n + 1){ out.push(cur); cur = next[cur]; }
         return out;
       };
-      const tiles = (title, ids, marks) => pTiles(title, ids.map(id => vals[id]), (k) => ({cls: (marks && marks[ids[k]]) || ''}));
 
-      /* ---------- phase 1: find the middle ---------- */
-      let slow = 0, fast = 0;
-      const walkMarks = () => {
-        const m = {};
-        for (let i = 0; i < n; i++) m[i] = (fast !== null && i > fast) ? 'dim' : '';
-        if (fast !== null) m[fast] = 'in-window';
-        m[slow] = 'hot';
-        return m;
+      const stackPanel = () => {
+        const items = frames.map((f, i) => ({
+          text: f.label,
+          sub: i === frames.length - 1 ? 'running' : (f.idx === null ? 'parked on line 18, waiting for ReverseList' : 'parked on line 43, waiting for newHead'),
+          cls: i === frames.length - 1 ? 'hot' : 'in-window'
+        }));
+        return pStack('call stack', [{label: 'frames', items: items, mode: 'stack', empty: 'no frames', top: 'innermost call', foot: 'caller'}]);
       };
-      const walkPanels = () => [
-        tiles('List', chain(0), walkMarks()),
-        pPills('', [
-          {k:'slow', v: vals[slow], cls:'hot'},
-          {k:'fast', v: fast === null ? 'null' : vals[fast], cls:'in-window'},
-          {k:'nodes', v: n}
-        ])
-      ];
-      steps.push({lines:[1], msg:'Both pointers start at the head. <code>fast</code> covers exactly twice the ground of <code>slow</code>, so the instant <code>fast</code> runs off the end, <code>slow</code> has covered half the list. That is the middle, found in a single pass — no length count, no array of nodes.', panels: walkPanels()});
-      while (fast !== null && nxt[fast] !== null){
-        const ps = slow, pf = fast;
-        slow = nxt[slow];
-        fast = nxt[nxt[fast]];
-        steps.push({lines:[3,5,6], msg:'<code>fast</code> is on <b>' + vals[pf] + '</b> and it has a next, so the guard passes and both advance: <code>slow</code> ' + vals[ps] + ' → <b>' + vals[slow] + '</b>, <code>fast</code> ' + vals[pf] + ' → <b>' + (fast === null ? 'null' : vals[fast]) + '</b>. Two links for every one is what keeps <code>slow</code> pinned at the halfway mark.', panels: walkPanels()});
-      }
-      steps.push({lines:[3,7], msg:'The guard fails — <code>fast</code> is ' + (fast === null ? '<b>null</b>, it stepped clean past the end' : 'on the last node <b>' + vals[fast] + '</b>, so <code>fast.next</code> is null') + '. <code>slow</code> stopped on <b>' + vals[slow] + '</b>: <b>' + (slow + 1) + '</b> nodes up to and including it, <b>' + (n - slow - 1) + '</b> behind it. When the count is odd the spare node stays in the <em>front</em> half, which is exactly where the reorder needs it.', panels: walkPanels()});
 
-      /* ---------- phase 2: cut ---------- */
-      const secondStart = nxt[slow];
-      steps.push({lines:[9], msg:'<code>second</code> grabs <b>' + vals[secondStart] + '</b>, the first node of the back half — taken <em>before</em> the link is destroyed, because <code>slow.next</code> is the only reference to it in existence.', panels: [
-        tiles('List', chain(0), (function(){ const m = {}; m[slow] = 'hot'; m[secondStart] = 'in-window'; return m; })()),
-        pPills('', [{k:'slow (middle)', v: vals[slow], cls:'hot'}, {k:'second', v: vals[secondStart], cls:'in-window'}])
-      ]});
-      nxt[slow] = null;
-      const secondIds = chain(secondStart), m = secondIds.length;
-      steps.push({lines:[10], msg:'<code>slow.next = null</code> turns one list into two genuinely independent lists. Without the cut the front half would still run straight through the back half, and the weave below would happily build a cycle out of it.', panels: [
-        tiles('Front half', chain(0), (function(){ const k = {}; k[slow] = 'hot'; return k; })()),
-        tiles('Back half', secondIds, (function(){ const k = {}; k[secondStart] = 'in-window'; return k; })())
-      ]});
+      const rowFromChain = (chain, opts) => {
+        opts = opts || {};
+        const hot = opts.hot || new Set();
+        return {
+          label: opts.label,
+          nodes: chain.map((idx) => ({id: 'n' + idx, v: vals[idx], cls: hot.has(idx) ? 'hot' : (opts.cls || '')})),
+          tail: true,
+          arrows: chain.slice(0, -1).map(() => ''),
+          tags: opts.tags || [],
+          empty: opts.empty
+        };
+      };
 
-      /* ---------- phase 3: reverse the back half ---------- */
-      const stack = [];
-      const stackPanel = () => pSlots('Call stack', stack.map((id, i) => ({text:'ReverseList(' + vals[id] + ')', cls: i === stack.length - 1 ? 'hot' : ''})));
-      for (let k = 0; k < m; k++){
-        const id = secondIds[k];
-        stack.push(id);
-        const dm = {};
-        for (let j = 0; j < m; j++) dm[secondIds[j]] = j < k ? '' : (j === k ? 'hot' : 'dim');
-        const panels = [
-          tiles('Front half (untouched)', chain(0), {}),
-          tiles('Back half (still pointing forwards)', secondIds, dm),
-          stackPanel()
+      const panelsPhase1 = (slow, fast) => {
+        const chain = chainFrom(0);
+        const tags = [{name: 'slow', idx: chain.indexOf(slow), cls: 'accent'}];
+        tags.push({name: 'fast', idx: chain.indexOf(fast), below: slow === fast});
+        return [
+          pList('the list, one chain, slow and fast walking it', [rowFromChain(chain, {label: 'head to tail', hot: new Set([slow, fast]), tags: tags})]),
+          stackPanel(),
+          pPills('state', [{k: 'slow', v: vals[slow]}, {k: 'fast', v: showV(fast)}])
         ];
-        if (k < m - 1){
-          steps.push({lines:[26,28,30,31,33], msg:'<code>ReverseList(' + vals[id] + ')</code>: this node still has a next, so its own answer depends on the reversal of everything behind it. Nothing can be rewired yet — the frame parks on the stack and recurses deeper. Those parked frames are the <b>O(n)</b> space this solution pays.', panels: panels});
-        } else {
-          steps.push({lines:[28,30,31,36,37], msg:'<code>ReverseList(' + vals[id] + ')</code> is the base: no next, so a one-node list is already its own reversal. It becomes <code>newHead</code> and is returned unchanged — and every frame above will pass this same node straight back up, because the reversed head never changes again.', panels: panels});
-        }
-      }
-      const newHead = secondIds[m - 1];
-      stack.pop();
-      for (let k = m - 2; k >= 0; k--){
-        const id = secondIds[k], tail = nxt[id];
-        nxt[tail] = id;
-        nxt[id] = null;
-        stack.pop();
-        const um = {};
-        chain(newHead).forEach(x => { um[x] = 'good'; });
-        um[id] = 'hot';
-        steps.push({lines:[34,36,37], msg:'Frame <b>' + vals[id] + '</b> wakes up. Its old next <b>' + vals[tail] + '</b> is now the <em>tail</em> of the reversed piece, so <code>head.next.next = head</code> hooks <b>' + vals[id] + '</b> onto that tail. Then <code>head.next = null</code> — skip it and <b>' + vals[id] + '</b> and <b>' + vals[tail] + '</b> would point at each other forever.', panels: [
-          tiles('Front half (untouched)', chain(0), {}),
-          tiles('Back half (reversed so far)', chain(newHead), um),
-          pPills('', [{k:'newHead', v: vals[newHead], cls:'good'}, {k:'frames still parked', v: stack.length}])
-        ]});
-      }
-      steps.push({lines:[11], msg:'<code>second</code> now points at <b>' + vals[newHead] + '</b> and the back half runs last-to-first: ' + chain(newHead).map(id => vals[id]).join(' → ') + '. That is the whole trick — the node the reorder wants second overall is now simply the <em>head</em> of a list we can walk forwards.', panels: [
-        tiles('Front half', chain(0), {}),
-        tiles('Back half (reversed)', chain(newHead), (function(){ const k = {}; chain(newHead).forEach(x => { k[x] = 'good'; }); return k; })())
-      ]});
-
-      /* ---------- phase 4: weave ---------- */
-      let first = 0, second = newHead;
-      const backLeft = chain(newHead), woven = {};
-      const mergeMarks = () => {
-        const k = {};
-        chain(0).forEach(id => { k[id] = woven[id] ? 'good' : ''; });
-        if (first !== null) k[first] = 'hot';
-        if (second !== null) k[second] = 'in-window';
-        return k;
       };
-      const mergePanels = () => [
-        tiles('List from head', chain(0), mergeMarks()),
-        backLeft.length
-          ? tiles('Back half left to weave', backLeft, (function(){ const k = {}; if (second !== null) k[second] = 'in-window'; return k; })())
-          : pNote('Back half left to weave', 'empty — every back-half node has been spliced in'),
-        pPills('', [
-          {k:'first', v: first === null ? 'null' : vals[first], cls:'hot'},
-          {k:'second', v: second === null ? 'null' : vals[second], cls:'in-window'}
-        ])
-      ];
-      steps.push({lines:[13], msg:'<code>first</code> walks the front half, <code>second</code> the reversed back half. The front is never shorter, so taking one node from each in turn produces exactly first, last, second, second-last … and the leftover front node lands at the end.', panels: mergePanels()});
-      while (second !== null && first !== null){
-        const firstNext = nxt[first], secondNext = nxt[second];
-        const fv = vals[first], sv = vals[second];
-        nxt[first] = second;
-        nxt[second] = firstNext;
-        woven[first] = true; woven[second] = true;
-        steps.push({lines:[16,17,19,20], msg:'Both successors are saved <em>first</em>: <code>first.next = second</code> is about to destroy the only pointer to <b>' + vals[firstNext] + '</b>, and <code>second.next = firstNext</code> the only pointer to <b>' + (secondNext === null ? 'null' : vals[secondNext]) + '</b>. With them in hand, <b>' + fv + '</b> → <b>' + sv + '</b> → <b>' + vals[firstNext] + '</b>: two nodes locked into their final positions.', panels: mergePanels()});
-        first = firstNext;
-        second = secondNext;
-        backLeft.shift();
-        steps.push({lines:[22,23], msg:'Each pointer jumps to the successor it saved: <code>first</code> = <b>' + (first === null ? 'null' : vals[first]) + '</b>, <code>second</code> = <b>' + (second === null ? 'null' : vals[second]) + '</b>. The stitched prefix is finished for good, so neither pointer ever needs to look back.', panels: mergePanels()});
+
+      let slow = 0, fast = 0;
+      steps.push({lines: [5, 6], msg: 'Two pointers start together at the head. fast will move twice as far as slow on every step, so when it runs off the end, slow is sitting exactly at the middle - the natural place to split the list in two.', panels: panelsPhase1(slow, fast)});
+
+      while (fast !== null && next[fast] !== null){
+        steps.push({lines: [8], msg: 'fast is at <b>' + vals[fast] + '</b> and has a next node, so the loop keeps going.', panels: panelsPhase1(slow, fast)});
+        slow = next[slow];
+        fast = next[next[fast]];
+        steps.push({lines: [10, 11], msg: 'slow takes one step to <b>' + vals[slow] + '</b>; fast takes two, landing on <b>' + showV(fast) + '</b>. Twice the speed means slow covers half the distance.', panels: panelsPhase1(slow, fast)});
       }
-      const finalMarks = {};
-      chain(0).forEach(id => { finalMarks[id] = 'good'; });
-      steps.push({lines:[14,24], msg:'<code>second</code> is null — the shorter list ran out, so every back-half node has been woven in and the last front node is already terminating the list. Final order <b>' + chain(0).map(id => vals[id]).join(' → ') + '</b>, rebuilt in place with three linear passes and a handful of pointers.', panels: [
-        tiles('Reordered list', chain(0), finalMarks),
-        pNote('Cost', 'One pass to find the middle, one recursive reversal of the back half, one weave — <b>O(n)</b> time. The only extra memory is the <b>O(n)</b> stack of <code>ReverseList</code> frames; an iterative reversal would make it O(1).')
-      ]});
+      steps.push({lines: [8], msg: 'fast is ' + (fast === null ? 'null' : 'at <b>' + vals[fast] + '</b> with no next node') + ', so the loop stops - it can not move two steps any further.', panels: panelsPhase1(slow, fast)});
+      steps.push({lines: [13], msg: 'slow is now on <b>' + vals[slow] + '</b>, the middle node. Everything up to and including it is the first half; everything after it is the second half, still to be reversed.', panels: panelsPhase1(slow, fast)});
+
+      const cutIdx = next[slow];
+      {
+        const chain = chainFrom(0);
+        const tags = [{name: 'slow', idx: chain.indexOf(slow), cls: 'accent'}, {name: 'second', idx: chain.indexOf(cutIdx), below: true}];
+        steps.push({lines: [16], msg: 'second is pointed at <b>' + vals[cutIdx] + '</b>, the node right after the middle - this reference is what keeps the second half reachable once the link to it is cut.', panels: [pList('the list, still one chain', [rowFromChain(chain, {label: 'head to tail', hot: new Set([slow, cutIdx]), tags: tags})]), stackPanel(), pPills('state', [{k: 'slow', v: vals[slow]}, {k: 'second', v: vals[cutIdx]}])]});
+      }
+
+      next[slow] = null;
+      {
+        const c1 = chainFrom(0), c2 = chainFrom(cutIdx);
+        steps.push({lines: [17], msg: 'Setting slow.next to null severs the tie: what was one list is now two independent ones, <b>' + c1.map(i => vals[i]).join(',') + '</b> and <b>' + c2.map(i => vals[i]).join(',') + '</b>, each walkable from its own head.', panels: [pList('two independent halves', [rowFromChain(c1, {label: 'first half'}), rowFromChain(c2, {label: 'second half (about to be reversed)'})]), stackPanel(), pPills('state', [{k: 'first half', v: c1.map(i => vals[i]).join(',')}, {k: 'second half', v: c2.map(i => vals[i]).join(',')}])]});
+      }
+
+      steps.push({lines: [18], msg: 'The second half is handed to the recursive helper. ReorderList parks here on the call and will not resume until a fully-reversed chain comes back.', panels: [pList('two independent halves', [rowFromChain(chainFrom(0), {label: 'first half'}), rowFromChain(chainFrom(cutIdx), {label: 'second half (about to be reversed)'})]), stackPanel(), pPills('state', [{k: 'second', v: vals[cutIdx]}])]});
+
+      const reversePanels = (curIdx) => {
+        const idxs = []; for (let i = cutIdx; i < n; i++) idxs.push(i);
+        const arrows = [];
+        for (let j = cutIdx; j < n - 1; j++){
+          const fwd = next[j] === j + 1;
+          const back = next[j + 1] === j;
+          arrows.push(fwd && back ? {cls: 'hot', text: 'cycle'} : (back ? 'back' : (fwd ? '' : 'ghost')));
+        }
+        const openIdx = new Set(frames.filter(f => f.idx !== null).map(f => f.idx));
+        const nodes = idxs.map((i) => ({
+          id: 'n' + i, v: vals[i],
+          cls: i === curIdx ? 'hot' : (doneSet.has(i) ? 'good' : (openIdx.has(i) ? 'in-window' : 'dim'))
+        }));
+        const tags = [{name: 'head', idx: idxs.indexOf(curIdx), cls: 'accent'}];
+        return [
+          pList('the two halves', [
+            rowFromChain(chainFrom(0), {label: 'first half (untouched)'}),
+            {label: 'second half - recursion unwinds right to left', nodes: nodes, tail: true, arrows: arrows, tags: tags}
+          ]),
+          stackPanel(),
+          pPills('state', [{k: 'frames open', v: frames.length}, {k: 'head', v: vals[curIdx]}])
+        ];
+      };
+
+      const doWalk = (idx) => {
+        frames.push({label: 'ReverseList(' + vals[idx] + ')', idx: idx});
+        steps.push({lines: [37, 38], msg: 'head is <b>' + vals[idx] + '</b>, not null, so this is not the base case yet.', panels: reversePanels(idx)});
+        let result;
+        if (next[idx] === null){
+          steps.push({lines: [40, 41], msg: '<b>' + vals[idx] + '</b> has no next node - it is the tail of the second half, so the if block is skipped and nothing more is recursed.', panels: reversePanels(idx)});
+          steps.push({lines: [46, 47], msg: 'head.next is already null; returning <b>' + vals[idx] + '</b> as newHead. It becomes the head of the reversed chain.', panels: reversePanels(idx)});
+          result = idx;
+        } else {
+          const s = next[idx];
+          steps.push({lines: [40, 41, 43], msg: '<b>' + vals[idx] + '</b> has a next node (<b>' + vals[s] + '</b>), so everything after it must be reversed first - the call on line 43 does exactly that before this frame does any rewiring of its own.', panels: reversePanels(idx)});
+          const nh = doWalk(s);
+          steps.push({lines: [44], msg: 'The call returned <b>' + vals[nh] + '</b>. <b>' + vals[s] + '</b> is the tail of that reversed piece and still has nowhere useful to point, so head.next.next = head makes it point back at <b>' + vals[idx] + '</b>.', panels: reversePanels(idx)});
+          next[s] = idx;
+          steps.push({lines: [46, 47], msg: 'head.next = null makes <b>' + vals[idx] + '</b> the temporary tail; the frame above, if any, will overwrite it in its own line 44. Returning newHead unchanged: <b>' + vals[nh] + '</b>.', panels: reversePanels(idx)});
+          next[idx] = null;
+          result = nh;
+        }
+        doneSet.add(idx);
+        frames.pop();
+        return result;
+      };
+
+      const secondHead = doWalk(cutIdx);
+
+      steps.push({lines: [18], msg: 'ReverseList has unwound completely and handed back <b>' + vals[secondHead] + '</b> as the new head of the second half - every pointer behind it now runs the other way.', panels: [pList('two independent halves', [rowFromChain(chainFrom(0), {label: 'first half'}), rowFromChain(chainFrom(secondHead), {label: 'second half, now reversed'})]), stackPanel(), pPills('state', [{k: 'second', v: vals[secondHead]}])]});
+
+      const mergePanels = (first, second) => {
+        const c1 = chainFrom(0), c2 = second === null ? [] : chainFrom(second);
+        return [
+          pList('splicing one node from each half at a time', [
+            rowFromChain(c1, {label: 'result so far (grown from first)', hot: new Set(first === null ? [] : [first]), tags: first === null ? [] : [{name: 'first', idx: c1.indexOf(first), cls: 'accent'}]}),
+            rowFromChain(c2, {label: 'not yet merged in (from second)', hot: new Set(second === null ? [] : [second]), tags: second === null ? [] : [{name: 'second', idx: c2.indexOf(second), cls: 'accent'}], empty: 'fully merged in'})
+          ]),
+          stackPanel(),
+          pPills('state', [{k: 'first', v: first === null ? 'null' : vals[first]}, {k: 'second', v: second === null ? 'null' : vals[second]}])
+        ];
+      };
+
+      let first = 0, second = secondHead;
+      steps.push({lines: [20], msg: 'first is reset to the original head. From here the two halves are woven together: a node from first, then a node from second, alternating until second runs out.', panels: mergePanels(first, second)});
+
+      while (second !== null){
+        steps.push({lines: [22], msg: 'second is <b>' + vals[second] + '</b>, not null, so there is still a node waiting to be spliced in.', panels: mergePanels(first, second)});
+        const firstNext = next[first], secondNext = next[second];
+        steps.push({lines: [24, 25], msg: 'Both continuations are saved first: firstNext = <b>' + showV(firstNext) + '</b>, secondNext = <b>' + showV(secondNext) + '</b>. The splice below is about to overwrite both nodes next fields, so whatever comes after them has to be captured now.', panels: mergePanels(first, second)});
+        next[first] = second;
+        next[second] = firstNext;
+        steps.push({lines: [27, 28], msg: '<b>' + vals[first] + '</b> now points at <b>' + vals[second] + '</b>, and <b>' + vals[second] + '</b> points at firstNext, so the rest of the first half stays reachable even though a second-half node was just inserted in front of it.', panels: mergePanels(first, second)});
+        first = firstNext; second = secondNext;
+        steps.push({lines: [30, 31], msg: second === null ? 'Both cursors move on; secondNext was null, so this was the final splice.' : 'Both cursors move on to keep the alternation going: first to <b>' + vals[first] + '</b>, second to <b>' + vals[second] + '</b>.', panels: mergePanels(first, second)});
+      }
+      steps.push({lines: [22], msg: 'second is null - every node from the second half is already spliced in, so the loop ends.', panels: mergePanels(first, second)});
+
+      const finalChain = chainFrom(0);
+      steps.push({lines: [33], msg: 'ReorderList returns. Reading from the head: <b>' + finalChain.map(i => vals[i]).join(' → ') + '</b> - first-half and second-half nodes now alternate. Three linear passes (find the middle, reverse, merge) make this O(n) time; the recursive reversal is the only extra memory used, so it is O(n) space rather than O(1).', panels: [pList('final list', [rowFromChain(finalChain, {label: 'head to tail'})]), stackPanel(), pPills('state', [{k: 'result', v: finalChain.map(i => vals[i]).join(',')}])]});
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.
