@@ -42,12 +42,23 @@ const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 // Sonnet at high effort since 2026-09. On max-area-of-island it built a correct animation - the
 // code copied exactly, neighbour order and stack depth faithful to the C# - for $0.24, against
-// $0.66 for the Opus one. If validation rejects the first attempt, the retry moves up to Opus:
-// the cheap model does the usual case and the expensive one only the hard one.
+// $0.66 for the Opus one.
+//
+// If validation rejects the first attempt, attempt 2 is a REPAIR on Opus, not a fresh build. It
+// gets the rejected definition and the exact errors, and returns the same object with only those
+// fixed - no worked example, no long requirements. A fresh Opus build threw away an answer that
+// was 95% right and cost ~$0.50 and 3-8 minutes; a repair is a small, scoped task. There is no
+// third attempt: a failed repair fails the folder loudly.
 // An explicit --model is respected on both attempts.
 const modelGiven = argv.includes('--model');
 const model = arg('--model', 'sonnet');
 const RETRY_MODEL = 'opus';
+// The repair's effort. Unset = Opus's own default (high). If repairs still think heavily, try medium.
+const repairEffort = arg('--repair-effort');
+// Local test of the repair alone: start from an existing definition (a visualizer .html or a .js
+// holding `const PROBLEM = ...`) instead of paying for attempt 1. If that definition passes, one
+// deliberate error is injected so there is something to repair. Dry runs only.
+const repairFrom = arg('--repair-from');
 // No --effort means the model's own default. Only ever set by hand, for comparisons.
 const effort = arg('--effort', modelGiven ? null : 'high');
 const backfill = has('--backfill');
@@ -76,7 +87,11 @@ function contract() {
 
 /** Lift the PROBLEM definition out of a finished visualizer. */
 function definitionFrom(dir, slug) {
-  const src = readFileSync(join(dir, `${slug}-visualizer.html`), 'utf8').split(/\r?\n/);
+  return definitionFromFile(join(dir, `${slug}-visualizer.html`));
+}
+
+function definitionFromFile(path) {
+  const src = readFileSync(path, 'utf8').split(/\r?\n/);
   const s = src.findIndex((l) => /^const PROBLEM = \{/.test(l));
   if (s < 0) return null;
   let depth = 0, end = -1;
@@ -121,6 +136,43 @@ function pickExample(slug, structures, state, all) {
   }
   const def = definitionFrom(FALLBACK_EXAMPLE.dir, FALLBACK_EXAMPLE.slug);
   return { source: def, from: FALLBACK_EXAMPLE.slug, sameShape: false };
+}
+
+/**
+ * Attempt 2: fix a rejected definition rather than rebuild it.
+ *
+ * Deliberately shorter than instructions(): the rejected answer already follows the voice, the
+ * panel conventions and the worked example, so those are not sent again. The helper contract and
+ * the structure rules stay, because a fix must still use the real panel API.
+ */
+function repairInstructions(slug, sols, structures, previous, errors) {
+  return [
+    `You are REPAIRING the PROBLEM definition for the NeetCode problem "${slug}". It was written for an`,
+    'existing visualizer and it failed validation. It is almost right.',
+    '',
+    'These helper functions and panel constructors already exist. Use them; do not redefine them:',
+    '```', contract(), '```',
+    '',
+    `The solutions, in order (each "lines" index is 1-based into THAT solution's own "code" array):`,
+    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}` +
+      ((s.structures ?? []).length ? `; made of: ${s.structures.join(', ')}` : '')),
+    '',
+    contractSection(structures),
+    '',
+    'The definition that failed:',
+    '```', previous, '```',
+    '',
+    'The validator found exactly these problems:',
+    ...errors.map((e) => `  - ${e}`),
+    '',
+    'Fix these problems and nothing else. Keep every panel, step, message and piece of wording as it is,',
+    'unless fixing a listed problem requires changing it. Do not redesign, shorten or rewrite the animation.',
+    'Plain-text fields are escaped on the way in: write < and & as themselves, never as entities.',
+    'Output only the full corrected statement: const PROBLEM = { ... };',
+    '',
+    'You have no tools and no filesystem access. The solution code follows below, and everything else',
+    'you need is above. Do not attempt to read, list or search files - answer directly.',
+  ].join('\n');
 }
 
 function instructions(slug, sols, structures, example, feedback) {
@@ -183,9 +235,9 @@ function instructions(slug, sols, structures, example, feedback) {
 // with the code, and the argument is one short line. stdin allows 10MB.
 const STDIN_POINTER = 'Your full instructions come first on stdin, followed by the solution code. Follow the instructions exactly.';
 
-function ask(prompt, code, useModel = model) {
+function ask(prompt, code, useModel = model, useEffort = effort) {
   const args = ['-p', STDIN_POINTER, '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
-                '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', useModel, ...effortArgs(effort), ...leanArgs()];
+                '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', useModel, ...effortArgs(useEffort), ...leanArgs()];
   let raw;
   try {
     raw = execFileSync('claude', args, {
@@ -312,13 +364,35 @@ for (const p of targets) {
     .map((f) => `===== FILE: ${f} =====\n${stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body}`)
     .join('\n\n');
 
-  let result = null, feedback = null, spend = 0, used = null, validationFailed = false;
-  for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+  let result = null, feedback = null, spend = 0, used = null;
+  // The definition validation last rejected. When set, the next attempt repairs it.
+  let rejected = null;
+  if (repairFrom) {
+    if (doApply) { console.log('  --repair-from is for dry runs only'); process.exit(1); }
+    let src = /\.html?$/i.test(repairFrom) ? definitionFromFile(repairFrom) : readFileSync(repairFrom, 'utf8');
+    let errs = validate(src, structures, sols.map((s) => s.structures ?? [])).errors;
+    if (!errs.length) {
+      // Nothing wrong with it: break one step's line number so the repair has a real job to do.
+      src = src.replace(/lines\s*:\s*\[/, 'lines:[999, ');
+      errs = validate(src, structures, sols.map((s) => s.structures ?? [])).errors;
+      console.log(`  --repair-from: definition was valid; injected a bad line number -> ${errs.length} error(s)`);
+    }
+    rejected = { src, errors: errs };
+  }
+
+  for (let attempt = rejected ? 2 : 1; attempt <= 2 && !result; attempt++) {
     let r;
-    // Attempt 2 after a validation rejection escalates to Opus, unless you chose the model.
-    const useModel = attempt === 2 && feedback && !modelGiven && validationFailed ? RETRY_MODEL : model;
-    if (useModel !== model) console.log(`  attempt ${attempt}: retrying on ${useModel}`);
-    try { r = ask(instructions(p.slug, sols, structures, example, feedback), code, useModel); }
+    const repairing = !!rejected;
+    const useModel = repairing && !modelGiven ? RETRY_MODEL : model;
+    const useEffort = repairing && !modelGiven ? repairEffort : effort;
+    try {
+      if (repairing) {
+        console.log(`  attempt ${attempt}: repairing on ${useModel}${useEffort ? ` (effort ${useEffort})` : ''} - ${rejected.errors.length} error(s) to fix`);
+        r = ask(repairInstructions(p.slug, sols, structures, rejected.src, rejected.errors.slice(0, 25)), code, useModel, useEffort);
+      } else {
+        r = ask(instructions(p.slug, sols, structures, example, feedback), code, useModel, useEffort);
+      }
+    }
     catch (e) {
       console.log(`  attempt ${attempt} FAILED: ${e.message}`);
       // Out of budget is a property of the account, not of this folder. Record
@@ -327,7 +401,7 @@ for (const p of targets) {
       if (isOutOfBudget(e)) { outOfBudget = e.message; budgetStop('visualize', e.message); break; }
       // Retry a run that simply ran out of room; do not retry an auth or
       // configuration failure, which will fail identically the second time.
-      if (/max_turns|overloaded|rate_limit|timeout/i.test(e.message)) {
+      if (!repairing && /max_turns|overloaded|rate_limit|timeout/i.test(e.message)) {
         feedback = ['Your previous attempt ran out of room before finishing. Answer immediately, in one reply, with no preamble.'];
         continue;
       }
@@ -341,16 +415,21 @@ for (const p of targets) {
     const v = validate(r.src, structures, sols.map((s) => s.structures ?? []));
     if (!v.errors.length) {
       result = r;
+      if (repairing) console.log('      repaired - validation passes');
       for (const [k, n] of Object.entries(v.stats)) console.log(`      ${k}: ${n}`);
       // A waiver is a claim that a structure is not really there. Print it:
       // it is the one thing here that is accepted on the model's say-so, so it
       // should be the one thing that is impossible to miss in the log.
       for (const w of v.waived ?? []) console.log(`      WAIVED  ${w}`);
     } else {
-      console.log(`  attempt ${attempt} rejected by validation:`);
+      console.log(`  attempt ${attempt} rejected by validation (${v.errors.length} error(s)):`);
       v.errors.slice(0, 6).forEach((e) => console.log(`      ${e}`));
-      feedback = v.errors.slice(0, 8);
-      validationFailed = true;
+      rejected = { src: r.src, errors: [...new Set(v.errors)] };
+      // Kept locally (gitignored) so a repair can be re-run with --repair-from without paying again.
+      try {
+        mkdirSync(join(REPO, '.agent', 'tmp'), { recursive: true });
+        writeFileSync(join(REPO, '.agent', 'tmp', `visualize-rejected-${p.slug}.js`), r.src, 'utf8');
+      } catch { /* diagnostics only */ }
     }
   }
 
@@ -362,7 +441,7 @@ for (const p of targets) {
       break;
     }
     console.log(`  giving up on ${p.slug}`);
-    report('visualize', p.slug, 'failed', 'validation rejected both attempts');
+    report('visualize', p.slug, 'failed', 'validation rejected the build and the repair');
     failures++;
     endGroup();
     continue;

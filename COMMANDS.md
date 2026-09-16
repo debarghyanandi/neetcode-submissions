@@ -456,12 +456,14 @@ failure is still committed, and the summary shows the estimated cost of the run.
 | `--model <name>` | lint, classify, teach, visualize | Override the model: `sonnet`, `opus`, `haiku`. |
 | `--effort <level>` | teach, visualize | `low`, `medium`, `high`, `xhigh`, `max`. Leave it out for the model's default. |
 | `--file <name>` | teach | Only this file inside the folder, e.g. `optimal.cs`. |
+| `--repair-from <file>` | visualize | Dry run of the repair step alone, starting from an existing visualizer `.html` or a saved rejected `.js`. A valid definition gets one bad line number injected. |
+| `--repair-effort <level>` | visualize | Effort for the Opus repair. Leave it out for Opus's default (high). |
 | `--exclude <slugs>` | detect, lint, classify | Hold these back. Comma-separated. |
 | `--dry-run` | apply | Report without writing. |
 | `--json` | detect | Machine-readable output. |
 | `--delete-duplicates` | classify | Remove a resubmission identical to code you already have. |
 
-Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Sonnet at high effort** and retries on Opus if validation rejects it.
+Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Sonnet at high effort**; if validation rejects it, **Opus repairs** that answer (one attempt, no rebuild).
 Every call replaces Claude Code's default system prompt and turns tools off (`PIPELINE_FULL_PROMPT=1` undoes that).
 Prompt caching is off for every call (`PIPELINE_PROMPT_CACHE=1` turns it back on). The pipeline never reads a cache entry back, so writing one only cost extra.
 Every model call now prints its tokens: fresh input, cache write, cache read, output.
