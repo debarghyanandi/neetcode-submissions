@@ -265,7 +265,8 @@ Calls Claude (Opus) once per *file* to write the long block that goes below the 
 Sonnet was tried in 2026-09: cheaper per call, but it repeated points across sections and
 got a space-complexity claim wrong, and once it needed a third turn it cost about the same.
 
-The sections are fixed by the output schema, in this order: `WHY THIS PATTERN`, `BRUTE FORCE`
+The model replies in plain text with `@@` markers (no `--json-schema`: Opus kept mis-calling the
+9-field output tool, which cost an extra turn). `parseTeachText` enforces the sections, in this order: `WHY THIS PATTERN`, `BRUTE FORCE`
 (`BETTER APPROACH` on a suboptimal file), `INVARIANT`, up to two problem-specific sections the
 model titles itself, `WATCH OUT`, `FOLLOW-UP AN INTERVIEWER WILL ASK`, `TRIGGER`, `C# NOTE`.
 Blocks written before 2026-09 used free headings and keep them until rewritten. The model is told exactly which facts

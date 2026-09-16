@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 import { stripHeader } from './lib/header.mjs';
-import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach, toSections } from './lib/teach.mjs';
+import { TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach, toSections, parseTeachText } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
@@ -112,13 +112,16 @@ function extraTurnReasons(events) {
   return out;
 }
 
-function ask(dir, file, ctx) {
+function ask(dir, file, ctx, feedback = null) {
+  const prompt = TEACH_INSTRUCTIONS(ctx) + (feedback
+    ? `\n\nYour previous answer could not be read. Fix exactly these, and reply again in the format above:\n${feedback.map((f) => `  - ${f}`).join('\n')}`
+    : '');
   const args = [
-    '-p', TEACH_INSTRUCTIONS(ctx),
+    '-p', prompt,
     '--output-format', 'stream-json', '--verbose',
-    '--json-schema', JSON.stringify(SECTIONS_SCHEMA),
+    // No --json-schema: the answer is plain text with @@ markers (see lib/teach.mjs).
     '--permission-mode', 'dontAsk',
-    '--max-turns', '8',
+    '--max-turns', '3',
     '--model', model,
     ...effortArgs(effort),
     ...leanArgs(),
@@ -140,9 +143,9 @@ function ask(dir, file, ctx) {
   }
   const { events, env } = parseStream(raw);
   if (!env) throw new Error(`no result event in the stream (${events.length} events)`);
-  // A clean structured answer takes 2 turns. More means something was retried, and the extra
-  // request re-sends the conversation so far. Print why, in the log, where it survives the runner.
-  if ((env.num_turns ?? 0) > 2) {
+  // A plain-text answer is one turn. More means something was retried, and the extra request
+  // re-sends the conversation so far. Print why, in the log, where it survives the runner.
+  if ((env.num_turns ?? 0) > 1) {
     const reasons = extraTurnReasons(events);
     console.log(`  note: ${env.num_turns} turns - ${reasons.length ? 'why:' : 'no rejection found in the stream'}`);
     for (const r of reasons.slice(0, 4)) console.log(`        ${r}`);
@@ -151,13 +154,9 @@ function ask(dir, file, ctx) {
       writeFileSync(join(REPO, '.agent', 'tmp', 'teach-extra-turns.jsonl'), raw, 'utf8');
     } catch { /* diagnostics only */ }
   }
-  const out = env.structured_output;
-  const missing = SECTIONS_SCHEMA.required.filter((k) => out?.[k] === undefined || out?.[k] === '');
-  if (!out || missing.length) {
-    throw new Error(`no usable structured_output${missing.length ? ` - missing ${missing.join(', ')}` : ''} (result: ${String(env.result).slice(0, 200)})`);
-  }
-  out.sections = toSections(out, ctx);
-  return { out, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
+  const { out, errors } = parseTeachText(env.result);
+  if (out) out.sections = toSections(out, ctx);
+  return { out, errors, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
 }
 
 // ---------------------------------------------------------------- run
@@ -258,8 +257,20 @@ for (const p of targets) {
       continue;
     }
 
-    let r;
-    try { r = ask(p.dir, file, ctx); }
+    // Up to two attempts. A reply that breaks the marker format is retried once, told exactly what
+    // was wrong - the same loop the visualizer uses. Every attempt's cost is reported.
+    let r = null, feedback = null, spend = 0;
+    try {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const a = ask(p.dir, file, ctx, feedback);
+        spend += a.cost ?? 0;
+        reportCost('teach', p.slug, a.cost, a.usage);
+        if (a.out) { r = { ...a, cost: spend }; break; }
+        console.log(`  ${file.padEnd(22)} attempt ${attempt} unreadable: ${a.errors.slice(0, 4).join('; ')}`);
+        feedback = a.errors.slice(0, 8);
+      }
+      if (!r) throw new Error(`reply unreadable twice: ${feedback.slice(0, 3).join('; ')}`);
+    }
     catch (e) {
       console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`);
       if (isOutOfBudget(e)) {
@@ -273,7 +284,6 @@ for (const p of targets) {
       continue;
     }
 
-    reportCost('teach', p.slug, r.cost, r.usage);
     const block = buildTeachingBlock(r.out, ctx);
     console.log(`  ${file.padEnd(22)} ${r.out.sections.length} section(s), ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
     console.log(`  ${''.padEnd(22)} ${usageLine(r.usage)}`);

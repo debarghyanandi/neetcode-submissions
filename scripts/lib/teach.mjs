@@ -83,39 +83,139 @@ export function toSections(out, ctx) {
   ].filter((x) => x.body && String(x.body).trim());
 }
 
+/**
+ * The answer comes back as PLAIN TEXT with fixed "@@ NAME" markers, not through --json-schema.
+ *
+ * With a schema, the CLI hands the model a tool with nine fields and nested lists, and the model
+ * must call it correctly. Opus often did not: 3 of 5 calls sent the whole answer as one string
+ * under a placeholder key ("$PARAMETER_NAME"), the tool rejected it, and the retry re-sent the
+ * whole conversation - about $0.09 more each time. Plain text needs no tool call at all, so that
+ * failure cannot happen, and a normal answer is a single turn. The section order that the schema
+ * used to enforce is now enforced by parseTeachText below, and a bad answer is retried by
+ * teach.mjs with the exact problems listed.
+ */
+export const MARKERS = [
+  ['pattern', 'PATTERN'],
+  ['whyThisPattern', 'WHY THIS PATTERN'],
+  ['bruteForce', 'BRUTE FORCE'],
+  ['invariant', 'INVARIANT'],
+  ['keyDetails', 'KEY DETAIL'],
+  ['watchOut', 'WATCH OUT'],
+  ['followUps', 'FOLLOW-UP'],
+  ['trigger', 'TRIGGER'],
+  ['csharpNote', 'C# NOTE'],
+];
+
+/**
+ * Read the marker format back into the same object the schema used to produce.
+ * @returns {{ out: object|null, errors: string[] }}
+ */
+export function parseTeachText(text) {
+  const errors = [];
+  const lines = String(text ?? '').replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let cur = null;
+  for (const line of lines) {
+    const m = line.match(/^\s*@@\s*(.+?)\s*$/);
+    if (m) { cur = { head: m[1], body: [] }; blocks.push(cur); continue; }
+    if (cur) cur.body.push(line);   // anything before the first marker is ignored
+  }
+  const byName = new Map(MARKERS.map(([k, n]) => [n, k]));
+  const out = { keyDetails: [], followUps: [] };
+  const order = [];
+  for (const b of blocks) {
+    const body = b.body.join('\n').trim();
+    const kd = b.head.match(/^KEY DETAIL\s*:\s*(.+)$/i);
+    const name = kd ? 'KEY DETAIL' : b.head.toUpperCase();
+    const key = byName.get(name);
+    if (!key) { errors.push(`unknown marker "@@ ${b.head}"`); continue; }
+    if (!body) { errors.push(`"@@ ${b.head}" is empty`); continue; }
+    order.push(key);
+    if (key === 'keyDetails') { out.keyDetails.push({ title: kd[1].trim().toUpperCase(), body }); continue; }
+    if (key === 'followUps') {
+      let q = null;
+      for (const l of body.split('\n')) {
+        const qm = l.match(/^\s*Q\s*:\s*(.*)$/i), am = l.match(/^\s*A\s*:\s*(.*)$/i);
+        if (qm) { q = { question: qm[1].trim(), answer: '' }; out.followUps.push(q); }
+        else if (am && q) q.answer = am[1].trim();
+        else if (q && l.trim()) { if (q.answer) q.answer += ' ' + l.trim(); else q.question += ' ' + l.trim(); }
+      }
+      continue;
+    }
+    if (out[key] !== undefined) { errors.push(`"@@ ${name}" appears twice`); continue; }
+    out[key] = body;
+  }
+  for (const [k, n] of MARKERS) {
+    if (k === 'keyDetails' || k === 'followUps') continue;
+    if (!out[k]) errors.push(`missing "@@ ${n}"`);
+  }
+  if (out.keyDetails.length > 2) errors.push(`${out.keyDetails.length} KEY DETAIL sections - at most 2`);
+  if (out.followUps.length < 2 || out.followUps.length > 4) errors.push(`${out.followUps.length} follow-up questions - need 2 to 4, each as a "Q:" line then an "A:" line`);
+  if (out.followUps.some((f) => !f.question || !f.answer)) errors.push('a follow-up is missing its "Q:" or its "A:"');
+  // The fixed order: each marker's first appearance must follow the previous one.
+  const rank = new Map(MARKERS.map(([k], i) => [k, i]));
+  for (let i = 1; i < order.length; i++) {
+    if (rank.get(order[i]) < rank.get(order[i - 1])) { errors.push(`sections out of order: "${order[i]}" after "${order[i - 1]}"`); break; }
+  }
+  if (out.pattern && out.pattern.includes('\n')) out.pattern = out.pattern.split('\n')[0].trim();
+  return { out: errors.length ? null : out, errors };
+}
+
+const guide = (k) => {
+  const d = SECTIONS_SCHEMA.properties[k];
+  return d.description ?? '';
+};
+
 export const TEACH_INSTRUCTIONS = (ctx) => [
   'You are writing the study preamble for ONE C# solution file, given on stdin.',
   '',
   'The reader is the person who wrote it, revising weeks later for an interview. Write for recall',
   'and for the follow-up an interviewer would ask.',
   '',
-  'Fill every field of the output schema. The sections and their order are fixed by the schema -',
-  'do not add headings of your own inside a field.',
-  '',
   'Facts already printed in the banner ABOVE your sections. Never restate any of them:',
-  `  PATTERN is your "pattern" field.`,
   `  SOURCE  : ${ctx.source}`,
   `  STATUS  : ${ctx.status}`,
   `  COMPLEXITY is emitted separately as ${ctx.time} time / ${ctx.space} space. Do not write it again.`,
   '',
   'Rules:',
-  '- Never repeat a point across two fields. If a follow-up would repeat WATCH OUT or a key detail,',
+  '- Never repeat a point across two sections. If a follow-up would repeat WATCH OUT or a key detail,',
   '  choose a different follow-up.',
   '- Every claim must be grounded in the code you were given or in the algorithm itself.',
   '  Do not assert performance folklore about the runtime, the JIT, or the compiler - if you',
   '  cannot show it from the code, leave it out.',
   '- Name the concrete variables and values from THIS file, not a generic template.',
   '- You are NOT given the problem\'s constraints. Never invent input sizes or limits ("a 300x300 grid").',
-  '- Short. The whole block should read in two minutes. Each field has its own job; a point that fits',
-  '  two fields goes in the first one and is left out of the other.',
-  '- If a comment in the code states something the code contradicts, say so in watchOut.',
+  '- Short. The whole block should read in two minutes. Each section has its own job; a point that fits',
+  '  two sections goes in the first one and is left out of the other.',
+  '- If a comment in the code states something the code contradicts, say so in WATCH OUT.',
   '- Plain English for a reader whose second language is English: short sentences, common words,',
   '  no word play. Keep real technical terms, and explain one in plain words the first time.',
   '- Plain ASCII. No markdown, no backticks, no emoji.',
   '',
-  'Return the answer by calling the output tool ONCE, with every field at the top level of the',
-  'object: pattern, whyThisPattern, bruteForce, invariant, keyDetails, watchOut, followUps, trigger,',
-  'csharpNote. Do not wrap them in another key, and do not pass the object as a JSON string.',
+  'OUTPUT FORMAT. Reply with ONLY these sections, in exactly this order, each starting with its',
+  'marker line. No text before the first marker, no JSON, no code fences.',
+  '',
+  `@@ PATTERN`,
+  `   ${guide('pattern')}`,
+  `@@ WHY THIS PATTERN`,
+  `   ${guide('whyThisPattern')}`,
+  `@@ BRUTE FORCE`,
+  `   ${guide('bruteForce')}`,
+  `@@ INVARIANT`,
+  `   ${guide('invariant')}`,
+  `@@ KEY DETAIL: <SHORT UPPERCASE TITLE>`,
+  `   ${guide('keyDetails')} Write this marker zero, one or two times. Leave it out entirely when`,
+  `   nothing earns it.`,
+  `@@ WATCH OUT`,
+  `   ${guide('watchOut')}`,
+  `@@ FOLLOW-UP`,
+  `   ${guide('followUps')} Two to four of them, each written as:`,
+  `   Q: the question`,
+  `   A: the answer and its trade-off`,
+  `@@ TRIGGER`,
+  `   ${guide('trigger')}`,
+  `@@ C# NOTE`,
+  `   ${guide('csharpNote')}`,
 ].join('\n');
 
 const wrap = (text, width) => {
