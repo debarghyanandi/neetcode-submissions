@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T06:53:58.752Z",
+  "updatedAt": "2026-09-16T07:48:53.468Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -310,20 +310,22 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "codePrint": "f4e4e8e76ef5",
+          "codePrint": "e4cf7d0c4d5d",
           "renames": [
-            "DFS->Height"
+            "res->diameter"
           ]
         },
         "optimal-variant.cs": {
           "version": 1,
-          "codePrint": "dd102e06d6f4",
-          "renames": []
+          "codePrint": "fc7d1d0914b5",
+          "renames": [
+            "DFS->ComputeHeightAndDiameter"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS computing height, tracking diameter in shared field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS returning (height, diameter) tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e4cf7d0c4d5d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS computing height, tracking diameter via mutable field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc7d1d0914b5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS returning height and diameter as tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -341,34 +343,47 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "postorder DFS computing height, tracking diameter in shared field",
+          "algorithm": "Postorder DFS computing height, tracking diameter via mutable field",
           "approachKey": "postorder-height-diameter",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "postorder DFS returning (height, diameter) tuple",
+          "algorithm": "Postorder DFS returning height and diameter as tuple",
           "approachKey": "postorder-height-diameter",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "tree",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS computing height, tracking diameter in shared field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"postorder DFS returning (height, diameter) tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e4cf7d0c4d5d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS computing height, tracking diameter via mutable field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"fc7d1d0914b5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS returning height and diameter as tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
         ],
         "prints": {
-          "optimal.cs": "f4e4e8e76ef5",
-          "optimal-variant.cs": "dd102e06d6f4"
+          "optimal.cs": "e4cf7d0c4d5d",
+          "optimal-variant.cs": "fc7d1d0914b5"
         },
-        "builtAt": "2026-09-09T22:57:03.012Z"
+        "structures": [
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-16T07:48:53.465Z"
       }
     },
     "buy-and-sell-crypto": {

@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">21</span> / 59</b></div>
-      <div class="bar"><span id="bar" style="width:35.6%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">22</span> / 59</b></div>
+      <div class="bar"><span id="bar" style="width:37.3%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -587,7 +587,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Trees">
   <div class="group-head">
     <h2>Trees</h2>
-    <span class="group-count"><b class="gdone">9</b> / <b>10</b> reshaped</span>
+    <span class="group-count"><b class="gdone">10</b> / <b>10</b> reshaped</span>
   </div>
   <p class="group-note">Recursion that returns something useful from every subtree.</p>
   <ul>
@@ -601,14 +601,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
-    <li data-hay="binary tree diameter binary-tree-diameter trees post-order dfs - return height, update diameter globally  needs reshape" data-status="stale">
+    <li data-hay="binary tree diameter binary-tree-diameter trees post-order dfs - return height, track best at each node tree call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/binary-tree-diameter" target="_blank" rel="noopener noreferrer">Binary Tree Diameter</a>
-        <span class="why">Post-order DFS - return height, update diameter globally</span>
+        <span class="why">Post-order DFS - return height, track best at each node</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/binary-tree-diameter/binary-tree-diameter-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std stale" title="visualizer shape standard"><i class="dot"></i>needs reshape</span>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
       </span>
     </li>
     <li data-hay="depth of binary tree depth-of-binary-tree trees post-order dfs - height = 1 + max of child heights tree call-stack queue current" data-status="current">
