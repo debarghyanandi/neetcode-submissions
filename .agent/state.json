@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T07:48:53.468Z",
+  "updatedAt": "2026-09-16T19:43:00.673Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3387,8 +3387,11 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "failed": true,
-          "reason": "two different names both became next: temp and next"
+          "codePrint": "f45ab5828eca",
+          "renames": [
+            "curr->current",
+            "temp->nextNode"
+          ]
         },
         "suboptimal.cs": {
           "version": 1,
@@ -3397,8 +3400,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal, prev/curr/temp walk\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive reversal, fix links on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f45ab5828eca\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative three-pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive reversal, fix on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3416,32 +3419,46 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "iterative pointer reversal, prev/curr/temp walk",
+          "algorithm": "Iterative three-pointer reversal",
           "approachKey": "iterative-pointer-reversal",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "linked-list"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive reversal, fix links on unwind",
+          "algorithm": "Recursive reversal, fix on unwind",
           "approachKey": "recursive-reversal",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "linked-list",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e1f52fa2f5d4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal, prev/curr/temp walk\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive reversal, fix links on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f45ab5828eca\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative three-pointer reversal\",\"approachKey\":\"iterative-pointer-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive reversal, fix on unwind\",\"approachKey\":\"recursive-reversal\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
+        "v": 2,
         "files": [
-          "optimal.cs"
+          "optimal.cs",
+          "suboptimal.cs"
         ],
         "prints": {
-          "optimal.cs": "e1f52fa2f5d4"
+          "optimal.cs": "f45ab5828eca",
+          "suboptimal.cs": "cc7b45fbbcf2"
         },
-        "builtAt": "2026-09-05T20:27:31.682Z"
+        "structures": [
+          "linked-list",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-16T19:43:00.671Z"
       }
     },
     "rotting-fruit": {

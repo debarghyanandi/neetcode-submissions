@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  recursive reversal, fix links on unwind   [recursive-reversal]
+// -  Recursive reversal, fix on unwind   [recursive-reversal]
 // -  ranks below optimal.cs (O(n) time / O(1) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
-// -  recurses to the tail then relinks pointers on the way back up, costing
-// -  O(n) call stack depth
+// -  Recursion depth equals linked list length; call stack accumulates one
+// -  frame per node.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -30,72 +30,82 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Recursion - reverse the tail, then splice head on
+ PATTERN : Recursive Linked List Reversal - unwind then relink
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 WHY THIS PATTERN
-  A singly linked list gives you no way back, so reversing means every node has
-  to learn who pointed at it. Recursion supplies that for free: the call stack
-  holds onto head while the rest of the list is being reversed, and on the way
-  back up each frame owns exactly the one edge it needs to flip. No prev
-  variable is needed because the frame IS the prev variable.
+  The problem asks for the same list with all next pointers flipped, and a
+  linked list is a naturally recursive structure: head plus a smaller list
+  starting at head.next. The code reverses the tail by calling
+  ReverseList(head.next), which hands back newHead, the last node of the
+  original list and the new front. Once the tail is reversed, head.next still
+  points at the node that is now the tail end of that reversed part, so
+  head.next.next = head hooks the current node on behind it. Setting head.next =
+  null closes the chain so the old first node becomes the new last node.
+BETTER APPROACH
+  The better approach is the iterative three-pointer walk: keep prev = null and
+  curr = head, and in a while loop save next = curr.next, set curr.next = prev,
+  then advance prev = curr and curr = next, returning prev. It does the same
+  number of pointer writes but uses O(1) space instead of O(n). This file loses
+  because every node adds a frame to the call stack, so a long list can throw
+  StackOverflowException, which no amount of tuning fixes since C# does not
+  guarantee tail call elimination here (and the call is not in tail position
+  anyway - work happens after it returns).
 INVARIANT
-  ReverseList(x) returns the head of the reversed sublist starting at x, and
-  leaves x as the TAIL of that sublist with x.next == null.
-
-  Both halves are load-bearing. The first half is what lets newHead be passed
-  straight up through every frame untouched. The second half is what lets the
-  caller's fix-up work: because the recursive call never rewrote head.next,
-  after it returns head.next is still the old successor, and by the invariant
-  that node is now the last node of the reversed tail - exactly the node that
-  must point back at head.
-ALGORITHM
-  1. head == null returns null. This guards the empty-list call only; it is not
-  the recursion's stopping point.
-  2. newHead = head. For a one-node list this is already the answer, and the if
-  (head.next != null) guard means a tail node falls straight through to the
-  return. The real base case is a last node, not a null.
-  3. Otherwise recurse on head.next. Everything from head.next onward comes back
-  reversed. newHead now holds the original final node and never changes again as
-  the frames unwind.
-  4. head.next.next = head. head.next is the old successor, which is now the
-  reversed tail's end; aim it back at head.
-  5. head.next = null, unconditionally. In the recursive branch this severs the
-  old forward edge that step 4 just turned into a two-node cycle. In the
-  one-node branch it is a harmless no-op on an already-null field.
-  6. return newHead.
-WHY THIS LOSES
-  The iterative three-pointer version - prev = null, walk curr, save nxt =
-  curr.next, curr.next = prev, prev = curr, curr = nxt, return prev - does the
-  same single pass with a fixed handful of locals and no call stack. This
-  version pays one stack frame per node, so a long list can overflow before it
-  can be wrong. Note the recursion is not in tail position: head.next.next =
-  head runs after the call returns, so no loop rewrite comes for free from the
-  language. Reach for the iterative form in an interview unless recursion was
-  requested; keep this one as the proof of why the iterative form is correct.
+  At the point ReverseList(head.next) returns, everything from head.next to the
+  end has been fully reversed, and head.next is now the last node of that
+  reversed block, while head itself is still untouched and still points into it.
+  That single unchanged pointer is what makes head.next.next = head legal - it
+  is the only handle back into the reversed part. Because the base cases (head
+  == null, or head.next == null so newHead stays head) trivially satisfy the
+  invariant, induction gives a correct full reversal, and newHead is passed up
+  unchanged from the deepest call.
 WATCH OUT
-  Order of steps 4 and 5 is forced. Null head.next first and you have destroyed
-  the only handle on the node you were about to write through.
-
-  Do not return head from the recursive branch. head became the new tail;
-  newHead has to be threaded up unchanged through every frame.
-
-  Between steps 4 and 5 the two nodes form a genuine cycle (head -> old
-  successor -> head). If you step through in a debugger and try to print the
-  list mid-frame, it will not terminate. Step 5 is what closes that window, and
-  it must run on every non-null node, not just some.
-
-  The caller's original head reference is now a one-node tail. The returned
-  value is the only valid handle on the list.
+  head.next = null runs on every frame, including the deepest one where
+  head.next was already null - harmless, but it means the assignment is not
+  guarded by the if, which is easy to misread as being inside it. The order
+  matters: if you wrote head.next = null before head.next.next = head, you would
+  destroy the link you need and get a NullReferenceException. The null check at
+  the top only protects the very first call with an empty list; after that
+  head.next != null guarantees the recursive call never receives null, so the
+  check is dead weight in every frame below the first. Depth equals list length
+  exactly, with no early exit, so failure on a long input is a crash, not a
+  slowdown.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How do you make this O(1) space without changing the language or data
+  structure?
+     Switch to the iterative prev/curr/next loop. Trade-off: you lose the short
+     inductive proof and have to reason about three moving pointers by hand, but
+     you remove the stack depth risk entirely.
+  2. Reverse only the sublist between positions m and n, leaving the rest
+  intact.
+     Walk to the node before position m and keep it as a fixed anchor, reverse
+     exactly n - m + 1 nodes iteratively, then reattach the anchor to the new
+     front and the old front to the node after position n. A dummy head node in
+     front of the list removes the special case where m is 1.
+  3. What if the list might contain a cycle?
+     This code would recurse forever and overflow. Detect the cycle first with
+     Floyd's fast/slow pointers, or reject the input; reversal is only well
+     defined on an acyclic list.
+  4. Reverse the list in groups of k, leaving any leftover tail as is.
+     Count k nodes ahead first; if fewer than k remain, return that segment
+     untouched. Otherwise reverse the k nodes and set the segment's original
+     head's next to the result of recursing on the remainder - same shape as
+     this file, but with a counted loop inside each frame.
 TRIGGER
-  Reach for reverse-the-tail-then-splice whenever a linked structure has to be
-  inverted and you want the predecessor handed to you rather than tracked by
-  hand. The same shape reappears in reverse-nodes-in-k-group,
-  palindrome-linked-list (recurse to the end, compare while unwinding), and
-  binary tree problems where the parent needs the result of the child before it
-  can fix its own pointers.
+  When a problem gives you a structure that is "one node plus a smaller version
+  of itself" and the answer for the whole depends on the answer for the tail,
+  reach for this unwind-then-relink recursion - then ask whether an iterative
+  version removes the stack cost.
+C# NOTE
+  The field is written as next, lowercase, which does not match normal C#
+  property naming - LeetCode's ListNode definition uses that spelling, so the
+  code is correct here but would not compile against a class declaring Next.
+  Since ListNode is a reference type, newHead, head and head.next are all just
+  references into the same objects, so no node is ever copied; the whole method
+  is pure pointer rewriting.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
