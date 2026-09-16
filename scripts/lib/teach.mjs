@@ -112,6 +112,10 @@ export const TEACH_INSTRUCTIONS = (ctx) => [
   '- Plain English for a reader whose second language is English: short sentences, common words,',
   '  no word play. Keep real technical terms, and explain one in plain words the first time.',
   '- Plain ASCII. No markdown, no backticks, no emoji.',
+  '',
+  'Return the answer by calling the output tool ONCE, with every field at the top level of the',
+  'object: pattern, whyThisPattern, bruteForce, invariant, keyDetails, watchOut, followUps, trigger,',
+  'csharpNote. Do not wrap them in another key, and do not pass the object as a JSON string.',
 ].join('\n');
 
 const wrap = (text, width) => {

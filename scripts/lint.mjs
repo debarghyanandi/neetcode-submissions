@@ -115,7 +115,13 @@ function ask(code, feedback) {
                 '--permission-mode', 'dontAsk', '--max-turns', '12', '--model', model, ...leanArgs()];
   let raw;
   try {
-    raw = execFileSync('claude', args, { input: code, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['pipe','pipe','pipe'] });
+    raw = execFileSync('claude', args, {
+      input: code, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['pipe','pipe','pipe'],
+      // Renaming needs little thought. On CI Haiku spent ~90% of lint's output on thinking
+      // (3.8k-6.4k tokens per small file) and lint became the slowest step. Haiku 4.5 has no
+      // --effort, so thinking is capped by budget instead. LINT_THINKING_TOKENS overrides it.
+      env: { ...process.env, MAX_THINKING_TOKENS: process.env.LINT_THINKING_TOKENS ?? '2000' },
+    });
   } catch (e) {
     let env = null; try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
     throw new Error(`claude failed (exit ${e.status}): ${env ? [env.terminal_reason, env.subtype, env.num_turns != null ? env.num_turns + ' turns' : null].filter(Boolean).join(' · ') : String(e.stderr || e.message).slice(0, 200)}`);

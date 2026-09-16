@@ -84,11 +84,25 @@ function parseStream(text) {
 /** What happened between the first answer and the last: rejected tool results and any text. */
 function extraTurnReasons(events) {
   const out = [];
+  // The answer the tool rejected, so the log shows what shape the model actually sent - the
+  // error alone only lists what was missing. Keyed by tool_use id; falls back to the last call.
+  const calls = new Map();
+  let lastCall = null;
+  const shapeOf = (input) => {
+    if (input === null || input === undefined) return String(input);
+    if (typeof input !== 'object') return `${typeof input} (${String(input).length} chars)`;
+    const keys = Object.keys(input);
+    const one = keys.length === 1 ? input[keys[0]] : null;
+    const inner = one && typeof one === 'object' ? ` -> {${Object.keys(one).slice(0, 12).join(', ')}}` : one !== null && keys.length === 1 ? ` -> ${typeof one}` : '';
+    return `{${keys.slice(0, 12).join(', ')}}${inner}`;
+  };
   for (const e of events) {
     for (const b of e.message?.content ?? []) {
+      if (e.type === 'assistant' && b.type === 'tool_use') { calls.set(b.id, b.input); lastCall = b.input; }
       if (b.type === 'tool_result' && b.is_error) {
         const t = Array.isArray(b.content) ? b.content.map((c) => c.text ?? '').join(' ') : String(b.content ?? '');
         out.push(`tool rejected: ${t.replace(/\s+/g, ' ').slice(0, 300)}`);
+        out.push(`model had sent: ${shapeOf(calls.has(b.tool_use_id) ? calls.get(b.tool_use_id) : lastCall)}`);
       }
       if (e.type === 'assistant' && b.type === 'text' && b.text?.trim()) {
         out.push(`model said: ${b.text.replace(/\s+/g, ' ').slice(0, 200)}`);
