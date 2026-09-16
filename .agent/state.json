@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T05:48:35.742Z",
+  "updatedAt": "2026-09-16T06:53:58.752Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -597,17 +597,23 @@
     },
     "course-schedule": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-3.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {},
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "71db6bed21c7d13083bb6815afffbfceba059ec2538f6bee58b9d6500654ed7c": "optimal.cs",
+        "935b92ed23a815dddc16ce9dbc3783968daac64d2563c2b583dc4d6209b5a389": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "71db6bed21c7d13083bb6815afffbfceba059ec2538f6bee58b9d6500654ed7c": "optimal.cs",
+        "935b92ed23a815dddc16ce9dbc3783968daac64d2563c2b583dc4d6209b5a389": "optimal-variant.cs"
+      },
       "lint": {
-        "submission-0.cs": {
+        "optimal.cs": {
           "version": 1,
           "codePrint": "07b2d348c6d9",
           "renames": [
@@ -616,7 +622,7 @@
             "nei->neighbor"
           ]
         },
-        "submission-3.cs": {
+        "optimal-variant.cs": {
           "version": 1,
           "codePrint": "569bd52e1ac8",
           "renames": [
@@ -624,18 +630,144 @@
             "nei->neighbor"
           ]
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"07b2d348c6d9\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"kahn-bfs-topo-sort\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"569bd52e1ac8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection with path tracking\",\"approachKey\":\"dfs-cycle-detect\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-3.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(n + m)",
+          "algorithm": "Kahn's algorithm, topological sort BFS",
+          "approachKey": "kahn-bfs-topo-sort",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "graph",
+            "queue"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(n + m)",
+          "space": "O(n + m)",
+          "algorithm": "DFS cycle detection with path tracking",
+          "approachKey": "dfs-cycle-detect",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "graph",
+            "call-stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"07b2d348c6d9\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"kahn-bfs-topo-sort\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"569bd52e1ac8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection with path tracking\",\"approachKey\":\"dfs-cycle-detect\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "07b2d348c6d9",
+          "optimal-variant.cs": "569bd52e1ac8"
+        },
+        "structures": [
+          "array",
+          "graph",
+          "queue",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-16T06:48:49.573Z"
       }
     },
     "course-schedule-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "29c689c30f3e9a5afed909a46dad286218f909df13fde646698e9fcc1be54b0e": "optimal.cs"
+      },
+      "fingerprints": {
+        "29c689c30f3e9a5afed909a46dad286218f909df13fde646698e9fcc1be54b0e": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "764c788a786b",
+          "renames": [
+            "adj->courseGraph",
+            "inDeg->indegree",
+            "q->queue",
+            "topo->order",
+            "nei->neighbor"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"764c788a786b\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm topological sort BFS\",\"approachKey\":\"kahn-topological-sort\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(n + m)",
+          "algorithm": "Kahn's algorithm topological sort BFS",
+          "approachKey": "kahn-topological-sort",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "queue",
+            "graph"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"764c788a786b\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm topological sort BFS\",\"approachKey\":\"kahn-topological-sort\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "764c788a786b"
+        },
+        "structures": [
+          "array",
+          "queue",
+          "graph"
+        ],
+        "builtAt": "2026-09-16T06:51:19.630Z"
+      }
     },
     "daily-temperatures": {
       "topic": "Data Structures & Algorithms",
@@ -3299,14 +3431,78 @@
     },
     "rotting-fruit": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "dd1f7b2dfcbeef46ca91e197a19a5f7b7b823afe88913291b80716236166c385": "optimal.cs"
+      },
+      "fingerprints": {
+        "dd1f7b2dfcbeef46ca91e197a19a5f7b7b823afe88913291b80716236166c385": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "3716f8546798",
+          "renames": [
+            "n->rows",
+            "m->cols",
+            "q->queue",
+            "vis->state",
+            "dRow->rowDirs",
+            "dCol->colDirs",
+            "tm->maxTime",
+            "nRow->nextRow",
+            "nCol->nextCol"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3716f8546798\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS level-by-level spread\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "Multi-source BFS level-by-level spread",
+          "approachKey": "multi-source-bfs",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "matrix",
+            "queue"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3716f8546798\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS level-by-level spread\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "3716f8546798"
+        },
+        "structures": [
+          "array",
+          "matrix",
+          "queue"
+        ],
+        "builtAt": "2026-09-16T06:53:58.491Z"
+      }
     },
     "same-binary-tree": {
       "topic": "Data Structures & Algorithms",
