@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-13T17:03:57.214Z",
+  "updatedAt": "2026-09-16T05:48:35.742Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -625,6 +625,17 @@
           ]
         }
       }
+    },
+    "course-schedule-ii": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "daily-temperatures": {
       "topic": "Data Structures & Algorithms",
@@ -2357,20 +2368,26 @@
       "processedSubmissions": [],
       "awaitingClassification": [],
       "knownFingerprints": {
-        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs"
+        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs",
+        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs"
       },
       "fingerprints": {
-        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs"
+        "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs",
+        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "failed": true,
-          "reason": "size renamed inconsistently: maxArea then areaCount"
+          "codePrint": "03d3012a47ff",
+          "renames": [
+            "size->maxArea",
+            "nRow->neighborRow",
+            "nCol->neighborCol"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill, track max island size\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"03d3012a47ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill with visited matrix\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2383,18 +2400,19 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "DFS flood fill, track max island size",
+          "algorithm": "DFS flood fill with visited matrix",
           "approachKey": "dfs-flood-fill",
           "correct": true,
           "bruteForce": false,
           "structures": [
+            "array",
             "matrix",
             "call-stack"
           ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill, track max island size\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"03d3012a47ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill with visited matrix\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -2402,13 +2420,14 @@
           "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "29b21450bf63"
+          "optimal.cs": "03d3012a47ff"
         },
         "structures": [
+          "array",
           "matrix",
           "call-stack"
         ],
-        "builtAt": "2026-09-13T06:54:52.565Z"
+        "builtAt": "2026-09-16T05:48:35.496Z"
       }
     },
     "max-water-container": {
@@ -3277,6 +3296,17 @@
         },
         "builtAt": "2026-09-05T20:27:31.682Z"
       }
+    },
+    "rotting-fruit": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "same-binary-tree": {
       "topic": "Data Structures & Algorithms",
