@@ -28,8 +28,9 @@ import { splitTrailingTeach } from './lib/teach.mjs';
 import { sameShape } from './lib/csharp.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { LINT_FORMAT } from './lib/lint-rules.mjs';
-import { report, group, endGroup } from './lib/report.mjs';
+import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
+import { usageOf, usageLine, leanArgs } from './lib/usage.mjs';
 
 
 const argv = process.argv.slice(2);
@@ -42,7 +43,9 @@ const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const backfill = has('--backfill');
 const force = has('--force');
-const model = arg('--model', 'sonnet');
+// Haiku: lint changes only names and spacing, and sameShape() throws away any rewrite that
+// changes more. A wrong answer is refused, not saved, so the cheapest model is safe here.
+const model = arg('--model', 'haiku');
 
 const SCHEMA = {
   type: 'object',
@@ -109,7 +112,7 @@ const INSTRUCTIONS = [
 function ask(code, feedback) {
   const args = ['-p', feedback ? INSTRUCTIONS + '\n\nYour previous attempt was REJECTED:\n' + feedback.map((e) => '  - ' + e).join('\n') + '\nReturn a rewrite that changes only names and spacing.' : INSTRUCTIONS,
                 '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
-                '--permission-mode', 'dontAsk', '--max-turns', '12', '--model', model];
+                '--permission-mode', 'dontAsk', '--max-turns', '12', '--model', model, ...leanArgs()];
   let raw;
   try {
     raw = execFileSync('claude', args, { input: code, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, stdio: ['pipe','pipe','pipe'] });
@@ -120,7 +123,7 @@ function ask(code, feedback) {
   const env = JSON.parse(raw);
   const out = env.structured_output?.code;
   if (!out) throw new Error(`no code returned (result: ${String(env.result).slice(0, 200)})`);
-  return { code: out.replace(/^\s*```(?:csharp|cs)?\s*/i, '').replace(/```\s*$/, ''), cost: env.total_cost_usd, turns: env.num_turns };
+  return { code: out.replace(/^\s*```(?:csharp|cs)?\s*/i, '').replace(/```\s*$/, ''), cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
 }
 
 // ---------------------------------------------------------------- run
@@ -201,7 +204,9 @@ for (const p of targets) {
         break;
       }
       spend += r.cost ?? 0;
-      const check = sameShape(body, r.code);
+      reportCost('lint', p.slug, r.cost, r.usage);
+      console.log(`  ${file.padEnd(22)} attempt ${attempt}: $${r.cost} · ${r.turns} turns · ${usageLine(r.usage)}`);
+    const check = sameShape(body, r.code);
       if (check.ok) result = { ...r, renames: check.renames };
       else {
         console.log(`  ${file.padEnd(22)} attempt ${attempt} REJECTED - the rewrite changed more than names:`);
@@ -209,7 +214,7 @@ for (const p of targets) {
         feedback = [
         ...check.errors,
         'Every distinct variable must keep a distinct name. If two variables would end up with the same name, pick different names for both rather than merging them.',
-        'And one name is one name: whatever you call it, call it that in every method it appears in.',
+        'Inside one method, one variable keeps one new name everywhere it appears. The same name in two different methods is two different variables - give each the name that fits it there. Fields, properties and method names are shared, so they keep one name across the whole file.',
       ];
       }
     }

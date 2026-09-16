@@ -196,7 +196,7 @@ it. The limit exists because the backlog is a queue of thirty; a named list is n
 ### What ticking Back-Fill costs you
 
 Leave it unticked for a named folder unless you have a reason. Unticked means "bring it up
-to standard", so a correct teaching block is left alone rather than reworded at Opus prices.
+to standard", so a correct teaching block is left alone rather than reworded for nothing.
 Ticked means "do it again anyway":
 
 - lint retries a file it had given up on after two rejections
@@ -437,10 +437,9 @@ skips it. The folder your push touched is still held back either way.
 
 ### Reading a failed workflow run
 
-Open the failing **step**, not just the run's red/green badge. The AI steps are set to keep
-going after an error, so one bad folder doesn't undo work that already succeeded — which
-also means **a run can show green with work skipped**. The run summary lists each step's
-outcome.
+Open the failing **step**. The model steps fail fast: the first failure stops the steps after it,
+the run goes red, and the summary says which step stopped it. Work that finished before the
+failure is still committed, and the summary shows the estimated cost of the run.
 
 ---
 
@@ -455,12 +454,18 @@ outcome.
 | `--force` | lint, teach | Rewrite even if nothing changed, and retry a file lint gave up on. |
 | `--verbose` | classify | Show the model's reasoning. |
 | `--model <name>` | lint, classify, teach, visualize | Override the model: `sonnet`, `opus`, `haiku`. |
+| `--effort <level>` | teach, visualize | `low`, `medium`, `high`, `xhigh`, `max`. Leave it out for the model's default. |
+| `--file <name>` | teach | Only this file inside the folder, e.g. `optimal.cs`. |
 | `--exclude <slugs>` | detect, lint, classify | Hold these back. Comma-separated. |
 | `--dry-run` | apply | Report without writing. |
 | `--json` | detect | Machine-readable output. |
 | `--delete-duplicates` | classify | Remove a resubmission identical to code you already have. |
 
-Defaults worth knowing: `lint` and `classify` use **Sonnet**, `teach` and `visualize` use **Opus**.
+Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Sonnet at high effort** and retries on Opus if validation rejects it.
+Every call replaces Claude Code's default system prompt and turns tools off (`PIPELINE_FULL_PROMPT=1` undoes that).
+Prompt caching is off for every call (`PIPELINE_PROMPT_CACHE=1` turns it back on). The pipeline never reads a cache entry back, so writing one only cost extra.
+Every model call now prints its tokens: fresh input, cache write, cache read, output.
+A dry run of `teach` or `visualize` saves its result under `.agent/tmp/try/` so two models can be compared.
 `--slug` works on any folder, whether or not it has new submissions.
 
 ---

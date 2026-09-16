@@ -40,10 +40,9 @@ w();
 
 // ---------------------------------------------------------------- did it run out
 //
-// This is the whole reason summarise.mjs can fail the run. Every model step
-// carries continue-on-error, because one bad folder should not throw away the
-// three good ones processed before it - but that also means a run that did
-// almost nothing because the subscription had hit its limit came out GREEN. It
+// Model steps used to carry continue-on-error, so a run that did almost nothing
+// because the subscription had hit its limit came out GREEN. They now fail fast,
+// but this banner still explains WHY a run stopped when the cause is budget. It
 // happened on a 2am schedule: lint ran, committed its renames, classify was
 // refused, teach and visualize found nothing to do, and the badge said success.
 //
@@ -64,6 +63,58 @@ if (budget) {
   w('> were never asked, and nothing is wrong with them — name them again after the reset.');
   w('>');
   w('> **The run is marked failed so it does not read as a success.**');
+  w();
+}
+
+// ---------------------------------------------------------------- did a step fail
+//
+// The model steps fail fast: the first one to fail stops the ones after it. Say which, in
+// one line at the top, so the red badge comes with its reason. Empty outcomes mean a local
+// run or a step that was never meant to run - nothing to report.
+const STEP_ORDER = ['lint', 'classify', 'teach', 'visualize'];
+const outcome = Object.fromEntries(STEP_ORDER.map((s) => [s, env(`OUTCOME_${s.toUpperCase()}`)]));
+const failedStep = STEP_ORDER.find((s) => outcome[s] === 'failure');
+if (failedStep && !budget) {
+  const never = STEP_ORDER.slice(STEP_ORDER.indexOf(failedStep) + 1).filter((s) => outcome[s] === 'skipped');
+  w('> [!CAUTION]');
+  w(`> ### ❌ Stopped: \`${failedStep}\` failed`);
+  w('>');
+  w(never.length
+    ? `> Not run because of it: ${never.map((x) => `\`${x}\``).join(', ')}. The reason is in the table below, and in full in the \`${failedStep}\` step log.`
+    : `> The reason is in the table below, and in full in the \`${failedStep}\` step log.`);
+  w('>');
+  w(env('OUTCOME_COMMIT') === 'success'
+    ? '> Work that finished before the failure was committed, so nothing paid for is lost.'
+    : '> Nothing was committed.');
+  w();
+}
+
+// ---------------------------------------------------------------- what it cost
+//
+// One "$cost" line per model call, written by reportCost(). Parsed here, before the folder
+// rows, so the total sits near the top where it is seen.
+const costs = [];
+if (reportFile && existsSync(reportFile)) {
+  for (const line of readFileSync(reportFile, 'utf8').split('\n')) {
+    if (!line.startsWith('$cost\t')) continue;
+    const [, step, slug, usd, tin, cw, cr, tout] = line.split('\t');
+    costs.push({ step, slug, usd: Number(usd) || 0, tokens: [tin, cw, cr, tout].map((x) => Number(x) || 0) });
+  }
+}
+const money = (x) => `$${x.toFixed(2)}`;
+const sum = (xs) => xs.reduce((a, c) => a + c.usd, 0);
+const costBySlug = new Map();
+for (const c of costs) costBySlug.set(c.slug, (costBySlug.get(c.slug) ?? 0) + c.usd);
+if (costs.length) {
+  const perStep = STEP_ORDER
+    .map((st) => [st, costs.filter((c) => c.step === st)])
+    .filter(([, xs]) => xs.length)
+    .map(([st, xs]) => `${st} ${money(sum(xs))}`);
+  const t = costs.reduce((a, c) => a.map((v, i) => v + c.tokens[i]), [0, 0, 0, 0]);
+  w(`**Estimated cost: ${money(sum(costs))}** — ${perStep.join(' · ')} · ${costs.length} model call(s)`);
+  w();
+  w(`<sub>Tokens: in ${t[0].toLocaleString('en-US')} · cache write ${t[1].toLocaleString('en-US')} · cache read ${t[2].toLocaleString('en-US')} · out ${t[3].toLocaleString('en-US')}. ` +
+    'API-price estimate from the CLI; on the subscription this is usage, not a bill. Calls that crashed before answering are not counted.</sub>');
   w();
 }
 
@@ -117,7 +168,7 @@ const STEPS = ['lint', 'classify', 'teach', 'visualize'];
 const rows = new Map();
 if (reportFile && existsSync(reportFile)) {
   for (const line of readFileSync(reportFile, 'utf8').split('\n')) {
-    if (!line.trim()) continue;
+    if (!line.trim() || line.startsWith('$cost\t')) continue;
     const [step, slug, status, detail = ''] = line.split('\t');
     if (!rows.has(slug)) rows.set(slug, {});
     // A folder can produce several lines per step (one per file). Keep the
@@ -136,15 +187,15 @@ if (rows.size) {
   // The Notes column carries ONLY what needs a decision. Cramming every step's
   // detail into one cell truncated it mid-word and buried the one line that
   // mattered among five that did not; the rest goes in a foldout below.
-  w('| Folder | ' + STEPS.map((s) => s[0].toUpperCase() + s.slice(1)).join(' | ') + ' | Needs attention |');
-  w('|---|' + STEPS.map(() => '---').join('|') + '|---|');
+  w('| Folder | ' + STEPS.map((s) => s[0].toUpperCase() + s.slice(1)).join(' | ') + ' | Cost | Needs attention |');
+  w('|---|' + STEPS.map(() => '---').join('|') + '|---:|---|');
   for (const [slug, cells] of rows) {
     const cols = STEPS.map((s) => (cells[s] ? ICON[cells[s].status] ?? '·' : '·'));
     const problems = STEPS
       .filter((s) => cells[s] && (cells[s].status === 'refused' || cells[s].status === 'failed'))
       .flatMap((s) => cells[s].details.map((d) => `**${s}**: ${d}`))
       .join('<br>');
-    w(`| \`${slug}\` | ${cols.join(' | ')} | ${problems || '—'} |`);
+    w(`| \`${slug}\` | ${cols.join(' | ')} | ${costBySlug.has(slug) ? money(costBySlug.get(slug)) : '—'} | ${problems || '—'} |`);
   }
   w();
   w('✅ done · ⏭️ skipped — nothing needed, or not attempted · ⚠️ refused, needs a decision · ❌ failed · · not run');
@@ -179,5 +230,10 @@ else console.log(out.join('\n'));
 // failing a run over; a run that quietly did nothing is.
 if (budget) {
   console.log(`::error::the pipeline stopped during ${budget.step} - out of budget: ${budget.message}`);
+  process.exit(1);
+}
+// The job is already red from the failed step; this puts the reason on the run page too.
+if (failedStep) {
+  console.log(`::error::${failedStep} failed - later model steps were not run. See the run summary.`);
   process.exit(1);
 }

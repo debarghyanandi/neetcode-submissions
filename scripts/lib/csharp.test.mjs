@@ -146,6 +146,52 @@ accepts('a private helper and its own parameters are yours',
   ren(TWO_METHODS, [['DFS', 'Walk'], ['level', 'depth'], ['res', 'levels']]),
   ['DFS->Walk', 'level->depth', 'res->levels']);
 
+// ---- scope: a local belongs to its method, a field to the whole file ------
+
+// The real file lint refused twice on 2026-09-13. `size` is the running max in one method
+// and one island's area in the other; giving them different names is the honest rename.
+const MAX_AREA = `public class Solution {
+    public int MaxAreaOfIsland(int[][] grid) {
+        int size = 0;
+        for (int row = 0; row < grid.Length; row++) {
+            size = Math.Max(size, Dfs(row, 0, grid));
+        }
+        return size;
+    }
+    private int Dfs(int row, int col, int[][] grid) {
+        int size = 1;
+        size += Dfs(row + 1, col, grid);
+        return size;
+    }
+}`;
+const splitSize = (src) => {
+  const cut = src.indexOf('private int Dfs');
+  return ren(src.slice(0, cut), [['size', 'maxArea']]) + ren(src.slice(cut), [['size', 'areaCount']]);
+};
+accepts('the same local name in two methods may get two names', MAX_AREA, splitSize(MAX_AREA),
+  ['size->maxArea', 'size->areaCount']);
+refuses('but inside one method it still renames one way',
+  MAX_AREA, MAX_AREA.replace('return size;\n    }\n    private', 'return best;\n    }\n    private'), 'renamed inconsistently');
+refuses('a parameter renamed in the signature but not the body',
+  MAX_AREA, MAX_AREA.replace('private int Dfs(int row,', 'private int Dfs(int r,'), 'renamed inconsistently');
+
+const WITH_FIELD = `public class Solution {
+    private int best = 0;
+    public int MaxAreaOfIsland(int[][] grid) {
+        Walk(grid);
+        return best;
+    }
+    private void Walk(int[][] grid) {
+        best = best + 1;
+    }
+}`;
+refuses('a field is shared, so it renames the same way in every method',
+  WITH_FIELD, WITH_FIELD.replace('return best;', 'return top;'), 'renamed inconsistently');
+accepts('and renaming it everywhere is fine', WITH_FIELD, ren(WITH_FIELD, [['best', 'maxArea']]), ['best->maxArea']);
+refuses('a local renamed onto a field name would shadow it',
+  WITH_FIELD.replace('best = best + 1;', 'int step = 1; best = best + step;'),
+  WITH_FIELD.replace('best = best + 1;', 'int best = 1; best = best + best;'));
+
 // ---- shapeForm: the same solution, however it is written ---------------
 
 function same(name, a, b, want = true) {

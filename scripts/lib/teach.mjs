@@ -15,53 +15,102 @@
 const RULE = '='.repeat(80);
 const WIDTH = 78;
 
+/**
+ * The block has a FIXED set of sections in a FIXED order.
+ *
+ * It used to be a free array: the model picked three to nine sections and titled them.
+ * Two models on the same file then produced different sections in a different order, and
+ * Sonnet simply left out the interviewer follow-ups that Opus had chosen to write. Reading
+ * fifty blocks for revision only works if every block has the same shape. So the schema
+ * names each section, and the schema - not the prompt - decides which exist and in what order.
+ *
+ * The one flexible slot is keyDetails: 0-2 sections the model titles itself, for the
+ * problem-specific trick. It always sits in the same place.
+ */
+const text = (description) => ({ type: 'string', description });
+
 export const SECTIONS_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    pattern: {
-      type: 'string',
-      description: 'The pattern name for the banner, e.g. "Sliding Window / Greedy - track the running minimum". Under 60 chars.',
-    },
-    sections: {
-      type: 'array',
-      minItems: 3,
-      maxItems: 9,
+    pattern: text('The pattern name for the banner, e.g. "Sliding Window / Greedy - track the running minimum". Under 60 chars.'),
+    whyThisPattern: text('2-4 sentences. What in the PROBLEM STATEMENT points at this pattern, and why the pattern solves it. Name this file\'s variables.'),
+    bruteForce: text('2-4 sentences. If STATUS is Optimal or an Optimal variant: the simplest CORRECT approach a person would write first, its complexity, and why it loses. Not a broken version of this code. If STATUS is Suboptimal: the better approach, and exactly why this file loses to it.'),
+    invariant: text('2-4 sentences. The invariant and the correctness argument: what stays true at each step of THIS code, and why that makes the answer right.'),
+    keyDetails: {
+      type: 'array', minItems: 0, maxItems: 2,
+      description: 'Zero to two problem-specific tricks worth their own section, 2-4 sentences each. Only a point no other field covers. Empty is the normal answer - never pad.',
       items: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          title: { type: 'string', description: 'SHORT UPPERCASE HEADING, e.g. WHY THIS PATTERN, BRUTE FORCE, INVARIANT, ALGORITHM, TRIGGER, WATCH OUT, or one you choose that fits this problem.' },
-          body: { type: 'string', description: 'Prose or numbered steps. Newlines allowed. No heading inside.' },
-        },
+        type: 'object', additionalProperties: false,
+        properties: { title: text('SHORT UPPERCASE HEADING, plain words.'), body: text('The detail. Newlines allowed.') },
         required: ['title', 'body'],
       },
     },
+    watchOut: text('2-5 sentences. What can go wrong in THIS code AS WRITTEN: input that breaks it, a bug waiting to happen, a comment the code contradicts. Each point is made here and nowhere else.'),
+    followUps: {
+      type: 'array', minItems: 2, maxItems: 4,
+      description: 'Follow-up questions an interviewer will ask: how would the solution CHANGE - less memory, no recursion, a variant of the problem, much larger input. Never a point already made in watchOut or keyDetails.',
+      items: {
+        type: 'object', additionalProperties: false,
+        properties: { question: text('The question, as the interviewer would say it. One sentence.'), answer: text('1-2 sentences: the answer, then the trade-off.') },
+        required: ['question', 'answer'],
+      },
+    },
+    trigger: text('ONE sentence: the signal in a new problem that should make you reach for this pattern next time.'),
+    csharpNote: text('1-2 sentences. One C#-specific point about this code - the right collection, a costly API, a better idiom - that no other field already made. Grounded in the code, not folklore.'),
   },
-  required: ['pattern', 'sections'],
+  required: ['pattern', 'whyThisPattern', 'bruteForce', 'invariant', 'keyDetails', 'watchOut', 'followUps', 'trigger', 'csharpNote'],
 };
+
+/**
+ * The model's fields, in the one order every block uses. COMPLEXITY is added after these
+ * by buildTeachingBlock, from the stored classification.
+ */
+export function toSections(out, ctx) {
+  const suboptimal = /^Suboptimal/.test(ctx?.status ?? '');
+  const followUps = (out.followUps ?? [])
+    .map((f, i) => `${i + 1}. ${String(f.question).trim()}\n   ${String(f.answer).trim()}`)
+    .join('\n');
+  return [
+    { title: 'WHY THIS PATTERN', body: out.whyThisPattern },
+    { title: suboptimal ? 'BETTER APPROACH' : 'BRUTE FORCE', body: out.bruteForce },
+    { title: 'INVARIANT', body: out.invariant },
+    ...(out.keyDetails ?? []),
+    { title: 'WATCH OUT', body: out.watchOut },
+    { title: 'FOLLOW-UP AN INTERVIEWER WILL ASK', body: followUps },
+    { title: 'TRIGGER', body: out.trigger },
+    { title: 'C# NOTE', body: out.csharpNote },
+  ].filter((x) => x.body && String(x.body).trim());
+}
 
 export const TEACH_INSTRUCTIONS = (ctx) => [
   'You are writing the study preamble for ONE C# solution file, given on stdin.',
   '',
-  'The reader is the person who wrote it, revising weeks later. Write for recall and for the',
-  'follow-up an interviewer would ask - the correctness argument, the invariant, the trap.',
+  'The reader is the person who wrote it, revising weeks later for an interview. Write for recall',
+  'and for the follow-up an interviewer would ask.',
+  '',
+  'Fill every field of the output schema. The sections and their order are fixed by the schema -',
+  'do not add headings of your own inside a field.',
   '',
   'Facts already printed in the banner ABOVE your sections. Never restate any of them:',
   `  PATTERN is your "pattern" field.`,
   `  SOURCE  : ${ctx.source}`,
   `  STATUS  : ${ctx.status}`,
-  `  COMPLEXITY is emitted separately as ${ctx.time} time / ${ctx.space} space. Do NOT write a complexity section.`,
+  `  COMPLEXITY is emitted separately as ${ctx.time} time / ${ctx.space} space. Do not write it again.`,
   '',
   'Rules:',
-  '- Choose the sections this problem actually needs. Three to nine. Omit any section you would',
-  '  have to pad. A short block with four real sections beats nine with filler.',
-  '- Never repeat a point across two sections, and never repeat the banner.',
+  '- Never repeat a point across two fields. If a follow-up would repeat WATCH OUT or a key detail,',
+  '  choose a different follow-up.',
   '- Every claim must be grounded in the code you were given or in the algorithm itself.',
   '  Do not assert performance folklore about the runtime, the JIT, or the compiler - if you',
   '  cannot show it from the code, leave it out.',
   '- Name the concrete variables and values from THIS file, not a generic template.',
-  '- If the solution is not optimal, say what the better approach is and why this one loses.',
+  '- You are NOT given the problem\'s constraints. Never invent input sizes or limits ("a 300x300 grid").',
+  '- Short. The whole block should read in two minutes. Each field has its own job; a point that fits',
+  '  two fields goes in the first one and is left out of the other.',
+  '- If a comment in the code states something the code contradicts, say so in watchOut.',
+  '- Plain English for a reader whose second language is English: short sentences, common words,',
+  '  no word play. Keep real technical terms, and explain one in plain words the first time.',
   '- Plain ASCII. No markdown, no backticks, no emoji.',
 ].join('\n');
 

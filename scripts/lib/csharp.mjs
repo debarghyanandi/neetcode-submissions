@@ -200,6 +200,49 @@ export function shapeForm(src) {
 }
 
 /**
+ * Which method each token belongs to.
+ *
+ * A local lives inside ONE method. `size` in MaxAreaOfIsland (the running max) and
+ * `size` in Dfs (one island's area) are two different variables that happen to share a
+ * name, and an honest rename gives them different names - maxArea and areaCount. A
+ * file-wide rename map read that as one name becoming two and refused the file twice,
+ * so max-area-of-island was never linted.
+ *
+ * So each member of a type - its signature, parameters and body - is its own scope.
+ * A scope ends at a `}` or `;` that lands back at type level. Names that live AT type
+ * level (fields, properties, method names) are shared by every method, so they stay
+ * in one file-wide scope and must still be renamed the same way everywhere.
+ *
+ * @returns {{ scopeOf: number[], shared: Set<string> }}
+ */
+export function memberScopes(toks) {
+  const TYPE_KW = new Set(['class', 'struct', 'interface', 'record', 'namespace']);
+  const stack = [];                 // one entry per open brace: true = a type body
+  let pendingType = false;          // a class/struct/... keyword seen, its `{` not yet
+  let parens = 0;
+  let scope = 0;
+  const scopeOf = new Array(toks.length);
+  const shared = new Set();
+  const atTypeLevel = () => stack.length === 0 || stack[stack.length - 1] === true;
+
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    scopeOf[i] = scope;
+    if (t.t === 'kw' && TYPE_KW.has(t.v)) pendingType = true;
+    if (t.t === 'op') {
+      if (t.v === '(') parens++;
+      else if (t.v === ')') parens = Math.max(0, parens - 1);
+      else if (t.v === '{') { stack.push(pendingType); pendingType = false; if (stack[stack.length - 1]) scope++; }
+      else if (t.v === '}') { stack.pop(); if (atTypeLevel()) scope++; }
+      else if (t.v === ';' && atTypeLevel()) { pendingType = false; scope++; }
+      continue;
+    }
+    if (t.t === 'id' && atTypeLevel() && parens === 0) shared.add(t.v);
+  }
+  return { scopeOf, shared };
+}
+
+/**
  * @returns {{ok: boolean, errors: string[], renames: Array<[string,string]>}}
  */
 export function sameShape(before, after) {
@@ -213,6 +256,10 @@ export function sameShape(before, after) {
   }
 
   const fwd = new Map(), rev = new Map();
+  const { scopeOf, shared } = memberScopes(A);
+  // A shared name (field, property, method) is one scope for the whole file; a local or
+  // a parameter is scoped to its method. Keys carry the scope so the maps never mix them.
+  const keyOf = (i, name) => (shared.has(A[i].v) ? 'G' : scopeOf[i]) + ':' + name;
 
   for (let i = 0; i < A.length; i++) {
     const a = A[i], b = B[i];
@@ -253,9 +300,12 @@ export function sameShape(before, after) {
       continue;
     }
 
-    if (fwd.has(a.v) && fwd.get(a.v) !== b.v) errors.push(`${a.v} renamed inconsistently: ${fwd.get(a.v)} then ${b.v}`);
-    if (rev.has(b.v) && rev.get(b.v) !== a.v) errors.push(`two different names both became ${b.v}: ${rev.get(b.v)} and ${a.v}`);
-    fwd.set(a.v, b.v); rev.set(b.v, a.v);
+    const fk = keyOf(i, a.v), rk = keyOf(i, b.v);
+    if (fwd.has(fk) && fwd.get(fk) !== b.v) errors.push(`${a.v} renamed inconsistently: ${fwd.get(fk)} then ${b.v}`);
+    if (rev.has(rk) && rev.get(rk) !== a.v) errors.push(`two different names both became ${b.v}: ${rev.get(rk)} and ${a.v}`);
+    // A local renamed onto the name of a field or method would shadow it - a different program.
+    if (!shared.has(a.v) && shared.has(b.v) && a.v !== b.v) errors.push(`${a.v} renamed to ${b.v}, which is already a field or method name in this file`);
+    fwd.set(fk, b.v); rev.set(rk, a.v);
   }
 
   // Comments are exempt from the token comparison above, which means the model
@@ -269,6 +319,10 @@ export function sameShape(before, after) {
     errors.push(`${commentsBefore - commentsAfter} comment(s) deleted - comments may be reworded, never removed`);
   }
 
-  const renames = [...fwd].filter(([k, v]) => k !== v);
+  // Scope keys stripped back to plain names. The same old name can appear twice with two
+  // new names - that is the per-method case above, and both are reported.
+  const renames = [...new Set([...fwd].map(([k, v]) => `${k.slice(k.indexOf(':') + 1)}\u0000${v}`))]
+    .map((x) => x.split('\u0000'))
+    .filter(([k, v]) => k !== v);
   return { ok: errors.length === 0, errors: [...new Set(errors)].slice(0, 12), renames };
 }

@@ -28,6 +28,10 @@ const PROBES = [
   ['D  + --permission-mode',    ['-p', PROMPT, '--output-format', 'json', '--json-schema', SCHEMA, '--permission-mode', 'dontAsk']],
   ['E  + --max-turns 1',        ['-p', PROMPT, '--output-format', 'json', '--json-schema', SCHEMA, '--permission-mode', 'dontAsk', '--max-turns', '1']],
   ['F  + stdin payload',        ['-p', PROMPT, '--output-format', 'json', '--json-schema', SCHEMA, '--permission-mode', 'dontAsk', '--max-turns', '1'], 'some text on stdin'],
+  // The lean call (lib/usage.mjs leanArgs). --max-turns 3, because structured output itself
+  // may take a turn. PASS here means structured_output still arrives with no tools.
+  ['G  + --tools ""',          ['-p', PROMPT, '--output-format', 'json', '--json-schema', SCHEMA, '--permission-mode', 'dontAsk', '--max-turns', '3', '--tools', ''], 'some text on stdin'],
+  ['H  + --system-prompt',      ['-p', PROMPT, '--output-format', 'json', '--json-schema', SCHEMA, '--permission-mode', 'dontAsk', '--max-turns', '3', '--tools', '', '--system-prompt', 'You are one non-interactive step in a build pipeline. Reply only through the required structured JSON output.'], 'some text on stdin'],
 ];
 
 console.log(`\nplatform ${platform}   node ${process.version}`);
@@ -52,6 +56,7 @@ for (const [label, args, input] of PROBES) {
     try {
       const j = JSON.parse(out);
       if (j.structured_output !== undefined) extra = `  structured_output=${JSON.stringify(j.structured_output)}`;
+      if (j.usage) extra += `\n${' '.repeat(31)}turns ${j.num_turns} · cache write ${j.usage.cache_creation_input_tokens ?? 0} · cache read ${j.usage.cache_read_input_tokens ?? 0} · in ${j.usage.input_tokens ?? 0} · out ${j.usage.output_tokens ?? 0}`;
       else if (j.result !== undefined) extra = `  result=${JSON.stringify(String(j.result).slice(0, 60))}`;
     } catch { /* plain text probe */ }
     console.log(`PASS   ${flat.slice(0, 70)}${extra}`);

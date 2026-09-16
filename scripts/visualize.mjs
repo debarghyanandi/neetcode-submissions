@@ -27,8 +27,10 @@ import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
 import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
-import { report, group, endGroup } from './lib/report.mjs';
+import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
+import { effortArgs, usageOf, usageLine, addUsage, leanArgs } from './lib/usage.mjs';
+import { mkdirSync } from 'node:fs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -38,8 +40,20 @@ const onlyRaw = arg('--slug');
 const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
-const model = arg('--model', 'opus');
+// Sonnet at high effort since 2026-09. On max-area-of-island it built a correct animation - the
+// code copied exactly, neighbour order and stack depth faithful to the C# - for $0.24, against
+// $0.66 for the Opus one. If validation rejects the first attempt, the retry moves up to Opus:
+// the cheap model does the usual case and the expensive one only the hard one.
+// An explicit --model is respected on both attempts.
+const modelGiven = argv.includes('--model');
+const model = arg('--model', 'sonnet');
+const RETRY_MODEL = 'opus';
+// No --effort means the model's own default. Only ever set by hand, for comparisons.
+const effort = arg('--effort', modelGiven ? null : 'high');
 const backfill = has('--backfill');
+// Also pick up any curated folder with no visualizer at all. Nothing is in that state
+// normally; it is how a folder gets finished after a failed run stopped before visualize.
+const unfinished = has('--unfinished');
 
 const SCHEMA = {
   type: 'object',
@@ -156,18 +170,28 @@ function instructions(slug, sols, structures, example, feedback) {
     '- Use `scale` to keep a panel on one screen rather than letting it scroll sideways.',
     '- Output only the statement: const PROBLEM = { ... };',
     '',
-    'You have no tools and no filesystem access. The solution code is on stdin and everything else',
+    'You have no tools and no filesystem access. The solution code follows below, and everything else',
     'you need is above. Do not attempt to read, list or search files - answer directly.',
     ...(feedback ? ['', 'Your previous attempt failed validation. Fix exactly these:', ...feedback.map((e) => `  - ${e}`)] : []),
   ].join('\n');
 }
 
-function ask(prompt, code) {
-  const args = ['-p', prompt, '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
-                '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', model];
+// Windows caps a whole command line at 32,767 characters, and this prompt - the chassis
+// contract plus a complete worked example - is longer than that. Passed as an argument it
+// failed locally with "spawnSync claude ENAMETOOLONG" before any model was called (Linux CI
+// allows far more, so it only ever broke on Windows). So the instructions travel on stdin
+// with the code, and the argument is one short line. stdin allows 10MB.
+const STDIN_POINTER = 'Your full instructions come first on stdin, followed by the solution code. Follow the instructions exactly.';
+
+function ask(prompt, code, useModel = model) {
+  const args = ['-p', STDIN_POINTER, '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
+                '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', useModel, ...effortArgs(effort), ...leanArgs()];
   let raw;
   try {
-    raw = execFileSync('claude', args, { input: code, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['pipe','pipe','pipe'] });
+    raw = execFileSync('claude', args, {
+      input: `${prompt}\n\n===== SOLUTION CODE =====\n\n${code}`,
+      encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['pipe','pipe','pipe'],
+    });
   } catch (e) {
     let env = null; try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
     const detail = env
@@ -180,7 +204,7 @@ function ask(prompt, code) {
   if (!env.structured_output?.problemSource) throw new Error(`no problemSource (result: ${String(env.result).slice(0,200)})`);
   // Models like fences even when told not to.
   const src = env.structured_output.problemSource.replace(/^\s*```(?:javascript|js)?\s*/i, '').replace(/```\s*$/, '').trim();
-  return { src, cost: env.total_cost_usd, turns: env.num_turns };
+  return { src, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
 }
 
 // ---------------------------------------------------------------- run
@@ -199,7 +223,9 @@ let outOfBudget = null;
 const state = loadState();
 const all = scanRepo(state);
 let targets = all;
-if (only) targets = targets.filter((p) => only.includes(p.slug));
+const stranded = (p) => p.curatedFiles.length > 0 && !existsSync(join(p.dir, `${p.slug}-visualizer.html`));
+if (only) targets = targets.filter((p) => only.includes(p.slug) || (unfinished && stranded(p)));
+else if (unfinished) targets = targets.filter(stranded);
 /** What the code looks like now, ignoring comments and whitespace. */
 const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
   f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body),
@@ -246,7 +272,7 @@ if (limit) targets = targets.slice(0, limit);
 
 if (!targets.length) { console.log('\nNothing to build - every problem already has a visualizer.\n'); process.exit(0); }
 
-console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, ${targets.length} folder(s)\n`);
+console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, effort ${effort ?? 'default'}, ${targets.length} folder(s)\n`);
 if (haltIfStopped('visualize', targets.map((p) => p.slug))) process.exit(1);
 
 let failures = 0, wrote = 0;
@@ -286,10 +312,13 @@ for (const p of targets) {
     .map((f) => `===== FILE: ${f} =====\n${stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body}`)
     .join('\n\n');
 
-  let result = null, feedback = null, spend = 0;
+  let result = null, feedback = null, spend = 0, used = null, validationFailed = false;
   for (let attempt = 1; attempt <= 2 && !result; attempt++) {
     let r;
-    try { r = ask(instructions(p.slug, sols, structures, example, feedback), code); }
+    // Attempt 2 after a validation rejection escalates to Opus, unless you chose the model.
+    const useModel = attempt === 2 && feedback && !modelGiven && validationFailed ? RETRY_MODEL : model;
+    if (useModel !== model) console.log(`  attempt ${attempt}: retrying on ${useModel}`);
+    try { r = ask(instructions(p.slug, sols, structures, example, feedback), code, useModel); }
     catch (e) {
       console.log(`  attempt ${attempt} FAILED: ${e.message}`);
       // Out of budget is a property of the account, not of this folder. Record
@@ -305,6 +334,9 @@ for (const p of targets) {
       break;
     }
     spend += r.cost ?? 0;
+    used = addUsage(used, r.usage);
+    reportCost('visualize', p.slug, r.cost, r.usage);
+    console.log(`  attempt ${attempt}: $${(r.cost ?? 0).toFixed(4)} · ${r.turns} turns · ${usageLine(r.usage)}`);
     const v = validate(r.src, structures);
     if (!v.errors.length) {
       result = r;
@@ -317,6 +349,7 @@ for (const p of targets) {
       console.log(`  attempt ${attempt} rejected by validation:`);
       v.errors.slice(0, 6).forEach((e) => console.log(`      ${e}`));
       feedback = v.errors.slice(0, 8);
+      validationFailed = true;
     }
   }
 
@@ -334,6 +367,16 @@ for (const p of targets) {
     continue;
   }
   console.log(`  validated  ·  $${spend.toFixed(4)} · ${result.turns} turns`);
+  console.log(`  total ${usageLine(used)}`);
+
+  if (!doApply) {
+    // Kept on disk (gitignored) so two models' animations can be opened side by side.
+    const tryDir = join(REPO, '.agent', 'tmp', 'try');
+    mkdirSync(tryDir, { recursive: true });
+    const saved = join(tryDir, `${p.slug}-visualizer.${model}-${effort ?? 'default'}.html`);
+    writeFileSync(saved, splice(result.src), 'utf8');
+    console.log(`  saved for comparison: ${saved}`);
+  }
 
   if (doApply) {
     const out = join(p.dir, `${p.slug}-visualizer.html`);
@@ -356,4 +399,4 @@ if (doApply && wrote) saveState(state);
 if (outOfBudget) announceBudget(outOfBudget);
 console.log(`${wrote} written, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `wrote=${wrote}\n`);
-process.exit(failures ? 1 : 0);
+process.exit(failures || outOfBudget ? 1 : 0);

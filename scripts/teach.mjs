@@ -2,7 +2,7 @@
 /**
  * teach.mjs - MILESTONE 4a. Writes the study preamble on solution files.
  *
- * One Opus call per FILE (the headers differ per solution), against the
+ * One model call per FILE (the headers differ per solution), against the
  * classification this repo already stores. Renames nothing and never runs the
  * ranking - classify.mjs owns that.
  *
@@ -22,10 +22,12 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 import { stripHeader } from './lib/header.mjs';
-import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach } from './lib/teach.mjs';
+import { SECTIONS_SCHEMA, TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach, toSections } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
-import { report, group, endGroup } from './lib/report.mjs';
+import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
+import { effortArgs, usageOf, usageLine, leanArgs } from './lib/usage.mjs';
+import { mkdirSync } from 'node:fs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -39,8 +41,19 @@ const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
 const backfill = has('--backfill');
 const force = has('--force');
-// The step with real design latitude - this is where the larger model earns it.
+// Opus. Sonnet was tried in 2026-09 and was cheaper per call, but on the fixed section
+// schema it kept repeating one point across sections and claimed "O(1) extra space" for a
+// recursive flood fill whose call stack is O(m*n) - a wrong answer to give an interviewer.
+// Once it also started taking a third turn, it cost about what Opus does. --model sonnet
+// still works for a comparison.
 const model = arg('--model', 'opus');
+// No --effort means the model's own default. Only ever set by hand, for comparisons.
+const effort = arg('--effort');
+// One file inside the folder, so a model comparison does not pay for every file.
+const fileOnly = arg('--file');
+// Also pick up any curated folder with a file that has NO teaching block. Nothing is in that
+// state normally; it is how a folder gets finished after a failed run stopped before teach.
+const unfinished = has('--unfinished');
 
 function ask(dir, file, ctx) {
   const args = [
@@ -50,6 +63,8 @@ function ask(dir, file, ctx) {
     '--permission-mode', 'dontAsk',
     '--max-turns', '8',
     '--model', model,
+    ...effortArgs(effort),
+    ...leanArgs(),
   ];
   let raw;
   try {
@@ -68,11 +83,23 @@ function ask(dir, file, ctx) {
     throw new Error(`claude failed (exit ${e.status}): ${why}`);
   }
   const env = JSON.parse(raw);
-  const out = env.structured_output;
-  if (!out || !Array.isArray(out.sections) || !out.pattern) {
-    throw new Error(`no usable structured_output (result: ${String(env.result).slice(0, 200)})`);
+  // A clean structured answer takes 2 turns. More means something was retried - a schema
+  // rejection or a refused tool call - and each extra turn re-sends the whole conversation.
+  // Keep the full envelope so the cause can be read rather than guessed.
+  if ((env.num_turns ?? 0) > 2) {
+    try {
+      mkdirSync(join(REPO, '.agent', 'tmp'), { recursive: true });
+      writeFileSync(join(REPO, '.agent', 'tmp', 'teach-extra-turns.json'), raw, 'utf8');
+      console.log(`  note: ${env.num_turns} turns - full response saved to .agent/tmp/teach-extra-turns.json`);
+    } catch { /* diagnostics only */ }
   }
-  return { out, cost: env.total_cost_usd, turns: env.num_turns };
+  const out = env.structured_output;
+  const missing = SECTIONS_SCHEMA.required.filter((k) => out?.[k] === undefined || out?.[k] === '');
+  if (!out || missing.length) {
+    throw new Error(`no usable structured_output${missing.length ? ` - missing ${missing.join(', ')}` : ''} (result: ${String(env.result).slice(0, 200)})`);
+  }
+  out.sections = toSections(out, ctx);
+  return { out, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
 }
 
 // ---------------------------------------------------------------- run
@@ -103,8 +130,17 @@ if (only) {
   const all = everything.filter((p) => p.curatedFiles.length);
   targets = force ? all : all.filter((p) => !atCurrentStandard(p));
   console.log(`\nbackfill: ${all.length} folder(s), ${all.length - targets.length} already done, ${targets.length} remaining`);
+} else if (unfinished) {
+  // Only the stranded folders below - not every folder with a raw submission waiting.
+  targets = [];
 } else {
   targets = pendingOnly(everything);
+}
+if (unfinished) {
+  const stranded = everything.filter((p) => p.curatedFiles.length && !targets.includes(p) &&
+    p.curatedFiles.some((f) => !splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).had));
+  if (stranded.length) console.log(`\nunfinished from an earlier run: ${stranded.map((p) => p.slug).join(', ')}`);
+  targets = [...targets, ...stranded];
 }
 if (limit) targets = targets.slice(0, limit);
 
@@ -113,7 +149,7 @@ if (!targets.length) {
   process.exit(0);
 }
 
-console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - teaching blocks, model ${model}, ${targets.length} folder(s)\n`);
+console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - teaching blocks, model ${model}, effort ${effort ?? 'default'}, ${targets.length} folder(s)\n`);
 
 if (haltIfStopped('teach', targets.map((p) => p.slug))) process.exit(1);
 
@@ -133,6 +169,7 @@ for (const p of targets) {
   const teach = rec.teachSignatures ?? {};
 
   for (const file of p.curatedFiles) {
+    if (fileOnly && file !== fileOnly) continue;
     // Staleness is judged against the classification signature, so a file whose
     // ranking and complexity are unchanged keeps the prose it already has.
     const sig = sigs[file] ?? null;
@@ -178,10 +215,18 @@ for (const p of targets) {
       continue;
     }
 
+    reportCost('teach', p.slug, r.cost, r.usage);
     const block = buildTeachingBlock(r.out, ctx);
     console.log(`  ${file.padEnd(22)} ${r.out.sections.length} section(s), ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
+    console.log(`  ${''.padEnd(22)} ${usageLine(r.usage)}`);
     if (!doApply) {
       console.log(block.split('\n').map((l) => '      ' + l).join('\n'));
+      // Kept on disk (gitignored) so two models' blocks can be read side by side.
+      const tryDir = join(REPO, '.agent', 'tmp', 'try');
+      mkdirSync(tryDir, { recursive: true });
+      const saved = join(tryDir, `teach-${p.slug}-${file.replace(/\.cs$/, '')}-${model}-${effort ?? 'default'}.txt`);
+      writeFileSync(saved, `// model ${model} · effort ${effort ?? 'default'} · $${r.cost} · ${r.turns} turns\n// ${usageLine(r.usage)}\n\n${block}\n`, 'utf8');
+      console.log(`  saved for comparison: ${saved}`);
       continue;
     }
     // banner header -> code -> teaching block. The block goes last, so the file

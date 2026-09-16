@@ -31,10 +31,11 @@ import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT }
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
-import { report, group, endGroup } from './lib/report.mjs';
+import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { renameInVisualizer } from './lib/visualizer.mjs';
 import { STRUCTURES, STRUCTURE_HELP } from './lib/shapes.mjs';
+import { usageOf, usageLine, leanArgs } from './lib/usage.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (n, d = null) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
@@ -57,7 +58,10 @@ const verbose = has('--verbose');
 //
 // On Pro the account default is already Sonnet 5, so this changes nothing
 // today; it keeps the frequent path cheap if the account ever defaults to Opus.
-const DEFAULT_MODEL = 'sonnet';
+//
+// 2026-09: moved to Haiku to cut usage. Re-check it against a folder with a hand-made
+// optimal / optimal-variant split; if Haiku ranks one wrongly, --model sonnet brings it back.
+const DEFAULT_MODEL = 'haiku';
 const model = arg('--model', DEFAULT_MODEL);
 const doApply = has('--apply');
 const deleteDupes = has('--delete-duplicates');
@@ -152,6 +156,7 @@ function classify(dir, files) {
     '--max-turns', '8',
   ];
   if (model) args.push('--model', model);   // --model default overrides back to the account default
+  args.push(...leanArgs());
 
   // execFile, not a shell: no quoting, no injection surface from file contents.
   // stdio 'pipe' on stderr so a failure tells us WHY, not just that it failed.
@@ -161,7 +166,10 @@ function classify(dir, files) {
       input: payload,
       encoding: 'utf8',
       maxBuffer: 32 * 1024 * 1024,
-      env: { ...process.env },
+      // Haiku 4.5 has no --effort; thinking is a fixed token budget instead. Set it explicitly
+      // so classification never depends on whatever the CLI's default happens to be.
+      // MAX_THINKING_TOKENS=0 in the environment turns it off.
+      env: { MAX_THINKING_TOKENS: '8000', ...process.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   } catch (e) {
@@ -210,7 +218,7 @@ function classify(dir, files) {
   if (missing.length) throw new Error(`model omitted: ${missing.join(', ')}`);
   if (extra.length) throw new Error(`model invented: ${extra.join(', ')}`);
 
-  return { solutions: out.solutions, cost: envelope.total_cost_usd, turns: envelope.num_turns };
+  return { solutions: out.solutions, cost: envelope.total_cost_usd, turns: envelope.num_turns, usage: usageOf(envelope) };
 }
 
 // ---------------------------------------------------------------- run
@@ -330,6 +338,7 @@ for (const p of targets) {
   let res;
   try {
     res = classify(p.dir, files);
+    reportCost('classify', p.slug, res.cost, res.usage);
   } catch (e) {
     console.log(`  FAILED: ${e.message}\n`);
     if (isOutOfBudget(e)) {
@@ -383,7 +392,7 @@ for (const p of targets) {
       console.log('      the ladder has no rung for:');
       for (const g of gaps) console.log(`        ${g.file}: ${g.actualComplexity}  <- add this to lib/complexity.mjs`);
     }
-    console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}\n`);
+    console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}  ·  ${usageLine(res.usage)}\n`);
     report('classify', p.slug, 'refused', gaps.length ? `ladder missing: ${gaps.map((g)=>g.actualComplexity).join(', ')}` : plan.reason);
     failures++;
     endGroup();
@@ -529,7 +538,7 @@ for (const p of targets) {
     }
   }
 
-  console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}`);
+  console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}  ·  ${usageLine(res.usage)}`);
   endGroup();
 }
 
