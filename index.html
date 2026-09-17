@@ -123,8 +123,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">25</span> / 60</b></div>
-      <div class="bar"><span id="bar" style="width:41.7%"></span></div>
+      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">26</span> / 60</b></div>
+      <div class="bar"><span id="bar" style="width:43.3%"></span></div>
       <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
     </div>
   </header>
@@ -807,10 +807,20 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="1-D DP">
   <div class="group-head">
     <h2>1-D DP</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>1</b> reshaped</span>
+    <span class="group-count"><b class="gdone">2</b> / <b>2</b> reshaped</span>
   </div>
   <p class="group-note">A row of subproblem answers, each built from the ones before it.</p>
   <ul>
+    <li data-hay="climbing stairs climbing-stairs 1-d dp bottom-up dp on fibonacci - two rolling variables array dp-table current" data-status="current">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/climbing-stairs" target="_blank" rel="noopener noreferrer">Climbing Stairs</a>
+        <span class="why">Bottom-up DP on Fibonacci - two rolling variables</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/climbing-stairs/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/climbing-stairs/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/climbing-stairs/climbing-stairs-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
+      </span>
+    </li>
     <li data-hay="maximum subarray maximum-subarray 1-d dp kadane - drop a negative running sum, keep the best array dp-table current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
@@ -839,26 +849,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-intervals/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-intervals/merge-intervals-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
         <span class="mark-std current" title="visualizer shape standard"><i class="dot"></i>current</span>
-      </span>
-    </li>
-  </ul>
-</section>
-
-<section class="group" data-group="Other">
-  <div class="group-head">
-    <h2>Other</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>1</b> reshaped</span>
-  </div>
-  <p class="group-note">Not yet filed. Add a rule in scripts/lib/patterns.mjs.</p>
-  <ul>
-    <li data-hay="climbing stairs climbing-stairs other   no visualizer" data-status="none">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/climbing-stairs" target="_blank" rel="noopener noreferrer">Climbing Stairs</a>
-        <span class="why none">not taught yet</span>
-      </span>
-      <span class="meta">
-        <span class="cx">not curated yet</span><span class="run off">no visualizer</span>
-        <span class="mark-std none" title="visualizer shape standard"><i class="dot"></i>no visualizer</span>
       </span>
     </li>
   </ul>

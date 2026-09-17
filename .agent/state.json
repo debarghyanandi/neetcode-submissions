@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-17T17:00:22.808Z",
+  "updatedAt": "2026-09-17T17:46:42.496Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -437,15 +437,98 @@
     },
     "climbing-stairs": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "74c9fe79ed472a5ae0c96c18c5f261641ea148776d1fbd0e1453760e2578bc05": "optimal.cs",
+        "09ae529740293004171c7d542a1c6ce95a6a097b3caf1733dca02b68e256c868": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "74c9fe79ed472a5ae0c96c18c5f261641ea148776d1fbd0e1453760e2578bc05": "optimal.cs",
+        "09ae529740293004171c7d542a1c6ce95a6a097b3caf1733dca02b68e256c868": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "ef3ac1e76727",
+          "renames": [
+            "prev2->twoStepsBack",
+            "prev1->oneStepBack",
+            "curr->current"
+          ]
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "f4ab26276b0b",
+          "renames": [
+            "dp->waysToStep"
+          ]
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ef3ac1e76727\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic Programming Space-Optimized\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f4ab26276b0b\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic Programming Tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Dynamic Programming Space-Optimized",
+          "approachKey": "dp-space-optimized",
+          "correct": true,
+          "bruteForce": false,
+          "structures": []
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Dynamic Programming Tabulation",
+          "approachKey": "dp-tabulation",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ef3ac1e76727\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic Programming Space-Optimized\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f4ab26276b0b\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic Programming Tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ef3ac1e76727",
+          "suboptimal.cs": "f4ab26276b0b"
+        },
+        "structures": [
+          "array",
+          "dp-table"
+        ],
+        "builtAt": "2026-09-17T17:46:42.240Z"
+      }
     },
     "clone-graph": {
       "topic": "Data Structures & Algorithms",
