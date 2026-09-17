@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-17T17:46:42.496Z",
+  "updatedAt": "2026-09-17T20:31:34.454Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1441,6 +1441,18 @@
         },
         "builtAt": "2026-09-05T18:09:28.495Z"
       }
+    },
+    "house-robber": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs",
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
