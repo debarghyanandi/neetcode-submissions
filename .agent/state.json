@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-17T04:26:23.454Z",
+  "updatedAt": "2026-09-17T17:00:22.808Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -434,6 +434,18 @@
           "renames": []
         }
       }
+    },
+    "climbing-stairs": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs",
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "clone-graph": {
       "topic": "Data Structures & Algorithms",
