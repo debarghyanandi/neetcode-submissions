@@ -25,10 +25,25 @@ Every model output passes a mechanical gate before it is allowed near the repo:
 |---|---|---|
 | lint | `sameShape()` — token-by-token proof the rewrite changed only names and spacing | `scripts/lib/csharp.mjs` |
 | classify | the complexity ladder — the model picks from a fixed enum, the script ranks | `scripts/lib/complexity.mjs` |
-| visualize | `validate()` — runs the generated object, checks steps, line numbers, panel shapes | `scripts/lib/visualizer.mjs` |
+| visualize | `validate()` — runs the generated object, checks steps, line numbers, panel shapes, and that the code panel is the `.cs` file copied verbatim | `scripts/lib/visualizer.mjs` |
 
 If you add a model call, add its gate. That is the house style, and it is the
 reason this thing can run unattended.
+
+**Which model each step uses** (defaults in the scripts; `--model` / `--effort`
+override):
+
+| step | model | why |
+|---|---|---|
+| `lint` | Haiku | mechanical; `sameShape()` catches any dishonesty. Thinking capped at 2000 via `MAX_THINKING_TOKENS`; no `--effort` flag on Haiku. |
+| `classify` | Haiku | picks from a fixed enum — a bounded question |
+| `teach` | Opus, default effort | prose a human reads; Haiku was thin, Sonnet cost the same as Opus for a worse answer |
+| `visualize` | Opus, **medium** effort | since 2026-09-17. Sonnet at high effort was correct but spent ~39,000 thinking tokens and 5-8 minutes; Opus at medium reaches the same place in under 2 minutes on ~1,700. A rejected build is **repaired** on Opus at its default (high) effort — never rebuilt from scratch. |
+
+Prompt caching is pinned to a 5-minute TTL. `DISABLE_PROMPT_CACHING=1` does *not*
+disable it on subscription auth — it only downgrades the TTL from 1h to 5m, which
+is still worth ~18% a call. Nothing ever reads a cache entry back.
+`CODE-TOUR.md` Part 8 has the full reasoning and the measurements.
 
 ---
 
@@ -80,9 +95,12 @@ Manual inputs are three boxes: `Process-Specific-folder`, `Back-Fill`
 teaching block and the visualizer all name variables — rename after they are
 written and every one of them describes code that no longer exists.
 
-The four model steps are `continue-on-error: true` on purpose: one bad folder
-must not discard work that already succeeded. This means **a run can be green
-with work skipped** — read the job summary, not the badge.
+The four model steps **fail fast** (since 2026-09-16). The first failure turns the
+run red and stops the steps after it; the summary names the step that stopped it.
+Commit and apply still run on a failure, so finished work is kept and
+`--unfinished` resumes the folder next run. Before this they were
+`continue-on-error: true`, which meant a run could be **green with work skipped**
+and real bugs went unnoticed for days.
 
 ---
 
@@ -184,7 +202,7 @@ a real conflicting rebase, a real folder from the repo. When a log arrives, read
 what the steps actually did rather than the run's badge.
 
 **Tests.** `node scripts/lib/<name>.test.mjs`, or all of them:
-`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 58 cases across four
+`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 233 cases across eight
 files. The workflow runs the glob before the first model call, so a new test
 file needs no workflow change. Pure functions only — anything that needs git or
 the network gets a throwaway fixture instead.

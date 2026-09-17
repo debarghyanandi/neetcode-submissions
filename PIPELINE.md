@@ -120,7 +120,7 @@ Here is the entire pipeline, in order:
                                                         (AI — Opus)
                                ▼
    7. VISUALIZE   Build an interactive animation, but only for a
-                  problem that doesn't already have one. (AI — Sonnet)
+                  problem that doesn't already have one. (AI — Opus)  
                                ▼
    8. INDEX       Regenerate the table in README.md.     (no AI)
                                ▼
@@ -325,7 +325,7 @@ deciding:
 |---|---|---|
 | `classify.mjs` | **which structures** the code is made of, from a fixed enum | yes, in `state.json` |
 | `visualize.mjs` | **how to draw them** — free choice from the panel catalogue | no, it's a design call |
-| `validate()` | only that **nothing handed over went undrawn** | — |
+| `validate()` | that **nothing handed over went undrawn** (among its other checks) | — |
 
 `scripts/lib/shapes.mjs` holds all three halves of that table, so they can't drift apart by
 being edited separately. Adding graph or DP panels later is an edit to that one file plus a
@@ -739,7 +739,11 @@ open-ended and judged by eye.
 
 One real cost worth knowing: because `--bare` had to be dropped, every call also loads my
 local Claude configuration — roughly 28,000 tokens of context that have nothing to do with
-ranking a sliding window. It caches, so repeat calls are much cheaper, but it isn't free.
+ranking a sliding window. Most of that is now gone: every call passes its own two-line system
+prompt and `--tools ""` (`leanArgs()` in `lib/usage.mjs`), since no step here has tools or
+needs agent behaviour. What remains is the cache write - one is made for every call, and the
+pipeline never reads one back, because each call is a single request with its own prompt. See
+COMMANDS.md for why that write cannot simply be turned off.
 That's the price of using the subscription instead of paying per token.
 
 ---
@@ -758,7 +762,7 @@ scripts/
   detect.mjs                       what needs doing            (no AI)
   classify.mjs                     complexity + ranking + rename (Haiku) 
   teach.mjs                        the study block             (Opus)
-  visualize.mjs                    the animation               (Sonnet)
+  visualize.mjs                    the animation               (Opus, medium)
   apply.mjs                        README index + state        (no AI)
   migrate-provenance.mjs           one-off provenance recovery (no AI)
   probe-cli.mjs                    debugging tool              (tiny AI calls)

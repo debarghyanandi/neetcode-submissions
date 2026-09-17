@@ -488,6 +488,12 @@ steps exist, every line number is inside the file, each panel has the shape its
 type requires, the blurb is under 450 characters. A model that produces something
 plausible but broken is caught here rather than by you clicking Play.
 
+It takes a fourth argument, `sourceBodies` — the real `.cs` files — and rejects any
+line of the code panel that is not a verbatim line of the file it claims to show.
+Indentation is ignored and stopping early is allowed; inventing a comment,
+rewording one, or splitting a statement across two lines is not. Part 8 explains
+why that check had to be added.
+
 `selectForVisualizer()` drops the brute force when a real solution exists — you
 asked for that explicitly.
 
@@ -612,8 +618,8 @@ the visualizer HTML. Each of those was a separate bug when it was missing.
 
 ### `teach.mjs` and `visualize.mjs`
 
-Same skeleton, Opus instead of Sonnet, and the same signature trick: a block is
-rewritten only when `teachSignature` changes.
+Same skeleton, both on Opus (`visualize` at medium effort), and the same signature
+trick: a block is rewritten only when `teachSignature` changes.
 
 `splitTrailingTeach()` finds the existing block at the bottom of a file. It
 requires a full-width `=` rule before it will claim a `/* ... */` block belongs
@@ -676,12 +682,16 @@ workflow runs. Swapping in a personal access token would defeat guard 2 — do n
 finished and would redo the same folder, then conflict with it.
 `fetch-depth: 0` gets the full history, which `detect` needs to diff.
 
-```yaml
-continue-on-error: true
-```
-On each of the four model steps. One bad folder must not discard work that
-already succeeded — which also means **a run can be green with work skipped**.
-Read the summary, not the badge.
+The four model steps **fail fast**. There is no `continue-on-error` anywhere in
+the workflow: the first failure turns the run red and stops the model steps after
+it, and the summary names the step that stopped it.
+
+This used to be the opposite — `continue-on-error: true` on each model step, so
+one bad folder could not discard work that already succeeded. The cost was that a
+run could be **green with work skipped**, and real bugs sat unnoticed for days
+because nothing ever went red. The commit and apply steps still run on a failure
+(`if: \${{ !cancelled() }}`), so finished work is committed either way, and
+`--unfinished` picks the folder up next run.
 
 ```bash
 pushed=0
@@ -728,7 +738,7 @@ pending  2 folder(s) -> 1 selected, 1 held back
 node scripts/detect.mjs                              # free, no AI
 node scripts/apply.mjs                               # free, regenerates the tables
 node scripts/lint.mjs --slug two-integer-sum         # dry run, shows the diff
-for t in scripts/lib/*.test.mjs; do node "$t"; done  # 58 tests, free
+for t in scripts/lib/*.test.mjs; do node "$t"; done  # 233 tests, free
 ```
 
 `git checkout -- .` throws away anything a dry run's `--apply` twin did locally.
@@ -815,9 +825,21 @@ and a tool catalogue every time.
 Replacing it with a two-line system prompt and `--tools ""` cut fixed overhead on
 every call, at every model, with no quality change. That is `leanArgs()`.
 
-Prompt caching went the same way. A cache entry is only worth its write premium
-if something later *reads* it. Here nothing ever does — every call has a
-different prompt, and each is a single request. The cache was pure cost.
+Prompt caching was the same idea, with a twist worth knowing. A cache entry is
+only worth its write premium if something later *reads* it, and here nothing ever
+does — every call has a different prompt, and each is a single request.
+
+The twist: it cannot be switched off. `DISABLE_PROMPT_CACHING=1` is documented as
+disabling the cache, but on a subscription it does not — it quietly downgrades the
+entry from a 1-hour TTL to a 5-minute one. Measured back to back on the same
+input: 1h write $0.4317, 5m write $0.3522, `cache read 0` both times. A 5m write
+bills at 1.25x input against 2x for 1h, so the flag is worth about 18% a call —
+just not for the reason its name gives. `usage.mjs` now asks for 5m explicitly
+rather than relying on that side effect.
+
+> **The interview point.** A setting that helps is not proof your model of the
+> system is right. This one was "working" for two days for the wrong reason.
+> Measuring *what changed* rather than *that it improved* is what caught it.
 
 > **The interview point.** Before changing models, remove the work that should
 > not be happening at all. Overhead reductions are free: no quality risk, no
