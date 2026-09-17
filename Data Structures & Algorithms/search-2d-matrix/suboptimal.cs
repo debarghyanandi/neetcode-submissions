@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  suboptimal.cs         O(m log n) time / O(log n) space
-// #  binary search each row independently   [row-wise-binary-search]
+// #  Recursive binary search per row   [row-wise-binary-search]
 // #  ranks below optimal.cs (O(log(m*n)) time / O(1) space)
 // #
-// #  YOU SOLVED THIS YOURSELF (from submission-0)
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  runs a full binary search on every row, and the recursive BinarySearch
-// #  adds O(log n) call-stack depth since C# does not guarantee tail-call
-// #  optimization
+// #  Searches each row independently with recursive binary search; call
+// #  stack accumulates O(log n) depth per row, ignoring cross-row ordering.
 // ##########################################################################
 
 public class Solution
@@ -26,84 +25,95 @@ public class Solution
         return false;
     }
 
-    private bool BinarySearch(int left, int right, int target, int[] nums)
+    private bool BinarySearch(int left, int right, int target, int[] array)
     {
         if (left > right)
             return false;
 
         int mid = left + (right - left) / 2;
 
-        if (nums[mid] == target)
+        if (array[mid] == target)
             return true;
 
-        if (nums[mid] < target)
-            return BinarySearch(mid + 1, right, target, nums);
+        if (array[mid] < target)
+            return BinarySearch(mid + 1, right, target, array);
 
-        return BinarySearch(left, mid - 1, target, nums);
+        return BinarySearch(left, mid - 1, target, array);
     }
 }
 
 /*
 ================================================================================
- PATTERN : Binary search per row - rows searched independently
+ PATTERN : Row-wise Binary Search - one sorted array per row
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Suboptimal
 ================================================================================
-WHAT IT ACTUALLY USES
-  The problem gives two guarantees: (1) every row is sorted left to right, and
-  (2) the first element of a row is greater than the last element of the row
-  above it. This code uses only (1). The foreach over matrix treats each row as
-  an unrelated sorted array and pays for a fresh BinarySearch on every one of
-  them. Guarantee (2) - the one that makes the whole matrix a single sorted
-  sequence - is never touched. That single sentence is both the correctness
-  story and the reason this is marked suboptimal.
+WHY THIS PATTERN
+  The problem gives a matrix whose rows are sorted left to right, so each `row`
+  is a sorted array and binary search applies directly to it. The outer
+  `foreach` walks every row and calls `BinarySearch(0, row.Length - 1, target,
+  row)`; the first `true` is returned immediately. This is the obvious reading
+  of "sorted rows" and it is correct, but it uses only half of what the
+  statement promises.
+BETTER APPROACH
+  The better approach uses the second guarantee: the first value of each row is
+  greater than the last value of the previous row, so the whole matrix is one
+  sorted sequence in row-major order. Binary search over the virtual index range
+  0 .. m*n-1 and map `mid` back with `row = mid / n`, `col = mid % n`, giving
+  O(log(m*n)) time. This file loses because it pays a separate O(log n) search
+  for every one of the m rows instead of spending O(log m) to find the single
+  candidate row first.
 INVARIANT
-  BinarySearch(left, right, target, nums) holds: if target occurs anywhere in
-  nums, its index lies in [left, right]. Every recursive call preserves it.
-  nums[mid] < target means target cannot sit at mid or below, so the window
-  becomes [mid+1, right]; nums[mid] > target means it cannot sit at mid or
-  above, so the window becomes [left, mid-1]. Both branches strictly shrink the
-  window, so left > right is reached in finite steps, and at that point the
-  window is empty - the invariant then says target is not in nums at all, which
-  is exactly what the false return claims.
-CORRECTNESS OF THE OUTER LOOP
-  The rows partition the matrix: every cell belongs to exactly one row. So
-  target is in matrix if and only if it is in some row. The loop returns true
-  the moment any row reports found, and returns false only after every row has
-  been searched and rejected - complete on one side, sound on the other. Note
-  this argument needs no ordering between rows, which is precisely the point
-  made above.
-WHY THIS LOSES
-  Use guarantee (2) and the matrix is one sorted array of length m*n that
-  happens to be stored in chunks. Take n = matrix[0].Length, run a single binary
-  search over lo = 0, hi = m*n - 1, and decode each probe as matrix[mid / n][mid
-  % n]. One search, not m of them. The equivalent two-step version is easier to
-  get right under pressure: binary search the column of row-first (or row-last)
-  elements to pick the one row that could contain target, then binary search
-  that row. Same asymptotics, no div/mod indexing to fumble.
-  The honest trade this file makes: because it reads row.Length per row and
-  never assumes rows line up, it works on a ragged matrix. The flattened search
-  hard-requires a rectangle, since mid / n and mid % n assume a uniform row
-  width.
-THE FOLLOW-UP
-  "Rows are sorted, but drop the guarantee that each row starts after the
-  previous one ends - what now?" Then this file is the right answer, not a
-  fallback. An adversary can place target in any row you did not look at, so any
-  correct algorithm must inspect at least one element of every row; the per-row
-  binary search is the natural way to pay that. Being able to name which
-  precondition each solution consumes is the whole point of the question.
+  Inside `BinarySearch`, the target can only exist in `array[left..right]`;
+  every recursive call preserves that by discarding the half that cannot contain
+  it, since `array[mid] < target` rules out everything at or below `mid`. The
+  outer loop keeps a weaker invariant: after finishing row k, the target is not
+  in rows 0..k. Because the loop ends only after testing all rows, returning
+  `false` at the end means the target is absent from all of them.
+IT NEVER USES THE CROSS-ROW ORDERING
+  This code only needs each row to be sorted on its own. It stays correct on a
+  matrix where row 3 starts below where row 2 ended, which the flat-index binary
+  search would get wrong. That is the honest trade: this version is more general
+  than the problem requires, and pays m times for generality it does not need.
 WATCH OUT
-  1. An empty row is already safe: right = row.Length - 1 = -1, so the first
-  call hits left(0) > right(-1) and returns false without indexing. An empty
-  matrix skips the loop and returns false. No guard needed for either.
-  2. mid = left + (right - left) / 2 rather than (left + right) / 2 - the
-  overflow-proof form. Keep the habit even when the bounds are small.
-  3. Both recursive calls are in tail position, so converting BinarySearch to a
-  while loop that reassigns left and right is a mechanical edit and removes the
-  call frames entirely.
-  4. if (found == true) return found; is just if (found) return true; - the
-  comparison against a bool adds nothing.
+  There is no cheap pre-filter: adding `if (target < row[0] || target >
+  row[row.Length - 1]) continue;` before the call would skip most rows for a few
+  comparisons each, and it costs one line. `BinarySearch` recurses instead of
+  looping, so it holds stack frames while a simple `while (left <= right)` would
+  not. A row of length 0 gives `right = -1`, and `left > right` catches it on
+  the first call, so that case is safe, but a null `matrix` or a null row
+  throws. `found == true` is redundant; `if (found) return true;` says the same
+  thing.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Write the O(log(m*n)) version without flattening the matrix into a new
+  array.
+     Binary search `lo = 0`, `hi = m*n - 1` and read `matrix[mid / n][mid % n]`
+     where `n = matrix[0].Length`. No extra memory, but it now requires every
+     row to have the same length and requires the cross-row ordering to hold.
+  2. What if rows are sorted and columns are sorted, but a row can start below
+  where the previous ended?
+     The flat search breaks. Start at the top-right corner: move left when the
+     value is too big, move down when it is too small. That is O(m + n) time and
+     O(1) space.
+  3. Remove the recursion here.
+     Replace the helper with a `while (left <= right)` loop updating `left = mid
+     + 1` or `right = mid - 1`. Same comparisons, but constant stack instead of
+     one frame per halving.
+  4. The matrix is far too large to hold in memory and rows arrive from disk one
+  at a time.
+     Row-wise search is actually the better fit then, since it touches one row
+     at a time; add the `row[0]` / last-element range check so most rows are
+     rejected after two reads.
+TRIGGER
+  Sorted order that continues across row boundaries, not just inside a row -
+  that is the signal to index the grid as one flat sorted array.
+C# NOTE
+  The whole `BinarySearch` helper duplicates `Array.BinarySearch(row, target)`,
+  which returns a non-negative index on a hit; `if (Array.BinarySearch(row,
+  target) >= 0) return true;` is the same algorithm in one line. Note also that
+  `int[][]` is a jagged array, so `row.Length` can differ per row - the flat
+  `mid / n` mapping silently assumes it does not.
 COMPLEXITY
   Time  : O(m log n)
   Space : O(log n)

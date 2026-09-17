@@ -1,17 +1,16 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(log(m*n)) time / O(1) space
-// -  treat matrix as one flattened sorted array and binary search via index
-// -  conversion
-// -  [flattened-binary-search]
+// -  Binary search on flattened matrix   [flattened-binary-search]
 // -  ranks above suboptimal.cs (O(m log n) time / O(log n) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
-// -  single binary search over the virtual 1D index space using div/mod to
-// -  map back to row/col, done iteratively so no extra space
+// -  Single binary search over virtual 1D index space treats sorted 2D
+// -  matrix as one array using div/mod conversion.
 // --------------------------------------------------------------------------
 
-public class Solution {
+public class Solution
+{
     public bool SearchMatrix(int[][] matrix, int target)
     {
         int rows = matrix.Length, cols = matrix[0].Length;
@@ -39,70 +38,73 @@ public class Solution {
 
 /*
 ================================================================================
- PATTERN : Binary search over the flattened 2D index
+ PATTERN : Binary Search on a flattened sorted matrix
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The problem's precondition is stronger than "every row is sorted": each row is
-  sorted AND the first value of a row exceeds the last value of the row above
-  it. That means reading the matrix left-to-right, top-to-bottom yields one
-  fully sorted sequence of rows*cols values. Once you see that, there is no 2D
-  structure left to exploit - it is an ordinary sorted array that happens to be
-  stored in chunks of width cols, so one plain binary search over indices 0 ..
-  rows*cols-1 is enough. No row-locating pass first, no second search inside the
-  row.
-ALGORITHM
-  1. cols = matrix[0].Length is the stride; it is the only geometry the search
-  needs.
-  2. Search the virtual index range: left = 0, right = rows*cols - 1.
-  3. mid = left + (right - left) / 2, then decode it: row = mid / cols, col =
-  mid % cols.
-  4. Compare target against matrix[row][col]: greater means the answer sits
-  after mid, so left = mid + 1; smaller means before, so right = mid - 1; equal
-  returns true.
-  5. left > right means the range emptied without a hit - return false.
+  The matrix rows are sorted and each row starts after the previous row ends, so
+  reading it row by row gives one fully sorted sequence. That means the whole
+  grid behaves like a single sorted array of length rows*cols, and binary search
+  is the standard tool for a sorted array. The code never materializes that
+  array: it searches the index range left=0 to right=rows*cols-1 and maps each
+  mid back with row = mid / cols and col = mid % cols.
+BRUTE FORCE
+  Walk every cell with two nested loops and compare with target. That is O(m*n)
+  time and O(1) space, and it is correct, but it throws away the ordering the
+  problem hands you. A middle step is to binary search the first column to pick
+  the row, then binary search that row - O(log m + log n), which is the same as
+  O(log(m*n)) but takes two loops instead of one.
 INVARIANT
-  At the top of every iteration, if target is present in the matrix its virtual
-  index lies in [left, right]. Each branch preserves this because the flattened
-  sequence is sorted: everything at index <= mid is <= matrix[row][col], so when
-  target is strictly greater it cannot be at or below mid, and symmetrically for
-  the other branch. Termination is separate and just as important to state:
-  every non-returning iteration either raises left or lowers right by at least
-  one, since mid is always in [left, right], so the range strictly shrinks and
-  the loop cannot spin.
+  At the top of every iteration, if target exists anywhere in the matrix, its
+  flattened index lies inside [left, right]. Each comparison against
+  matrix[row][col] is a comparison against the sorted sequence value at index
+  mid, so discarding mid and everything below it (left = mid + 1) or mid and
+  everything above it (right = mid - 1) can never drop the target. The range
+  shrinks by at least one each pass, so the loop ends; when left > right the
+  range is empty and returning false is correct.
+MID WITHOUT OVERFLOW
+  mid = left + (right - left) / 2 is used instead of (left + right) / 2. With
+  right = rows*cols - 1 the sum of two large indices could exceed int.MaxValue,
+  and this form keeps every intermediate value inside the current range. It
+  matters more here than in a normal array search because the search space is
+  the product of two dimensions, not one.
 WATCH OUT
-  - Decode with cols, not rows. row = mid / cols and col = mid % cols; dividing
-  by rows still passes on every square test matrix and silently fails on a 3x4.
-  This is the single most common bug in this solution.
-  - right = rows*cols - 1, not rows*cols. The loop condition is left <= right,
-  so an inclusive upper bound is required; using rows*cols would let mid address
-  one past the end.
-  - matrix[0] is dereferenced before any bounds check, so a zero-row input
-  throws rather than returning false. A zero-column input is survivable by
-  accident: right becomes -1 and the loop body never executes.
-  - mid = left + (right - left) / 2 rather than (left + right) / 2 is the
-  habitual overflow-safe form. On the constraints here rows*cols is small, so
-  this is discipline, not a fix for a live bug in this file.
+  matrix[0].Length runs before any check, so an empty outer array (matrix.Length
+  == 0) throws IndexOutOfRangeException rather than returning false. cols is
+  read once from row 0, so a ragged input where some row is shorter would make
+  matrix[row][col] throw - the code assumes a true rectangle. rows * cols itself
+  is computed as int, so a grid large enough to overflow that product silently
+  produces a wrong right bound. Also note matrix[row][col] is evaluated twice
+  per iteration when the first comparison fails.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The matrix is sorted left to right and top to bottom, but a row no longer
+  starts after the previous row ends. What changes?
+     The flatten trick dies, since the sequence is no longer sorted. Start at
+     the top-right corner and move left when the value is too big, down when too
+     small - O(m + n) time, still O(1) space.
+  2. Return the coordinates of target instead of a bool.
+     Replace "return true" with returning row and col, which are already
+     computed, and return something like (-1, -1) on the miss. No extra cost.
+  3. Return the index where target should be inserted if it is absent.
+     Switch to a lower-bound loop: use while (left < right), never return early
+     on equality, and after the loop left is the insertion index. The trade-off
+     is you lose the early exit, so it always runs the full log number of steps.
+  4. How would you handle a matrix so large that rows*cols does not fit in an
+  int?
+     Make left, right and mid long, and cast back to int for the row and col
+     division. The comparison logic is unchanged; only the index arithmetic
+     widens.
 TRIGGER
-  Reach for the flatten-then-binary-search shape when a 2D array is globally
-  sorted in row-major order and you need membership or position. The tell is the
-  second half of the precondition - the cross-row guarantee. If the statement
-  only promises sorted rows and sorted columns independently, this approach is
-  wrong, not merely slower: the flattened sequence is no longer monotonic and
-  the comparisons discard the wrong half.
-FOLLOW-UP
-  - "Rows and columns are each sorted, but a row can start below the previous
-  row's end" (Search a 2D Matrix II): the flattening breaks. Walk a staircase
-  from the top-right corner - move left when the value is too big, down when too
-  small - for O(m + n) with no binary search at all.
-  - "Return where it would be inserted instead of a bool": drop the equality
-  return and run the loop to exhaustion; left is then the insertion index,
-  decoded the same way with left / cols and left % cols.
-  - "Why not binary search the first column for the row, then the row itself?":
-  it is correct and the same asymptotics, but it is two loops and two sets of
-  boundary conditions instead of one. The virtual index collapses them.
+  A grid whose rows are sorted and where each row's first value is larger than
+  the previous row's last value - that is a sorted array wearing a 2D costume.
+C# NOTE
+  int[][] is a jagged array, so matrix[row][col] is two pointer hops plus two
+  bounds checks; caching int val = matrix[row][col] once per iteration would
+  remove the duplicate lookup in the else-if. A true rectangular int[,] would
+  make the shape assumption explicit, at the cost of a different indexing syntax
+  and losing matrix[0].Length in favour of GetLength(1).
 COMPLEXITY
   Time  : O(log(m*n))
   Space : O(1)

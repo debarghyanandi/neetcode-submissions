@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T20:35:20.518Z",
+  "updatedAt": "2026-09-17T04:15:28.833Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3699,10 +3699,23 @@
         "13727086966a3fafef70341af08a97bf523bdf799b8653dc079c8cf4d57d56a2": "optimal.cs",
         "f3740ad2d27aeebf98dfc5519109bc40164a380791c984d7af27f3f1184ef2f8": "suboptimal.cs"
       },
-      "lint": {},
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "1fe0243b4ec5",
+          "renames": []
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "codePrint": "e14aebab9e9f",
+          "renames": [
+            "nums->array"
+          ]
+        }
+      },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"treat matrix as one flattened sorted array and binary search via index conversion\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"binary search each row independently\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on flattened matrix\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"e14aebab9e9f\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Recursive binary search per row\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3720,23 +3733,49 @@
         "optimal.cs": {
           "time": "O(log(m*n))",
           "space": "O(1)",
-          "algorithm": "treat matrix as one flattened sorted array and binary search via index conversion",
+          "algorithm": "Binary search on flattened matrix",
           "approachKey": "flattened-binary-search",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "matrix"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(m log n)",
           "space": "O(log n)",
-          "algorithm": "binary search each row independently",
+          "algorithm": "Recursive binary search per row",
           "approachKey": "row-wise-binary-search",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "matrix",
+            "call-stack"
+          ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"treat matrix as one flattened sorted array and binary search via index conversion\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"binary search each row independently\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on flattened matrix\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"e14aebab9e9f\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Recursive binary search per row\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "1fe0243b4ec5",
+          "suboptimal.cs": "e14aebab9e9f"
+        },
+        "structures": [
+          "array",
+          "matrix",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-17T04:15:28.831Z"
       }
     },
     "sliding-window-maximum": {
