@@ -10,18 +10,26 @@
  */
 
 /**
- * Prompt caching OFF for every model call the pipeline makes.
+ * Prompt caching: the cheapest setting the CLI actually honours.
  *
- * On a subscription, `claude -p` writes a 1-hour cache entry at 2x the input price. The pipeline
- * never reads one back: a normal structured call is ONE model request, and no two calls share a
- * prompt (each file, folder and model differs). Measured 2026-09 on the same inputs:
- *   teach (Opus)        input $0.032 with the cache  ->  $0.016 without
- *   visualize (Sonnet)  input $0.063 with the cache  ->  $0.032 without
- * Every script imports this module, so local runs and CI behave the same.
- * PIPELINE_PROMPT_CACHE=1 leaves caching on, for a comparison.
+ * On a subscription, `claude -p` writes a cache entry the pipeline never reads back: a normal
+ * structured call is ONE model request, and no two calls share a prompt (each file, folder and
+ * model differs). So every cache-write token is pure overhead.
+ *
+ * DISABLE_PROMPT_CACHING=1 does NOT stop the write. Measured 2026-09-17, visualize on
+ * binary-tree-diameter, same input, back to back:
+ *   flag set    cache write 20,083 (5m)   $0.3522
+ *   flag unset  cache write 20,722 (1h)   $0.4317
+ * The flag downgrades the TTL from 1h to 5m rather than disabling the cache. That still matters:
+ * a 5m write bills at 1.25x input, a 1h write at 2x - about 18% off every call. So the pipeline
+ * asks for 5m explicitly instead of relying on the disable flag's side effect.
+ * PIPELINE_PROMPT_CACHE=1 leaves the CLI default alone, for a comparison.
  */
-if (process.env.PIPELINE_PROMPT_CACHE !== '1' && process.env.DISABLE_PROMPT_CACHING === undefined) {
-  process.env.DISABLE_PROMPT_CACHING = '1';
+if (process.env.PIPELINE_PROMPT_CACHE !== '1') {
+  process.env.CLAUDE_CODE_PROMPT_CACHE_TTL ??= '5m';
+  process.env.CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL ??= '5m';
+  process.env.FORCE_PROMPT_CACHING_5M ??= '1';
+  process.env.DISABLE_PROMPT_CACHING ??= '1';
 }
 
 export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];

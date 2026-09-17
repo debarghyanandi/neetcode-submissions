@@ -63,7 +63,7 @@ export function structuresFor(si, structures = [], perSolution = null) {
   return Array.isArray(own) && own.length ? own : structures;
 }
 
-export function validate(problemSource, structures = [], perSolution = null) {
+export function validate(problemSource, structures = [], perSolution = null, sourceBodies = null) {
   const problems = [];
   const tmp = join(REPO, '.agent', 'tmp');
   mkdirSync(tmp, { recursive: true });
@@ -114,6 +114,7 @@ try {
       const seenTypes = new Set();
       out.solutions.push({
         where: where, label: sol.label || null, types: [],
+        code: sol.code.slice(),
         override: (sol.shapeOverride && typeof sol.shapeOverride === 'object')
           ? { skip: sol.shapeOverride.skip, reason: sol.shapeOverride.reason } : null,
         __types: seenTypes,
@@ -352,6 +353,35 @@ process.stdout.write(JSON.stringify(out));
     for (const e of c.errors) res.errors.push(`${sol.where}: ${e}`);
     for (const w of c.waived) waived.push(`${sol.label ?? sol.where}: ${w} (declared: ${String(sol.override?.reason ?? '').trim()})`);
   });
+  // ---- code fidelity ----
+  //
+  // The code panel is supposed to BE the reader's file, so that a line number in
+  // a msg means the same line in the editor. Opus at medium effort was measured
+  // (2026-09-17, binary-tree-diameter) inventing explanatory comments and
+  // reflowing one statement across two lines - every line number still resolved,
+  // every check above passed, and the panel quietly stopped being the file.
+  // Nothing but a verbatim comparison catches that, so here it is.
+  if (Array.isArray(sourceBodies)) {
+    (res.solutions ?? []).forEach((sol, si) => {
+      const body = sourceBodies[si];
+      if (typeof body !== 'string') return;
+      const key = (l) => String(l).replace(/\s+/g, ' ').trim();
+      const fileLines = new Set(body.split('\n').map(key).filter(Boolean));
+      const strays = (sol.code ?? [])
+        .map((l, i) => ({ i: i + 1, l }))
+        .filter(({ l }) => key(l) && !fileLines.has(key(l)));
+      for (const { i, l } of strays.slice(0, 8)) {
+        res.errors.push(`${sol.where}.code[${i}] is not a line of the solution file: ` +
+          `${JSON.stringify(String(l).slice(0, 80))} - the code panel must be the file itself, copied ` +
+          'verbatim. Do not add comments, reword them, reflow a statement across lines or join two lines.');
+      }
+      if (strays.length > 8) {
+        res.errors.push(`${sol.where}.code has ${strays.length} lines that are not in the solution file ` +
+          '(first 8 listed) - copy the file verbatim.');
+      }
+    });
+  }
+
   res.waived = waived;
   return res;
 }

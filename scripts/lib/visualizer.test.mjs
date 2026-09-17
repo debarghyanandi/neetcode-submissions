@@ -10,7 +10,7 @@
  *   node scripts/lib/visualizer.test.mjs
  */
 
-import { renameInVisualizer, structuresFor } from './visualizer.mjs';
+import { renameInVisualizer, structuresFor, validate } from './visualizer.mjs';
 import { coverage } from './shapes.mjs';
 
 let pass = 0, fail = 0;
@@ -70,6 +70,61 @@ is('a solution with nothing recorded falls back to the union',
   JSON.stringify(structuresFor(0, UNION, [[], PER[1]])), JSON.stringify(UNION));
 is('and with no per-solution list at all, nothing changes',
   JSON.stringify(structuresFor(1, UNION, null)), JSON.stringify(UNION));
+
+// ---- the code panel must be the file, copied verbatim --------------------
+// Opus at medium effort invented explanatory comments and reflowed a statement
+// across two lines (2026-09-17, binary-tree-diameter). Every line number still
+// resolved and every other check passed, so only a verbatim comparison sees it.
+const FILE_BODY = [
+  'public int Total(int[] nums)',
+  '{',
+  '    int sum = 0;                 // running total',
+  '    foreach (int n in nums) sum += n;',
+  '    return sum;',
+  '}',
+].join('\n');
+
+const defWith = (codeLines) => `
+const PROBLEM = {
+  title: 'T', note: 'n',
+  inputs: [{id:'a', label:'a', value:'1'}],
+  parse(raw){ return {ok:true, value:{v:1}, normalized:{a:'1'}}; },
+  shuffle(){ return {a:'1'}; },
+  solutions: [{
+    label: 'L', badge: 'B · optimal.cs', blurb: 'b',
+    code: ${JSON.stringify(codeLines)},
+    simulate(){ return [{lines:[1], msg:'m', panels:[]}]; },
+    shapeOverride: {skip: ['*'], reason: 'fixture'},
+  }],
+};`;
+
+const fidelityErrors = (codeLines) =>
+  validate(defWith(codeLines), [], [[]], [FILE_BODY]).errors.filter((e) => /not a line of the solution file|not in the solution file/.test(e));
+
+is('the file copied verbatim passes',
+  fidelityErrors(FILE_BODY.split('\n')).length, 0);
+
+is('a prefix of the file passes - stopping early is allowed',
+  fidelityErrors(FILE_BODY.split('\n').slice(0, 4)).length, 0);
+
+is('re-indentation alone is not a fidelity failure',
+  fidelityErrors(FILE_BODY.split('\n').map((l) => l.trim())).length, 0);
+
+is('an invented comment is caught',
+  fidelityErrors([...FILE_BODY.split('\n'), '// add them all up']).length, 1);
+
+is('a reworded comment on a real line is caught',
+  fidelityErrors(['    int sum = 0;                 // start at zero']).length, 1);
+
+is('a statement reflowed across two lines is caught',
+  fidelityErrors(['    foreach (int n in nums)', '        sum += n;']).length, 2);
+
+is('a blank line is ignored rather than flagged',
+  fidelityErrors(['public int Total(int[] nums)', '', '{']).length, 0);
+
+is('with no source bodies the check does not run',
+  validate(defWith(['// entirely invented']), [], [[]], null)
+    .errors.filter((e) => /not a line of the solution file/.test(e)).length, 0);
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

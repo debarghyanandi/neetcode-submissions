@@ -40,9 +40,16 @@ const onlyRaw = arg('--slug');
 const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
-// Sonnet at high effort since 2026-09. On max-area-of-island it built a correct animation - the
-// code copied exactly, neighbour order and stack depth faithful to the C# - for $0.24, against
-// $0.66 for the Opus one.
+// Opus at medium effort since 2026-09-17. Sonnet at high effort held this slot before it, and was
+// correct, but spent 5-8 minutes and ~39,000 thinking tokens to get there. Opus at medium reaches
+// the same place in well under two minutes on ~1,700 thinking tokens, for roughly the same money -
+// measured on binary-tree-diameter: Sonnet high $0.22, Opus medium $0.31 (and $0.31 included a
+// wasted cache write; see lib/usage.mjs). The wall-clock is the real win on a multi-folder run.
+//
+// Opus medium's one weakness was fidelity: it paraphrased the code panel, inventing comments and
+// reflowing a statement, while every other check still passed. The prompt now states that "code"
+// is the file copied verbatim and validate() enforces it against the real source, so that class of
+// drift fails the build instead of shipping quietly.
 //
 // If validation rejects the first attempt, attempt 2 is a REPAIR on Opus, not a fresh build. It
 // gets the rejected definition and the exact errors, and returns the same object with only those
@@ -51,16 +58,17 @@ const doApply = has('--apply');
 // third attempt: a failed repair fails the folder loudly.
 // An explicit --model is respected on both attempts.
 const modelGiven = argv.includes('--model');
-const model = arg('--model', 'sonnet');
+const model = arg('--model', 'opus');
 const RETRY_MODEL = 'opus';
-// The repair's effort. Unset = Opus's own default (high). If repairs still think heavily, try medium.
+// The repair's effort. Unset = Opus's own default (high): a repair is the one place extra thinking
+// is worth paying for, because attempt 1 already failed.
 const repairEffort = arg('--repair-effort');
 // Local test of the repair alone: start from an existing definition (a visualizer .html or a .js
 // holding `const PROBLEM = ...`) instead of paying for attempt 1. If that definition passes, one
 // deliberate error is injected so there is something to repair. Dry runs only.
 const repairFrom = arg('--repair-from');
 // No --effort means the model's own default. Only ever set by hand, for comparisons.
-const effort = arg('--effort', modelGiven ? null : 'high');
+const effort = arg('--effort', modelGiven ? null : 'medium');
 const backfill = has('--backfill');
 // Also pick up any curated folder with no visualizer at all. Nothing is in that state
 // normally; it is how a folder gets finished after a failed run stopped before visualize.
@@ -210,6 +218,12 @@ function instructions(slug, sols, structures, example, feedback) {
     '  drawing for an array and the wrong one for everything else.',
     '- Every step\'s "lines" must be 1-based indices into THAT solution\'s own "code" array. A line',
     '  number outside it highlights nothing and the visualizer silently reads as broken.',
+    '- "code" is the reader\'s own file, not a retelling of it. Copy the lines of that solution file',
+    '  character for character, in order, starting at the first line of code below the stripped',
+    '  header. Do not add explanatory comments, do not reword or drop the comments that are there,',
+    '  do not reflow one statement across two lines or join two onto one, and do not rename anything.',
+    '  You may stop early at a natural end, but every line you emit must appear verbatim in the file.',
+    '  A reader following a line number here opens that file and expects to land on the same line.',
     '- parse() must accept its own default input value.',
     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
@@ -360,8 +374,11 @@ for (const p of targets) {
   if (!example.source) { console.log('  cannot read the worked example'); report('visualize', p.slug, 'failed', 'worked example unreadable'); failures++; endGroup(); continue; }
   console.log(`  example: ${example.from}${example.sameShape ? ' (same shape)' : ' (different shape - voice only)'}`);
 
+  // The same stripped bodies twice: joined for the model on stdin, and kept per
+  // file so validate() can check the code panel is that file copied verbatim.
+  const bodies = chosen.map((f) => stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body);
   const code = chosen
-    .map((f) => `===== FILE: ${f} =====\n${stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body}`)
+    .map((f, i) => `===== FILE: ${f} =====\n${bodies[i]}`)
     .join('\n\n');
 
   let result = null, feedback = null, spend = 0, used = null;
@@ -370,11 +387,11 @@ for (const p of targets) {
   if (repairFrom) {
     if (doApply) { console.log('  --repair-from is for dry runs only'); process.exit(1); }
     let src = /\.html?$/i.test(repairFrom) ? definitionFromFile(repairFrom) : readFileSync(repairFrom, 'utf8');
-    let errs = validate(src, structures, sols.map((s) => s.structures ?? [])).errors;
+    let errs = validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
     if (!errs.length) {
       // Nothing wrong with it: break one step's line number so the repair has a real job to do.
       src = src.replace(/lines\s*:\s*\[/, 'lines:[999, ');
-      errs = validate(src, structures, sols.map((s) => s.structures ?? [])).errors;
+      errs = validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
       console.log(`  --repair-from: definition was valid; injected a bad line number -> ${errs.length} error(s)`);
     }
     rejected = { src, errors: errs };
@@ -412,7 +429,7 @@ for (const p of targets) {
     reportCost('visualize', p.slug, r.cost, r.usage);
     console.log(`  attempt ${attempt}: $${(r.cost ?? 0).toFixed(4)} · ${r.turns} turns · ${usageLine(r.usage)}`);
     // Each solution is checked against its OWN file's structures - see structuresFor.
-    const v = validate(r.src, structures, sols.map((s) => s.structures ?? []));
+    const v = validate(r.src, structures, sols.map((s) => s.structures ?? []), bodies);
     if (!v.errors.length) {
       result = r;
       if (repairing) console.log('      repaired - validation passes');

@@ -400,11 +400,22 @@ confirming each was caught:
 | `parent` naming a node that isn't in the panel | `would silently be drawn as a second root` |
 | A ragged grid row | `has 3 cells but row 0 has 4` |
 | `&lt;` written into a plain-text label | `rendered as plain text but contains markup` |
+| A comment the model wrote itself into the code panel | `is not a line of the solution file` |
+| One statement reflowed across two panel lines | `is not a line of the solution file` |
 
 The first one is the interesting failure. An out-of-range line number doesn't crash
 anything — the visualizer just highlights nothing and reads as *dull*. Nobody reports a dull
 visualizer as broken. That's exactly the class of fault that survives casual review, and
 it's why validation runs the code rather than reading it.
+
+The last two are the same kind of fault seen from a different angle. The code panel is supposed
+to **be** the reader's file, so that a line number in a `msg` means the same line in the editor.
+Opus at medium effort was measured (2026-09-17, `binary-tree-diameter`) inventing explanatory
+comments and reflowing one statement across two lines. Every line number still resolved, every
+other check passed, and the panel had quietly stopped being the file. Nothing but a verbatim
+comparison against the stripped source body catches that, so `validate()` takes the per-file
+bodies and does exactly that. Indentation is ignored and stopping early is allowed; inventing,
+rewording, splitting or joining a line is not.
 
 ### `scripts/reskin.mjs` — pushing a chassis change into finished visualizers
 
@@ -715,7 +726,7 @@ Estimates from real runs, on a Claude Pro subscription:
 |---|---|---|
 | Classify a folder | Haiku | ~3 turns |
 | Teaching block, per file | Opus | ~2 turns |
-| Visualizer, per problem | Sonnet, high effort (Opus on retry) | ~2 turns, the largest single call |
+| Visualizer, per problem | Opus, medium effort (Opus at high on retry) | ~2 turns, the largest single call |
 
 The dollar figures the CLI prints are **client-side estimates of API pricing**, not bills.
 On a subscription they're not charged; treat them as a relative cost signal only.

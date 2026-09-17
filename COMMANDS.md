@@ -463,9 +463,9 @@ failure is still committed, and the summary shows the estimated cost of the run.
 | `--json` | detect | Machine-readable output. |
 | `--delete-duplicates` | classify | Remove a resubmission identical to code you already have. |
 
-Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Sonnet at high effort**; if validation rejects it, **Opus repairs** that answer (one attempt, no rebuild).
+Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Opus at medium effort**; if validation rejects it, **Opus at its default (high) effort repairs** that answer (one attempt, no rebuild).
 Every call replaces Claude Code's default system prompt and turns tools off (`PIPELINE_FULL_PROMPT=1` undoes that).
-Prompt caching is off for every call (`PIPELINE_PROMPT_CACHE=1` turns it back on). The pipeline never reads a cache entry back, so writing one only cost extra.
+Prompt caching is pinned to a 5-minute TTL for every call (`PIPELINE_PROMPT_CACHE=1` restores the CLI default). The pipeline never reads a cache entry back, so the write is pure overhead - but `DISABLE_PROMPT_CACHING=1` does not actually stop it on subscription auth, it only downgrades the TTL from 1h to 5m. Measured 2026-09-17 on binary-tree-diameter: 1h write $0.4317, 5m write $0.3522, cache read 0 either way. 5m is the cheapest setting the CLI honours.
 Every model call now prints its tokens: fresh input, cache write, cache read, output.
 A dry run of `teach` or `visualize` saves its result under `.agent/tmp/try/` so two models can be compared.
 `--slug` works on any folder, whether or not it has new submissions.
