@@ -9,6 +9,10 @@ does it*. Read them in that order if you have not already.
 You do not need to read this in one sitting. Part 2 is the only part you must
 read in order; after that you can jump to whichever file you are curious about.
 
+Part 8 is different from the rest: it is the story of how the running cost of
+this pipeline came down by about 60%, what was measured, and which of the
+obvious answers turned out to be wrong. It needs no code knowledge to read.
+
 ---
 
 # Part 0 — The vocabulary, once
@@ -56,10 +60,10 @@ turn them into a curated folder.
 | # | command | model | what it does |
 |---|---|---|---|
 | 1 | `detect.mjs` | none | which folders have raw submissions waiting |
-| 2 | `lint.mjs` | Sonnet | tidy spacing and variable names |
-| 3 | `classify.mjs` | Sonnet | work out complexity, rename files, write the header |
+| 2 | `lint.mjs` | Haiku | tidy spacing and variable names |
+| 3 | `classify.mjs` | Haiku | work out complexity, rename files, write the header |
 | 4 | `teach.mjs` | Opus | write the study block at the bottom of each file |
-| 5 | `visualize.mjs` | Opus | build the animation |
+| 5 | `visualize.mjs` | Opus, medium effort | build the animation |
 | 6 | `apply.mjs` | none | regenerate `README.md`, `index.md`, `.agent/state.json` |
 
 **Lint is first, and that is not arbitrary.** The header, the teaching block and
@@ -746,3 +750,245 @@ for t in scripts/lib/*.test.mjs; do node "$t"; done  # 58 tests, free
 
 The rule that has held throughout: if you add a model call, add the mechanical
 gate that checks it. The model reads; the script decides.
+
+---
+
+# Part 8 — How the cost came down, and what it cost to learn
+
+This part is not about the code. It is about the *method* — how a vague
+complaint ("this is expensive") became a measured, tested, 60%-cheaper system,
+and the several places where the obvious answer was wrong.
+
+Read it if you want the reasoning. Everything here actually happened, in the
+order it is written, over two days. The numbers are from real runs.
+
+## The baseline: use the best model for everything, on purpose
+
+The first version ran **Opus on every step**. That was not laziness — it was a
+deliberate first move, for two reasons.
+
+**You cannot optimise what you cannot measure, and you cannot measure what does
+not work yet.** A cheap pipeline that produces wrong teaching blocks has no
+baseline; it has a bug. Getting it *correct first* on the strongest model meant
+every later change had a known-good target to be compared against.
+
+**It separates two questions that look like one.** "Is this output bad?" and "is
+this model too weak?" are different questions, and you can only answer the second
+once you have an answer to the first that you trust.
+
+So the baseline was: Opus everywhere, correct output, **~$2.00 per three-file
+folder**. Expensive, and known to be expensive. That is a starting line, not a
+failure.
+
+> **The interview point.** Establishing a deliberately over-resourced baseline is
+> not waste. It is the control group. Skipping it is how teams end up arguing
+> about whether the model or the prompt is at fault, with no evidence either way.
+
+## Step 1: measure before touching anything
+
+The first change spent no money and changed no behaviour: **log what every call
+actually costs**, in tokens, not just dollars.
+
+```
+tokens: in 1,952 · cache write 0 · cache read 0 · out 1,187 (thinking 842)
+```
+
+Four numbers, because one dollar figure cannot tell you *why* a call was
+expensive. Fresh input is the prompt. Cache write is overhead. Output — which
+includes the model's thinking — is the most expensive kind of token there is.
+
+This is `lib/usage.mjs`, and it immediately paid for itself. It showed that a
+large, fixed slice of every call was not the work at all: it was the default
+system prompt and tool definitions being sent on a call that had no tools and
+needed no agent behaviour.
+
+> **The interview point.** Instrument first. The measurement is cheap, it is
+> reversible, and it routinely finds something you would never have guessed. Do
+> not start by changing the thing you assume is the problem.
+
+## Step 2: the cheap win nobody argues with
+
+Every call in this pipeline is *one* structured question with no tools and no
+file access. The CLI does not know that, so it sends a full agent's system prompt
+and a tool catalogue every time.
+
+Replacing it with a two-line system prompt and `--tools ""` cut fixed overhead on
+every call, at every model, with no quality change. That is `leanArgs()`.
+
+Prompt caching went the same way. A cache entry is only worth its write premium
+if something later *reads* it. Here nothing ever does — every call has a
+different prompt, and each is a single request. The cache was pure cost.
+
+> **The interview point.** Before changing models, remove the work that should
+> not be happening at all. Overhead reductions are free: no quality risk, no
+> trade-off to argue about.
+
+## Step 3: the obvious move — try cheaper models — and where it broke
+
+Now the real question. Four steps, three model tiers. The hypothesis was the
+industry-standard one: *a weaker model at higher effort should match a stronger
+model at lower effort, for less money.*
+
+It was tested per step, because "which model" is not one decision — it is four.
+
+| step | the job | verdict |
+|---|---|---|
+| `lint` | mechanical: spacing, variable names | **Haiku wins.** The guard in `lib/csharp.mjs` catches any dishonesty, so a weak model is safe here. |
+| `classify` | pick from a fixed enum, one short summary | **Haiku wins.** Narrow, bounded question. |
+| `teach` | write the study block a human will read | **Haiku failed. Sonnet was close. Opus won.** |
+| `visualize` | write ~40KB of correct JavaScript | **the interesting one — see below.** |
+
+**Where "cheaper" was simply wrong: `teach`.** Haiku's teaching blocks were thin.
+Sonnet's were decent but missed the follow-up questions an interviewer would
+actually ask. So the plan was to accept Sonnet as good-enough — until the logs
+showed Sonnet's cost had crept to **$0.136**, the same as Opus, because it burned
+output tokens thinking its way to a weaker answer.
+
+Equal price, worse output. The decision made itself: go back to Opus.
+
+> **The interview point.** A cheaper model is not automatically cheaper. Price is
+> per token; cost is per *task*. A weak model that thinks longer, retries, or
+> needs a second attempt can cost more than the strong model that answers once.
+> The unit that matters is cost-per-accepted-result, not $/MTok.
+
+**But first, fix the prompt.** The missing follow-ups were diagnosed as a prompt
+problem, not a model problem: the prompt never said which sections to produce or
+in what order. The fix was to name every section explicitly, with `@@` markers and
+a hand-written parser (`lib/teach.mjs`), replacing a nine-field structured-output
+schema the model kept mis-calling and burning a whole extra turn on.
+
+Result: teach went from occasionally 3 turns to **1 turn, every run**.
+
+> **The interview point.** When output is poor, suspect the instruction before the
+> model. Swapping in a bigger model to paper over an ambiguous prompt is the
+> expensive version of the same fix.
+
+## Step 4: the visualizer — where it went round in a circle
+
+This is the step worth telling properly, because the answer reversed twice.
+
+**Round 1 — Opus (baseline).** Correct, ~$0.50, 3–8 minutes.
+
+**Round 2 — Sonnet at high effort.** Cheaper on paper ($0.22–0.24 on a good
+folder) and correct. Adopted. This looked like the win.
+
+**Round 3 — reality.** Sonnet started failing validation and retrying. One real
+run on `reverse-a-linked-list`:
+
+```
+attempt 1: $0.3897 · out 35,945 (thinking 30,610)   <- rejected by validation
+attempt 2: retrying on opus
+attempt 2: $0.4933 · out 17,219 (thinking 11,064)
+validated  ·  $0.8829 · 9m 35s
+```
+
+**$0.88 and nine and a half minutes** — worse than the Opus baseline it replaced.
+Sonnet spent 30,610 thinking tokens and still got it wrong; Opus then fixed it in
+a third of the thinking.
+
+Two fixes came out of that, and the order matters:
+
+1. **Make the retry a repair, not a restart.** A rejected build was ~95% correct.
+   Rebuilding from scratch threw away good work and paid full price again. Now the
+   second attempt receives the rejected definition plus the exact validation
+   errors, and returns the same object with only those fixed.
+2. **Stop making it retry.** One rejection was the validator's own fault: it
+   demanded every solution draw every structure in the folder's *union*, so an
+   iterative solution was required to draw a call stack it does not have
+   (`structuresFor` now checks each solution against its own file).
+
+**Round 4 — back to Opus, but at *medium* effort.** The reasoning: with the fixed
+overhead gone, the remaining cost is almost entirely *output tokens*, and thinking
+is output. Sonnet-high was expensive precisely because it thought so much. So try
+the stronger model with *less* thinking, rather than the weaker model with more.
+
+Measured on the same folder, same input:
+
+| | Sonnet high | Opus medium |
+|---|---|---|
+| thinking tokens | 38,735 | 1,706 |
+| cost | $0.4844 | $0.3102 |
+| wall clock | ~7 min | < 2 min |
+
+The stronger model, told to think less, was **cheaper, four times faster, and
+correct on the first attempt.**
+
+> **The interview point.** "Weaker model + more effort" and "stronger model + less
+> effort" are two dials, not one. Most people only turn the first. The second
+> turned out to dominate here, because the strong model needed less reasoning to
+> reach the same place — and reasoning is the expensive token.
+
+## Step 5: the regression that passed every test
+
+Opus at medium had one fault, and it is the most instructive bug in this whole
+story: **it paraphrased the code panel.** It invented explanatory comments and
+reflowed one statement across two lines.
+
+Every existing check passed. Every line number still resolved to a real line. The
+animation played correctly. Nothing crashed. It simply was not the reader's code
+any more — and a line number in the narration no longer matched the file you would
+open in your editor.
+
+Nothing but a verbatim comparison catches that, so `validate()` now takes the real
+source and rejects any panel line that is not in it. Indentation is ignored,
+stopping early is allowed; inventing, rewording, splitting or joining a line is
+not. Eight unit tests, written before the fix was trusted.
+
+Then the rule was added to the prompt, and the same run repeated: **0 stray lines,
+passed on attempt 1.**
+
+> **The interview point.** The dangerous failures are the ones that pass your
+> tests. "It rendered, so it worked" is not verification. When you loosen a
+> constraint — here, a cheaper effort setting — add the check that would catch the
+> specific way it might now be wrong, *before* you trust it in production.
+
+## Step 6: make the failures loud
+
+Several of these bugs survived as long as they did because a failing step did not
+stop the run. The workflow now **fails red and stops** — every model step is fail-fast, with
+no `continue-on-error` setting anywhere — while still committing work already done, so a late failure does not discard the
+model calls that already succeeded and `--unfinished` can resume the folder.
+
+The job summary prints the total dollar cost of every run, per step and per
+folder. The thing you want people to manage has to be the thing they can see.
+
+## The result
+
+Same folder, `reverse-a-linked-list`, one day apart:
+
+| | before | after |
+|---|---|---|
+| visualize | $0.8829 (2 attempts) | **$0.3018** (1 attempt) |
+| thinking tokens | 41,674 | 3,369 |
+| whole run | $0.9895 / 11m 11s | **$0.3785 / 3m 15s** |
+
+**62% cheaper, 3.4× faster** — and better: the earlier run had to waive a
+structure it failed to draw, the new one drew it correctly on both tabs.
+
+Across the pipeline, a three-file folder went from **~$2.00 to ~$0.38–0.55**.
+
+## What actually transfers
+
+Strip out the AI specifics and the method is ordinary engineering:
+
+1. **Build it correct on the expensive path first.** That is your control group.
+2. **Instrument before optimising.** Log the sub-components of cost, not the
+   total. The total cannot tell you where to look.
+3. **Delete the work that should not happen.** Overhead first — it is free.
+4. **Optimise per step, not globally.** Four steps, four different answers. A
+   single "which model do we use" decision would have been wrong for three of them.
+5. **Price per task, not per unit.** A cheap resource that retries is expensive.
+6. **Suspect your instructions before your tools.** Half of these "model problems"
+   were prompt problems.
+7. **Two dials, not one.** Cheaper-and-harder vs stronger-and-lighter.
+8. **Every loosened constraint needs a new check**, written before you trust it.
+9. **Fail loudly, measure publicly.** 233 tests run before the first paid call;
+   the cost of every run is printed where you cannot miss it.
+
+And the rule that governs all of it, the same one from Part 1:
+
+> The model reads. The script decides.
+
+Every cost decision here was safe to make *because* a deterministic, tested guard
+stands behind each model call. Cheapening a step you cannot verify is not
+optimisation — it is gambling.
