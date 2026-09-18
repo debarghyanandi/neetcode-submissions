@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T12:06:09.588Z",
+  "updatedAt": "2026-09-18T12:18:53.934Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4250,17 +4250,44 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-lifo-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"60fd91a31780\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "stack-based bracket matching",
-          "approachKey": "stack-lifo-matching",
+          "approachKey": "stack-matching",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "stack",
+            "hash-map"
+          ]
         }
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "60fd91a31780"
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"60fd91a31780\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "60fd91a31780"
+        },
+        "structures": [
+          "stack",
+          "hash-map"
+        ],
+        "builtAt": "2026-09-18T12:18:53.932Z"
       }
     }
   }
