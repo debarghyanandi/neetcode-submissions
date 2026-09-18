@@ -17,11 +17,12 @@
  *   standard marker are all read from the repo and from state.json, so the page
  *   cannot drift from what is actually there.
  *
- *   THE STATUS IS DERIVED, NOT DECLARED. A problem is green when its visualizer
- *   was built under the current VISUALIZER_FORMAT and red otherwise. There is
- *   no list of "done" slugs to maintain and no way for the page to claim
- *   something that is not true - reskin or rebuild a visualizer and it turns
- *   green on the next run by itself.
+ *   THE STATUS IS DERIVED, NOT DECLARED. One field, "standard": green when lint,
+ *   classify, teach AND the visualizer are all at the current standard, red when
+ *   any one of them is not. The verdict comes from lib/standard.mjs, the same
+ *   function the backfill queues on, so the page cannot claim a folder is done
+ *   while the queue still holds it. There is no list of "done" slugs to maintain
+ *   - finish a folder and it turns green on the next run by itself.
  *
  *   IT WORKS WITH NO NETWORK AND NO BUILD. One file, no framework, no CDN
  *   except the font, and it degrades to a perfectly readable list if that font
@@ -29,6 +30,7 @@
  */
 
 import { GROUPS, GROUP_NOTE, groupFor, groupRank } from './patterns.mjs';
+import { atStandard, needs } from './standard.mjs';
 import { VISUALIZER_FORMAT } from './shapes.mjs';
 
 const esc = (s) => String(s ?? '')
@@ -41,23 +43,27 @@ const linkPath = (p) => p.split('/').map(encodeURIComponent).join('/');
 const nice = (slug) => slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 /**
- * Has this visualizer been drawn under the current shape rules?
+ * ONE field, covering the whole pipeline.
  *
- *   current  built by the pipeline at the current format
- *   stale    a visualizer exists, but from before the structural panels - so it
- *            draws a tree as rows of boxes. This is what the backfill is for.
- *   none     no visualizer at all
+ * This used to report only the visualizer's shape version, which meant a folder
+ * could read "current" here while the backfill queue held it for three other
+ * reasons - unformatted code, a header from older rules, a teaching block written
+ * for a classification that had since changed. One green word, three kinds of
+ * unfinished underneath it.
+ *
+ * The verdict now comes from lib/standard.mjs, the same function select-backfill
+ * queues on, so the page and the queue cannot disagree:
+ *
+ *   current  lint, classify, teach AND visualizer all at the current standard
+ *   rebuild  any one of them is not - a backfill pass fixes it
  */
 function standing(p, state) {
-  if (!p.hasVisualizer) return 'none';
-  const rec = state.problems[p.slug]?.visualizer;
-  return (rec?.v ?? 1) === VISUALIZER_FORMAT ? 'current' : 'stale';
+  return atStandard(p, state) ? 'current' : 'rebuild';
 }
 
 const STATUS_TEXT = {
-  current: 'current',
-  stale: 'needs reshape',
-  none: 'no visualizer',
+  current: 'Current',
+  rebuild: 'Needs rebuilt',
 };
 
 export function buildIndexHtml(problems, state, opts = {}) {
@@ -81,6 +87,7 @@ export function buildIndexHtml(problems, state, opts = {}) {
       hasVisualizer: p.hasVisualizer,
       visualizerFile: `${p.slug}-visualizer.html`,
       status: standing(p, state),
+      needs: needs(p, state),
     };
   });
 
@@ -102,7 +109,7 @@ export function buildIndexHtml(problems, state, opts = {}) {
 <section class="group" data-group="${esc(name)}">
   <div class="group-head">
     <h2>${esc(name)}</h2>
-    <span class="group-count"><b class="gdone">${done}</b> / <b>${list.length}</b> reshaped</span>
+    <span class="group-count"><b class="gdone">${done}</b> / <b>${list.length}</b> at standard</span>
   </div>
   <p class="group-note">${esc(GROUP_NOTE[name] || '')}</p>
   <ul>
@@ -212,8 +219,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
 .mark-std .dot{width:9px;height:9px;border-radius:50%;flex:none;}
 .mark-std.current{border-color:var(--green);color:var(--green);}
 .mark-std.current .dot{background:var(--green);}
-.mark-std.stale{border-color:var(--red);color:var(--red);}
-.mark-std.stale .dot{background:var(--red);}
+.mark-std.rebuild{border-color:var(--red);color:var(--red);}
+.mark-std.rebuild .dot{background:var(--red);}
 .mark-std.none{border-color:var(--pencil-light);color:var(--pencil-light);}
 .mark-std.none .dot{background:var(--pencil-light);}
 
@@ -248,9 +255,9 @@ li + li{border-top:2px dashed var(--pencil-light);}
       <input id="q" type="search" placeholder="Search a problem, a pattern, or a technique…" autocomplete="off" aria-label="Search problems and patterns">
       <button class="clear" id="clear" type="button" title="Clear" aria-label="Clear search" hidden>&times;</button>
     </label>
-    <div class="chips" role="group" aria-label="Filter by visualizer standard">
+    <div class="chips" role="group" aria-label="Filter by standard">
       <button class="chip" id="f-all" data-filter="all" aria-pressed="true">All</button>
-      <button class="chip" id="f-stale" data-filter="stale" aria-pressed="false">Needs reshape</button>
+      <button class="chip" id="f-rebuild" data-filter="rebuild" aria-pressed="false">Needs rebuilt</button>
       <button class="chip" id="f-current" data-filter="current" aria-pressed="false">Current</button>
     </div>
     <span class="count" id="count"></span>
@@ -262,7 +269,7 @@ ${groups.map(sectionHtml).join('\n')}
 
   <footer class="foot">
     <span>Generated by <code>scripts/apply.mjs</code>. Grouping rules live in <code>scripts/lib/patterns.mjs</code>.</span>
-    <span>Visualizer standard <code>v${VISUALIZER_FORMAT}</code></span>
+    <span>Standard: lint, classify, teach and visualizer <code>v${VISUALIZER_FORMAT}</code></span>
   </footer>
 </div>
 
@@ -354,7 +361,7 @@ function rowHtml(r, web, pages) {
       </span>
       <span class="meta">
         ${cx}${src}${run}
-        <span class="mark-std ${r.status}" title="visualizer shape standard"><i class="dot"></i>${STATUS_TEXT[r.status]}</span>
+        <span class="mark-std ${r.status}" title="${r.status === 'current' ? 'lint, classify, teach and visualizer all at the current standard' : 'needs: ' + esc(r.needs.join(', '))}"><i class="dot"></i>${STATUS_TEXT[r.status]}</span>
       </span>
     </li>`;
 }

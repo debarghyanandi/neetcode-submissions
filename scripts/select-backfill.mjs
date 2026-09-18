@@ -16,10 +16,7 @@
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadState, scanRepo } from './lib/scan.mjs';
-import { HEADER_FORMAT } from './lib/header.mjs';
-import { splitTrailingTeach } from './lib/teach.mjs';
-import { lintWanted } from './lib/lint-rules.mjs';
-import { VISUALIZER_FORMAT } from './lib/shapes.mjs';
+import { needs } from './lib/standard.mjs';
 
 const argv = process.argv.slice(2);
 const limit = Number(argv.includes('--limit') ? argv[argv.indexOf('--limit') + 1] : '5') || 5;
@@ -27,46 +24,9 @@ const limit = Number(argv.includes('--limit') ? argv[argv.indexOf('--limit') + 1
 const state = loadState();
 const problems = scanRepo(state).filter((p) => p.curatedFiles.length || p.pending.length);
 
-const reasons = (p) => {
-  const rec = state.problems[p.slug] ?? {};
-  const lint = rec.lint ?? {}, sigs = rec.headerSignatures ?? {}, teach = rec.teachSignatures ?? {}, cls = rec.classification ?? {};
-  const all = [...p.curatedFiles, ...p.pending.map((s) => s.file)];
-  const why = [];
-
-  // Same rule lint.mjs uses, imported rather than restated - a file still owed a
-  // retry has to reach the queue, or backfill and lint disagree about what is done.
-  if (all.some((f) => lintWanted(lint[f]))) why.push('lint');
-
-  // Must agree with atCurrentStandard() in classify.mjs. It is duplicated here
-  // rather than shared because the two answer slightly different questions -
-  // but the CONDITIONS must match, or this queue hands classify a folder it
-  // considers finished, or worse, never queues one it does not.
-  const classified = p.curatedFiles.length && !p.pending.length && p.curatedFiles.every((f) => {
-    if (!cls[f] || !sigs[f]) return false;
-    if (!Array.isArray(cls[f].structures)) return false;   // classified before shapes existed
-    try { return JSON.parse(sigs[f]).v === HEADER_FORMAT; } catch { return false; }
-  });
-  if (!classified) why.push('classify');
-
-  const taught = p.curatedFiles.length && p.curatedFiles.every((f) =>
-    teach[f] && sigs[f] && teach[f] === sigs[f] && splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).had);
-  if (!taught) why.push('teach');
-
-  // "Has a visualizer" was the whole test, and it is why every array-shaped
-  // visualizer in the repo counted as finished work. A visualizer built before
-  // the structural panels is a visualizer that draws a BST as rows of chips: it
-  // exists, and it is exactly what the backfill is for. So the test is now
-  // whether it was built under the CURRENT shape contract.
-  //
-  // A hand-built one carries no record at all. It is queued too - a Back-Fill
-  // run is the one place those are meant to be replaced, and it is the only
-  // kind of run that consults this queue.
-  const viz = rec.visualizer;
-  if (!existsSync(join(p.dir, `${p.slug}-visualizer.html`))) why.push('visualizer');
-  else if ((viz?.v ?? 1) !== VISUALIZER_FORMAT) why.push('visualizer shape');
-
-  return why;
-};
+// The queue and the index ask the same function, so a folder cannot read "Current"
+// on the page while sitting in this list. See lib/standard.mjs.
+const reasons = (p) => needs(p, state);
 
 // A folder with raw submissions is NOT backlog - it is work you just did, and
 // the push and cron runs own it. The push run deliberately holds back the folder

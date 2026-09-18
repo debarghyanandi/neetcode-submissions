@@ -486,11 +486,10 @@ a bare `/bst/` matches "su**bst**ring" and filed both longest-substring problems
 `/rot/` matches "**rot**ated" and filed both rotated-array searches under Graphs. A misgrouped
 problem doesn't throw — it sits quietly in the wrong section.
 
-### `scripts/apply.mjs` and `scripts/migrate-provenance.mjs`
+### `scripts/apply.mjs`
 
 `apply.mjs` regenerates the index table in `README.md` and updates `.agent/state.json`. No AI.
 
-`migrate-provenance.mjs` is a one-off that solved a subtle problem — see Part 7.
 
 ---
 
@@ -556,7 +555,7 @@ was edited away.** Re-deriving it would have relabelled 12 of my own solutions a
 
 **The fix.** Provenance is now *recorded once*, at the only moment it's knowable — when a raw
 submission is processed — and stored in `state.json`. It's carried across renames and never
-re-derived. `migrate-provenance.mjs` seeded it for the existing 34 files by reading my own
+re-derived. A one-off migration seeded it for the existing 34 files by reading my own
 annotations from before the pipeline existed: 12 mine, 22 reference, 0 unknown.
 
 It's also **tri-state** now. Unknown reports as unknown, not as a denial. A header that
@@ -710,7 +709,7 @@ Everything is reversible with `git checkout -- .` until committed.
    model steps after it and turns the run red, and the summary names the step. Apply and
    commit still run, so work that finished before the failure is kept. A folder the failure
    left without a teaching block or visualizer is finished by the next run (`--unfinished`).
-2. **`node scripts/probe-cli.mjs`** — adds one CLI flag at a time on top of a bare call, so
+2. **Read the step log.** Each model step prints the exact CLI error it got.
    the first failure names the culprit. This is what found the `Not logged in` problem in one
    run after three failures that all looked identical.
 3. **`.agent/tmp/last-claude-response.json`** — the full unabridged response from the last
@@ -760,13 +759,20 @@ That's the price of using the subscription instead of paying per token.
 
 scripts/
   detect.mjs                       what needs doing            (no AI)
+  lint.mjs                         dotnet format               (NO AI)
   classify.mjs                     complexity + ranking + rename (Haiku) 
   teach.mjs                        the study block             (Opus)
   visualize.mjs                    the animation               (Opus, medium)
   apply.mjs                        README index + state        (no AI)
-  migrate-provenance.mjs           one-off provenance recovery (no AI)
-  probe-cli.mjs                    debugging tool              (tiny AI calls)
+  compile-check.mjs                do the .cs files build?     (no AI)
+  select-backfill.mjs              choose one backfill batch   (no AI)
+  reskin.mjs                       push a chassis change       (no AI)
+  resolve-slugs.mjs                fail early on a typo'd slug (no AI)
+  summarise.mjs                    the run summary             (no AI)
   lib/
+    standard.mjs                   the one "is this folder finished" test
+    lint-rules.mjs                 the formatting version
+    format.mjs                     the dotnet format wrapper
     scan.mjs                       one definition of "pending"
     normalise.mjs                  comment-stripping + hashing
     complexity.mjs                 the ladder and the naming rules

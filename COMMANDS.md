@@ -368,14 +368,15 @@ git revert <the sha>
 
 # When something breaks
 
-### Step 1 — find out which flag or credential is at fault
+### Step 1 — check the free half first
 
 ```powershell
-node scripts/probe-cli.mjs
+Get-ChildItem scripts\lib\*.test.mjs | ForEach-Object { node $_.FullName | Select-Object -Last 1 }
+node scripts\compile-check.mjs
 ```
 
-Makes six tiny AI calls, each adding one option to the last. **The first `FAIL` is the
-problem** — ignore everything below it. It also prints your Claude version.
+Both run with no AI and no cost. If a test fails or a solution stops compiling, that is the
+problem — a model step failing afterwards is usually the symptom, not the cause.
 
 ### Step 2 — read the full error
 
@@ -479,9 +480,10 @@ node scripts/apply.mjs          # regenerate the README table (free, no AI)
 ```
 
 ```powershell
-node scripts/migrate-provenance.mjs           # report only
-node scripts/migrate-provenance.mjs --write   # record it
+node scripts/compile-check.mjs                # every curated .cs file
+node scripts/compile-check.mjs --slug two-integer-sum
 ```
 
-Recovers who-wrote-what from the notes you wrote before the pipeline existed. Already done —
-you'd only need it again if `.agent/state.json` were lost.
+Compiles every solution in one project, each file in its own namespace. Free, and the only
+check in the repo that the code is still valid C# — the .cs files are the one thing a
+backfill cannot rebuild.

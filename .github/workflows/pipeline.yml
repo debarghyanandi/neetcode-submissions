@@ -175,6 +175,20 @@ jobs:
           # up, so a new test file needs no change here.
           for t in scripts/lib/*.test.mjs; do echo "--- $t"; node "$t"; done
 
+      - name: Guard - every solution file must still compile
+        run: |
+          set -euo pipefail
+          # The .cs files are the point of this repo, and they are the one thing a
+          # backfill cannot rebuild - everything else is generated commentary. Nothing
+          # else here checks they are valid C#: sameShape() proves a rewrite changed no
+          # token, which says nothing about whether either version compiles. A rename
+          # onto a keyword, a mangled generic, a lost brace - all pass every other check
+          # and fail at the grader.
+          #
+          # One project, one build, each file in its own namespace so the sixty
+          # `public class Solution` declarations do not collide. Seconds, and free.
+          node scripts/compile-check.mjs
+
       - name: Guard - the formatter must be there
         run: |
           set -euo pipefail

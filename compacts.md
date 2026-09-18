@@ -35,6 +35,24 @@ override):
 
 | step | model | why |
 |---|---|---|
+
+## The standard, and the one field that reports it
+
+A folder is **Current** only when all four stages are at the current standard - lint,
+classify, teach and visualizer. Anything else is **Needs rebuilt**, and one backfill pass
+fixes it. All or nothing on purpose: a half-finished folder is not a shade of green.
+
+The verdict lives in `lib/standard.mjs` and nothing else computes it. The Pages index
+renders it and `select-backfill.mjs` queues on it, so a folder cannot read "Current" on
+the page while sitting in the backfill queue - which it could before, because the index
+was reporting only the visualizer's shape version and calling that the whole story.
+
+`.cs` files are the one thing a backfill cannot rebuild. `compile-check.mjs` builds every
+one of them - one project, each file in its own namespace so the sixty `public class
+Solution` declarations do not collide - and it runs in CI before any paid call. Nothing
+else in the repo checks the code is valid C#: sameShape() proves a rewrite changed no
+token, which says nothing about whether either version compiles.
+
 | `lint` | **none** | `dotnet format whitespace --folder`, rules in `.editorconfig`. Deterministic, free, ~2s, cannot fail; `sameShape()` still checks it moved no token. **It no longer renames variables.** Its own record condemned it: 92 renames over 72 files, 47% of them overwriting a standard DSA name (`n`, `l`, `r`, `dp`, `res`, `q`, `curr`), 7 pure noise (`res->result`, `q->queue`), and 3 of 22 multi-file folders left with one variable under two names. The files are a record of what was submitted; an opaque name gets a line in the teaching block's VARIABLES glossary instead. |
 | `classify` | Haiku | picks from a fixed enum — a bounded question |
 | `teach` | Opus, default effort | prose a human reads; Haiku was thin, Sonnet cost the same as Opus for a worse answer |
