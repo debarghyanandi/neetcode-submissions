@@ -200,6 +200,11 @@ h1{margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.02;font-weight:400;te
 .group-note{margin:4px 0 12px;font-size:15px;color:var(--pencil);max-width:70ch;}
 ul{list-style:none;margin:0;padding:0;}
 li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;}
+/* The filter works by setting li.hidden, and the display:flex above beats the
+   browser's own [hidden] rule - so every row stayed on screen while the count
+   under the chips correctly read "2 of 62". The JS was right; the CSS was
+   drawing rows it had been told to hide. Same for the group sections. */
+li[hidden], section[hidden]{display:none !important;}
 li + li{border-top:2px dashed var(--pencil-light);}
 .who{flex:1 1 340px;min-width:0;}
 .name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
@@ -247,9 +252,9 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>visualizers at current standard</span><b><span id="curCount">${current}</span> / ${total}</b></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">${current}</span> / ${total}</b></div>
       <div class="bar"><span id="bar" style="width:${total ? (current / total * 100).toFixed(1) : 0}%"></span></div>
-      <div class="meter-line"><span>red means the structure is still drawn as rows of boxes</span></div>
+      <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
 
