@@ -35,7 +35,7 @@ override):
 
 | step | model | why |
 |---|---|---|
-| `lint` | Haiku | mechanical; `sameShape()` catches any dishonesty. Thinking capped at 2000 via `MAX_THINKING_TOKENS`; no `--effort` flag on Haiku. |
+| `lint` | Haiku | mechanical; `sameShape()` catches any dishonesty. Thinking capped at 600 via `MAX_THINKING_TOKENS` (was 2000, which was a ceiling rather than a limit); no `--effort` flag on Haiku. Override with `LINT_THINKING_TOKENS`. |
 | `classify` | Haiku | picks from a fixed enum — a bounded question |
 | `teach` | Opus, default effort | prose a human reads; Haiku was thin, Sonnet cost the same as Opus for a worse answer |
 | `visualize` | Opus, **medium** effort | since 2026-09-17. Sonnet at high effort was correct but spent ~39,000 thinking tokens and 5-8 minutes; Opus at medium reaches the same place in under 2 minutes on ~1,700. A rejected build is **repaired** on Opus at its default (high) effort — never rebuilt from scratch. |
@@ -202,7 +202,7 @@ a real conflicting rebase, a real folder from the repo. When a log arrives, read
 what the steps actually did rather than the run's badge.
 
 **Tests.** `node scripts/lib/<name>.test.mjs`, or all of them:
-`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 233 cases across eight
+`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 264 cases across nine
 files. The workflow runs the glob before the first model call, so a new test
 file needs no workflow change. Pure functions only — anything that needs git or
 the network gets a throwaway fixture instead.

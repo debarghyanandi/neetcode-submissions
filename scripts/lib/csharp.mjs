@@ -243,6 +243,78 @@ export function memberScopes(toks) {
 }
 
 /**
+ * Which tokens were inserted and which were dropped, when the two streams are
+ * no longer the same length.
+ *
+ * This exists because of a real failure. The message used to be "token count
+ * changed: 145 before, 147 after - something other than names or spacing was
+ * edited", and that was the whole of it. It is true and it is useless: it does
+ * not say WHICH two tokens, so the model gets the same non-information back on
+ * the retry and makes the same edit again. house-robber's submission-0 was
+ * refused twice with byte-identical errors, cost two model calls, and was
+ * retired as a permanent failure - over one pair of braces the model had added
+ * to a braceless `if`.
+ *
+ * A rejection that carries no new information is a wasted attempt. So name the
+ * tokens.
+ *
+ * Standard LCS, which is O(n*m) - fine on files of a few hundred tokens and
+ * capped below so a pathological input degrades to the old message rather than
+ * eating the runner's memory.
+ *
+ * @returns {{added: string[], removed: string[], at: number}} `at` is the index
+ *          in A where the two first part company, or -1 if they never do.
+ */
+export function tokenDelta(A, B) {
+  const a = A.map((t) => t.v), b = B.map((t) => t.v);
+  const n = a.length, m = b.length;
+  if (n > 2000 || m > 2000) return { added: [], removed: [], at: -1 };
+
+  const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+
+  const added = [], removed = [];
+  let i = 0, j = 0, at = -1;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (at < 0) at = i;
+    if (dp[i + 1][j] >= dp[i][j + 1]) removed.push(a[i++]);
+    else added.push(b[j++]);
+  }
+  if ((i < n || j < m) && at < 0) at = i;
+  while (i < n) removed.push(a[i++]);
+  while (j < m) added.push(b[j++]);
+  return { added, removed, at };
+}
+
+/**
+ * The refusal you get when the token counts differ, written so the retry can
+ * act on it. Braces get their own line because they are the common case and
+ * because "formatting" is exactly what a model thinks they are.
+ */
+function countMismatch(A, B) {
+  const head = `token count changed: ${A.length} before, ${B.length} after`;
+  const d = tokenDelta(A, B);
+  if (d.at < 0 || (!d.added.length && !d.removed.length))
+    return [`${head} - something other than names or spacing was edited`];
+
+  const show = (xs) => xs.slice(0, 6).map((v) => JSON.stringify(v)).join(' ') + (xs.length > 6 ? ` (+${xs.length - 6} more)` : '');
+  const what = [
+    d.added.length ? `added ${show(d.added)}` : null,
+    d.removed.length ? `removed ${show(d.removed)}` : null,
+  ].filter(Boolean).join(', and ');
+  const near = A.slice(Math.max(0, d.at - 5), d.at + 5).map((t) => t.v).join(' ');
+
+  const errors = [`${head} - the rewrite ${what}, first near: ${near}`];
+  if ([...d.added, ...d.removed].some((v) => v === '{' || v === '}')) {
+    errors.push('Braces are structure, not formatting. A body written without braces stays without braces - do not add a { } pair around it, and do not remove a pair that is already there. Move an existing brace to its own line if you like; never change how many there are.');
+  }
+  return errors;
+}
+
+/**
  * @returns {{ok: boolean, errors: string[], renames: Array<[string,string]>}}
  */
 export function sameShape(before, after) {
@@ -252,7 +324,7 @@ export function sameShape(before, after) {
   const errors = [];
 
   if (A.length !== B.length) {
-    return { ok: false, renames: [], errors: [`token count changed: ${A.length} before, ${B.length} after - something other than names or spacing was edited`] };
+    return { ok: false, renames: [], errors: countMismatch(A, B) };
   }
 
   const fwd = new Map(), rev = new Map();

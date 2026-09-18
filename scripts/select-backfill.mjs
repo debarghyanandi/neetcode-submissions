@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { loadState, scanRepo } from './lib/scan.mjs';
 import { HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
-import { LINT_FORMAT } from './lib/lint-rules.mjs';
+import { lintWanted } from './lib/lint-rules.mjs';
 import { VISUALIZER_FORMAT } from './lib/shapes.mjs';
 
 const argv = process.argv.slice(2);
@@ -33,7 +33,9 @@ const reasons = (p) => {
   const all = [...p.curatedFiles, ...p.pending.map((s) => s.file)];
   const why = [];
 
-  if (all.some((f) => (lint[f]?.version ?? -1) !== LINT_FORMAT)) why.push('lint');
+  // Same rule lint.mjs uses, imported rather than restated - a file still owed a
+  // retry has to reach the queue, or backfill and lint disagree about what is done.
+  if (all.some((f) => lintWanted(lint[f], null))) why.push('lint');
 
   // Must agree with atCurrentStandard() in classify.mjs. It is duplicated here
   // rather than shared because the two answer slightly different questions -

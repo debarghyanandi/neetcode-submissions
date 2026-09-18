@@ -12,7 +12,7 @@
  * will refuse honest rewrites. Both are worth stopping for.
  */
 
-import { sameShape, shapeForm } from './csharp.mjs';
+import { sameShape, shapeForm, tokenDelta, tokenize } from './csharp.mjs';
 
 let pass = 0, fail = 0;
 
@@ -241,6 +241,67 @@ refuses('but swapping which one is assigned is still a different program',
   TREE_SWAP, TREE_SWAP.replace('root.left = right;', 'root.left = left;'));
 refuses('and the member itself still may not be renamed',
   TREE_SWAP, TREE_SWAP.replace(/root\.left/g, 'root.lft'));
+
+// ---- the rejection has to say WHAT changed -----------------------------
+//
+// The real failure this came from: house-robber's submission-0 has a braceless
+//
+//     if(n == 1)
+//     return nums[0];
+//
+// Haiku braced it, which is +2 tokens, and the refusal said only "token count
+// changed: 145 before, 147 after". The retry got that same sentence back, made
+// the same edit, and the file was retired permanently. A rejection that carries
+// no new information is a wasted attempt - so these test the information.
+
+const BRACELESS = `public class Solution
+{
+    public int Rob(int[] nums)
+    {
+        int n = nums.Length;
+        if (n == 1)
+            return nums[0];
+        return n;
+    }
+}`;
+const BRACED = BRACELESS.replace('        if (n == 1)\n            return nums[0];',
+                                 '        if (n == 1)\n        {\n            return nums[0];\n        }');
+
+// Still refused - the guard has not been loosened, only made articulate.
+refuses('braces added to a braceless if', BRACELESS, BRACED, 'token count changed');
+refuses('and the refusal names the braces', BRACELESS, BRACED, '"{"');
+refuses('and says braces are not formatting', BRACELESS, BRACED, 'Braces are structure');
+refuses('braces removed from a braced if', BRACED, BRACELESS, 'Braces are structure');
+
+// The brace line is specific to braces. An unrelated size change must not
+// collect a lecture about braces it can do nothing with.
+function refusalHas(name, before, after, phrase, want) {
+  const r = sameShape(before, after);
+  const got = r.errors.some((e) => e.includes(phrase));
+  if (got === want) { pass++; console.log(`ok    ${name}`); }
+  else { fail++; console.log(`FAIL  ${name}\n      errors were: ${r.errors.join(' | ')}`); }
+}
+refusalHas('a dropped statement is not blamed on braces',
+  BASE, BASE.replace('            if (nums[m] == target) return m;\n', ''), 'Braces are structure', false);
+refusalHas('but it does say what went missing',
+  BASE, BASE.replace('            if (nums[m] == target) return m;\n', ''), 'removed', true);
+refusalHas('an added statement says what arrived',
+  BASE, BASE.replace('return -1;', 'Console.WriteLine(l);\n        return -1;'), 'added', true);
+
+// ---- tokenDelta on its own ---------------------------------------------
+function delta(name, before, after, wantAdded, wantRemoved) {
+  const A = tokenize(before).filter((t) => t.t !== 'ws' && t.t !== 'comment');
+  const B = tokenize(after).filter((t) => t.t !== 'ws' && t.t !== 'comment');
+  const d = tokenDelta(A, B);
+  const got = `+[${d.added.join(' ')}] -[${d.removed.join(' ')}]`;
+  const want = `+[${wantAdded.join(' ')}] -[${wantRemoved.join(' ')}]`;
+  if (got === want) { pass++; console.log(`ok    ${name}`); }
+  else { fail++; console.log(`FAIL  ${name}\n      got ${got}, wanted ${want}`); }
+}
+delta('an inserted brace pair', 'if (a) b();', 'if (a) { b(); }', ['{', '}'], []);
+delta('a removed brace pair', 'if (a) { b(); }', 'if (a) b();', [], ['{', '}']);
+delta('an identical file has no delta', BASE, BASE, [], []);
+delta('a pure rename has no delta either - it is length-equal', 'int l = 0;', 'int left = 0;', ['left'], ['l']);
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

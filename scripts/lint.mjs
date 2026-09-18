@@ -27,7 +27,7 @@ import { stripHeader } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { sameShape } from './lib/csharp.mjs';
 import { shortPrint } from './lib/normalise.mjs';
-import { LINT_FORMAT } from './lib/lint-rules.mjs';
+import { LINT_FORMAT, LINT_MAX_ROUNDS, lintDecision, lintWanted } from './lib/lint-rules.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { usageOf, usageLine, leanArgs } from './lib/usage.mjs';
@@ -79,8 +79,20 @@ const INSTRUCTIONS = [
   'sequence differs by anything other than names and spacing, so a "small improvement"',
   'to the logic fails the whole file rather than shipping.',
   '',
-  'Formatting: four spaces per level, Allman braces (opening brace on its own line), one',
-  'space around binary operators, no trailing whitespace, no line over roughly 100 columns.',
+  'Formatting: four spaces per level, one space around binary operators, no trailing',
+  'whitespace, no line over roughly 100 columns. Where a brace is already there, put the',
+  'opening one on its own line.',
+  '',
+  'BRACES ARE STRUCTURE, NOT FORMATTING. The rewrite must contain exactly as many { and }',
+  'as the original - count them. A body written without braces stays without braces:',
+  '',
+  '    if (n == 1)',
+  '        return nums[0];',
+  '',
+  'is left exactly like that. Do NOT wrap it in { }. Adding that pair is two tokens, the',
+  'mechanical check reads two extra tokens as an edit to the logic, and the whole file is',
+  'refused. It is the single most common way these rewrites fail. Removing a pair that is',
+  'already there fails the same way.',
   '',
   'Naming: descriptive enough to read without scrolling back, short enough to scan.',
   '  - Keep i, j, k when they are ordinary loop counters. They are idiomatic, not lazy.',
@@ -120,7 +132,15 @@ function ask(code, feedback) {
       // Renaming needs little thought. On CI Haiku spent ~90% of lint's output on thinking
       // (3.8k-6.4k tokens per small file) and lint became the slowest step. Haiku 4.5 has no
       // --effort, so thinking is capped by budget instead. LINT_THINKING_TOKENS overrides it.
-      env: { ...process.env, MAX_THINKING_TOKENS: process.env.LINT_THINKING_TOKENS ?? '2000' },
+      //
+      // 2000 was the first cut and it was still the ceiling, not a limit: the four calls on
+      // house-robber thought 1,582 / 1,281 / 1,988 / 1,481 tokens and two of them were wrong
+      // anyway. Thinking was not buying correctness here - the rejections were a brace pair,
+      // which is a reading-comprehension failure, not a reasoning one. 600 is enough to plan
+      // a rename map and cuts roughly half of lint's output tokens and wall time. Raise it
+      // through LINT_THINKING_TOKENS if rejections climb; the number to watch is the
+      // "attempt 1 REJECTED" count in the step log.
+      env: { ...process.env, MAX_THINKING_TOKENS: process.env.LINT_THINKING_TOKENS ?? '600' },
     });
   } catch (e) {
     let env = null; try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
@@ -139,7 +159,10 @@ const everything = scanRepo(state);
 
 const needsLint = (p) => p.curatedFiles.concat(p.pending.map((s) => s.file)).some((f) => {
   const rec = state.problems[p.slug]?.lint?.[f];
-  return !rec || rec.version !== LINT_FORMAT;
+  // Deliberately NOT reading the file to print it: this runs over every folder in
+  // the repo to build a queue. A record with a print is judged on its rounds, and
+  // a file edited since is caught by the per-file decision in the loop below.
+  return lintWanted(rec, null);
 });
 
 let targets;
@@ -172,7 +195,7 @@ console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - lint, model ${model}, ${target
 
 if (haltIfStopped('lint', targets.map((p) => p.slug))) process.exit(1);
 
-let failures = 0, changed = 0, clean = 0;
+let failures = 0, changed = 0, clean = 0, givenUp = 0;
 // The account, not the file. Recording a lint failure here would be a lie that
 // costs money later: a file marked `failed: true` is never retried without
 // --force, so one session limit would permanently retire a perfectly good file.
@@ -198,9 +221,34 @@ for (const p of targets) {
     const header = had ? withHeader.slice(0, withHeader.length - body.length) : '';
 
     const rec = state.problems[p.slug]?.lint?.[file];
-    if (!force && rec && rec.version === LINT_FORMAT) { console.log(`  ${file.padEnd(22)} already linted`); report('lint', p.slug, 'skipped', `${file}: already linted`); clean++; continue; }
+    const print = shortPrint(body);
+    // A recorded FAILURE is not a recorded success, and the two used to be told
+    // apart by nothing at all: this branch checked `version` and printed
+    // "already linted" either way. house-robber's submission-0 was refused twice
+    // in one run, and the very next run announced "2 already linted, 0 failed"
+    // and went green. The file went on through classify, teach and visualize
+    // carrying the spacing lint was meant to fix, and no report anywhere ever
+    // mentioned it again. One red run, then invisible forever.
+    //
+    // Now a refusal is retried on the next run (LINT_MAX_ROUNDS of them, and any
+    // time the code itself changes), which is what every other step in this
+    // pipeline already does. When the rounds run out the file is reported as
+    // `refused` - the status summarise.mjs renders as "needs a decision" - and
+    // keeps being reported, run after run, until somebody forces a retry.
+    const decision = lintDecision(rec, print, force);
+    if (decision.action === 'skip-done') {
+      console.log(`  ${file.padEnd(22)} already linted`);
+      report('lint', p.slug, 'skipped', `${file}: already linted`);
+      clean++; continue;
+    }
+    if (decision.action === 'skip-refused') {
+      console.log(`  ${file.padEnd(22)} NOT LINTED - refused on ${decision.rounds} run(s), not retried again: ${rec.reason ?? 'no reason recorded'}`);
+      report('lint', p.slug, 'refused', `${file}: still unlinted after ${decision.rounds} run(s) - ${rec.reason ?? 'no reason recorded'}. Retry: run the workflow with Process-Specific-folder=${p.slug} and Back-Fill on`);
+      givenUp++; continue;
+    }
+    if (decision.rounds) console.log(`  ${file.padEnd(22)} retry ${decision.rounds + 1} of ${LINT_MAX_ROUNDS} - refused on an earlier run`);
 
-    let result = null, feedback = null, spend = 0;
+    let result = null, feedback = null, spend = 0, rejected = false;
     for (let attempt = 1; attempt <= 2 && !result; attempt++) {
       let r;
       try { r = ask(body, feedback); }
@@ -215,6 +263,7 @@ for (const p of targets) {
     const check = sameShape(body, r.code);
       if (check.ok) result = { ...r, renames: check.renames };
       else {
+        rejected = true;
         console.log(`  ${file.padEnd(22)} attempt ${attempt} REJECTED - the rewrite changed more than names:`);
         check.errors.slice(0, 3).forEach((e) => console.log(`      ${e}`));
         feedback = [
@@ -227,6 +276,17 @@ for (const p of targets) {
 
     // Before the failure bookkeeping: an out-of-budget stop must not be written
     // into state.json as a file that lint has given up on.
+    // The CLI, not the file. Same reasoning as the budget stop below: if no attempt
+    // ever came back with a rewrite to judge, nothing has been learned about this
+    // file, and burning one of its retries for a crashed invocation would retire a
+    // perfectly good file over a bad runner.
+    if (!result && !rejected && !outOfBudget) {
+      console.log(`  ${file.padEnd(22)} left untouched - the model call failed, nothing to judge`);
+      report('lint', p.slug, 'failed', `${file}: the model call failed before returning a rewrite - nothing recorded against the file`);
+      failures++;
+      continue;
+    }
+
     if (!result && outOfBudget) {
       console.log(`  ${file.padEnd(22)} left untouched - out of budget, not the file`);
       report('lint', p.slug, 'skipped', `${file}: stopped - out of budget, nothing wrong with this file`);
@@ -234,20 +294,31 @@ for (const p of targets) {
     }
 
     if (!result) {
-      console.log(`  ${file.padEnd(22)} left untouched`);
-      report('lint', p.slug, 'failed', `${file}: rewrite rejected twice - ${(feedback && feedback[0]) || 'unknown'}`);
-      // Record the attempt so the next backfill does not retry it. Two model
-      // calls that end in the same rejection will end in it again, and this
-      // file would otherwise be paid for on every run forever. --force retries.
+      const round = decision.rounds + 1;
+      const last = round >= LINT_MAX_ROUNDS;
+      const why = (feedback && feedback[0]) || 'rewrite rejected twice';
+      console.log(`  ${file.padEnd(22)} left untouched - round ${round} of ${LINT_MAX_ROUNDS}${last ? ', no more retries' : ', will be retried next run'}`);
+      // Record the round, and the print of the code it was refused on. The next
+      // run reads both: another try while rounds remain, and a clean slate if
+      // the file has been edited since. --force retries regardless.
       if (doApply) {
         const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
         (prec.lint ?? (prec.lint = {}))[file] = {
-          version: LINT_FORMAT,
-          failed: true,
-          reason: (feedback && feedback[0]) || 'rewrite rejected twice',
+          version: LINT_FORMAT, failed: true, attempts: round, print, reason: why,
         };
       }
-      failures++;
+      // While a retry is still coming, this is a plain failure: the run goes red,
+      // classify and the rest are skipped, and the folder stays pending so the
+      // next run picks the whole thing up. Once the rounds are spent it becomes a
+      // refusal instead - a decision, not a surprise - so one file that will never
+      // pass cannot hold every other problem in the repo behind it forever.
+      if (last) {
+        report('lint', p.slug, 'refused', `${file}: refused on ${LINT_MAX_ROUNDS} runs, giving up - ${why}. Retry: run the workflow with Process-Specific-folder=${p.slug} and Back-Fill on`);
+        givenUp++;
+      } else {
+        report('lint', p.slug, 'failed', `${file}: rewrite rejected twice - ${why}. Will be retried on the next run (${round} of ${LINT_MAX_ROUNDS}).`);
+        failures++;
+      }
       continue;
     }
 
@@ -275,7 +346,8 @@ for (const p of targets) {
 
 if (doApply) saveState(state);
 if (outOfBudget) announceBudget(outOfBudget);
-console.log(`${changed} file(s) changed, ${clean} already linted, ${failures} failed${outOfBudget ? ', rest not attempted' : ''}.\n`);
+console.log(`${changed} file(s) changed, ${clean} already linted, ${failures} failed (retry next run)${givenUp ? `, ${givenUp} given up on` : ''}${outOfBudget ? ', rest not attempted' : ''}.\n`);
+if (givenUp) console.log(`::warning::${givenUp} file(s) have now been refused on ${LINT_MAX_ROUNDS} runs and are not retried again. They are listed in the run summary.`);
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
   appendFileSync(process.env.GITHUB_OUTPUT, `slugs=${[...touchedSlugs].join(',')}\n`);

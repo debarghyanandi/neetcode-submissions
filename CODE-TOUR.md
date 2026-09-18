@@ -738,7 +738,7 @@ pending  2 folder(s) -> 1 selected, 1 held back
 node scripts/detect.mjs                              # free, no AI
 node scripts/apply.mjs                               # free, regenerates the tables
 node scripts/lint.mjs --slug two-integer-sum         # dry run, shows the diff
-for t in scripts/lib/*.test.mjs; do node "$t"; done  # 233 tests, free
+for t in scripts/lib/*.test.mjs; do node "$t"; done  # 264 tests, free
 ```
 
 `git checkout -- .` throws away anything a dry run's `--apply` twin did locally.
@@ -1004,7 +1004,7 @@ Strip out the AI specifics and the method is ordinary engineering:
    were prompt problems.
 7. **Two dials, not one.** Cheaper-and-harder vs stronger-and-lighter.
 8. **Every loosened constraint needs a new check**, written before you trust it.
-9. **Fail loudly, measure publicly.** 233 tests run before the first paid call;
+9. **Fail loudly, measure publicly.** 264 tests run before the first paid call;
    the cost of every run is printed where you cannot miss it.
 
 And the rule that governs all of it, the same one from Part 1:
