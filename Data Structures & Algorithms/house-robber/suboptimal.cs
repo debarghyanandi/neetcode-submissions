@@ -38,6 +38,7 @@ public class Solution
 }
 
 
+
 /*
 ================================================================================
  PATTERN : Linear DP - max sum with no two adjacent picks

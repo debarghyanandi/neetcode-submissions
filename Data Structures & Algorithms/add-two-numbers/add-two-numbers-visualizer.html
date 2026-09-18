@@ -690,10 +690,10 @@ const PROBLEM = {
       '',
       'while (l1 != null || l2 != null || carry != 0)',
       '{',
-      '    int digit1 = l1 != null ? l1.val : 0;',
-      '    int digit2 = l2 != null ? l2.val : 0;',
+      '    int x = l1 != null ? l1.val : 0;',
+      '    int y = l2 != null ? l2.val : 0;',
       '',
-      '    int sum = digit1 + digit2 + carry;',
+      '    int sum = x + y + carry;',
       '    carry = sum / 10;',
       '',
       '    current.next = new ListNode(sum % 10);',
@@ -717,8 +717,8 @@ const PROBLEM = {
       const outPanel = () => pTiles('dummy -> result (ones digit first)', ['0'].concat(out),
         (k) => ({cls: k === 0 ? 'dim' : (k === out.length ? 'good' : 'in-window')}));
       const pills = (d1, d2, cin, sum, cout) => pPills('', [
-        {k:'digit1', v: d1 === null ? '-' : d1, cls:'hot'},
-        {k:'digit2', v: d2 === null ? '-' : d2, cls:'hot'},
+        {k:'x', v: d1 === null ? '-' : d1, cls:'hot'},
+        {k:'y', v: d2 === null ? '-' : d2, cls:'hot'},
         {k:'carry in', v: cin},
         {k:'sum', v: sum === null ? '-' : sum},
         {k:'sum % 10', v: sum === null ? '-' : (sum % 10), cls:'good'},
@@ -742,7 +742,7 @@ const PROBLEM = {
         } else {
           why = 'both lists are exhausted, yet <code>carry != 0</code> keeps the loop alive &mdash; the sum is one digit longer than either input, and that digit exists in neither of them';
         }
-        steps.push({lines:[5,7,8,10,11], msg:'Column ' + col + ': ' + why + '. <code>digit1</code> = <b>' + d1 + '</b>, <code>digit2</code> = <b>' + d2 + '</b>, carry in <b>' + carry + '</b>, so <code>sum</code> = <b>' + sum + '</b>. A column can never exceed 9 + 9 + 1 = 19, so <code>sum / 10</code> is always 0 or 1: one column spills at most a single unit into the next.',
+        steps.push({lines:[5,7,8,10,11], msg:'Column ' + col + ': ' + why + '. <code>x</code> = <b>' + d1 + '</b>, <code>y</code> = <b>' + d2 + '</b>, carry in <b>' + carry + '</b>, so <code>sum</code> = <b>' + sum + '</b>. A column can never exceed 9 + 9 + 1 = 19, so <code>sum / 10</code> is always 0 or 1: one column spills at most a single unit into the next.',
           panels: listPanels(i, j).concat([outPanel(), pills(d1, d2, carry, sum, nc)])});
 
         out.push(nd);
@@ -780,10 +780,10 @@ const PROBLEM = {
       '        return null;',
       '    }',
       '',
-      '    int firstValue  = first  != null ? first.val  : 0;',
-      '    int secondValue = second != null ? second.val : 0;',
+      '    int v1  = first  != null ? first.val  : 0;',
+      '    int v2 = second != null ? second.val : 0;',
       '',
-      '    int sum = firstValue + secondValue + carry;',
+      '    int sum = v1 + v2 + carry;',
       '    int newCarry  = sum / 10;',
       '    int nodeValue = sum % 10;',
       '',
@@ -831,8 +831,8 @@ const PROBLEM = {
         : pNote('Chain built so far', 'Nothing. <code>new ListNode(...)</code> on line 20 has not run in any frame yet &mdash; the entire descent only computes digits and carries, and construction happens strictly on the way back up.');
       const locals = (f) => pPills('', [
         {k:'depth', v: f.p},
-        {k:'firstValue', v: f.d1, cls:'hot'},
-        {k:'secondValue', v: f.d2, cls:'hot'},
+        {k:'v1', v: f.d1, cls:'hot'},
+        {k:'v2', v: f.d2, cls:'hot'},
         {k:'carry', v: f.cin},
         {k:'sum', v: f.sum},
         {k:'nodeValue', v: f.nd, cls:'good'},

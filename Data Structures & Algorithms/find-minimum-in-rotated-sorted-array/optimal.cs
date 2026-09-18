@@ -31,6 +31,7 @@ public class Solution
 }
 
 
+
 /*
 ================================================================================
  PATTERN : Binary Search on the Break - compare mid against right

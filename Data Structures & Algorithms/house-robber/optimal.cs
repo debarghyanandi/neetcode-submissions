@@ -38,6 +38,7 @@ public class Solution
 }
 
 
+
 /*
 ================================================================================
  PATTERN : Linear DP with rolling variables - two-state house robber

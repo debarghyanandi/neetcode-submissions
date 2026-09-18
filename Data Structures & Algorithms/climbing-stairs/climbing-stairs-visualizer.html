@@ -678,18 +678,18 @@ const PROBLEM = {
       'if (n <= 2)',
       '    return n;',
       '',
-      'int twoStepsBack = 1;',
-      'int oneStepBack = 2;',
+      'int prev2 = 1;',
+      'int prev1 = 2;',
       'int current = 0;',
       '',
       'for (int i = 3; i <= n; i++)',
       '{',
-      '    current = oneStepBack + twoStepsBack;',
-      '    twoStepsBack = oneStepBack;',
-      '    oneStepBack = current;',
+      '    current = prev1 + prev2;',
+      '    prev2 = prev1;',
+      '    prev1 = current;',
       '}',
       '',
-      'return oneStepBack;'
+      'return prev1;'
     ],
     simulate(input){
       const n = input.n, steps = [];
@@ -708,8 +708,8 @@ const PROBLEM = {
           }, {ptrs: ptrs, scale: n > 10 ? 0.85 : 1}),
           pPills('rolling state', [
             {k:'i', v: i > 0 ? i : '–', cls:'accent'},
-            {k:'twoStepsBack', v: two === null ? '–' : two},
-            {k:'oneStepBack', v: one === null ? '–' : one},
+            {k:'prev2', v: two === null ? '–' : two},
+            {k:'prev1', v: one === null ? '–' : one},
             {k:'current', v: cur === null ? '–' : cur, cls:'hot'}
           ])
         ];
@@ -722,24 +722,24 @@ const PROBLEM = {
       steps.push({lines:[1], msg:'<b>n = ' + n + '</b> is greater than 2, so the guard does not fire. It exists because the recurrence needs two earlier answers to add, and steps 1 and 2 have no such pair behind them — they must be handed over as facts.', panels: panels(0, null, null, null)});
       known[1] = 1; known[2] = 2;
       let two = 1, one = 2, cur = 0;
-      steps.push({lines:[4,5,6], msg:'Seed the two facts: <code>twoStepsBack</code> = ways to reach step <b>1</b> = <b>1</b>, <code>oneStepBack</code> = ways to reach step <b>2</b> = <b>2</b>. Read the names relative to the step about to be computed — when <code>i</code> is 3, those are steps 1 and 2. <code>current</code> is just a scratch slot.', panels: panels(0, two, one, cur)});
+      steps.push({lines:[4,5,6], msg:'Seed the two facts: <code>prev2</code> = ways to reach step <b>1</b> = <b>1</b>, <code>prev1</code> = ways to reach step <b>2</b> = <b>2</b>. Read the names relative to the step about to be computed — when <code>i</code> is 3, those are steps 1 and 2. <code>current</code> is just a scratch slot.', panels: panels(0, two, one, cur)});
       for (let i = 3; i <= n; i++){
         cur = one + two;
         known[i] = cur;
         steps.push({lines:[8,10], msg:'Step <b>' + i + '</b>: every route ending here arrives either as a 1-step from step ' + (i-1) + ' (<b>' + one + '</b> routes) or as a 2-step from step ' + (i-2) + ' (<b>' + two + '</b> routes). No route can be counted twice, because its <em>final</em> move is one or the other. So <code>current = ' + one + ' + ' + two + ' = <b>' + cur + '</b></code>.', panels: panels(i, two, one, cur)});
         two = one; one = cur;
-        steps.push({lines:[11,12], msg:'Shuffle the window forward one stair: step ' + (i-2) + ' can now be dropped <b>permanently</b> — nothing after step ' + i + ' will ever look that far back. <code>twoStepsBack</code> becomes ' + two + ' (step ' + (i-1) + ') and <code>oneStepBack</code> becomes ' + one + ' (step ' + i + ').', panels: panels(i, two, one, cur)});
+        steps.push({lines:[11,12], msg:'Shuffle the window forward one stair: step ' + (i-2) + ' can now be dropped <b>permanently</b> — nothing after step ' + i + ' will ever look that far back. <code>prev2</code> becomes ' + two + ' (step ' + (i-1) + ') and <code>prev1</code> becomes ' + one + ' (step ' + i + ').', panels: panels(i, two, one, cur)});
       }
-      steps.push({lines:[15], msg:'The loop ended with <code>i = ' + n + '</code> just computed, so <code>oneStepBack</code> holds the answer for step <b>' + n + '</b>: <b>' + one + '</b> distinct ways. Note this is the Fibonacci sequence arriving on its own — it falls out of the two-move rule, it was not assumed.', panels: panels(n, two, one, cur)});
+      steps.push({lines:[15], msg:'The loop ended with <code>i = ' + n + '</code> just computed, so <code>prev1</code> holds the answer for step <b>' + n + '</b>: <b>' + one + '</b> distinct ways. Note this is the Fibonacci sequence arriving on its own — it falls out of the two-move rule, it was not assumed.', panels: panels(n, two, one, cur)});
       return steps;
     }
   },
   {
     label: 'Fill a dp table',
     badge: 'O(n) time · O(n) space · tabulation · suboptimal.cs',
-    blurb: 'The same recurrence, but every answer is kept. <code>waysToStep[i]</code> is written once, left to right, each cell reading only the two cells immediately behind it — so by the time the loop reaches <b>i</b>, both operands are already final. The array is honest about the subproblem structure; it just pays O(n) memory to store history nothing later reads.',
+    blurb: 'The same recurrence, but every answer is kept. <code>dp[i]</code> is written once, left to right, each cell reading only the two cells immediately behind it — so by the time the loop reaches <b>i</b>, both operands are already final. The array is honest about the subproblem structure; it just pays O(n) memory to store history nothing later reads.',
     legend: [
-      {cls:'hot', text:'waysToStep[i] being written'},
+      {cls:'hot', text:'dp[i] being written'},
       {cls:'in-window', text:'the two cells being added'},
       {cls:'good', text:'already settled'},
       {cls:'ghost', text:'still zero'}
@@ -750,16 +750,16 @@ const PROBLEM = {
       '    return n;',
       '}',
       '',
-      'int[] waysToStep = new int[n + 1];',
-      'waysToStep[1] = 1;',
-      'waysToStep[2] = 2;',
+      'int[] dp = new int[n + 1];',
+      'dp[1] = 1;',
+      'dp[2] = 2;',
       '',
       'for (int i = 3; i <= n; i++)',
       '{',
-      '    waysToStep[i] = waysToStep[i - 1] + waysToStep[i - 2];',
+      '    dp[i] = dp[i - 1] + dp[i - 2];',
       '}',
       '',
-      'return waysToStep[n];'
+      'return dp[n];'
     ],
     simulate(input){
       const n = input.n, steps = [];
@@ -774,7 +774,7 @@ const PROBLEM = {
         }
         const out = [];
         if (dp){
-          out.push(pTiles('waysToStep (index 0 .. ' + n + ')', vals, (k) => {
+          out.push(pTiles('dp (index 0 .. ' + n + ')', vals, (k) => {
             if (k === i && writing) return {cls:'hot', fresh:true};
             if (i >= 3 && (k === i - 1 || k === i - 2)) return {cls:'in-window'};
             if (k >= 1 && k <= filled) return {cls:'good'};
@@ -784,9 +784,9 @@ const PROBLEM = {
         out.push(pPills('state', [
           {k:'n', v: n},
           {k:'i', v: i >= 3 ? i : '–', cls:'accent'},
-          {k:'waysToStep[i-1]', v: i >= 3 ? dp[i-1] : '–'},
-          {k:'waysToStep[i-2]', v: i >= 3 ? dp[i-2] : '–'},
-          {k:'waysToStep[i]', v: (i >= 3 && writing) ? dp[i] : '–', cls:'hot'}
+          {k:'dp[i-1]', v: i >= 3 ? dp[i-1] : '–'},
+          {k:'dp[i-2]', v: i >= 3 ? dp[i-2] : '–'},
+          {k:'dp[i]', v: (i >= 3 && writing) ? dp[i] : '–', cls:'hot'}
         ]));
         return out;
       };
@@ -795,18 +795,18 @@ const PROBLEM = {
         steps.push({lines:[1,3], msg:'<b>n = ' + n + '</b> hits the guard, so no table is ever allocated. Steps 1 and 2 have fewer than two predecessors to add, so they cannot be derived — they are the seeds, and for these two the count happens to equal <b>n</b>.', panels: [pPills('state', [{k:'n', v: n}, {k:'returns', v: n, cls:'good'}])]});
         return steps;
       }
-      steps.push({lines:[1], msg:'<b>n = ' + n + '</b> is above 2, so execution falls through the guard and into the table build. The guard also protects line 8: writing <code>waysToStep[2]</code> into an array of length <code>n + 1</code> would be out of range if <code>n</code> were 1.', panels: [pPills('state', [{k:'n', v: n}, {k:'i', v:'–'}, {k:'waysToStep[i-1]', v:'–'}, {k:'waysToStep[i-2]', v:'–'}, {k:'waysToStep[i]', v:'–'}])]});
+      steps.push({lines:[1], msg:'<b>n = ' + n + '</b> is above 2, so execution falls through the guard and into the table build. The guard also protects line 8: writing <code>dp[2]</code> into an array of length <code>n + 1</code> would be out of range if <code>n</code> were 1.', panels: [pPills('state', [{k:'n', v: n}, {k:'i', v:'–'}, {k:'dp[i-1]', v:'–'}, {k:'dp[i-2]', v:'–'}, {k:'dp[i]', v:'–'}])]});
       dp = new Array(n + 1).fill(0);
       steps.push({lines:[6], msg:'Allocate <code>n + 1 = ' + (n+1) + '</code> ints so the index <em>is</em> the step number — slot 0 is deliberately unused padding, which removes every off-by-one from the arithmetic below. C# zero-fills the array.', panels: panels(0, false)});
       dp[1] = 1; dp[2] = 2; filled = 2;
       steps.push({lines:[7,8], msg:'Plant the two base cases. Step <b>1</b>: one route (a single 1-step). Step <b>2</b>: two routes (1+1, or one 2-step). Everything else in the table will be produced by addition alone.', panels: panels(0, false)});
       for (let i = 3; i <= n; i++){
-        steps.push({lines:[10,12], msg:'<code>i = ' + i + '</code>: both operands lie strictly to the left and were written on earlier passes, so they are already final — that is the whole reason a left-to-right sweep works without recursion. <code>waysToStep[' + i + '] = ' + dp[i-1] + ' + ' + dp[i-2] + '</code>.', panels: panels(i, false)});
+        steps.push({lines:[10,12], msg:'<code>i = ' + i + '</code>: both operands lie strictly to the left and were written on earlier passes, so they are already final — that is the whole reason a left-to-right sweep works without recursion. <code>dp[' + i + '] = ' + dp[i-1] + ' + ' + dp[i-2] + '</code>.', panels: panels(i, false)});
         dp[i] = dp[i-1] + dp[i-2];
         filled = i;
         steps.push({lines:[12], msg:'Cell <b>' + i + '</b> is now <b>' + dp[i] + '</b> and is never touched again. Compare with the optimal version: cells to the left of <code>i - 2</code> are dead weight from here on, which is exactly the O(n) memory being wasted.', panels: panels(i, true)});
       }
-      steps.push({lines:[15], msg:'The table is complete; return <code>waysToStep[' + n + '] = <b>' + dp[n] + '</b></code>. Same answer and same running time as the two-variable version — only the memory differs, and the table can be read as a proof: every cell equals the sum of the two before it.', panels: panels(0, false)});
+      steps.push({lines:[15], msg:'The table is complete; return <code>dp[' + n + '] = <b>' + dp[n] + '</b></code>. Same answer and same running time as the two-variable version — only the memory differs, and the table can be read as a proof: every cell equals the sum of the two before it.', panels: panels(0, false)});
       return steps;
     }
   }]

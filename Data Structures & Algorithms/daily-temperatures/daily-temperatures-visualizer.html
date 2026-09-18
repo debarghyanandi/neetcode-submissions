@@ -678,9 +678,9 @@ const PROBLEM = {
       '',
       'for (int i = 0; i < temperatures.Length; i++)',
       '{',
-      '    int currentTemp = temperatures[i];',
+      '    int curr = temperatures[i];',
       '    while (stack.Count > 0 &&',
-      '           currentTemp > temperatures[stack.Peek()])',
+      '           curr > temperatures[stack.Peek()])',
       '    {',
       '        int index = stack.Pop();',
       '        result[index] = i - index;',
@@ -713,7 +713,7 @@ const PROBLEM = {
         })),
         pPills('', [
           {k:'i', v: i >= 0 && i < n ? i : '–', cls:'hot'},
-          {k:'currentTemp', v: i >= 0 && i < n ? t[i] : '–'},
+          {k:'curr', v: i >= 0 && i < n ? t[i] : '–'},
           {k:'stack size', v: stack.length},
           {k:'top of stack', v: stack.length ? 'day ' + stack[stack.length-1] + ' (' + t[stack[stack.length-1]] + ')' : '–', cls:'accent'}
         ])

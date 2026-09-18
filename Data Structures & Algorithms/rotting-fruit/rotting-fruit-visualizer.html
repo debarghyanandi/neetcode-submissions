@@ -235,7 +235,7 @@ button.primary:hover{background:#F7B85F;}
 
 /* ==========================================================================
    Structural panels: tree, linked list, stack/queue, grid, heap.
-   Every one of these reuses the tokens and the state-class names above
+   Every one of these reuses the tokens and the vis-class names above
    (hot / good / done / dim / ghost / fresh), so a structural panel is the
    same drawing as a tile row by construction rather than by resemblance.
 
@@ -692,7 +692,7 @@ const PROBLEM = {
   {
     label: 'Multi-source BFS, level by level',
     badge: 'O(m * n) time · O(m * n) space · multi-source BFS · optimal.cs',
-    blurb: 'Every already-rotten orange is a BFS source, all enqueued at time 0 in the same pass that builds <code>state</code>. The queue drains them in time order, so a fresh cell a source reaches is enqueued at time+1. The last dequeue fixes <code>maxTime</code>, and the closing scan tells you whether some fresh orange was never in reach - the only way this returns -1.',
+    blurb: 'Every already-rotten orange is a BFS source, all enqueued at time 0 in the same pass that builds <code>vis</code>. The queue drains them in time order, so a fresh cell a source reaches is enqueued at time+1. The last dequeue fixes <code>tm</code>, and the closing scan tells you whether some fresh orange was never in reach - the only way this returns -1.',
     legend: [
       {cls:'hot', text:'the cell just dequeued, spreading rot to its neighbours'},
       {cls:'in-window', text:'already rotten and still waiting in the queue'},
@@ -708,37 +708,37 @@ const PROBLEM = {
       '        int rows = grid.Length;',
       '        int cols = grid[0].Length;',
       '        Queue<(int row, int col, int time)> queue = new();',
-      '        int[,] state = new int[rows, cols];',
+      '        int[,] vis = new int[rows, cols];',
       '',
       '        for (int i = 0; i < rows; i++)',
       '        {',
       '            for (int j = 0; j < cols; j++)',
       '            {',
-      '                state[i, j] = grid[i][j];',
-      '                if (state[i, j] == 2)',
+      '                vis[i, j] = grid[i][j];',
+      '                if (vis[i, j] == 2)',
       '                    queue.Enqueue((i, j, 0));',
       '            }',
       '        }',
       '',
-      '        List<int> rowDirs = new List<int> { -1, 0, 1, 0 };',
-      '        List<int> colDirs = new List<int> { 0, 1, 0, -1 };',
+      '        List<int> dRow = new List<int> { -1, 0, 1, 0 };',
+      '        List<int> dCol = new List<int> { 0, 1, 0, -1 };',
       '',
-      '        int maxTime = 0;',
+      '        int tm = 0;',
       '        while (queue.Count > 0)',
       '        {',
       '            var (row, col, time) = queue.Dequeue();',
-      '            maxTime = Math.Max(time, maxTime);',
+      '            tm = Math.Max(time, tm);',
       '',
       '            for (int i = 0; i < 4; i++)',
       '            {',
-      '                int nextRow = row + rowDirs[i];',
-      '                int nextCol = col + colDirs[i];',
+      '                int nRow = row + dRow[i];',
+      '                int nCol = col + dCol[i];',
       '',
-      '                if (nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols',
-      '                    && state[nextRow, nextCol] == 1)',
+      '                if (nRow >= 0 && nCol >= 0 && nRow < rows && nCol < cols',
+      '                    && vis[nRow, nCol] == 1)',
       '                {',
-      '                    queue.Enqueue((nextRow, nextCol, time + 1));',
-      '                    state[nextRow, nextCol] = 2;',
+      '                    queue.Enqueue((nRow, nCol, time + 1));',
+      '                    vis[nRow, nCol] = 2;',
       '                }',
       '            }',
       '        }',
@@ -747,12 +747,12 @@ const PROBLEM = {
       '        {',
       '            for (int j = 0; j < cols; j++)',
       '            {',
-      '                if (state[i, j] == 1)',
+      '                if (vis[i, j] == 1)',
       '                    return -1;',
       '            }',
       '        }',
       '',
-      '        return maxTime;',
+      '        return tm;',
       '    }',
       '}'
     ],
@@ -761,15 +761,15 @@ const PROBLEM = {
       const R = g.length, C = g[0].length;
       const DELTAS = [[-1,0],[0,1],[1,0],[0,-1]];
       const DNAMES = ['up','right','down','left'];
-      const state = g.map(row => row.slice());
-      const rotTime = state.map(row => row.map(v => v === 2 ? 0 : null));
+      const vis = g.map(row => row.slice());
+      const rotTime = vis.map(row => row.map(v => v === 2 ? 0 : null));
       let queue = [];
       const steps = [];
-      let maxTime = 0, dequeues = 0;
+      let tm = 0, dequeues = 0;
       const rc = (r, c) => r + ',' + c;
 
       const panels = (cur, popText, freshKeys, scanTxt) => [
-        pGrid('grid', state.map((row, r) => row.map((v, c) => {
+        pGrid('grid', vis.map((row, r) => row.map((v, c) => {
           let cls = '';
           const inQ = queue.some(q => q.r === r && q.c === c);
           if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
@@ -779,8 +779,8 @@ const PROBLEM = {
           const sub = v === 2 ? ('t=' + rotTime[r][c]) : (v === 1 ? 'fresh' : 'empty');
           return {v: String(v), cls: cls, sub: sub, fresh: freshKeys ? freshKeys.indexOf(rc(r, c)) >= 0 : false};
         })), {
-          rowLabels: state.map((_, r) => 'r' + r),
-          colLabels: state[0].map((_, c) => 'c' + c),
+          rowLabels: vis.map((_, r) => 'r' + r),
+          colLabels: vis[0].map((_, c) => 'c' + c),
           scale: 0.9
         }),
         pStack('queue', [{
@@ -799,34 +799,34 @@ const PROBLEM = {
           top: 'back: Enqueue adds here'
         }]),
         pTiles('direction offsets (row,col): up, right, down, left', DELTAS.map(d => d[0] + ',' + d[1])),
-        pPills('state', [
+        pPills('vis', [
           {k:'stage', v: scanTxt || '-', cls:'hot'},
           {k:'queue size', v: queue.length},
           {k:'dequeues', v: dequeues},
-          {k:'maxTime', v: maxTime, cls: maxTime ? 'good' : ''}
+          {k:'tm', v: tm, cls: tm ? 'good' : ''}
         ])
       ];
 
-      steps.push({lines:[6,7,8,9], msg:'Two dimensions are read off <code>grid</code>, an empty <code>Queue</code> of <code>(row, col, time)</code> tuples is created to hold the pending work, and <code>state</code> is a fresh <code>int[,]</code> the same shape as <code>grid</code> - a working copy so the original input is never mutated while the rot spreads through it.', panels: panels(null, null, [], 'setup')});
+      steps.push({lines:[6,7,8,9], msg:'Two dimensions are read off <code>grid</code>, an empty <code>Queue</code> of <code>(row, col, time)</code> tuples is created to hold the pending work, and <code>vis</code> is a fresh <code>int[,]</code> the same shape as <code>grid</code> - a working copy so the original input is never mutated while the rot spreads through it.', panels: panels(null, null, [], 'setup')});
 
       const initEnq = [];
       for (let i = 0; i < R; i++){
         for (let j = 0; j < C; j++){
-          if (state[i][j] === 2){ queue.push({r:i, c:j, t:0}); initEnq.push(rc(i, j)); }
+          if (vis[i][j] === 2){ queue.push({r:i, c:j, t:0}); initEnq.push(rc(i, j)); }
         }
       }
-      steps.push({lines:[11,12,13,14,15,16,17,18,19], msg:'The double loop copies every cell into <code>state</code> and, wherever it finds a 2, enqueues that cell with time 0: ' + (initEnq.length ? initEnq.join(', ') : 'none found') + '. These are the BFS sources - every one of them starts spreading at once, which is exactly why a single shared <code>time</code> counter is enough even with several rotten oranges to begin with.', panels: panels(null, null, initEnq, 'seeding the queue')});
+      steps.push({lines:[11,12,13,14,15,16,17,18,19], msg:'The double loop copies every cell into <code>vis</code> and, wherever it finds a 2, enqueues that cell with time 0: ' + (initEnq.length ? initEnq.join(', ') : 'none found') + '. These are the BFS sources - every one of them starts spreading at once, which is exactly why a single shared <code>time</code> counter is enough even with several rotten oranges to begin with.', panels: panels(null, null, initEnq, 'seeding the queue')});
 
-      steps.push({lines:[21,22], msg:'<code>rowDirs</code> and <code>colDirs</code> are read together index by index, so <code>i</code> picks one pair: 0 is up, 1 is right, 2 is down, 3 is left. Four lookups replace writing out four separate neighbour checks by hand.', panels: panels(null, null, [], 'directions defined')});
+      steps.push({lines:[21,22], msg:'<code>dRow</code> and <code>dCol</code> are read together index by index, so <code>i</code> picks one pair: 0 is up, 1 is right, 2 is down, 3 is left. Four lookups replace writing out four separate neighbour checks by hand.', panels: panels(null, null, [], 'directions defined')});
 
-      steps.push({lines:[24], msg:'<code>maxTime</code> starts at 0. It will only ever be pushed forward by a dequeue, so by the time the queue empties it holds the time stamp of whichever orange rotted last - the answer the problem is actually asking for.', panels: panels(null, null, [], 'maxTime = 0')});
+      steps.push({lines:[24], msg:'<code>tm</code> starts at 0. It will only ever be pushed forward by a dequeue, so by the time the queue empties it holds the time stamp of whichever orange rotted last - the answer the problem is actually asking for.', panels: panels(null, null, [], 'tm = 0')});
 
       while (queue.length){
         const cell = queue.shift();
         dequeues++;
-        maxTime = Math.max(cell.t, maxTime);
+        tm = Math.max(cell.t, tm);
         const popText = rc(cell.r, cell.c) + ',' + cell.t;
-        steps.push({lines:[27,28], msg:'Line 27 takes the oldest entry off the queue: <b>(' + cell.r + ',' + cell.c + ')</b> at time <b>' + cell.t + '</b>. Because BFS enqueues in time order, this is guaranteed to be one of the earliest-rotten oranges still owed a look at its neighbours, and line 28 folds its time into <code>maxTime</code>, which becomes <b>' + maxTime + '</b>.', panels: panels([cell.r, cell.c], null, [], 'dequeue ' + popText)});
+        steps.push({lines:[27,28], msg:'Line 27 takes the oldest entry off the queue: <b>(' + cell.r + ',' + cell.c + ')</b> at time <b>' + cell.t + '</b>. Because BFS enqueues in time order, this is guaranteed to be one of the earliest-rotten oranges still owed a look at its neighbours, and line 28 folds its time into <code>tm</code>, which becomes <b>' + tm + '</b>.', panels: panels([cell.r, cell.c], null, [], 'dequeue ' + popText)});
 
         const log = [];
         const freshKeys = [];
@@ -834,11 +834,11 @@ const PROBLEM = {
           const nr = cell.r + DELTAS[i][0], nc = cell.c + DELTAS[i][1];
           let why;
           if (nr < 0 || nc < 0 || nr >= R || nc >= C) why = 'off the grid';
-          else if (state[nr][nc] === 2) why = 'already rotten';
-          else if (state[nr][nc] === 0) why = 'empty, never rots';
+          else if (vis[nr][nc] === 2) why = 'already rotten';
+          else if (vis[nr][nc] === 0) why = 'empty, never rots';
           else {
             why = 'fresh - turns rotten at t=' + (cell.t + 1);
-            state[nr][nc] = 2;
+            vis[nr][nc] = 2;
             rotTime[nr][nc] = cell.t + 1;
             queue.push({r: nr, c: nc, t: cell.t + 1});
             freshKeys.push(rc(nr, nc));
@@ -848,13 +848,13 @@ const PROBLEM = {
         const tail = freshKeys.length
           ? 'Line 39 marks ' + freshKeys.length + ' of them rotten right away, before they are ever re-examined, and line 38 enqueues each with <code>time + 1</code> - that write is what turns the shared counter into a genuine BFS depth.'
           : 'None of the four were fresh, so nothing new joins the queue from this cell.';
-        steps.push({lines:[30,31,32,33,35,36,37,38,39,40,41], msg:'All four neighbours of <b>' + rc(cell.r, cell.c) + '</b> are checked in <code>rowDirs</code>/<code>colDirs</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels([cell.r, cell.c], null, freshKeys, 'expand ' + popText)});
+        steps.push({lines:[30,31,32,33,35,36,37,38,39,40,41], msg:'All four neighbours of <b>' + rc(cell.r, cell.c) + '</b> are checked in <code>dRow</code>/<code>dCol</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels([cell.r, cell.c], null, freshKeys, 'expand ' + popText)});
       }
 
       let stuck = false, stuckCell = null;
       for (let i = 0; i < R && !stuck; i++){
         for (let j = 0; j < C && !stuck; j++){
-          if (state[i][j] === 1){ stuck = true; stuckCell = [i, j]; }
+          if (vis[i][j] === 1){ stuck = true; stuckCell = [i, j]; }
         }
       }
       steps.push({lines:[44,45,46,47,48,49,50,51], msg: stuck
@@ -865,7 +865,7 @@ const PROBLEM = {
       if (stuck){
         steps.push({lines:[49], msg:'Returns <b>-1</b>: at least one fresh orange was unreachable, so there is no well-defined "everything is rotten" time.', panels: panels(stuckCell, null, [], 'return -1')});
       } else {
-        steps.push({lines:[53], msg:'Line 53 returns <code>maxTime</code> = <b>' + maxTime + '</b>. That value came only from dequeues - ' + dequeues + ' of them - each doing four constant-time neighbour checks, so the whole run is O(m * n) time, and <code>state</code> plus the queue give O(m * n) space, peaking at however wide the rotting frontier ever got.', panels: panels(null, null, [], 'return ' + maxTime)});
+        steps.push({lines:[53], msg:'Line 53 returns <code>tm</code> = <b>' + tm + '</b>. That value came only from dequeues - ' + dequeues + ' of them - each doing four constant-time neighbour checks, so the whole run is O(m * n) time, and <code>vis</code> plus the queue give O(m * n) space, peaking at however wide the rotting frontier ever got.', panels: panels(null, null, [], 'return ' + tm)});
       }
       return steps;
     }
@@ -1335,7 +1335,7 @@ const mkSvg = (name) => document.createElementNS(SVG_NS, name);
    Used by both the tree panel and the heap panel, which is a tree with its
    edges implied by array indices. Leaves take the next free column; a parent
    centres over its children. Depth comes from the parent chain, so the caller
-   never states a depth and cannot state a wrong one. */
+   never states a depth and cannot vis a wrong one. */
 function layoutTree(nodes, k){
   const byId = new Map();
   const kids = new Map();
@@ -1812,7 +1812,7 @@ function blankPanels(panels){
     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
     if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
-    // A structure is shown in its starting state, not emptied: the whole point
+    // A structure is shown in its starting vis, not emptied: the whole point
     // of step -1 on a tree problem is seeing the tree you are about to walk.
     if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
     if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }

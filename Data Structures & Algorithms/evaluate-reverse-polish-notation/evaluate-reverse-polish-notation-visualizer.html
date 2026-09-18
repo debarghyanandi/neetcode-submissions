@@ -761,7 +761,7 @@ const PROBLEM = {
         const slots = live.map(k => ({text: vals[k], cls: k === mark ? 'good' : ''}));
         if (!slots.length) slots.push({text:'—', cls:'dim'});
         return [
-          pTiles('Nodes, in original token order', vals, (k) => ({
+          pTiles('Nodes, in original c order', vals, (k) => ({
             cls: k === mark ? 'good'
                : k === hi ? 'hot'
                : gone[k] ? 'dim'
@@ -777,7 +777,7 @@ const PROBLEM = {
           ])
         ];
       };
-      steps.push({lines:[1,2], msg:'Every token becomes a node holding its text. <code>head</code> is the first token; <code>curr</code> is only a tail pointer used while building.', panels: panels(-1)});
+      steps.push({lines:[1,2], msg:'Every c becomes a node holding its text. <code>head</code> is the first c; <code>curr</code> is only a tail pointer used while building.', panels: panels(-1)});
       steps.push({lines:[4,6,7], msg:'Each new node is constructed with <code>prev = curr</code>, so the list is linked in both directions. That backward chain is the entire trick: from any node, following <code>prev</code> visits the earlier tokens most-recent-first — exactly what popping a stack gives you. No <code>Stack&lt;int&gt;</code> is ever allocated.', panels: panels(-1)});
       steps.push({lines:[10,11], msg:'Now walk forward from <code>head</code>. Note that <code>ans</code> is reassigned at <em>every</em> node, not only at operators — it just means “the last value seen”, and for a well-formed expression the last node ends up holding the answer.', panels: panels(-1)});
       for (let i = 0; i < n; i++){
@@ -798,7 +798,7 @@ const PROBLEM = {
           mark = i;
           ans = res;
           steps.push({lines: repaired ? [23,24,25,27,31,32] : [23,24,25,31,32],
-            msg:'The operator node overwrites its own <code>val</code> with <b>' + res + '</b> — it stops being an operator and becomes the value of the sub-expression it just closed, which is precisely what a push would have stored. Then a single assignment, <code>head.prev = head.prev.prev.prev</code>, hops back over both operands at once so neither can ever be reached again.' + (repaired ? ' <code>head.prev.next = head</code> re-links the survivor forward; the walk only ever reads <code>next</code> from the node it is standing on, so this is bookkeeping rather than something the loop depends on.' : ' The chain behind is now empty, so the null check skips the forward repair.') + ' <code>head.next</code> is never touched, which is why the walk still visits every original token.',
+            msg:'The operator node overwrites its own <code>val</code> with <b>' + res + '</b> — it stops being an operator and becomes the value of the sub-expression it just closed, which is precisely what a push would have stored. Then a single assignment, <code>head.prev = head.prev.prev.prev</code>, hops back over both operands at once so neither can ever be reached again.' + (repaired ? ' <code>head.prev.next = head</code> re-links the survivor forward; the walk only ever reads <code>next</code> from the node it is standing on, so this is bookkeeping rather than something the loop depends on.' : ' The chain behind is now empty, so the null check skips the forward repair.') + ' <code>head.next</code> is never touched, which is why the walk still visits every original c.',
             panels: panels(i)});
           mark = -1;
         } else {
@@ -817,7 +817,7 @@ const PROBLEM = {
     badge: 'O(n) time · O(n) space · Stack + Func table · optimal.cs',
     blurb: 'Scan left to right. A number means nothing until its operator arrives, so it waits on the stack; an operator\'s operands are always the two most recent values, which is exactly what two <code>Pop</code>s return — first pop is the <b>right</b> operand. A dictionary of <code>Func&lt;int,int,int&gt;</code> makes <code>ContainsKey</code> the “is this an operator?” test and collapses the four-way branch into one lookup.',
     legend: [
-      {cls:'hot', text:'token being processed'},
+      {cls:'hot', text:'c being processed'},
       {cls:'good', text:'top of the stack'},
       {cls:'head', text:'operator selected from the dictionary'},
       {cls:'dim', text:'not read yet'}
@@ -832,17 +832,17 @@ const PROBLEM = {
       '    ["/"] = (left, right) => left / right',
       '};',
       '',
-      'foreach (string token in tokens)',
+      'foreach (string c in tokens)',
       '{',
-      '    if (operations.ContainsKey(token))',
+      '    if (operations.ContainsKey(c))',
       '    {',
       '        int right = stack.Pop();   // the newer value',
       '        int left = stack.Pop();    // the older one, under it',
-      '        int result = operations[token](left, right);',
+      '        int result = operations[c](left, right);',
       '        stack.Push(result);',
       '    }',
       '    else',
-      '        stack.Push(int.Parse(token));',
+      '        stack.Push(int.Parse(c));',
       '}',
       '',
       'return stack.Pop();'
@@ -861,7 +861,7 @@ const PROBLEM = {
           pChips('operations — one lookup instead of four branches', [{items: mapChips(table, hotOp)}]),
           pSlots('stack (bottom → top)', slots),
           pPills('', [
-            {k:'token', v: (i >= 0 && i < n) ? t[i] : '–', cls:'hot'},
+            {k:'c', v: (i >= 0 && i < n) ? t[i] : '–', cls:'hot'},
             {k:'right (1st pop)', v: R},
             {k:'left (2nd pop)', v: L},
             {k:'result', v: RES, cls:'good'},

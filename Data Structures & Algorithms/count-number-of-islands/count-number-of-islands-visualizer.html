@@ -708,7 +708,7 @@ const PROBLEM = {
       '',
       '    // Visited array',
       '    int[,] visited = new int[rows, cols];',
-      '    int islandCount = 0;',
+      '    int cnt = 0;',
       '    for (int row = 0; row < rows; row++)',
       '    {',
       '        for (int col = 0; col < cols; col++)',
@@ -716,11 +716,11 @@ const PROBLEM = {
       "            if (visited[row, col] == 0 && grid[row][col] == '1')",
       '            {',
       '                Dfs(row, col, visited, grid);',
-      '                islandCount++;',
+      '                cnt++;',
       '            }',
       '        }',
       '    }',
-      '    return islandCount;',
+      '    return cnt;',
       '}',
       '',
       'private void Dfs(int row, int col, int[,] visited, char[][] grid)',
@@ -803,11 +803,11 @@ const PROBLEM = {
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
           {k:'Dfs calls', v: calls},
-          {k:'islandCount', v: count, cls: count ? 'good' : ''}
+          {k:'cnt', v: count, cls: count ? 'good' : ''}
         ])
       ];
 
-      steps.push({lines:[7,8,9,11], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>islandCount</code> at 0. The two loops below sweep every cell in reading order, but they are not counting land - they are only looking for a cell that is land <em>and</em> still unclaimed. Each time they find one, they let a walk loose on it, and that walk claims the entire island it belongs to.', panels: panels(null, null, null)});
+      steps.push({lines:[7,8,9,11], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>cnt</code> at 0. The two loops below sweep every cell in reading order, but they are not counting land - they are only looking for a cell that is land <em>and</em> still unclaimed. Each time they find one, they let a walk loose on it, and that walk claims the entire island it belongs to.', panels: panels(null, null, null)});
 
       const dfs = (r, c, via) => {
         frames.push({r: r, c: c, note: 'entered, neighbours not scanned yet'});
@@ -849,7 +849,7 @@ const PROBLEM = {
             dfs(r, c, null);
             count++;
             const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);
-            steps.push({lines:[15,16], msg:'The recursion has unwound all the way back to line 15, which means every cell reachable from <b>' + rc(r, c) + '</b> - all <b>' + size + '</b> of them - now carries a 1 in <code>visited</code>. Only now does line 16 run <code>islandCount++</code>, taking it to <b>' + count + '</b>. The increment is per walk started, never per cell: the other ' + (size - 1) + ' cell(s) of this island will be skipped when the scan reaches them.', panels: panels([r, c], null, null)});
+            steps.push({lines:[15,16], msg:'The recursion has unwound all the way back to line 15, which means every cell reachable from <b>' + rc(r, c) + '</b> - all <b>' + size + '</b> of them - now carries a 1 in <code>visited</code>. Only now does line 16 run <code>cnt++</code>, taking it to <b>' + count + '</b>. The increment is per walk started, never per cell: the other ' + (size - 1) + ' cell(s) of this island will be skipped when the scan reaches them.', panels: panels([r, c], null, null)});
           } else if (g[r][c] === '1'){
             steps.push({lines:[11,13], msg:'<b>' + rc(r, c) + '</b> is land, but a walk already claimed it for island <b>' + isle[r][c] + '</b>. The first half of the <code>&amp;&amp;</code> on line 13 is false, so the grid is not even read and no new count happens. This is the whole trick: every cell of an island after the first is absorbed by a walk that already ran.', panels: panels([r, c], null, null)});
           } else {
@@ -880,10 +880,10 @@ const PROBLEM = {
       '    int rows = grid.Length;',
       '    int cols = grid[0].Length;',
       '    bool[,] visited = new bool[rows, cols];',
-      '    int islandCount = 0;',
+      '    int cnt = 0;',
       '',
-      '    int[] rowDelta = { -1, 1, 0, 0 };',
-      '    int[] colDelta = { 0, 0, -1, 1 };',
+      '    int[] dRow = { -1, 1, 0, 0 };',
+      '    int[] dCol = { 0, 0, -1, 1 };',
       '',
       '    for (int row = 0; row < rows; row++)',
       '    {',
@@ -891,18 +891,18 @@ const PROBLEM = {
       '        {',
       "            if (!visited[row, col] && grid[row][col] == '1')",
       '            {',
-      '                islandCount++;',
+      '                cnt++;',
       '                Queue<(int, int)> queue = new();',
       '                queue.Enqueue((row, col));',
       '                visited[row, col] = true; // mark when ENQUEUED',
       '',
       '                while (queue.Count > 0)',
       '                {',
-      '                    var (currRow, currCol) = queue.Dequeue();',
+      '                    var (r, c) = queue.Dequeue();',
       '                    for (int i = 0; i < 4; i++)',
       '                    {',
-      '                        int nRow = currRow + rowDelta[i];',
-      '                        int nCol = currCol + colDelta[i];',
+      '                        int nRow = r + dRow[i];',
+      '                        int nCol = c + dCol[i];',
       '                        if (nRow >= 0 && nRow < rows && nCol >= 0 && nCol < cols &&',
       "                            !visited[nRow, nCol] && grid[nRow][nCol] == '1')",
       '                        {',
@@ -914,7 +914,7 @@ const PROBLEM = {
       '            }',
       '        }',
       '    }',
-      '    return islandCount;',
+      '    return cnt;',
       '}'
     ],
     simulate(input){
@@ -973,11 +973,11 @@ const PROBLEM = {
           {k:'in queue', v: q.length},
           {k:'biggest queue', v: maxQ},
           {k:'dequeues', v: deqs},
-          {k:'islandCount', v: count, cls: count ? 'good' : ''}
+          {k:'cnt', v: count, cls: count ? 'good' : ''}
         ])
       ];
 
-      steps.push({lines:[5,6,8,9], msg:'Same setup as the recursive version, with two differences. <code>rowDelta</code> and <code>colDelta</code> spell the four neighbours out directly - index <b>i</b> means ' + NAMES.join(', ') + ' - instead of generating nine offsets and filtering the diagonals out. And the pending work will live in a <code>Queue</code> the code owns, not in the call stack, so nothing here recurses.', panels: panels(null, null, [])});
+      steps.push({lines:[5,6,8,9], msg:'Same setup as the recursive version, with two differences. <code>dRow</code> and <code>dCol</code> spell the four neighbours out directly - index <b>i</b> means ' + NAMES.join(', ') + ' - instead of generating nine offsets and filtering the diagonals out. And the pending work will live in a <code>Queue</code> the code owns, not in the call stack, so nothing here recurses.', panels: panels(null, null, [])});
 
       for (let r = 0; r < R; r++){
         for (let c = 0; c < C; c++){
@@ -1014,7 +1014,7 @@ const PROBLEM = {
               const tail = fresh.length
                 ? 'Line 32 marks ' + fresh.length + ' of them visited and line 33 puts them on the <em>back</em> of the queue, behind everything already waiting - that is what makes this breadth-first rather than depth-first. Marking at enqueue time is essential: a cell both of these could reach would otherwise be queued twice and expanded twice.'
                 : 'Nothing new came of it, so this cell is simply finished and the queue got shorter.';
-              steps.push({lines: fresh.length ? [24,29,30,32,33] : [24,29,30], msg:'The <code>while</code> condition still holds, so line 24 takes the oldest entry, <b>' + rc(cell[0], cell[1]) + '</b>, off the front. Its four neighbours in <code>rowDelta</code>/<code>colDelta</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels(cell, cell, fresh)});
+              steps.push({lines: fresh.length ? [24,29,30,32,33] : [24,29,30], msg:'The <code>while</code> condition still holds, so line 24 takes the oldest entry, <b>' + rc(cell[0], cell[1]) + '</b>, off the front. Its four neighbours in <code>dRow</code>/<code>dCol</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels(cell, cell, fresh)});
             }
 
             const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);

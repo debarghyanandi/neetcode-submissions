@@ -50,6 +50,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { loadState, saveState, REPO } from './lib/scan.mjs';
 import { sameShape, renameIdentifiers, tokenize } from './lib/csharp.mjs';
@@ -59,6 +60,14 @@ import { shortPrint } from './lib/normalise.mjs';
 import { formatMany, dotnetAvailable, toEol } from './lib/format.mjs';
 
 const doApply = process.argv.includes('--apply');
+// --renames-from <git-rev>: read the rename records from an older state.json.
+//
+// The repair CLEARS a file's renames once it has undone them, which makes it safely
+// re-runnable - and means that once the result is committed, the map is only in git
+// history. This is how you re-run it after a fix: the records live at c815095, the
+// last commit before any of this.
+const fromRev = process.argv.includes('--renames-from')
+  ? process.argv[process.argv.indexOf('--renames-from') + 1] : null;
 
 /** Renames worth keeping: a grid's dimensions read better as rows/cols than n/m. */
 const KEEP = new Set(['rows', 'cols']);
@@ -109,12 +118,24 @@ function verifyRevert(before, after, map) {
 }
 
 const state = loadState();
+
+// Where the from->to pairs are read from. Everything is still WRITTEN to the live
+// state; only the historical map comes from elsewhere.
+let renameSource = state;
+if (fromRev) {
+  try {
+    renameSource = JSON.parse(execFileSync('git', ['--no-optional-locks', 'show', `${fromRev}:.agent/state.json`], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
+    console.log(`\nreading rename records from ${fromRev}`);
+  } catch (e) { console.log(`\ncannot read state.json at ${fromRev}: ${e.message}`); process.exit(1); }
+}
+
 const plan = [];
 
-for (const [slug, rec] of Object.entries(state.problems)) {
+for (const [slug, rec] of Object.entries(renameSource.problems)) {
   const dir = join(REPO, rec.topic ?? 'Data Structures & Algorithms', slug);
   if (!existsSync(dir)) continue;
 
+  if (!state.problems[slug]) continue;              // gone since that revision
   for (const [file, l] of Object.entries(rec.lint ?? {})) {
     const renames = l?.renames ?? [];
     if (!renames.length) continue;
@@ -198,7 +219,6 @@ for (let i = 0; i < done.length; i++) {
 // in the step messages as well as in the verbatim code panel.
 let vizTouched = 0;
 for (const slug of folders) {
-  if (reshape.has(slug)) continue;
   const d0 = done.find((d) => d.slug === slug);
   if (!d0) continue;
   const safe = Object.assign({}, ...done.filter((d) => d.slug === slug).map((d) => d.safe));

@@ -49,6 +49,7 @@ public class Solution
 }
 
 
+
 /*
 ================================================================================
  PATTERN : Modified binary search - find the sorted half each step

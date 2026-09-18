@@ -91,7 +91,7 @@ button.primary:hover{background:#F7B85F;}
 
 /* ---------- legend ---------- */
 .legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
-.legend span{display:inline-flex;align-items:center;gap:9px;}
+.legend span{display:inline-flex;align-items:m;gap:9px;}
 .swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
 .swatch.win{background:var(--orange-soft);}
 .swatch.hot{background:var(--orange);}
@@ -99,7 +99,7 @@ button.primary:hover{background:#F7B85F;}
 .swatch.good{background:var(--green);}
 .swatch.dim{opacity:.42;}
 .swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
-.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:m;font-family:var(--hand);}
 
 /* ---------- stage ---------- */
 .stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
@@ -107,7 +107,7 @@ button.primary:hover{background:#F7B85F;}
 @media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
 
 .panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
-.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left m;}
 
 /* ---------- tiles ---------- */
 .array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
@@ -116,7 +116,7 @@ button.primary:hover{background:#F7B85F;}
 .tile{
   min-width:var(--tile);height:var(--tile);padding:0 6px;
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  display:flex;flex-direction:column;align-items:m;justify-content:m;position:relative;
   transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
 }
 .tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
@@ -133,7 +133,7 @@ button.primary:hover{background:#F7B85F;}
 .tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
 .tile.just-popped{animation:pop-fade .55s ease;}
 .tile.just-popped::after{
-  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  content:'✕';position:absolute;inset:0;display:flex;align-items:m;justify-content:m;
   font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
 }
 @keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
@@ -149,7 +149,7 @@ button.primary:hover{background:#F7B85F;}
 
 .ptr-marker{
   position:absolute;bottom:0;transform:translateX(-50%);
-  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
+  font-size:19px;font-weight:700;line-height:1;text-align:m;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
 }
 .ptr-marker.visible{opacity:1;}
@@ -160,10 +160,10 @@ button.primary:hover{background:#F7B85F;}
 .ptr-marker.red::before{color:var(--red);}
 
 /* ---------- chip rows ---------- */
-.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.chip-row{display:flex;align-items:m;gap:12px;flex-wrap:wrap;}
 .chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
 .row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
-.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:m;}
 .chip{
   font-size:18px;font-weight:600;line-height:1;background:var(--paper);
   border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
@@ -184,7 +184,7 @@ button.primary:hover{background:#F7B85F;}
 .slot-row{display:flex;gap:10px;flex-wrap:wrap;}
 .slot{
   min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
-  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  background:var(--paper);display:flex;align-items:m;justify-content:m;
   font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
   transition:background .3s ease, color .3s ease, border-color .3s;
 }
@@ -194,7 +194,7 @@ button.primary:hover{background:#F7B85F;}
 
 /* ---------- bars ---------- */
 .bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
-.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:m;height:100%;position:relative;min-width:34px;flex:1;}
 .bar{
   width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
   transition:height .3s ease, background .25s ease;
@@ -215,7 +215,7 @@ button.primary:hover{background:#F7B85F;}
 .range-line{position:relative;height:34px;}
 .range-bar{
   position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
-  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  background:var(--paper);display:flex;align-items:m;justify-content:m;
   font-size:15px;line-height:1;white-space:nowrap;
   transition:left .3s ease, width .3s ease, background .25s ease;
 }
@@ -248,7 +248,7 @@ button.primary:hover{background:#F7B85F;}
   position:absolute;box-sizing:border-box;
   min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
   border:2px solid var(--ink);border-radius:50%;background:var(--paper);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:m;justify-content:m;
   font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transform:translate(-50%,-50%);
   transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
@@ -297,12 +297,12 @@ button.primary:hover{background:#F7B85F;}
 /* ---------- linked list ---------- */
 .list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
 .list-scroll{overflow-x:auto;scrollbar-width:thin;}
-.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-row{position:relative;display:flex;align-items:m;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
 .list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
 .list-cell{
   min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:m;justify-content:m;
   font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
 }
@@ -317,7 +317,7 @@ button.primary:hover{background:#F7B85F;}
 .list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
 .list-cell.fresh{animation:fill-flash .5s ease;}
 .list-arrow{
-  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
+  flex:none;width:calc(30px * var(--pscale));text-align:m;font-size:calc(19px * var(--pscale));
   line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
 }
 .list-arrow.back{transform:scaleX(-1);}
@@ -329,7 +329,7 @@ button.primary:hover{background:#F7B85F;}
 }
 .list-tag{
   position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
-  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
+  line-height:1;text-align:m;white-space:nowrap;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;
 }
 .list-tag.visible{opacity:1;}
@@ -349,9 +349,9 @@ button.primary:hover{background:#F7B85F;}
    their labels up along the top and their floors up along the bottom. Stacked
    as a plain flex column they drifted against each other and the panel read as
    three unrelated drawings. */
-.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
-.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
-.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:m;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:m;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:m;}
 /* three sides only: the top is open, because that is the whole point of a bucket */
 .bucket-box{
   align-self:end;
@@ -366,13 +366,13 @@ button.primary:hover{background:#F7B85F;}
 .bucket-box::before{left:-2px;}
 .bucket-box::after{right:-2px;}
 .bucket.queue .bucket-box{
-  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:m;
   border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
 }
 .cell{
   border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
   padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
-  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:m;white-space:nowrap;
   transition:background .25s ease, color .25s ease;
 }
 .cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
@@ -388,7 +388,7 @@ button.primary:hover{background:#F7B85F;}
 .cell.popped{animation:pop-fade .55s ease;}
 .bucket-empty{
   position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
-  text-align:center;font-size:15px;color:var(--pencil);
+  text-align:m;font-size:15px;color:var(--pencil);
 }
 .bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
 /* A normal flex child, appended last, so column-reverse lands it directly above
@@ -398,7 +398,7 @@ button.primary:hover{background:#F7B85F;}
   align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
   line-height:1;padding:0 2px calc(2px * var(--pscale));
 }
-.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
+.bucket.queue .bucket-top{align-self:m;padding:0 0 0 calc(4px * var(--pscale));}
 
 /* ---------- grid / matrix ---------- */
 .grid-scroll{overflow-x:auto;scrollbar-width:thin;}
@@ -411,7 +411,7 @@ button.primary:hover{background:#F7B85F;}
 .grid-cell{
   min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
-  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:m;
   vertical-align:middle;white-space:nowrap;position:relative;
   transition:background .25s ease, color .25s ease, border-color .25s ease;
 }
@@ -439,7 +439,7 @@ button.primary:hover{background:#F7B85F;}
 .heap-slot{
   min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:m;justify-content:m;
   font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transition:background .25s ease, color .25s ease;
 }
@@ -470,7 +470,7 @@ button.primary:hover{background:#F7B85F;}
    already showing. */
 .code-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px;}
 .code-head .panel-title{margin:0;}
-.code-head-right{display:flex;align-items:center;gap:12px;}
+.code-head-right{display:flex;align-items:m;gap:12px;}
 .layer-crumb{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
 .layer-crumb b{color:var(--ink);}
 .code-toggle{
@@ -501,11 +501,11 @@ button.primary:hover{background:#F7B85F;}
 /* Pinned to the bottom of the viewport. It used to sit under the whole stage,
    so its distance from the panels was set by whichever column was taller - on a
    long solution that put Play a screen and a half below the thing it drives. */
-.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
+.transport{display:flex;align-items:m;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
   position:sticky;bottom:14px;z-index:30;background:var(--paper);box-shadow:0 3px 0 0 var(--ink);}
-.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:m;justify-content:m;font-size:17px;font-family:var(--mono);}
 #playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
-.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed{display:flex;align-items:m;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
 .speed input{accent-color:var(--orange);}
 .speed .hint{font-size:13px;}
 .progress{margin-left:auto;font-size:17px;color:var(--pencil);}
@@ -780,9 +780,9 @@ const PROBLEM = {
   {
     label: 'Find the pivot, then search a normal half',
     badge: 'O(log n) time · O(1) space · pivot + plain binary search · optimal-variant.cs',
-    blurb: 'Split the job in two. One binary search ignores the target entirely and walks toward whichever side is smaller (<code>nums[center] &gt; nums[high]</code> means the minimum is further right) until it lands on the rotation point. That leaves two ordinary ascending runs, and a textbook binary search handles each.',
+    blurb: 'Split the job in two. One binary search ignores the target entirely and walks toward whichever side is smaller (<code>nums[m] &gt; nums[high]</code> means the minimum is further right) until it lands on the rotation point. That leaves two ordinary ascending runs, and a textbook binary search handles each.',
     legend: [
-      {cls:'hot', text:'center / mid — the probe'},
+      {cls:'hot', text:'m / mid — the probe'},
       {cls:'win', text:'active bounds'},
       {cls:'good', text:'pivot (smallest) / match'},
       {cls:'dim', text:'outside the active range'}
@@ -792,11 +792,11 @@ const PROBLEM = {
       '',
       'while (low < high)              // hunt the pivot',
       '{',
-      '    int center = (low + high) / 2;',
-      '    if (nums[center] > nums[high])',
-      '        low = center + 1;       // drop is to the right',
+      '    int m = (low + high) / 2;',
+      '    if (nums[m] > nums[high])',
+      '        low = m + 1;       // drop is to the right',
       '    else',
-      '        high = center;          // center may be the min',
+      '        high = m;          // m may be the min',
       '}',
       'int pivot = low;                // index of smallest value',
       '',
@@ -836,17 +836,17 @@ const PROBLEM = {
           {k: 'pivot', v: pivot >= 0 ? pivot : '–', cls:'good'}
         ])
       ];
-      const PIV = ['low','high','center'], SRC = ['left','right','mid'];
+      const PIV = ['low','high','m'], SRC = ['left','right','mid'];
       steps.push({lines:[1], msg:'The first loop never looks at <code>target</code> at all — it is hunting the <b>pivot</b>, the index of the smallest value, which is exactly where the array wraps. Find it and the rotation stops mattering.', panels: panels(PIV)});
       while (L < R){
         const hi0 = R;
         M = Math.floor((L + R) / 2);
         if (a[M] > a[hi0]){
           L = M + 1;
-          steps.push({lines:[3,5,6,7], msg:'<code>nums[center] = ' + a[M] + '</code> is greater than <code>nums[high] = ' + a[hi0] + '</code>. A sorted run can never do that, so the wrap must happen strictly after center — center itself cannot be the minimum. <code>low = center + 1</code>.', panels: panels(PIV)});
+          steps.push({lines:[3,5,6,7], msg:'<code>nums[m] = ' + a[M] + '</code> is greater than <code>nums[high] = ' + a[hi0] + '</code>. A sorted run can never do that, so the wrap must happen strictly after m — m itself cannot be the minimum. <code>low = m + 1</code>.', panels: panels(PIV)});
         } else {
           R = M;
-          steps.push({lines:[3,5,8,9], msg:'<code>nums[center] = ' + a[M] + '</code> is not greater than <code>nums[high] = ' + a[hi0] + '</code>, so center..high is already ascending and the minimum is at center <em>or</em> to its left. <code>high = center</code> keeps center in play — that is why the loop tests <code>low &lt; high</code> and never writes <code>center - 1</code>, which could step over the answer.', panels: panels(PIV)});
+          steps.push({lines:[3,5,8,9], msg:'<code>nums[m] = ' + a[M] + '</code> is not greater than <code>nums[high] = ' + a[hi0] + '</code>, so m..high is already ascending and the minimum is at m <em>or</em> to its left. <code>high = m</code> keeps m in play — that is why the loop tests <code>low &lt; high</code> and never writes <code>m - 1</code>, which could step over the answer.', panels: panels(PIV)});
         }
       }
       pivot = L; M = -1;

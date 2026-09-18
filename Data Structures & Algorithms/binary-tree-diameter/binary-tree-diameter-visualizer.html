@@ -852,17 +852,17 @@ const PROBLEM = {
       '{',
       '    public int DiameterOfBinaryTree(TreeNode root)',
       '    {',
-      '        var (_, diameter) = ComputeHeightAndDiameter(root);',
+      '        var (_, diameter) = DFS(root);',
       '        return diameter;',
       '    }',
       '',
-      '    private (int height, int diameter) ComputeHeightAndDiameter(TreeNode node)',
+      '    private (int height, int diameter) DFS(TreeNode node)',
       '    {',
       '        if (node == null)',
       '            return (0, 0);',
       '',
-      '        var left = ComputeHeightAndDiameter(node.left);',
-      '        var right = ComputeHeightAndDiameter(node.right);',
+      '        var left = DFS(node.left);',
+      '        var right = DFS(node.right);',
       '',
       '        int height = 1 + Math.Max(left.height, right.height);',
       '        int diameterThroughHere = left.height + right.height;',
@@ -922,7 +922,7 @@ const PROBLEM = {
           scale: 0.75
         }),
         pStack('call stack', [{
-          label: 'ComputeHeightAndDiameter(node)',
+          label: 'DFS(node)',
           mode: 'stack',
           items: frames.map((f, i) => ({
             text: 'node = ' + shown(f.id),
@@ -946,7 +946,7 @@ const PROBLEM = {
         ])
       ];
 
-      steps.push({lines:[3,5], msg:'No field this time - every call to <code>ComputeHeightAndDiameter</code> returns its answer as a pair, <code>(height, diameter)</code>, and the caller decides what to do with it. The root call’s pair is deconstructed on line 5; only the diameter half survives to be returned. The dashed empty slots below are real calls too: the code recurses into missing children.', panels: panels(null, null, null)});
+      steps.push({lines:[3,5], msg:'No field this time - every call to <code>DFS</code> returns its answer as a pair, <code>(height, diameter)</code>, and the caller decides what to do with it. The root call’s pair is deconstructed on line 5; only the diameter half survives to be returned. The dashed empty slots below are real calls too: the code recurses into missing children.', panels: panels(null, null, null)});
 
       const walk = (id) => {
         frames.push({id: id, left: null, right: null});
