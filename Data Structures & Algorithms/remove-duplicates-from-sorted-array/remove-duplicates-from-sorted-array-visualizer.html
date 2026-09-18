@@ -651,95 +651,87 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Remove Duplicates from Sorted Array',
-  note: 'sorted means every duplicate is adjacent, so one glance back is a whole memory',
-  inputs: [{id:'n', label:'nums (sorted)', value:'0,0,1,1,1,2,2,3', width:260}],
+  note: 'sorted means every duplicate stands next to its twin, so one comparison is enough',
+  inputs: [{id:'n', label:'nums (sorted)', value:'1,1,2,3,3,3,4', width:260}],
   parse(raw){
     const n = parseInts(raw.n, 14);
     if (!n) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (n.length < 1) return {ok:false, msg:'Needs at least one element.'};
+    if (n.length < 1) return {ok:false, msg:'Needs at least one number.'};
     for (let i = 1; i < n.length; i++){
       if (n[i] < n[i-1]) return {ok:false, msg:'The array must be sorted in non-decreasing order.'};
     }
     return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
   shuffle(){
-    const len = 7 + Math.floor(Math.random()*3);
-    const a = randInts(len, 0, 4).sort((x, y) => x - y);
+    const len = 6 + Math.floor(Math.random()*3);
+    const a = randInts(len, 1, 5).sort((x,y) => x - y);
     return {n: a.join(',')};
   },
   solutions: [
   {
-    label: 'Two pointers, overwriting in place',
+    label: 'Two pointers, overwrite in place',
     badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'Sorting puts every copy of a value in one unbroken run, so a repeat is always the cell immediately before it. That turns “have I seen this?” into a single comparison. A second pointer, <code>left</code>, marks where the next unique value belongs — and because it never outruns <code>right</code>, the compacted answer can be written over the array as it is read.',
+    blurb: 'Because the array is sorted, a value is new exactly when it differs from the element immediately before it — no set, no lookback. <code>r</code> reads every element once; <code>l</code> marks the next free slot in the answer prefix. Writes only ever land at or before <code>r</code>, so nothing unread is ever clobbered.',
     legend: [
-      {cls:'good', text:'kept — the compacted prefix'},
-      {cls:'hot', text:'right — the value under test'},
-      {cls:'dim', text:'stale leftover, already copied forward'}
+      {cls:'hot', text:'r — element being read'},
+      {cls:'good', text:'kept prefix nums[0..l-1]'},
+      {cls:'in-window', text:'l — next write slot'},
+      {cls:'dim', text:'past the prefix / junk tail'}
     ],
     code: [
-      'int left = 1;   // nums[0] can never be a duplicate, so the',
-      '                // first writable slot is index 1',
-      '',
-      'for (int right = 1; right < nums.Length; right++)',
+      'public int RemoveDuplicates(int[] nums)',
       '{',
-      '    if (nums[right] != nums[right - 1])',
+      '    int l = 1;',
+      '    for (int r = 1; r < nums.Length; r++)',
       '    {',
-      '        nums[left] = nums[right];',
-      '        left++;',
+      '        if (nums[r] != nums[r - 1])',
+      '        {',
+      '            nums[l] = nums[r];',
+      '            l++;',
+      '        }',
       '    }',
-      '}',
-      '',
-      'return left;'
+      '    return l;',
+      '}'
     ],
     simulate(input){
       const a = input.n.slice(), steps = [];
-      let left = 1;
-      const panels = (r, bracket) => {
-        const extra = {ptrs: r >= 0
-          ? [{name:'left', idx: left}, {name:'right', idx: r, cls:'accent'}]
-          : [{name:'left', idx: left}]};
-        if (bracket && r >= 1) extra.bracket = {from: r - 1, to: r, dashed: true};
-        return [
-          pTiles('nums — rewritten in place', a, (i) => ({
-            cls: i === r ? 'hot'
-               : i < left ? 'good'
-               : (r >= 0 && i < r) ? 'dim'
-               : ''
-          }), extra),
-          pSlots('what the caller reads — nums[0 .. left-1]',
-            a.map((v, i) => i < left ? {text: String(v), cls:'good'} : {text:''})),
-          pPills('', [
-            {k:'left', v: left},
-            {k:'right', v: r >= 0 ? r : '–', cls:'hot'},
-            {k:'nums[right-1]', v: r >= 1 ? a[r-1] : '–'},
-            {k:'nums[right]', v: r >= 0 ? a[r] : '–'}
-          ])
-        ];
-      };
-
-      steps.push({lines:[1,2], msg:'<code>nums[0]</code> has nothing before it, so it can never be a duplicate — it is kept by definition and index <b>0</b> is already correct. <code>left</code> therefore starts at <b>1</b>. It carries two meanings at once: the count of unique values settled so far, and the next slot to write into. That is exactly why the same variable can be returned at the end.', panels: panels(-1, false)});
-
+      let l = 1, dropped = 0;
+      const panels = (r, fresh, done) => [
+        pTiles('nums (mutated in place)', a, (k) => ({
+          cls: done ? (k < l ? 'good' : 'dim')
+             : k === r ? 'hot'
+             : k < l ? 'good'
+             : k === l ? 'in-window'
+             : 'dim',
+          fresh: fresh === k
+        }), {ptrs: [{name:'l', idx: l, cls:'accent'}, {name:'r', idx: r >= 0 ? r : 0}]}),
+        pPills('state', [
+          {k:'l (length so far)', v: l, cls:'accent'},
+          {k:'r', v: r >= 0 ? r : '–', cls:'hot'},
+          {k:'nums[r]', v: r >= 0 ? a[r] : '–'},
+          {k:'nums[r-1]', v: r >= 1 ? a[r-1] : '–'},
+          {k:'duplicates dropped', v: dropped}
+        ])
+      ];
+      steps.push({lines:[1,3], msg:'<code>l</code> starts at <b>1</b>, not 0: index 0 is trivially part of the answer — the first element can never be a duplicate of something before it. So <code>l</code> is both the length of the kept prefix and the index of the next free slot.', panels: panels(-1, -1, false)});
       for (let r = 1; r < a.length; r++){
-        const prev = a[r-1], cur = a[r];
-        steps.push({lines:[4,6], msg:'<code>right = ' + r + '</code>: compare <b>' + cur + '</b> with its neighbour <b>' + prev + '</b>. Because the array is sorted, every copy of a value sits in one unbroken run, so a repeat is always <em>adjacent</em> to its twin. One look back is enough to tell new from seen — no set, no scanning what came earlier.', panels: panels(r, true)});
-
-        if (cur !== prev){
-          const selfWrite = (left === r);
-          const stale = a[left];
-          a[left] = cur;
-          left++;
-          steps.push({lines:[8,9], msg:'<b>' + cur + '</b> ≠ <b>' + prev + '</b> — the first copy of a new run. It is copied to index <b>' + (left-1) + '</b>' + (selfWrite ? ', which happens to be <code>right</code> itself: no duplicate has been dropped yet, so the cell writes onto itself and nothing moves.' : ', overwriting the stale <b>' + stale + '</b> left there by an earlier duplicate. Overwriting is safe because <code>left</code> never passes <code>right</code> — it only ever clobbers cells already read.') + ' <code>left</code> becomes <b>' + left + '</b>: ' + left + ' unique values are now packed at the front.', panels: panels(r, false)});
+        if (a[r] !== a[r-1]){
+          steps.push({lines:[4,6], msg:'<code>r = ' + r + '</code>: <b>' + a[r] + '</b> differs from its neighbour <b>' + a[r-1] + '</b>. Sorted order guarantees equal values are adjacent, so differing from the one element behind it is enough to prove this value has never been seen — a new value.', panels: panels(r, -1, false)});
+          const wrote = a[r];
+          a[l] = a[r];
+          const at = l;
+          l++;
+          steps.push({lines:[8,9], msg:'Write <b>' + wrote + '</b> into slot <b>' + at + '</b>' + (at === r ? ' — which is where it already sat, so nothing changed yet; no duplicate has been skipped so far' : ', overwriting a duplicate that was already copied past. The write index ' + at + ' is behind the read index ' + r + ', so no unread element is destroyed') + '. <code>l</code> becomes <b>' + l + '</b>.', panels: panels(r, at, false)});
         } else {
-          steps.push({lines:[6], msg:'<b>' + cur + '</b> = <b>' + prev + '</b> — another copy of a run already recorded. Nothing is written and <code>left</code> stays at <b>' + left + '</b>, holding that slot open for the next new value. Only <code>right</code> advances, so the gap between the pointers is precisely the number of duplicates skipped so far.', panels: panels(r, false)});
+          dropped++;
+          steps.push({lines:[4,6], msg:'<code>r = ' + r + '</code>: <b>' + a[r] + '</b> equals <code>nums[' + (r-1) + ']</code>, a repeat. Skip it entirely — <code>l</code> stays at <b>' + l + '</b>, which opens the gap that lets the next new value be pulled forward.', panels: panels(r, -1, false)});
         }
       }
-
-      steps.push({lines:[13], msg:'Scan complete: <b>' + left + '</b> unique values sit in order at <code>nums[0 .. ' + (left-1) + ']</code>. The tail past index ' + (left-1) + ' still holds leftovers, and that is fine — the contract is to return the count, and the caller only reads that many cells. One pass, one extra int, no second array.', panels: panels(-1, false)});
+      steps.push({lines:[12], msg:'Every element read once. The first <b>' + l + '</b> slots hold the distinct values in order; whatever sits past index ' + (l-1) + ' is leftover junk the caller is told to ignore. Return <b>' + l + '</b>.', panels: panels(-1, -1, true)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

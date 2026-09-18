@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  two-pointer, in-place overwrite   [two-pointer-inplace]
+// -  Two-pointer, overwrite duplicates   [two-pointer-duplicates]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  single pass with a slow pointer tracking the next write position while
-// -  scanning for distinct values
+// -  Single pass with two pointers; duplicate elements overwritten in-place
+// -  with no extra storage.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -26,72 +26,75 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Two Pointers - slow write index, fast scan index
+ PATTERN : Two Pointers - slow write index, fast read index
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  l    next slot to write into; also the count of unique values kept so far
+  r    scan index; nums[r] is the candidate being examined
 WHY THIS PATTERN
-  The array is sorted, so every run of equal values is contiguous. That single
-  fact turns "is this a duplicate?" from a set-membership question into a
-  comparison with the immediate neighbor. No HashSet, no second array: one scan
-  pointer (right) reads, one write pointer (left) packs the survivors toward the
-  front. The pattern to recall is not "two pointers" in the
-  meeting-in-the-middle sense but the read/write split - right always runs ahead
-  of or level with left, so the region behind left is finished output and the
-  region at or ahead of right is untouched input.
+  The input is sorted, so every group of equal values sits in one continuous
+  block, and a duplicate can only be the element right before it. The problem
+  also asks to edit the array in place and return a length, not to build a new
+  array. That is exactly a two-pointer split: nums[0..l-1] is the clean result
+  being written, and r walks ahead over the raw data. Because l never passes r,
+  the write never destroys a value that has not been read yet.
+BRUTE FORCE
+  The first idea most people write is to copy nums into a HashSet or a List,
+  keep only values not seen before, sort if needed, then copy back. That is O(n)
+  time but O(n) extra memory, and it ignores the fact that the array is already
+  sorted. A second common try is to remove duplicates by shifting the tail left
+  each time a repeat is found, which costs O(n^2) in the worst case when the
+  array is all one value.
 INVARIANT
-  At the top of each iteration: nums[0 .. left-1] holds the distinct values seen
-  so far, in sorted order, and left is exactly how many there are. Because left
-  is both the count and the next write slot, the function can just return left
-  at the end - no separate counter. Combined with left <= right at all times,
-  the write nums[left] = nums[right] can never destroy an input element that has
-  not been consumed yet.
-WHY THE COMPARISON IS SAFE
-  The test is nums[right] != nums[right - 1], comparing against a slot that the
-  loop may itself have written. Argue it does not matter. left <= right always.
-  If left == right the write is a self-assignment. If left < right, the deepest
-  slot ever written in iteration right is index right - 1 (when left == right -
-  1), and that write happens after the comparison for this iteration has already
-  been read. Index right is never written during iteration right in that case,
-  since left only reaches right after the increment. So every comparison reads
-  an original input value. The common alternative, nums[right] != nums[left - 1]
-  (compare against the last value kept), sidesteps the question entirely and is
-  worth having ready if an interviewer pushes on it.
-TRACE
-  nums = [0,0,1,1,1,2,2,3,3,4]
-  right=1: 0 == 0, skip. left stays 1.
-  right=2: 1 != 0, write nums[1]=1, left=2.
-  right=3,4: 1 == 1, skip.
-  right=5: 2 != 1, write nums[2]=2, left=3.
-  right=6: skip. right=7: 3 != 2, write nums[3]=3, left=4.
-  right=8: skip. right=9: 4 != 3, write nums[4]=4, left=5.
-  Return 5, with nums beginning 0,1,2,3,4. The tail [2,2,3,3,4] is stale and
-  that is allowed - the contract only defines the first k slots.
+  Before each iteration, nums[0..l-1] holds the distinct values of nums[0..r-1]
+  in their original sorted order. The test nums[r] != nums[r-1] is enough to
+  detect a new value, because sorting means any earlier occurrence of nums[r]
+  would have to be adjacent to it. When the loop ends, r has covered the whole
+  array, so nums[0..l-1] is the full distinct list and l is its length.
+WHY BOTH POINTERS START AT 1
+  Index 0 is always unique by definition, so it is counted up front by setting l
+  = 1 and never compared. Starting r at 1 also makes nums[r - 1] safe on the
+  very first read. Note nums[r - 1] refers to the original array only while l ==
+  r; after the first duplicate, l lags behind r, but the comparison still uses r
+  - 1, the unmodified neighbour in the read region, which is what correctness
+  needs.
 WATCH OUT
-  left = 1 hardcodes the assumption that a first element exists. If nums.Length
-  == 0 the loop body never runs and this returns 1 for an empty array, claiming
-  one unique element that is not there. LeetCode 26 constrains 1 <= nums.length,
-  so the judge never exercises it, but state that assumption out loud rather
-  than letting an interviewer find it. The fix is a guard returning 0, or
-  starting left at 0 and using the compare-against-nums[left-1] formulation with
-  an explicit first-element case.
-
-  Second trap: the loop starts at right = 1, not 0. Starting at 0 would read
-  nums[-1].
-INTERVIEW FOLLOW-UP
-  Allow each value at most twice (LeetCode 80): keep the same skeleton, start
-  left at 2 and right at 2, and compare nums[right] != nums[left - 2]. That
-  generalizes to at most k copies with left starting at k and the comparison
-  against nums[left - k] - and note that version must compare against left, not
-  right, because the kept window is what defines admissibility. Related
-  question: why does this fail on unsorted input? Because the neighbor
-  comparison only detects duplicates that are adjacent; unsorted input needs a
-  HashSet and gives up the O(1) space.
+  If nums is empty, the loop body never runs and the method returns 1, claiming
+  one valid element in a zero-length array; a caller that then reads nums[0]
+  throws. If nums is null, nums.Length throws a NullReferenceException before
+  anything else. The method mutates the caller's array, so any code holding the
+  same reference sees the rewritten contents and the stale tail beyond index l -
+  1 left untouched.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Allow each value to appear at most twice instead of once.
+     Compare against nums[l - 2] instead of nums[r - 1], and start l at 2 with a
+     guard for arrays shorter than 3. The comparison must move to the written
+     region so the count of kept copies is what limits you.
+  2. What if the array is not sorted but you must keep the first occurrence of
+  each value?
+     You need a HashSet<int> of seen values and the same write pointer l, which
+     costs O(n) extra space. Without sorting there is no way to detect a repeat
+     by looking only at the neighbour.
+  3. The array is huge and lives on disk or arrives as a stream.
+     Turn it into a single pass that yields a value only when it differs from
+     the previous one, keeping just the last emitted value in memory. You lose
+     the in-place return-a-length contract and return a sequence instead.
+  4. How would you also report how many elements were removed?
+     Return nums.Length - l, computed at the end from the same l; no extra
+     counter is needed since l already counts survivors.
+TRIGGER
+  Sorted input plus a requirement to compact or filter in place and return a new
+  length.
+C# NOTE
+  This works on int[] directly, so nums[l] = nums[r] is a plain array store with
+  no bounds surprises beyond the loop condition; reaching for
+  List<int>.Distinct() or a new array here would allocate and break the in-place
+  contract the signature implies.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

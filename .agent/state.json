@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T12:18:53.934Z",
+  "updatedAt": "2026-09-18T12:30:32.932Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3225,12 +3225,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "5fe33e928c63"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, in-place overwrite\",\"approachKey\":\"two-pointer-inplace\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3243,8 +3243,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two-pointer, in-place overwrite",
-          "approachKey": "two-pointer-inplace",
+          "algorithm": "Two-pointer, overwrite duplicates",
+          "approachKey": "two-pointer-duplicates",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3252,9 +3252,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -3264,7 +3266,7 @@
         "structures": [
           "array"
         ],
-        "builtAt": "2026-09-12T06:30:45.371Z"
+        "builtAt": "2026-09-18T12:30:32.929Z"
       }
     },
     "remove-node-from-end-of-linked-list": {
