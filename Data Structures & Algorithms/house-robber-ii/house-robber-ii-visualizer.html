@@ -651,39 +651,44 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'House Robber II',
-  note: 'a circle is just two lines: one without the last house, one without the first',
-  inputs: [{id:'nums', label:'nums', value:'2,7,9,3,1', width:260}],
+  note: 'a circle is just two lines: drop the first house, or drop the last',
+  inputs: [{id:'n', label:'nums', value:'2,3,2,5,1,7', width:260}],
   parse(raw){
-    const nums = parseInts(raw.nums, 10);
-    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of house values.'};
-    if (nums.some(v => v < 0)) return {ok:false, msg:'House values must be non-negative.'};
-    return {ok:true, value:{nums}, normalized:{nums: nums.join(',')}};
+    const n = parseInts(raw.n, 10);
+    if (!n) return {ok:false, msg:'Enter a valid comma-separated list of house values.'};
+    if (n.some(v => v < 0)) return {ok:false, msg:'House values must be non-negative.'};
+    if (n.length > 10) return {ok:false, msg:'Keep it to 10 houses so the run stays watchable.'};
+    return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
-  shuffle(){ return {nums: randInts(5 + Math.floor(Math.random()*3), 0, 12).join(',')}; },
+  shuffle(){ return {n: randInts(5 + Math.floor(Math.random()*3), 1, 9).join(',')}; },
   solutions: [
   {
-    label: 'Two linear passes, two rolling numbers',
-    badge: 'O(n) time · O(1) space · DP, space-optimized · optimal.cs',
-    blurb: 'On a street, <code>best[i] = max(nums[i] + best[i-2], best[i-1])</code>, and only the last two answers are ever read — so two ints replace the table. The circle only adds one rule: house <b>0</b> and house <b>n-1</b> touch, so they cannot both be taken. Rob the line <code>0..n-2</code>, rob the line <code>1..n-1</code>, keep the larger.',
+    label: 'Two linear passes, rolling pair',
+    badge: 'O(n) time · O(1) space · dynamic programming · optimal.cs',
+    blurb: 'House 0 and house n−1 are neighbours, so they can never both be robbed. That single fact splits the circle into two ordinary straight streets: houses <code>0..n−2</code> and houses <code>1..n−1</code>. Each is solved by the plain rolling recurrence <code>best = max(nums[i] + prev2, prev)</code>, and the answer is the larger of the two.',
     legend: [
-      {cls:'hot', text:'nums[i] — the house being decided'},
-      {cls:'done', text:'already folded into prev / prev2'},
-      {cls:'dim', text:'excluded from this pass'},
-      {cls:'good', text:'pass result'}
+      {cls:'hot', text:'house i being decided'},
+      {cls:'in-window', text:'already decided in this pass'},
+      {cls:'good', text:'prev — best up to i−1'},
+      {cls:'dim', text:'excluded from this pass'}
     ],
     code: [
-      'int n = nums.Length;',
+      'public int Rob(int[] nums)',
+      '{',
+      '    int n = nums.Length;',
       '',
-      'if (n == 1)',
-      '    return nums[0];',
+      '    if (n == 1)',
+      '        return nums[0];',
       '',
-      'if (n == 2)',
-      '    return Math.Max(nums[0], nums[1]);',
+      '    if (n == 2)',
+      '        return Math.Max(nums[0], nums[1]);',
       '',
-      'int first = RobLinear(nums, 0, n - 2);',
-      'int second = RobLinear(nums, 1, n - 1);',
+      '    int first = RobLinear(nums, 0, n - 2);',
+      '    int second = RobLinear(nums, 1, n - 1);',
       '',
-      'return Math.Max(first, second);',
+      '    return Math.Max(first, second);',
+      '}',
+      '',
       '',
       'private int RobLinear(int[] nums, int start, int end)',
       '{',
@@ -704,78 +709,72 @@ const PROBLEM = {
       '        prev = curr;',
       '',
       '    }',
-      '    return prev;'
+      '    return prev;',
+      '',
+      '}'
     ],
     simulate(input){
-      const nums = input.nums, n = nums.length, steps = [];
+      const nums = input.n, N = nums.length, steps = [];
+      const tiles = (start, end, i) => pTiles('nums (houses in a circle)', nums, (k) => ({
+        cls: (start < 0 || k < start || k > end) ? 'dim'
+           : (k === i) ? 'hot'
+           : (i >= 0 && k < i) ? 'in-window' : ''
+      }), start >= 0 ? {bracket: {from: start, to: end, dashed: true}} : {});
+
       let first = null, second = null;
 
-      const ptrs = (s, e, hot) => {
-        const out = [];
-        if (s !== null) out.push({name:'start', idx: s});
-        if (e !== null) out.push({name:'end', idx: e});
-        if (hot !== null && hot >= 0) out.push({name:'i', idx: hot, cls:'accent'});
-        return out;
-      };
-      const tiles = (s, e, hot, upto) => pTiles(
-        'nums — house 0 and house ' + (n - 1) + ' are neighbours',
-        nums,
-        (k) => ({cls: (s === null || k < s || k > e) ? 'dim'
-                    : (k === hot ? 'hot' : (k <= upto ? 'done' : ''))}),
-        {ptrs: ptrs(s, e, hot)}
-      );
-      const results = () => pSlots('pass results', [
-        {text: first === null ? '' : String(first), cls: first === null ? '' : 'good'},
-        {text: second === null ? '' : String(second), cls: second === null ? '' : 'good'}
-      ]);
-      const state = (prev2, prev, curr, pick, notPick) => pPills('RobLinear state', [
-        {k:'prev2', v: prev2},
-        {k:'prev', v: prev, cls:'good'},
-        {k:'curr', v: curr},
-        {k:'pick', v: pick === null ? '-' : pick},
-        {k:'notPick', v: notPick === null ? '-' : notPick}
-      ]);
+      steps.push({lines:[1,3], msg:'<b>' + N + '</b> houses standing in a <em>circle</em>: house 0 and house ' + (N-1) + ' touch. The straight-street recurrence cannot be applied directly, because it has no idea those two ends are neighbours.',
+        panels:[tiles(-1,-1,-1), pNote('the trick', 'In any valid plan house 0 and house ' + (N-1) + ' are not <b>both</b> robbed. So at least one of them is skipped, and the best plan lives in one of two straight streets: <code>0..n-2</code> (no last house) or <code>1..n-1</code> (no first house). Solve both, take the max.')]});
 
-      steps.push({lines:[1], msg:'<b>' + n + '</b> houses arranged in a <em>circle</em>: the last house is adjacent to the first, so a plain line-DP would happily take both ends and be wrong.',
-        panels: [tiles(0, n - 1, -1, -1), pNote('the circular constraint', 'House 0 and house ' + (n - 1) + ' cannot both be robbed. Every valid plan therefore misses at least one of them — so it is a valid plan on the line <code>0..n-2</code>, or on the line <code>1..n-1</code>, or both.')]});
-
-      if (n === 1){
-        steps.push({lines:[3,4], msg:'A single house has no neighbour to conflict with, and slicing it into two lines would create an empty range. Return <b>' + nums[0] + '</b> directly.',
-          panels: [tiles(0, 0, 0, -1)]});
+      if (N === 1){
+        steps.push({lines:[5,6], msg:'One house, no neighbours to conflict with — rob it for <b>' + nums[0] + '</b>.', panels:[tiles(0,0,0), pPills('result', [{k:'answer', v: nums[0], cls:'good'}])]});
         return steps;
       }
-      if (n === 2){
-        steps.push({lines:[6,7], msg:'Two houses on a circle are neighbours <em>twice over</em>; only one can be taken, so the answer is <code>max(' + nums[0] + ', ' + nums[1] + ') = <b>' + Math.max(nums[0], nums[1]) + '</b></code>. This guard also protects <code>nums[start + 1]</code> inside <code>RobLinear</code>.',
-          panels: [tiles(0, 1, -1, -1)]});
+      if (N === 2){
+        steps.push({lines:[8,9], msg:'Two houses that are neighbours twice over in a circle — exactly one can be robbed, so take the bigger: <b>' + Math.max(nums[0],nums[1]) + '</b>.', panels:[tiles(0,1,-1), pPills('result', [{k:'answer', v: Math.max(nums[0],nums[1]), cls:'good'}])]});
         return steps;
       }
 
-      const runLinear = (s, e, callLine, name) => {
-        let prev2 = nums[s];
-        let prev = Math.max(nums[s], nums[s + 1]);
-        let curr = s;
-        steps.push({lines:[callLine], msg:'<b>' + name + '</b>: rob the straight line <code>' + s + '..' + e + '</code>. House ' + (s === 0 ? (n - 1) : 0) + ' is dropped entirely, which is exactly what makes the ends safe to treat as a line.',
-          panels: [tiles(s, e, -1, -1), results()]});
-        steps.push({lines:[18,19,20], msg:'Seed the two rolling answers: <code>prev2</code> = best over just house ' + s + ' = <b>' + prev2 + '</b>, <code>prev</code> = best over houses ' + s + ' and ' + (s + 1) + ' = <b>' + prev + '</b> (adjacent, so at most one). <code>curr</code> is seeded with <code>start</code>, which is meaningless as a sum — it is overwritten on the first iteration and never read before then.',
-          panels: [tiles(s, e, -1, s + 1), state(prev2, prev, curr, null, null), results()]});
-        for (let i = s + 2; i <= e; i++){
+      const runLinear = (start, end, callLine, name) => {
+        let prev2 = nums[start];
+        let prev = Math.max(nums[start], nums[start+1]);
+        let curr = start;
+        const pills = (i, pick, notPick) => pPills('RobLinear state', [
+          {k:'start', v: start}, {k:'end', v: end},
+          {k:'i', v: i >= 0 ? i : '-', cls:'hot'},
+          {k:'prev2', v: prev2},
+          {k:'prev', v: prev, cls:'good'},
+          {k:'pick', v: pick === null ? '-' : pick},
+          {k:'notPick', v: notPick === null ? '-' : notPick},
+          {k:'curr', v: curr}
+        ]);
+        steps.push({lines:[callLine,18,22,23,24], msg:name + ': solve the straight street <code>' + start + '..' + end + '</code>. <code>prev2</code> is the best take for the first house alone (<b>' + prev2 + '</b>); <code>prev</code> is the best over the first two, which must be one or the other since they are adjacent (<b>' + prev + '</b>). <code>curr</code> is seeded with <code>start</code>, a harmless placeholder — it is overwritten before it is ever read.',
+          panels:[tiles(start, end, -1), pills(-1, null, null)]});
+        for (let i = start + 2; i <= end; i++){
           const pick = nums[i] + prev2;
           const notPick = 0 + prev;
           curr = Math.max(pick, notPick);
-          steps.push({lines:[22,25,26,27,29,30], msg:'House ' + i + ' holds <b>' + nums[i] + '</b>. Rob it and house ' + (i - 1) + ' is forbidden, so the best is <code>' + nums[i] + ' + prev2 = ' + pick + '</code>. Skip it and you inherit <code>prev = ' + notPick + '</code>. Take <b>' + curr + '</b>. Then the window rolls: <code>prev2</code> becomes the old <code>prev</code>, <code>prev</code> becomes <code>curr</code> — nothing older than two houses back is ever needed again.',
-            panels: [tiles(s, e, i, i - 1), state(prev, curr, curr, pick, notPick), results()]});
-          prev2 = prev; prev = curr;
+          steps.push({lines:[26,29,30,31,33,34], msg:'House ' + i + ' holds <b>' + nums[i] + '</b>. Rob it and house ' + (i-1) + ' is off limits, so add the best up to ' + (i-2) + ': ' + nums[i] + ' + ' + prev2 + ' = <b>' + pick + '</b>. Skip it and the answer is simply the best up to ' + (i-1) + ': <b>' + notPick + '</b>. Take the max, <b>' + curr + '</b>, then slide the pair forward — only these two numbers of history are ever needed.',
+            panels:[tiles(start, end, i), pills(i, pick, notPick)]});
+          prev2 = prev;
+          prev = curr;
         }
-        steps.push({lines:[33], msg:'Past house ' + e + '. <code>prev</code> now holds the best over the whole line ' + s + '..' + e + ': <b>' + prev + '</b>.',
-          panels: [tiles(s, e, -1, e), state(prev2, prev, curr, null, null), results()]});
+        steps.push({lines:[37], msg:name + ' finishes with <b>' + prev + '</b> — <code>prev</code> always holds the best over the whole stretch decided so far.',
+          panels:[tiles(start, end, -1), pills(-1, null, null)]});
         return prev;
       };
 
-      first = runLinear(0, n - 2, 9, 'first');
-      second = runLinear(1, n - 1, 10, 'second');
+      first = runLinear(0, N - 2, 11, 'Pass 1 (houses 0 to ' + (N-2) + ', last house sacrificed)');
+      steps.push({lines:[11], msg:'<code>first = ' + first + '</code>: the best haul when house ' + (N-1) + ' is never touched, which frees house 0 to be robbed.',
+        panels:[tiles(0, N-2, -1), pSlots('two straight streets', [{text:'first = ' + first, cls:'good'}, {text:'second = ?', cls:'ghost'}])]});
 
-      steps.push({lines:[12], msg:'Every legal circular plan is covered by one of the two lines, and neither line can produce an illegal plan — so the maximum of <b>' + first + '</b> and <b>' + second + '</b> is the answer: <b>' + Math.max(first, second) + '</b>. Two passes, four ints, no table.',
-        panels: [tiles(0, n - 1, -1, -1), results(), pPills('', [{k:'first (0..' + (n - 2) + ')', v: first}, {k:'second (1..' + (n - 1) + ')', v: second}, {k:'answer', v: Math.max(first, second), cls:'good'}])]});
+      second = runLinear(1, N - 1, 12, 'Pass 2 (houses 1 to ' + (N-1) + ', first house sacrificed)');
+      steps.push({lines:[12], msg:'<code>second = ' + second + '</code>: the best haul when house 0 is never touched, which frees house ' + (N-1) + '.',
+        panels:[tiles(1, N-1, -1), pSlots('two straight streets', [{text:'first = ' + first, cls:'done'}, {text:'second = ' + second, cls:'good'}])]});
+
+      const ans = Math.max(first, second);
+      steps.push({lines:[14], msg:'Every legal circular plan is covered by one of the two streets, and neither street can produce an illegal plan, so the answer is <code>max(' + first + ', ' + second + ')</code> = <b>' + ans + '</b>. Two passes, four ints, no array.',
+        panels:[tiles(-1,-1,-1), pPills('result', [{k:'first', v: first}, {k:'second', v: second}, {k:'answer', v: ans, cls:'good'}])]});
       return steps;
     }
   }]

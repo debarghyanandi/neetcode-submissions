@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T11:50:54.856Z",
+  "updatedAt": "2026-09-18T12:06:09.588Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1419,7 +1419,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular constraint split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1432,7 +1432,7 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Dynamic programming, space-optimized, circular constraint split",
+          "algorithm": "Dynamic programming, space-optimized, circular split",
           "approachKey": "dp-space-optimized-circular",
           "correct": true,
           "bruteForce": false,
@@ -1442,7 +1442,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular constraint split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1455,7 +1455,7 @@
         "structures": [
           "array"
         ],
-        "builtAt": "2026-09-18T11:50:54.593Z"
+        "builtAt": "2026-09-18T12:06:09.586Z"
       }
     },
     "implement-queue-using-stacks": {

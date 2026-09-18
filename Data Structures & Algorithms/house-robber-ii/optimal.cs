@@ -1,13 +1,13 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Dynamic programming, space-optimized, circular constraint split
+// -  Dynamic programming, space-optimized, circular split
 // -  [dp-space-optimized-circular]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Two linear DP passes handle the circular constraint; each pass uses
-// -  rolling variables instead of a table.
+// -  Circular constraint split into two linear DP passes using rolling
+// -  variables instead of a table.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -55,75 +55,85 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : House Robber II - circular array split into two linear DP runs
+ PATTERN : House Robber II - two linear DP runs on a broken circle
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  first     best loot from houses 0..n-2 (house n-1 never robbed)
-  second    best loot from houses 1..n-1 (house 0 never robbed)
-  prev2     best loot up to two houses back inside the current window
-  prev      best loot up to the previous house inside the current window
-  curr      best loot up to house i; becomes the new prev each step
+  first     best loot from houses 0..n-2 (drops the last house)
+  second    best loot from houses 1..n-1 (drops the first house)
+  prev2     best loot up to the house two before i
+  prev      best loot up to the house just before i
+  curr      best loot up to house i inside the loop
   pick      take nums[i], so add it to prev2
   notPick   skip nums[i], so keep prev
 WHY THIS PATTERN
   The houses sit in a circle, so house 0 and house n-1 are neighbours and cannot
   both be robbed. That single extra rule is the only difference from the plain
-  line version, so you remove it by force: either house n-1 is off the table, or
-  house 0 is. RobLinear solves each straight range with the usual take-or-skip
-  recurrence, and the answer is Math.Max(first, second). Inside each run only
-  prev2 and prev matter, because the choice at house i depends on nothing older
-  than two steps.
+  line version, and it splits into two cases: either house 0 is left out, or
+  house n-1 is left out. RobLinear solves each case as the ordinary "no two
+  adjacent" problem, and Math.Max(first, second) picks the better case. Inside
+  RobLinear the choice at each house depends only on the two answers behind it,
+  so prev and prev2 are enough state.
 BRUTE FORCE
-  The first thing most people write is recursion over "rob house i or skip it"
-  with a flag for whether house 0 was taken. That explores every valid subset
-  and costs about O(2^n) time. Adding memoization on (i, flag) drops it to O(n)
-  time but keeps an O(n) table and the recursion stack; this file reaches the
-  same result with two scalars per run.
+  The first thing most people write is recursion: at each house, try robbing it
+  and jumping two ahead, or skipping it and moving one ahead, then take the max.
+  Without memoisation that branches twice per house and costs O(2^n) time.
+  Adding a memo table drops it to O(n) time but keeps an O(n) array; this file
+  keeps only prev and prev2, so the table disappears.
 INVARIANT
   At the top of each iteration of the loop in RobLinear, prev holds the best
-  loot from nums[start..i-1] and prev2 holds the best loot from
-  nums[start..i-2]. Both are the true optimum for those prefixes, so curr =
-  Math.Max(nums[i] + prev2, prev) is the true optimum for nums[start..i], since
-  robbing i forbids i-1 and nothing else. The shift prev2 = prev; prev = curr
-  restores the invariant for i+1, so the returned prev is the optimum for the
-  whole window.
+  loot for houses start..i-1 and prev2 holds the best loot for houses
+  start..i-2. The choice at i is forced: either nums[i] plus the best that ends
+  at or before i-2, or the best that ends at i-1. Both candidates respect the
+  no-adjacent rule, and every valid plan for start..i ends in one of these two
+  shapes, so curr is exact. After the loop prev is the answer for the whole
+  range start..end.
+WHY THE TWO CASES COVER EVERYTHING
+  Neither run forbids robbing both endpoints of its own range; it just removes
+  one house from the circle. That is enough, because in any valid circular plan
+  at least one of house 0 and house n-1 is not robbed. If house 0 is skipped the
+  plan is legal inside 1..n-1, and if house n-1 is skipped it is legal inside
+  0..n-2. So the true optimum appears in at least one of first or second, and
+  neither run can produce an illegal plan, since after cutting one end the range
+  is a plain line.
 WATCH OUT
-  An empty array crashes: n == 0 passes both guards and RobLinear reads
-  nums[start] with start = 0. The variable curr is initialised to start, which
-  is an index, not a loot value - it is dead because the method returns prev,
-  but the name and the type make it easy to later return curr by mistake when
-  start > end. RobLinear also reads nums[start + 1] unconditionally, which is
-  safe only because every window here has at least two elements once n >= 3;
-  reusing this helper on a one-element range would throw. The write int notPick
-  = 0 + prev; is just prev with noise added.
+  An empty array crashes: n == 0 passes both guards, then RobLinear reads
+  nums[0] on a length-zero array. RobLinear also assumes the range has at least
+  two houses because it reads nums[start + 1] before the loop; the n == 1 and n
+  == 2 early returns are what keep that safe, so removing them breaks the
+  helper. The line int curr = start; stores an index into a variable that is
+  supposed to hold money - it is dead because the loop overwrites curr before
+  any read, but it is confusing and would be wrong if the code ever returned
+  curr instead of prev. The 0 + in notPick = 0 + prev adds nothing and only
+  exists to mirror the pick line.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return which houses were robbed, not only the total.
-     The rolling pair loses the path. Keep a full dp array plus a choice flag
-     per index, or walk backwards comparing dp[i] against dp[i-1], and do that
-     for both runs before taking the max - O(n) space again.
-  2. Can you do it in one pass instead of calling RobLinear twice?
-     Yes, carry two independent (prev2, prev) pairs in the same loop, one for
-     the range excluding the last house and one excluding the first. Same O(n)
-     time, one traversal, but the code gets harder to read than two clean calls.
-  3. The rule changes to "no two robbed houses within 3 of each other".
-     The recurrence becomes nums[i] + best up to i-3, so keep three rolling
-     values instead of prev2 and prev. The circular fix also grows: you now need
-     to block several first and last combinations, which is usually done with a
-     small set of forced-exclusion runs.
-  4. Houses form a binary tree instead of a circle.
-     Switch to post-order DFS returning a pair (best with this node robbed, best
-     without). No wrap-around case exists, so the two-run split disappears.
+  1. How would you return which houses were robbed, not just the total?
+     The two-variable form has thrown that information away. Keep an O(n) dp
+     array per run plus a parent or a boolean "took house i" flag, then walk
+     backwards from the end. Memory goes back to O(n), time stays the same.
+  2. What if no two robbed houses may be within k houses of each other, still in
+  a circle?
+     prev2 becomes prev_k, the best answer k+1 positions back, so you need a
+     rolling window of k+1 values or a running max over that window. The
+     circular fix also grows: instead of two cases you exclude each of the first
+     k houses in turn, or run the line version on the ranges that break the
+     wrap.
+  3. The array is huge and arrives as a stream you can read only once.
+     The recurrence already needs only the last two values, so one pass works
+     for the line case. The circular case is the problem: it needs two passes
+     over almost the same data, so either buffer the first and last element and
+     run both recurrences in parallel in a single pass, or accept a second read.
 TRIGGER
-  A linear DP you already know, but the array wraps around so the first and last
-  elements conflict - run the linear DP twice on the two open ranges.
+  A "no two adjacent" choice problem where the items are arranged in a ring
+  instead of a line - cut the ring at one link and run the linear DP twice.
 C# NOTE
-  Passing start and end indices forces the helper to do index arithmetic like
-  nums[start + 1]; taking a ReadOnlySpan<int> and calling
-  RobLinear(nums.AsSpan(0, n - 1)) would slice without copying and let the loop
-  just run from 2 to the span length.
+  Passing start and end as int parameters avoids building sub-arrays; the LINQ
+  or Array.Copy version (nums.Take(n-1).ToArray()) would allocate two new arrays
+  and lose the O(1) space claim. If you wanted the slice style without the copy,
+  ReadOnlySpan<int> with nums.AsSpan(0, n - 1) gives a view rather than a new
+  array.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
