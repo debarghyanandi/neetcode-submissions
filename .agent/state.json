@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T11:37:38.730Z",
+  "updatedAt": "2026-09-18T11:50:54.856Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1400,14 +1400,63 @@
     },
     "house-robber-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "390296491399d5a7e821f067b289e487f2858abb9996bbf289ee3833abb8ea21": "optimal.cs"
+      },
+      "fingerprints": {
+        "390296491399d5a7e821f067b289e487f2858abb9996bbf289ee3833abb8ea21": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2a36fe2eb985"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular constraint split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Dynamic programming, space-optimized, circular constraint split",
+          "approachKey": "dp-space-optimized-circular",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular constraint split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2a36fe2eb985"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-18T11:50:54.593Z"
+      }
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
