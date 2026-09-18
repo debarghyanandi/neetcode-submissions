@@ -10,7 +10,7 @@
  *   node scripts/lib/visualizer.test.mjs
  */
 
-import { renameInVisualizer, structuresFor, validate } from './visualizer.mjs';
+import { renameInVisualizer, structuresFor, validate, hasMethodSignature, loadChassis } from './visualizer.mjs';
 import { coverage } from './shapes.mjs';
 
 let pass = 0, fail = 0;
@@ -125,6 +125,51 @@ is('a blank line is ignored rather than flagged',
 is('with no source bodies the check does not run',
   validate(defWith(['// entirely invented']), [], [[]], null)
     .errors.filter((e) => /not a line of the solution file/.test(e)).length, 0);
+
+const ok = (name, cond, extra = '') => is(name, !!cond, true) ;
+
+// ---- the code panel must start at the method signature -------------------
+//
+// house-robber-ii's panel began at `int n = nums.Length;`. Every line in it was a
+// line of the file, so the fidelity check passed - but the signature was missing,
+// findLayers() found no method, and the "show all" control and the whole layer view
+// silently disappeared. Compare course-schedule, whose panel starts at
+// `public bool CanFinish(...)` and has both.
+
+const WITH_SIG = [
+  'public int Rob(int[] nums)',
+  '{',
+  '    int n = nums.Length;',
+  '    if (n == 1)',
+  '        return nums[0];',
+  '    return n;',
+  '}',
+];
+const NO_SIG = WITH_SIG.slice(2, -1);
+
+ok('a panel that starts at the signature has a method', hasMethodSignature(WITH_SIG));
+ok('one that starts inside the body does not', !hasMethodSignature(NO_SIG));
+ok('an empty panel does not', !hasMethodSignature([]));
+ok('a bad argument does not throw', !hasMethodSignature(null));
+ok('a lone call is not a signature', !hasMethodSignature(['Helper(nums, 0);', 'return 1;', 'x++;']));
+ok('nor is a control keyword with parentheses',
+  !hasMethodSignature(['if (n == 1)', '{', '    return nums[0];', '}']));
+ok('a private helper counts too',
+  hasMethodSignature(['private int Dfs(TreeNode node)', '{', '    return 0;', '}', '    x();']));
+
+// THE ANTI-DRIFT TEST. hasMethodSignature() restates findLayers()'s rule in Node,
+// because findLayers lives after the /*__PROBLEM__*/ marker and validate() never
+// sees it. Pull the real one out of the chassis and make the two agree, so the
+// duplication cannot rot without this failing.
+const chassis = loadChassis();
+const src = chassis.slice(chassis.indexOf('const CTRL_WORD'), chassis.indexOf('const layerOf'));
+ok('findLayers was found in the chassis', /function findLayers/.test(src), src.slice(0, 60));
+const findLayers = new Function(src + '; return findLayers;')();
+for (const [name, fixture] of [['with a signature', WITH_SIG], ['without one', NO_SIG],
+                               ['empty', []], ['a lone call', ['Helper(x);', 'return 1;', 'y++;']]]) {
+  ok(`the chassis and validate agree: ${name}`,
+    (findLayers(fixture).length > 0) === hasMethodSignature(fixture));
+}
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

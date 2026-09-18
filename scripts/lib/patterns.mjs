@@ -137,11 +137,13 @@ const RULES = [
       /is-palindrome|two-integer-sum-ii|three-integer-sum|max-water|move-zeroes|remove-duplicates-from-sorted|trapping-rain/.test(c.slug) },
 
   { group: '2-D DP', test: (c) =>
-      has(c.structures, 'dp-table') && /matrix|grid|2-d|two-dimensional/.test(c.pattern) },
+      (has(c.structures, 'dp-table') || c.says(DP)) &&
+      c.says(/matrix|grid|2-d|two[- ]dimensional|subsequence of two|edit distance/) },
 
-  { group: '1-D DP', test: (c) =>
-      has(c.structures, 'dp-table') ||
-      /dynamic programming|memoi[sz]|tabulat/.test(c.pattern) },
+  // `\bdp\b` matters as much as the long phrase: the teach block writes "two linear
+  // DP runs" and "bottom-up DP", never "dynamic programming" in full. Kept word-bounded
+  // so it cannot fire on a substring.
+  { group: '1-D DP', test: (c) => has(c.structures, 'dp-table') || c.says(DP) },
 
   { group: 'Greedy', test: (c) => /kadane|greedy/.test(c.pattern) },
 
@@ -157,12 +159,27 @@ const RULES = [
  * @param {{slug: string, pattern?: string, structures?: string[]}} problem
  * @returns {string} one of GROUPS
  */
+/** How a DP solution describes itself, in either field. */
+const DP = /\bdp\b|dynamic program|memoi[sz]|tabulat|bottom[- ]up|top[- ]down/;
+
 export function groupFor(problem) {
+  // `algorithm` is what classify recorded - "Dynamic programming, space-optimized,
+  // circular constraint split" - and it used to be thrown away here. house-robber-ii
+  // landed in Other because of that: the classifier had named it dynamic programming
+  // in plain words, while grouping was reading only the teach block's PATTERN line
+  // ("...two linear DP runs") and the structures list (["array"], because a
+  // space-optimised DP keeps rolling variables and allocates no table).
+  //
+  // So a correctly classified DP problem was unfilable, and every future one that is
+  // solved only in its O(1)-space form would have been too.
   const ctx = {
     slug: String(problem.slug || '').toLowerCase(),
     pattern: String(problem.pattern || '').toLowerCase(),
+    algorithm: String(problem.algorithm || '').toLowerCase(),
     structures: problem.structures || [],
   };
+  // Most rules want "did anyone describe it this way", not "which field said so".
+  ctx.says = (re) => re.test(ctx.pattern) || re.test(ctx.algorithm);
   for (const r of RULES) {
     try { if (r.test(ctx)) return r.group; } catch { /* a bad rule must not take the page down */ }
   }

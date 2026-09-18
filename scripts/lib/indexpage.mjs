@@ -73,11 +73,15 @@ export function buildIndexHtml(problems, state, opts = {}) {
     const cls = state.problems[p.slug]?.classification ?? {};
     const best = cls['optimal.cs'] ?? Object.values(cls)[0] ?? null;
     const structures = [...new Set(Object.values(cls).flatMap((c) => c.structures ?? []))];
+    // Every file's recorded technique, joined. A folder whose only solution is the
+    // space-optimised one has no dp-table to give it away, but classify still called
+    // it dynamic programming - and that sentence is the most reliable signal there is.
+    const algorithm = Object.values(cls).map((c) => c.algorithm ?? '').filter(Boolean).join(' · ');
     const pattern = patternOf ? patternOf(p) : '';
     return {
       slug: p.slug,
       title: nice(p.slug),
-      group: groupFor({ slug: p.slug, pattern, structures }),
+      group: groupFor({ slug: p.slug, pattern, structures, algorithm }),
       pattern,
       structures,
       time: best?.time ?? null,

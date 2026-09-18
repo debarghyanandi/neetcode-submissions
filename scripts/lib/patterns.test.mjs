@@ -99,5 +99,41 @@ is('every group ranks inside the list', GROUPS.every((n) => groupRank(n) < GROUP
 is('an unknown group sorts last', groupRank('Nonsense') >= GROUPS.length, true);
 is('"Other" is last so unfiled work is visible at the bottom', GROUPS[GROUPS.length - 1], 'Other');
 
+// ---- the classifier's own words count ------------------------------------
+//
+// house-robber-ii landed in Other on the day it was solved. classify had called it
+// "Dynamic programming, space-optimized, circular constraint split" - exactly right -
+// but groupFor was never handed that field. It saw structures ["array"], because a
+// space-optimised DP allocates no table, and a PATTERN line reading "two linear DP
+// runs", which does not contain the literal words "dynamic programming".
+const ga = (slug, pattern, algorithm, structures) => groupFor({ slug, pattern, algorithm, structures });
+
+is('a space-optimised DP has no dp-table, and is still 1-D DP',
+  ga('house-robber-ii', 'House Robber II - circular array split into two linear DP runs',
+     'Dynamic programming, space-optimized, circular constraint split', ['array']),
+  '1-D DP');
+is('the algorithm field alone is enough',
+  ga('some-problem', '', 'Bottom-up dynamic programming', ['array']), '1-D DP');
+is('and so is a bare "DP" in the teach block',
+  ga('some-problem', 'bottom-up DP over the prefix', '', ['array']), '1-D DP');
+is('a dp-table still lands there with nothing else said',
+  ga('x', '', '', ['array', 'dp-table']), '1-D DP');
+
+// Word-bounded, so it cannot fire on a substring of something else.
+is('"dpi" is not DP - it falls through rather than being filed as one',
+  ga('x', 'scale by dpi', '', ['array']) === '1-D DP', false);
+
+// 2-D is tested first and no longer needs a dp-table either, since a rolling-row
+// grid DP has none.
+is('a grid DP is 2-D, not 1-D',
+  ga('unique-paths', 'DP over a grid of cells', 'Dynamic programming on a matrix', ['matrix']), '2-D DP');
+is('and one that keeps its table, likewise',
+  ga('edit-distance', 'tabulate the edit distance', 'Dynamic programming', ['dp-table']), '2-D DP');
+
+// Greedy is tested AFTER 1-D DP, so a Kadane scan that called itself DP would now be
+// filed as DP. It does not, and this pins that.
+is('Kadane is still greedy',
+  ga('maximum-subarray', "Kadane's algorithm, one rolling sum", "Kadane's algorithm", ['array']), 'Greedy');
+
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

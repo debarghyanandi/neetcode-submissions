@@ -63,6 +63,54 @@ export function structuresFor(si, structures = [], perSolution = null) {
   return Array.isArray(own) && own.length ? own : structures;
 }
 
+
+/**
+ * Does this code panel contain a method the layer view can fold?
+ *
+ * The chassis renders the code panel as one collapsible layer per method, and it
+ * works this out by PARSING the code array - no schema field, nothing the generator
+ * has to declare. When the parse finds nothing the layers are simply off, which is
+ * the right fallback for a bare fragment and the wrong one for a whole solution.
+ *
+ * house-robber-ii is why this is now checked. Its panel began at
+ * `int n = nums.Length;` - the method signature was missing - so findLayers() found
+ * no method, the "show all" control hid itself and the whole layer view silently
+ * went away. Every line in the panel WAS a line of the file, so the fidelity check
+ * above was satisfied; starting halfway down simply was not something it asked about.
+ *
+ * The rule below mirrors findLayers() in the chassis. That duplication is real, and
+ * visualizer.test.mjs pins it: it pulls findLayers out of the chassis text and
+ * asserts the two agree on the same fixtures, so they cannot drift apart quietly.
+ */
+const CTRL_WORD = /^\s*(?:if|else|for|foreach|while|do|switch|case|return|using|lock|try|catch|finally|new)\b/;
+
+export function hasMethodSignature(code) {
+  const lines = Array.isArray(code) ? code.map((l) => String(l ?? '')) : [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.indexOf('(') < 0) continue;            // a signature has parameters
+    if (/;\s*$/.test(line)) continue;               // a call, not a declaration
+    if (CTRL_WORD.test(line)) continue;             // if (...) is not a method
+    const m = line.match(/(\w+)\s*\(/);
+    if (!m) continue;
+    if (!line.slice(0, line.indexOf(m[0])).trim()) continue;   // needs a return type
+    let open = -1;
+    for (let k = i; k < Math.min(i + 3, lines.length); k++) {
+      if (lines[k].indexOf(';') >= 0) break;
+      if (lines[k].indexOf('{') >= 0) { open = k; break; }
+    }
+    if (open < 0) continue;
+    let depth = 0, end = -1;
+    for (let k = open; k < lines.length; k++) {
+      for (const ch of lines[k]) { if (ch === '{') depth++; else if (ch === '}') depth--; }
+      if (depth === 0) { end = k; break; }
+    }
+    if (end < 0 || end - i < 2) continue;           // too small to be worth folding
+    return true;
+  }
+  return false;
+}
+
 export function validate(problemSource, structures = [], perSolution = null, sourceBodies = null) {
   const problems = [];
   const tmp = join(REPO, '.agent', 'tmp');
@@ -361,6 +409,14 @@ process.stdout.write(JSON.stringify(out));
   // reflowing one statement across two lines - every line number still resolved,
   // every check above passed, and the panel quietly stopped being the file.
   // Nothing but a verbatim comparison catches that, so here it is.
+  // The panel has to start where the method starts, or the layer view vanishes.
+  (res.solutions ?? []).forEach((sol) => {
+    if (hasMethodSignature(sol.code)) return;
+    res.errors.push(`${sol.where}.code has no method signature - it starts inside the method body. ` +
+      'Begin the panel at the declaration line (e.g. "public int Rob(int[] nums)") and its opening ' +
+      'brace, and include the closing brace, so the code panel can fold one layer per method.');
+  });
+
   if (Array.isArray(sourceBodies)) {
     (res.solutions ?? []).forEach((sol, si) => {
       const body = sourceBodies[si];
