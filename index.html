@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">3</span> / 62</b></div>
-      <div class="bar"><span id="bar" style="width:4.8%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">4</span> / 62</b></div>
+      <div class="bar"><span id="bar" style="width:6.5%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -152,7 +152,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Arrays &amp; Hashing">
   <div class="group-head">
     <h2>Arrays &amp; Hashing</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>8</b> at standard</span>
+    <span class="group-count"><b class="gdone">1</b> / <b>8</b> at standard</span>
   </div>
   <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
   <ul>
@@ -186,14 +186,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
       </span>
     </li>
-    <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set + start-of-run guard, expand each run once  needs rebuilt" data-status="rebuild">
+    <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set - expand only from each run's left edge array hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-consecutive-sequence" target="_blank" rel="noopener noreferrer">Longest Consecutive Sequence</a>
-        <span class="why">Hash set + start-of-run guard, expand each run once</span>
+        <span class="why">Hash Set - expand only from each run's left edge</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/longest-consecutive-sequence-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="products of array discluding self products-of-array-discluding-self arrays &amp; hashing prefix/suffix products - two passes, output as scratch  needs rebuilt" data-status="rebuild">

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T12:30:32.932Z",
+  "updatedAt": "2026-09-18T18:21:43.106Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2220,35 +2220,44 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, walk runs from left edge only\",\"approachKey\":\"hashset-sequence-start\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with left-edge iteration\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash set, walk runs from left edge only",
-          "approachKey": "hashset-sequence-start",
+          "algorithm": "HashSet with left-edge iteration",
+          "approachKey": "hashset-left-edge",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "hash-set"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with left-edge iteration\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "711ff7adff41",
-          "renames": []
+          "version": 2,
+          "codePrint": "711ff7adff41"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "711ff7adff41"
         },
-        "builtAt": "2026-09-11T04:48:59.366Z",
-        "v": 1
+        "structures": [
+          "array",
+          "hash-set"
+        ],
+        "builtAt": "2026-09-18T18:21:43.104Z"
       }
     },
     "longest-repeating-substring-with-replacement": {
