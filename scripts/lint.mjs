@@ -134,14 +134,21 @@ function ask(code, feedback) {
       // (3.8k-6.4k tokens per small file) and lint became the slowest step. Haiku 4.5 has no
       // --effort, so thinking is capped by budget instead. LINT_THINKING_TOKENS overrides it.
       //
-      // 2000 was the first cut and it was still the ceiling, not a limit: the four calls on
-      // house-robber thought 1,582 / 1,281 / 1,988 / 1,481 tokens and two of them were wrong
-      // anyway. Thinking was not buying correctness here - the rejections were a brace pair,
-      // which is a reading-comprehension failure, not a reasoning one. 600 is enough to plan
-      // a rename map and cuts roughly half of lint's output tokens and wall time. Raise it
-      // through LINT_THINKING_TOKENS if rejections climb; the number to watch is the
+      // 1024 IS THE FLOOR, NOT A CHOICE. The documented minimum thinking budget is 1,024
+      // tokens and the API rejects anything smaller, so a lower number is not a tighter
+      // cap - it is no cap at all, and the model falls back to its own default.
+      //
+      // That is not theory. This was briefly set to 600 on the reasoning that renaming
+      // needs little thought, and the very next run proved it backwards: the two calls
+      // on house-robber thought 1,375 and 4,401 tokens, against 1,582 / 1,281 / 1,988 /
+      // 1,481 under the old 2000. One call went from $0.0138 to $0.0289 and lint's
+      // per-call wall time roughly doubled. Setting it below the floor made thinking go
+      // UP, because nothing was capping it any more.
+      //
+      // So the value must stay >= 1024 to mean anything. Raise it through
+      // LINT_THINKING_TOKENS if rejections climb; the number to watch is the
       // "attempt 1 REJECTED" count in the step log.
-      env: { ...process.env, MAX_THINKING_TOKENS: process.env.LINT_THINKING_TOKENS ?? '600' },
+      env: { ...process.env, MAX_THINKING_TOKENS: String(Math.max(1024, Number(process.env.LINT_THINKING_TOKENS) || 1024)) },
     });
   } catch (e) {
     let env = null; try { env = JSON.parse(String(e.stdout ?? '')); } catch { /* not JSON */ }
@@ -392,8 +399,15 @@ for (const p of targets) {
       else console.log(`  ${file.padEnd(22)} formatter altered the rewrite - keeping the model's text`);
     }
 
+    // Say whether the formatter did anything, even when a rename happened too. The first
+    // run of this reported "0 reformatted only" while having reindented both files from
+    // K&R to Allman - true, because that counter means "reformatted AND NOTHING ELSE",
+    // and completely misleading if you are trying to find out whether dotnet ran.
     const same = finalCode.trim() === body.trim();
-    console.log(`  ${file.padEnd(22)} ${same ? 'nothing to change' : result.renames.length ? 'renames: ' + result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : 'spacing only'}  ·  $${(spend || 0).toFixed(4)}`);
+    const what = same ? 'nothing to change'
+      : result.renames.length ? 'renames: ' + result.renames.map(([a, b]) => `${a}->${b}`).join(', ')
+      : 'spacing only';
+    console.log(`  ${file.padEnd(22)} ${what}${wasReindented ? '  (+ reformatted)' : ''}  ·  $${(spend || 0).toFixed(4)}`);
     if (!same && !doApply) {
       console.log(finalCode.split('\n').slice(0, 12).map((l) => '      | ' + l).join('\n'));
     }
