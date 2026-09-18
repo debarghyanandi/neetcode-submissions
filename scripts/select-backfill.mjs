@@ -35,7 +35,7 @@ const reasons = (p) => {
 
   // Same rule lint.mjs uses, imported rather than restated - a file still owed a
   // retry has to reach the queue, or backfill and lint disagree about what is done.
-  if (all.some((f) => lintWanted(lint[f], null))) why.push('lint');
+  if (all.some((f) => lintWanted(lint[f]))) why.push('lint');
 
   // Must agree with atCurrentStandard() in classify.mjs. It is duplicated here
   // rather than shared because the two answer slightly different questions -

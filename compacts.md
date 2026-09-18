@@ -35,7 +35,7 @@ override):
 
 | step | model | why |
 |---|---|---|
-| `lint` | `dotnet format whitespace` + Haiku | Two halves. **Spacing is deterministic** - `dotnet format whitespace --folder`, config in `.editorconfig`, preinstalled on the runner, zero tokens, runs over every file including ones no model call touches. **Names are the model**, and `sameShape()` catches any dishonesty - from the formatter too, which is checked exactly like the model. Thinking capped at 1024 via `MAX_THINKING_TOKENS`, floored in code because **1024 is the documented minimum and the API rejects less** - a smaller number is no cap at all, and 600 made thinking go UP (4,401 tokens on one call) rather than down. No `--effort` flag on Haiku. Override with `LINT_THINKING_TOKENS`; values below 1024 are raised to it. |
+| `lint` | **none** | `dotnet format whitespace --folder`, rules in `.editorconfig`. Deterministic, free, ~2s, cannot fail; `sameShape()` still checks it moved no token. **It no longer renames variables.** Its own record condemned it: 92 renames over 72 files, 47% of them overwriting a standard DSA name (`n`, `l`, `r`, `dp`, `res`, `q`, `curr`), 7 pure noise (`res->result`, `q->queue`), and 3 of 22 multi-file folders left with one variable under two names. The files are a record of what was submitted; an opaque name gets a line in the teaching block's VARIABLES glossary instead. |
 | `classify` | Haiku | picks from a fixed enum — a bounded question |
 | `teach` | Opus, default effort | prose a human reads; Haiku was thin, Sonnet cost the same as Opus for a worse answer |
 | `visualize` | Opus, **medium** effort | since 2026-09-17. Sonnet at high effort was correct but spent ~39,000 thinking tokens and 5-8 minutes; Opus at medium reaches the same place in under 2 minutes on ~1,700. A rejected build is **repaired** on Opus at its default (high) effort — never rebuilt from scratch. |
@@ -202,7 +202,7 @@ a real conflicting rebase, a real folder from the repo. When a log arrives, read
 what the steps actually did rather than the run's badge.
 
 **Tests.** `node scripts/lib/<name>.test.mjs`, or all of them:
-`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 279 cases across ten
+`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 252 cases across ten
 files. The workflow runs the glob before the first model call, so a new test
 file needs no workflow change. Pure functions only — anything that needs git or
 the network gets a throwaway fixture instead.

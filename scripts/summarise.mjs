@@ -10,8 +10,6 @@
 
 import { readFileSync, existsSync, appendFileSync } from 'node:fs';
 import { stopped } from './lib/budget.mjs';
-import { loadState } from './lib/scan.mjs';
-import { lintDecision, LINT_MAX_ROUNDS } from './lib/lint-rules.mjs';
 
 const out = [];
 const w = (l = '') => out.push(l);
@@ -88,55 +86,6 @@ if (failedStep && !budget) {
   w(env('OUTCOME_COMMIT') === 'success'
     ? '> Work that finished before the failure was committed, so nothing paid for is lost.'
     : '> Nothing was committed.');
-  w();
-}
-
-// ---------------------------------------------------------------- what is still broken
-//
-// A standing list, read from state.json rather than from this run's report, and shown on
-// EVERY run whether or not the folder was touched.
-//
-// The folder table below only has rows for folders this run processed. A file lint gave up
-// on is, by construction, one lint will not look at again - so after the run that broke it,
-// its folder never appears in another table and the failure is invisible. That is exactly
-// what happened to house-robber: refused twice at 06:32, and the 06:40 run reported the
-// same file as "already linted" and went green.
-//
-// Nothing else in the pipeline is allowed to go quiet like that, so this section is the
-// place a known-bad file has to keep showing up until somebody retries it.
-const stuck = [];
-try {
-  const st = loadState();
-  for (const [slug, rec] of Object.entries(st.problems ?? {}))
-    for (const [file, l] of Object.entries(rec.lint ?? {}))
-      if (l && l.failed) stuck.push({
-        slug, file,
-        reason: l.reason ?? 'no reason recorded',
-        rounds: l.attempts ?? 1,
-        retrying: lintDecision(l, null).action === 'lint',
-      });
-} catch { /* a summary must never be the thing that fails a run */ }
-
-if (stuck.length) {
-  const over = stuck.filter((x) => !x.retrying);
-  w('> [!WARNING]');
-  w(`> ### ⚠️ ${stuck.length} file(s) lint could not rewrite`);
-  w('>');
-  w('> They carry whatever spacing and variable names you submitted, and everything');
-  w('> downstream - header, teaching block, visualizer - describes them as they are.');
-  w('>');
-  for (const x of stuck) {
-    const tag = x.retrying
-      ? `refused on ${x.rounds} of ${LINT_MAX_ROUNDS} run(s) — **another retry is due**`
-      : `refused on ${x.rounds} run(s) — **given up on, not retried again**`;
-    w(`> - \`${x.slug}/${x.file}\` — ${tag}`);
-    w(`>   <br><sub>${x.reason.replace(/`/g, "'")}</sub>`);
-  }
-  if (over.length) {
-    w('>');
-    w('> **To force one of the given-up files:** run the workflow with `Process-Specific-folder`');
-    w('> set to the slug and `Back-Fill` on. That is the only path that passes `--force`.');
-  }
   w();
 }
 

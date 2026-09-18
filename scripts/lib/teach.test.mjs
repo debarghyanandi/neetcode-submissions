@@ -16,6 +16,9 @@ const ok = (name, cond, extra = '') => { if (cond) { pass++; console.log(`ok    
 const GOOD = `Sure, here it is.
 @@ PATTERN
 Post-order DFS - height up, diameter in a field
+@@ VARIABLES
+diameter  the best edge count seen so far
+node      the subtree root being measured
 @@ WHY THIS PATTERN
 The path bends at one node.
 @@ BRUTE FORCE
@@ -47,14 +50,23 @@ ok('no key detail at all is fine', !!parseTeachText(GOOD.replace(/@@ KEY DETAIL[
 const block = g.out ? buildTeachingBlock({ pattern: g.out.pattern, sections: toSections(g.out, { status: 'Optimal' }) }, { source: 's', status: 'Optimal', time: 'O(n)', space: 'O(n)' }) : '';
 const heads = block.split('\n').filter((l) => /^[A-Z#][A-Z#, -]+$/.test(l) && !/^=+$/.test(l));
 ok('the block comes out in the fixed order',
-  JSON.stringify(heads) === JSON.stringify(['WHY THIS PATTERN', 'BRUTE FORCE', 'INVARIANT', 'NODES UP, EDGES OUT', 'WATCH OUT', 'FOLLOW-UP AN INTERVIEWER WILL ASK', 'TRIGGER', 'C# NOTE', 'COMPLEXITY']),
+  JSON.stringify(heads) === JSON.stringify(['VARIABLES', 'WHY THIS PATTERN', 'BRUTE FORCE', 'INVARIANT', 'NODES UP, EDGES OUT', 'WATCH OUT', 'FOLLOW-UP AN INTERVIEWER WILL ASK', 'TRIGGER', 'C# NOTE', 'COMPLEXITY']),
   JSON.stringify(heads));
+
+// The glossary is why lint stopped renaming: a name that needs explaining gets a line
+// here instead of being rewritten in the author's code.
+ok('the variables glossary is read, one line per name',
+  g.out?.variables === 'diameter  the best edge count seen so far\nnode      the subtree root being measured', JSON.stringify(g.out?.variables));
+ok('and its alignment survives into the block', block.includes('diameter  the best edge count seen so far'));
+ok('it comes before any section that uses the names',
+  block.indexOf('VARIABLES') < block.indexOf('WHY THIS PATTERN'));
 
 const bad = (name, text, mention) => {
   const r = parseTeachText(text);
   ok(name, !r.out && r.errors.some((e) => e.includes(mention)), r.errors.join('; ') || 'accepted');
 };
 bad('a missing section is refused', GOOD.replace(/@@ INVARIANT\n[^\n]*\n/, ''), 'missing "@@ INVARIANT"');
+bad('and so is a reply with no glossary', GOOD.replace(/@@ VARIABLES\n[^\n]*\n[^\n]*\n/, ''), 'missing "@@ VARIABLES"');
 bad('an empty section is refused', GOOD.replace('diameter is never reset.', ''), 'is empty');
 bad('one follow-up is not enough', GOOD.replace(/Q: Return the path\?\nA: Track the bend node;\nextra state per frame.\n/, ''), 'need 2 to 4');
 bad('three key details are too many', GOOD.replace('@@ WATCH OUT', '@@ KEY DETAIL: A\nx\n@@ KEY DETAIL: B\ny\n@@ WATCH OUT'), 'at most 2');

@@ -34,6 +34,7 @@ export const SECTIONS_SCHEMA = {
   additionalProperties: false,
   properties: {
     pattern: text('The pattern name for the banner, e.g. "Sliding Window / Greedy - track the running minimum". Under 60 chars.'),
+    variables: text('One line per NON-OBVIOUS local variable in this file, in the order they first appear, as "name  what it holds". Use the EXACT names in the code - they are the author\'s and are never renamed. An indexed table gets its meaning written as an equation: "dp  dp[i] = best loot from houses 0..i". Skip ordinary loop counters (i, j, k) and anything whose name already says it. Three to six lines is normal; write nothing at all if every name is self-evident.'),
     whyThisPattern: text('2-4 sentences. What in the PROBLEM STATEMENT points at this pattern, and why the pattern solves it. Name this file\'s variables.'),
     bruteForce: text('2-4 sentences. If STATUS is Optimal or an Optimal variant: the simplest CORRECT approach a person would write first, its complexity, and why it loses. Not a broken version of this code. If STATUS is Suboptimal: the better approach, and exactly why this file loses to it.'),
     invariant: text('2-4 sentences. The invariant and the correctness argument: what stays true at each step of THIS code, and why that makes the answer right.'),
@@ -59,7 +60,7 @@ export const SECTIONS_SCHEMA = {
     trigger: text('ONE sentence: the signal in a new problem that should make you reach for this pattern next time.'),
     csharpNote: text('1-2 sentences. One C#-specific point about this code - the right collection, a costly API, a better idiom - that no other field already made. Grounded in the code, not folklore.'),
   },
-  required: ['pattern', 'whyThisPattern', 'bruteForce', 'invariant', 'keyDetails', 'watchOut', 'followUps', 'trigger', 'csharpNote'],
+  required: ['pattern', 'variables', 'whyThisPattern', 'bruteForce', 'invariant', 'keyDetails', 'watchOut', 'followUps', 'trigger', 'csharpNote'],
 };
 
 /**
@@ -72,6 +73,11 @@ export function toSections(out, ctx) {
     .map((f, i) => `${i + 1}. ${String(f.question).trim()}\n   ${String(f.answer).trim()}`)
     .join('\n');
   return [
+    // First, because on revision it is the thing you need before any sentence that
+    // uses a name. It exists BECAUSE lint no longer renames anything: where a name
+    // is genuinely opaque, the answer is a glossary beside the code, not a rewrite
+    // of the code. A glossary is additive and reversible; a rename is neither.
+    { title: 'VARIABLES', body: out.variables },
     { title: 'WHY THIS PATTERN', body: out.whyThisPattern },
     { title: suboptimal ? 'BETTER APPROACH' : 'BRUTE FORCE', body: out.bruteForce },
     { title: 'INVARIANT', body: out.invariant },
@@ -96,6 +102,7 @@ export function toSections(out, ctx) {
  */
 export const MARKERS = [
   ['pattern', 'PATTERN'],
+  ['variables', 'VARIABLES'],
   ['whyThisPattern', 'WHY THIS PATTERN'],
   ['bruteForce', 'BRUTE FORCE'],
   ['invariant', 'INVARIANT'],
@@ -197,6 +204,10 @@ export const TEACH_INSTRUCTIONS = (ctx) => [
   '',
   `@@ PATTERN`,
   `   ${guide('pattern')}`,
+  `@@ VARIABLES`,
+  `   ${guide('variables')} Write it as aligned plain text, one per line, for example:`,
+  `   dp       dp[i] = best loot from houses 0..i`,
+  `   prev2    the answer two houses back`,
   `@@ WHY THIS PATTERN`,
   `   ${guide('whyThisPattern')}`,
   `@@ BRUTE FORCE`,
@@ -255,7 +266,17 @@ export function buildTeachingBlock({ pattern, sections }, ctx) {
   ];
 
   for (const s of sections) {
-    lines.push(safe(String(s.title).toUpperCase().trim()));
+    const title = safe(String(s.title).toUpperCase().trim());
+    lines.push(title);
+    // VARIABLES is a two-column glossary, not prose. wrap() reflows paragraphs and
+    // collapses runs of spaces, which turns "dp       dp[i] = ..." into one ragged
+    // sentence and loses the column the whole section is FOR. So it is emitted
+    // verbatim, one line per name, with over-long lines left long rather than
+    // folded into the wrong column. A test pins this.
+    if (title === 'VARIABLES') {
+      lines.push(...safe(s.body).split('\n').map((l) => (l.trim() ? '  ' + l.replace(/\s+$/, '') : '')));
+      continue;
+    }
     lines.push(...wrap(safe(s.body), WIDTH).map((l) => (l ? '  ' + l : '')));
   }
 

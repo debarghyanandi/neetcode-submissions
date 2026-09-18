@@ -227,28 +227,29 @@ jobs:
         if: github.event.inputs['Back-Fill'] == 'true' && github.event.inputs['Process-Specific-folder'] == ''
         run: node scripts/select-backfill.mjs --limit "${{ github.event.inputs['Back-Fill-Limit'] || '5' }}"
 
-      - name: Lint - spacing and variable names
+      - name: Format the solution code
         id: lint
         if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
-        # FAIL FAST. No continue-on-error: if this step fails, the job is marked failed and
-        # every later model step is skipped (a step `if:` without a status function carries
-        # an implicit success()). Apply, commit and summarise still run - see their `if:` -
-        # so work that finished before the failure is kept, and the run ends red.
+        # NO MODEL, NO TOKEN. This step used to ask Haiku to rename local variables as
+        # well as tidy spacing; the renaming is gone (lint.mjs explains why, with the
+        # audit that ended it) and what is left is `dotnet format whitespace`, which is
+        # deterministic and free. It keeps its place at the front of the pipeline so a
+        # file is in its final shape before anything describes it.
+        #
+        # It still fails fast, but now only for one reason: sameShape() caught the
+        # formatter changing a token, which would mean it is no longer whitespace-only
+        # and the design of this step is broken.
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PIPELINE_REPORT: ${{ runner.temp }}/pipeline-report.tsv
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
-          # A named folder is an explicit instruction; the backfill batch is a
-          # queue. Naming folders wins, and the queue is not consulted at all.
           BATCH: ${{ github.event.inputs['Process-Specific-folder'] || steps.batch.outputs.slugs }}
           NAMED: ${{ github.event.inputs['Process-Specific-folder'] }}
           LIMIT_IN: ${{ github.event.inputs['Back-Fill-Limit'] }}
+          # Formatting again costs nothing, so Back-Fill just means "do it anyway",
+          # e.g. to roll out an .editorconfig change.
           REDO: ${{ github.event.inputs['Back-Fill'] == 'true' && 'yes' || '' }}
         run: |
           set -euo pipefail
-          # Lint runs BEFORE classify. The header, the teaching block and the
-          # visualizer all name variables, so renaming after they are written
-          # would leave every one of them describing code that no longer exists.
           # A named list is not a queue: process all of it, whatever --limit says.
           limit="${LIMIT_IN:-5}"
           if [ -n "${NAMED:-}" ]; then limit=0; fi
@@ -256,8 +257,7 @@ jobs:
           if [ -n "${BATCH:-}" ]; then
             args+=(--slug "$BATCH")
           fi
-          if [ -n "${NAMED:-}" ] && [ -n "${REDO:-}" ]; then
-            # Also the only way back for a file lint recorded as failed twice.
+          if [ -n "${REDO:-}" ]; then
             args+=(--force)
           fi
           if [ -n "$BEFORE_SHA" ]; then
