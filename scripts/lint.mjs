@@ -31,6 +31,7 @@ import { LINT_FORMAT, LINT_MAX_ROUNDS, lintDecision, lintWanted } from './lib/li
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { usageOf, usageLine, leanArgs } from './lib/usage.mjs';
+import { formatMany, dotnetAvailable, toEol } from './lib/format.mjs';
 
 
 const argv = process.argv.slice(2);
@@ -79,12 +80,12 @@ const INSTRUCTIONS = [
   'sequence differs by anything other than names and spacing, so a "small improvement"',
   'to the logic fails the whole file rather than shipping.',
   '',
-  'Formatting: four spaces per level, one space around binary operators, no trailing',
-  'whitespace, no line over roughly 100 columns. Where a brace is already there, put the',
-  'opening one on its own line.',
+  'FORMATTING IS NOT YOUR JOB. The code on stdin has already been formatted by a',
+  'deterministic formatter (dotnet format), and it will be run over your answer again',
+  'afterwards. Reproduce the whitespace exactly as you find it and spend nothing on it.',
   '',
-  'BRACES ARE STRUCTURE, NOT FORMATTING. The rewrite must contain exactly as many { and }',
-  'as the original - count them. A body written without braces stays without braces:',
+  'In particular, LEAVE THE BRACES ALONE. The rewrite must contain exactly as many { and',
+  '} as the original - count them. A body written without braces stays without braces:',
   '',
   '    if (n == 1)',
   '        return nums[0];',
@@ -191,11 +192,14 @@ if (limit) targets = targets.slice(0, limit);
 
 if (!targets.length) { console.log('\nNothing to lint.\n'); process.exit(0); }
 
-console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - lint, model ${model}, ${targets.length} folder(s)\n`);
+console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - lint, model ${model}, ${targets.length} folder(s)`);
+console.log(dotnetAvailable()
+  ? '  spacing: dotnet format whitespace (deterministic) · names: the model\n'
+  : '  spacing: NOT APPLIED - no dotnet on PATH · names: the model\n');
 
 if (haltIfStopped('lint', targets.map((p) => p.slug))) process.exit(1);
 
-let failures = 0, changed = 0, clean = 0, givenUp = 0;
+let failures = 0, changed = 0, clean = 0, givenUp = 0, reindented = 0;
 // The account, not the file. Recording a lint failure here would be a lie that
 // costs money later: a file marked `failed: true` is never retried without
 // --force, so one session limit would permanently retire a perfectly good file.
@@ -212,16 +216,64 @@ for (const p of targets) {
     console.log(`  ${s.file.padEnd(22)} skipped - superseded by ${s.supersededBy}`);
   }
 
-  for (const file of files) {
+  // Read the folder, then format the whole of it in ONE dotnet call - it pays a few
+  // seconds of SDK start-up per invocation, which is worth batching away.
+  //
+  // This happens BEFORE the model sees anything, for two reasons. The spacing is then
+  // already right whether or not a model call follows, so a file lint is not renaming
+  // still gets tidied - free, and impossible to get wrong. And the model is handed
+  // code that needs no formatting, so the prompt can tell it to leave whitespace alone
+  // instead of asking it for an opinion about braces.
+  const prepared = files.map((file) => {
     const full = join(p.dir, file);
     const raw = readFileSync(full, 'utf8');
     const { code: withHeader, eol } = splitTrailingTeach(raw);
     const teachBlock = raw.slice(withHeader.length);
     const { body, had } = stripHeader(withHeader);
     const header = had ? withHeader.slice(0, withHeader.length - body.length) : '';
+    return { file, full, eol, teachBlock, header, body };
+  });
 
+  const formattedIn = formatMany(prepared.map((x) => x.body));
+  if (formattedIn) {
+    for (let i = 0; i < prepared.length; i++) {
+      const x = prepared[i];
+      const tidy = toEol(formattedIn[i], x.eol).replace(/\s+$/, '');
+      if (tidy.trim() === x.body.trim()) continue;
+      // The formatter is not trusted either. Whitespace is all it is allowed to
+      // change, and sameShape() is exactly the thing that knows the difference.
+      const check = sameShape(x.body, tidy);
+      if (!check.ok) {
+        console.log(`  ${x.file.padEnd(22)} formatter CHANGED CODE, not just spacing - ignored: ${check.errors[0]}`);
+        console.log(`::warning::dotnet format altered tokens in ${p.slug}/${x.file}; the original was kept`);
+        report('lint', p.slug, 'refused', `${x.file}: dotnet format changed more than whitespace - ${check.errors[0]}`);
+        continue;
+      }
+      x.body = tidy;
+      x.reindented = true;
+    }
+  } else if (!dotnetAvailable()) {
+    console.log('  (no dotnet on PATH - spacing left as submitted)');
+  } else {
+    console.log('  (dotnet format failed - spacing left as submitted)');
+  }
+
+  for (const { file, full, eol, teachBlock, header, body, reindented: wasReindented } of prepared) {
     const rec = state.problems[p.slug]?.lint?.[file];
     const print = shortPrint(body);
+    const writeBody = (code) =>
+      writeFileSync(full, header + code.replace(/^(\r?\n)+/, '').replace(/\s+$/, '') + eol + teachBlock, 'utf8');
+    // A file lint will not rename still gets its spacing, because the formatter
+    // already did it and it costs nothing. Safe to do to a curated file: every
+    // print in state.json (codePrint, headerSignature, teachSignature, the
+    // visualizer's) is computed with whitespace stripped, so reindenting moves
+    // none of them and nothing downstream is invalidated.
+    const saveReindent = (label) => {
+      if (!wasReindented) return;
+      if (doApply) { writeBody(body); touchedSlugs.add(p.slug); }
+      reindented++;
+      console.log(`  ${file.padEnd(22)} ${label} - spacing reformatted`);
+    };
     // A recorded FAILURE is not a recorded success, and the two used to be told
     // apart by nothing at all: this branch checked `version` and printed
     // "already linted" either way. house-robber's submission-0 was refused twice
@@ -237,12 +289,14 @@ for (const p of targets) {
     // keeps being reported, run after run, until somebody forces a retry.
     const decision = lintDecision(rec, print, force);
     if (decision.action === 'skip-done') {
-      console.log(`  ${file.padEnd(22)} already linted`);
-      report('lint', p.slug, 'skipped', `${file}: already linted`);
+      if (wasReindented) saveReindent('already linted');
+      else console.log(`  ${file.padEnd(22)} already linted`);
+      report('lint', p.slug, 'skipped', `${file}: already linted${wasReindented ? ', spacing reformatted' : ''}`);
       clean++; continue;
     }
     if (decision.action === 'skip-refused') {
       console.log(`  ${file.padEnd(22)} NOT LINTED - refused on ${decision.rounds} run(s), not retried again: ${rec.reason ?? 'no reason recorded'}`);
+      saveReindent('names left as submitted');
       report('lint', p.slug, 'refused', `${file}: still unlinted after ${decision.rounds} run(s) - ${rec.reason ?? 'no reason recorded'}. Retry: run the workflow with Process-Specific-folder=${p.slug} and Back-Fill on`);
       givenUp++; continue;
     }
@@ -282,6 +336,7 @@ for (const p of targets) {
     // perfectly good file over a bad runner.
     if (!result && !rejected && !outOfBudget) {
       console.log(`  ${file.padEnd(22)} left untouched - the model call failed, nothing to judge`);
+      saveReindent('names left as submitted');
       report('lint', p.slug, 'failed', `${file}: the model call failed before returning a rewrite - nothing recorded against the file`);
       failures++;
       continue;
@@ -289,6 +344,7 @@ for (const p of targets) {
 
     if (!result && outOfBudget) {
       console.log(`  ${file.padEnd(22)} left untouched - out of budget, not the file`);
+      saveReindent('names left as submitted');
       report('lint', p.slug, 'skipped', `${file}: stopped - out of budget, nothing wrong with this file`);
       break;
     }
@@ -298,6 +354,7 @@ for (const p of targets) {
       const last = round >= LINT_MAX_ROUNDS;
       const why = (feedback && feedback[0]) || 'rewrite rejected twice';
       console.log(`  ${file.padEnd(22)} left untouched - round ${round} of ${LINT_MAX_ROUNDS}${last ? ', no more retries' : ', will be retried next run'}`);
+      saveReindent('names left as submitted');
       // Record the round, and the print of the code it was refused on. The next
       // run reads both: another try while rounds remain, and a clean slate if
       // the file has been edited since. --force retries regardless.
@@ -322,22 +379,36 @@ for (const p of targets) {
       continue;
     }
 
-    const same = result.code.trim() === body.trim();
+    // Format the model's answer too. It was told to reproduce the whitespace it was
+    // given and mostly does, but sameShape() cannot check that - whitespace is the
+    // one thing it ignores - so a sloppy reply would otherwise undo the formatting
+    // this run just did. If the pass fails or (impossibly) moves a token, the
+    // model's own text stands: it already passed sameShape above.
+    let finalCode = result.code;
+    const formattedOut = formatMany([result.code]);
+    if (formattedOut) {
+      const tidy = toEol(formattedOut[0], eol).replace(/\s+$/, '');
+      if (sameShape(body, tidy).ok) finalCode = tidy;
+      else console.log(`  ${file.padEnd(22)} formatter altered the rewrite - keeping the model's text`);
+    }
+
+    const same = finalCode.trim() === body.trim();
     console.log(`  ${file.padEnd(22)} ${same ? 'nothing to change' : result.renames.length ? 'renames: ' + result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : 'spacing only'}  ·  $${(spend || 0).toFixed(4)}`);
     if (!same && !doApply) {
-      console.log(result.code.split('\n').slice(0, 12).map((l) => '      | ' + l).join('\n'));
+      console.log(finalCode.split('\n').slice(0, 12).map((l) => '      | ' + l).join('\n'));
     }
 
     if (doApply) {
-      writeFileSync(full, header + result.code.replace(/^(\r?\n)+/, '').replace(/\s+$/, '') + eol + teachBlock, 'utf8');
+      writeBody(finalCode);
       const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
       (prec.lint ?? (prec.lint = {}))[file] = {
         version: LINT_FORMAT,
-        codePrint: shortPrint(result.code),
+        codePrint: shortPrint(finalCode),
         renames: result.renames.map(([a, b]) => `${a}->${b}`),
       };
       report('lint', p.slug, 'ok', `${file}: ${result.renames.length ? result.renames.map(([a, b]) => `${a}->${b}`).join(', ') : same ? 'nothing to change' : 'spacing tidied'}`);
       if (!same) { changed++; touchedSlugs.add(p.slug); }
+      else if (wasReindented) { reindented++; touchedSlugs.add(p.slug); }
     }
   }
   endGroup();
@@ -346,7 +417,7 @@ for (const p of targets) {
 
 if (doApply) saveState(state);
 if (outOfBudget) announceBudget(outOfBudget);
-console.log(`${changed} file(s) changed, ${clean} already linted, ${failures} failed (retry next run)${givenUp ? `, ${givenUp} given up on` : ''}${outOfBudget ? ', rest not attempted' : ''}.\n`);
+console.log(`${changed} file(s) changed, ${reindented} reformatted only, ${clean} already linted, ${failures} failed (retry next run)${givenUp ? `, ${givenUp} given up on` : ''}${outOfBudget ? ', rest not attempted' : ''}.\n`);
 if (givenUp) console.log(`::warning::${givenUp} file(s) have now been refused on ${LINT_MAX_ROUNDS} runs and are not retried again. They are listed in the run summary.`);
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);

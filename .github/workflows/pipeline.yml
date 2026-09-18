@@ -175,6 +175,34 @@ jobs:
           # up, so a new test file needs no change here.
           for t in scripts/lib/*.test.mjs; do echo "--- $t"; node "$t"; done
 
+      - name: Guard - the formatter must be there
+        run: |
+          set -euo pipefail
+          # Spacing is done by `dotnet format whitespace`, not by the model. The SDK is
+          # preinstalled on ubuntu-24.04 (8.x, 9.x and 10.x), so there is no setup-dotnet
+          # step and nothing to install - but lint degrades QUIETLY when dotnet is absent,
+          # and a pipeline that silently stops doing half its job is the exact failure
+          # this repo has already been bitten by. So assert it, here, before anything runs.
+          if ! command -v dotnet >/dev/null; then
+            echo "::error::dotnet is not on PATH; lint would skip formatting silently. Add actions/setup-dotnet."
+            exit 1
+          fi
+          dotnet --version
+          # Prove the tool is the whitespace-only one, on a file shaped like the one that
+          # broke house-robber: a braceless `if`. If a future SDK ever starts adding the
+          # braces here, lint's sameShape() would refuse every file it touches - so find
+          # out now, for free, rather than four model calls later.
+          tmp="$(mktemp -d)"
+          cp .editorconfig "$tmp/" 2>/dev/null || true
+          printf 'public class S\n{\n    public int F(int n)\n    {\n        if(n == 1)\n        return 0;\n        return n;\n    }\n}\n' > "$tmp/S.cs"
+          DOTNET_NOLOGO=1 dotnet format whitespace --folder "$tmp" --verbosity quiet
+          if grep -q '{' <<< "$(sed -n '/if (n == 1)/,+1p' "$tmp/S.cs")"; then
+            echo "::error::dotnet format added braces to a braceless if - it is no longer whitespace-only"
+            cat "$tmp/S.cs"
+            exit 1
+          fi
+          echo "formatter is whitespace-only, as expected"
+
       - name: Install Claude Code
         if: steps.detect.outputs.count != '0' || github.event.inputs['Back-Fill'] == 'true' || github.event.inputs['Process-Specific-folder'] != ''
         # PINNED. An unpinned install takes whatever was released that morning, and a release can

@@ -60,7 +60,7 @@ turn them into a curated folder.
 | # | command | model | what it does |
 |---|---|---|---|
 | 1 | `detect.mjs` | none | which folders have raw submissions waiting |
-| 2 | `lint.mjs` | Haiku | tidy spacing and variable names |
+| 2 | `lint.mjs` | `dotnet format` + Haiku | spacing deterministically, then variable names |
 | 3 | `classify.mjs` | Haiku | work out complexity, rename files, write the header |
 | 4 | `teach.mjs` | Opus | write the study block at the bottom of each file |
 | 5 | `visualize.mjs` | Opus, medium effort | build the animation |
@@ -738,7 +738,7 @@ pending  2 folder(s) -> 1 selected, 1 held back
 node scripts/detect.mjs                              # free, no AI
 node scripts/apply.mjs                               # free, regenerates the tables
 node scripts/lint.mjs --slug two-integer-sum         # dry run, shows the diff
-for t in scripts/lib/*.test.mjs; do node "$t"; done  # 264 tests, free
+for t in scripts/lib/*.test.mjs; do node "$t"; done  # 279 tests, free
 ```
 
 `git checkout -- .` throws away anything a dry run's `--apply` twin did locally.
@@ -1004,7 +1004,7 @@ Strip out the AI specifics and the method is ordinary engineering:
    were prompt problems.
 7. **Two dials, not one.** Cheaper-and-harder vs stronger-and-lighter.
 8. **Every loosened constraint needs a new check**, written before you trust it.
-9. **Fail loudly, measure publicly.** 264 tests run before the first paid call;
+9. **Fail loudly, measure publicly.** 279 tests run before the first paid call;
    the cost of every run is printed where you cannot miss it.
 
 And the rule that governs all of it, the same one from Part 1:
