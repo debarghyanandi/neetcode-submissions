@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T06:34:09.148Z",
+  "updatedAt": "2026-09-18T06:42:37.355Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1444,27 +1444,105 @@
     },
     "house-robber": {
       "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "6d5d9284d4324514bcc5c365eda268478c0e5a33df7e284ec817f0d86d23f651": "optimal.cs",
+        "0dcf956323032721c2e893b3ba04cda5cc7c6e60a9f60ca485f30a2842f38734": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "6d5d9284d4324514bcc5c365eda268478c0e5a33df7e284ec817f0d86d23f651": "optimal.cs",
+        "0dcf956323032721c2e893b3ba04cda5cc7c6e60a9f60ca485f30a2842f38734": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 1,
+          "codePrint": "34219e23d560",
+          "renames": []
+        },
+        "suboptimal.cs": {
+          "version": 1,
+          "failed": true,
+          "reason": "token count changed: 145 before, 147 after - something other than names or spacing was edited"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized dynamic programming\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming with DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Space-optimized dynamic programming",
+          "approachKey": "house-robber-dp",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Dynamic programming with DP table",
+          "approachKey": "house-robber-dp",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized dynamic programming\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming with DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "34219e23d560",
+          "suboptimal.cs": "befda3bfc2de"
+        },
+        "structures": [
+          "array",
+          "dp-table"
+        ],
+        "builtAt": "2026-09-18T06:42:37.101Z"
+      }
+    },
+    "house-robber-ii": {
+      "topic": "Data Structures & Algorithms",
       "curatedFiles": [],
       "hasVisualizer": false,
       "processedSubmissions": [],
       "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+        "submission-0.cs"
       ],
       "knownFingerprints": {},
-      "fingerprints": {},
-      "lint": {
-        "submission-0.cs": {
-          "version": 1,
-          "failed": true,
-          "reason": "token count changed: 145 before, 147 after - something other than names or spacing was edited"
-        },
-        "submission-1.cs": {
-          "version": 1,
-          "codePrint": "34219e23d560",
-          "renames": []
-        }
-      }
+      "fingerprints": {}
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
