@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T06:42:37.355Z",
+  "updatedAt": "2026-09-18T07:48:44.661Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1462,18 +1462,26 @@
       "lint": {
         "optimal.cs": {
           "version": 1,
-          "codePrint": "34219e23d560",
-          "renames": []
+          "codePrint": "b36b9b4a4f3f",
+          "renames": [
+            "n->length",
+            "prev2->prevPrev"
+          ]
         },
         "suboptimal.cs": {
           "version": 1,
-          "failed": true,
-          "reason": "token count changed: 145 before, 147 after - something other than names or spacing was edited"
+          "codePrint": "560ce6f6eb58",
+          "renames": [
+            "n->numsLength",
+            "dp->maxAmount",
+            "pick->robCurrent",
+            "notPick->skipCurrent"
+          ]
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized dynamic programming\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming with DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"b36b9b4a4f3f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized linear DP, rolling variables\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"560ce6f6eb58\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Linear DP with full DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1491,7 +1499,7 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Space-optimized dynamic programming",
+          "algorithm": "Space-optimized linear DP, rolling variables",
           "approachKey": "house-robber-dp",
           "correct": true,
           "bruteForce": false,
@@ -1502,7 +1510,7 @@
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Dynamic programming with DP table",
+          "algorithm": "Linear DP with full DP table",
           "approachKey": "house-robber-dp",
           "correct": true,
           "bruteForce": false,
@@ -1513,8 +1521,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized dynamic programming\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming with DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"b36b9b4a4f3f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized linear DP, rolling variables\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"560ce6f6eb58\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Linear DP with full DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1523,14 +1531,14 @@
           "suboptimal.cs"
         ],
         "prints": {
-          "optimal.cs": "34219e23d560",
-          "suboptimal.cs": "befda3bfc2de"
+          "optimal.cs": "b36b9b4a4f3f",
+          "suboptimal.cs": "560ce6f6eb58"
         },
         "structures": [
           "array",
           "dp-table"
         ],
-        "builtAt": "2026-09-18T06:42:37.101Z"
+        "builtAt": "2026-09-18T07:48:44.658Z"
       }
     },
     "house-robber-ii": {

@@ -651,162 +651,179 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'House Robber',
-  note: 'at every house the only question is: take it and skip the neighbour, or keep what you had',
-  inputs: [{id:'n', label:'nums', value:'2,7,9,3,1,5', width:260}],
+  note: 'at every house the only question is: take it and skip back two, or skip it and keep what you had',
+  inputs: [{id:'n', label:'nums', value:'2,7,9,3,1,5,8', width:260}],
   parse(raw){
-    const n = parseInts(raw.n, 10);
+    const n = parseInts(raw.n, 12);
     if (!n) return {ok:false, msg:'Enter a valid comma-separated list of house values.'};
     if (n.some(v => v < 0)) return {ok:false, msg:'House values must be non-negative.'};
-    if (n.length > 10) return {ok:false, msg:'Keep it to 10 houses so the run stays watchable.'};
-    return {ok:true, value:{nums:n}, normalized:{n: n.join(',')}};
+    return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
-  shuffle(){ return {n: randInts(5 + Math.floor(Math.random()*3), 1, 12).join(',')}; },
+  shuffle(){ return {n: randInts(6 + Math.floor(Math.random()*3), 0, 12).join(',')}; },
   solutions: [
   {
-    label: 'Two rolling numbers',
-    badge: 'O(n) time · O(1) space · space-optimized DP · optimal.cs',
-    blurb: 'The best haul through house <b>i</b> is either <code>nums[i] + best(i-2)</code> or <code>best(i-1)</code> — nothing older than two houses back can ever change that choice. So the whole table collapses to two ints, <code>prev2</code> and <code>prev</code>, shuffled forward one house at a time.',
+    label: 'Two rolling variables',
+    badge: 'O(n) time · O(1) space · linear DP · optimal.cs',
+    blurb: 'The best haul up to house <b>i</b> is either <code>nums[i] + best(i-2)</code> or <code>best(i-1)</code> — nothing older than two steps back can ever be asked about again. So the whole table collapses to two ints, <code>prevPrev</code> and <code>prev</code>, that shuffle forward one house per iteration.',
     legend: [
-      {cls:'hot', text:'house i — being decided'},
-      {cls:'good', text:'prev — best through i-1'},
-      {cls:'in-window', text:'prev2 — best through i-2'},
-      {cls:'dim', text:'not reached yet'}
+      {cls:'hot', text:'house i — the pick/skip decision'},
+      {cls:'good', text:'prev — best through house i-1'},
+      {cls:'in-window', text:'prevPrev — best through house i-2'},
+      {cls:'dim', text:'not yet reached'}
     ],
     code: [
       '//Dp space Optimized',
-      'int n = nums.Length;',
+      'int length = nums.Length;',
       '',
-      'if (n == 1)',
+      'if (length == 1)',
       '    return nums[0];',
       '',
-      'int prev2 = nums[0];',
+      'int prevPrev = nums[0];',
       'int prev = Math.Max(nums[0], nums[1]);',
       'int curr = 0;',
       '',
-      'for (int i = 2; i < n; i++)',
+      'for (int i = 2; i < length; i++)',
       '{',
-      '    int pick = nums[i] + prev2;',
+      '    int pick = nums[i] + prevPrev;',
       '    int notPick = 0 + prev;',
       '    curr = Math.Max(pick, notPick);',
       '',
-      '    prev2 = prev;',
+      '    prevPrev = prev;',
       '    prev = curr;',
       '}',
       '',
       'return prev;'
     ],
     simulate(input){
-      const a = input.nums, n = a.length, steps = [];
-      let prev2 = 0, prev = 0, curr = 0, i = -1;
-      const panels = (pick, notPick) => [
+      const a = input.n, steps = [];
+      let prevPrev = 0, prev = 0, curr = 0, pick = null, notPick = null;
+      const panels = (i, started) => [
         pBars('houses', a, (k) => ({
           cls: k === i ? 'hot'
-             : (i >= 0 && k === i - 1) ? 'good'
-             : (i >= 0 && k === i - 2) ? 'in-window'
+             : (started && k === i - 1) ? 'good'
+             : (started && k === i - 2) ? 'in-window'
              : (i >= 0 && k > i) ? 'dim' : 'done'
         })),
         pPills('rolling state', [
-          {k:'i', v: i < 0 ? '–' : i, cls:'hot'},
-          {k:'prev2 (best through i-2)', v: prev2, cls:'in-window'},
-          {k:'prev (best through i-1)', v: prev, cls:'good'},
-          {k:'pick', v: pick === undefined ? '–' : pick},
-          {k:'notPick', v: notPick === undefined ? '–' : notPick},
-          {k:'curr', v: curr}
-        ])
+          {k:'prevPrev', v: started ? prevPrev : '-', cls:'in-window'},
+          {k:'prev', v: started ? prev : '-', cls:'good'},
+          {k:'pick', v: pick === null ? '-' : pick, cls:'hot'},
+          {k:'notPick', v: notPick === null ? '-' : notPick},
+          {k:'curr', v: started ? curr : '-'}
+        ]),
+        pNote('the recurrence', 'best(i) = max(nums[i] + best(i-2), best(i-1)). Only two of those values are ever live, so two ints are a whole DP table.')
       ];
-      steps.push({lines:[1,2], msg:'<b>' + n + '</b> houses. Robbing two adjacent houses trips the alarm, so a plain "take the biggest" is wrong — the answer has to be built left to right.', panels: panels()});
-      if (n === 1){
-        steps.push({lines:[4,5], msg:'Only one house, so there is no neighbour to conflict with and no window of two to initialise. Return <b>' + a[0] + '</b> straight away — the loop below would read <code>nums[1]</code> and crash.', panels: panels()});
+      steps.push({lines:[2], msg:'<b>' + a.length + '</b> houses. The street is a line, and the only rule is that two adjacent houses cannot both be robbed.', panels: panels(-1, false)});
+      if (a.length === 1){
+        steps.push({lines:[4,5], msg:'A single house has no neighbour to conflict with, so the answer is just <b>' + a[0] + '</b>. This guard exists because the next line reads <code>nums[1]</code>, which would be out of bounds here.', panels: panels(0, false)});
         return steps;
       }
-      steps.push({lines:[4], msg:'<code>n</code> is ' + n + ', not 1, so the guard falls through. It exists only because the next two lines both touch <code>nums[1]</code>.', panels: panels()});
-      prev2 = a[0];
+      prevPrev = a[0];
       prev = Math.max(a[0], a[1]);
-      steps.push({lines:[7,8,9], msg:'Seed the two-house window by hand. Best through house 0 is just <b>' + a[0] + '</b>. Best through house 1 is <code>Math.Max(' + a[0] + ', ' + a[1] + ')</code> = <b>' + prev + '</b>, because those two are adjacent and only one of them can be robbed.', panels: panels()});
-      for (i = 2; i < n; i++){
-        const pick = a[i] + prev2;
-        const notPick = 0 + prev;
+      curr = 0;
+      steps.push({lines:[7,8,9], msg:'Seed the two base cases. Through house 0 the best is <b>' + a[0] + '</b>. Through house 1 you must choose one of the two neighbours, so it is <code>max(' + a[0] + ', ' + a[1] + ')</code> = <b>' + prev + '</b> — not their sum, because they are adjacent.', panels: panels(1, true)});
+      for (let i = 2; i < a.length; i++){
+        pick = a[i] + prevPrev;
+        notPick = 0 + prev;
         curr = Math.max(pick, notPick);
-        steps.push({lines:[13,14,15], msg:'House ' + i + ' holds <b>' + a[i] + '</b>. Rob it and house ' + (i-1) + ' is off limits, so the haul is ' + a[i] + ' + prev2 ' + prev2 + ' = <b>' + pick + '</b>. Skip it and you simply keep prev = <b>' + notPick + '</b>. ' + (pick > notPick ? 'Picking wins' : pick === notPick ? 'They tie, so <code>Math.Max</code> keeps notPick' : 'Skipping wins') + ' → curr = <b>' + curr + '</b>.', panels: panels(pick, notPick)});
-        const oldPrev = prev;
-        prev2 = prev; prev = curr;
-        steps.push({lines:[17,18], msg:'Slide the window forward: what was best-through-' + (i-1) + ' (<b>' + oldPrev + '</b>) becomes the new <code>prev2</code>, and <code>curr</code> becomes the new <code>prev</code>. Everything older than that is now unreachable and never needed again — that is why no array is stored.', panels: panels(pick, notPick)});
+        steps.push({lines:[13,14,15], msg:'House ' + i + ' holds <b>' + a[i] + '</b>. Rob it and house ' + (i-1) + ' is off limits, so add it to <code>prevPrev</code> = ' + prevPrev + ' → <b>' + pick + '</b>. Skip it and you simply keep <code>prev</code> = <b>' + notPick + '</b>. Best is <b>' + curr + '</b>' + (pick >= notPick ? ' (rob).' : ' (skip).'), panels: panels(i, true)});
+        prevPrev = prev;
+        prev = curr;
+        steps.push({lines:[17,18], msg:'Shuffle the window forward: what was <code>prev</code> becomes <code>prevPrev</code>, and <code>curr</code> becomes the new <code>prev</code>. The old <code>prevPrev</code> is three houses back now and can never be referenced again, so dropping it costs nothing.', panels: panels(i, true)});
       }
-      i = -1;
-      steps.push({lines:[21], msg:'The loop ended with <code>prev</code> holding the best through the last house, so the answer is <b>' + prev + '</b>. Two ints did the work of an n-length table.', panels: panels()});
+      pick = null; notPick = null;
+      steps.push({lines:[21], msg:'<code>prev</code> is the best through the last house: <b>' + prev + '</b>. An n-cell table was never needed — the recurrence only ever looks two steps back.', panels: panels(a.length - 1, true)});
       return steps;
     }
   },
   {
-    label: 'Fill a DP table',
-    badge: 'O(n) time · O(n) space · bottom-up DP table · suboptimal.cs',
-    blurb: 'Same recurrence, written out in full: <code>dp[i] = max(nums[i] + dp[i-2], dp[i-1])</code>, with <code>dp[0]</code> and <code>dp[1]</code> seeded by hand. Every answer stays on the shelf even though only the last two are ever read — which is exactly the slack the optimal version cuts.',
+    label: 'Full DP table',
+    badge: 'O(n) time · O(n) space · tabulation · suboptimal.cs',
+    blurb: 'Same recurrence, written out in full: <code>maxAmount[i]</code> is the best haul through house <b>i</b>. Each cell reads only <code>i-1</code> and <code>i-2</code>, so one left-to-right sweep fills the table and the last filled cell is the answer.',
     legend: [
-      {cls:'hot', text:'dp[i] — being written'},
-      {cls:'good', text:'dp[i-1] — the notPick source'},
-      {cls:'in-window', text:'dp[i-2] — the pick source'},
-      {cls:'ghost', text:'still zero, never written'}
+      {cls:'hot', text:'cell being written'},
+      {cls:'in-window', text:'the two cells it reads'},
+      {cls:'done', text:'already filled'},
+      {cls:'ghost', text:'not yet written'}
     ],
     code: [
-      'int n = nums.Length;',
+      'int numsLength = nums.Length;',
       '',
-      'if(n == 1)',
-      'return nums[0];',
+      'if (numsLength == 1)',
+      '    return nums[0];',
       '',
-      'int [] dp = new int [n+1];',
+      'int[] maxAmount = new int[numsLength + 1];',
       '',
       '//Recurrence relation',
-      '//pick = f(indx) + f(indx - 2);',
-      '//not pick = 0 + f(index - 1);',
-      'dp[0] = nums[0];',
-      'dp[1] = Math.Max(nums[0], nums[1]);',
+      '//robCurrent = f(indx) + f(indx - 2);',
+      '//skipCurrent = 0 + f(index - 1);',
+      'maxAmount[0] = nums[0];',
+      'maxAmount[1] = Math.Max(nums[0], nums[1]);',
       '',
-      'for(int i = 2; i < n; i++){',
-      '    int pick = nums[i] + dp[i - 2];',
-      '    int notPick = 0 + dp[i-1];',
-      '    dp[i] = Math.Max(pick, notPick);',
+      'for (int i = 2; i < numsLength; i++)',
+      '{',
+      '    int robCurrent = nums[i] + maxAmount[i - 2];',
+      '    int skipCurrent = 0 + maxAmount[i - 1];',
+      '    maxAmount[i] = Math.Max(robCurrent, skipCurrent);',
       '}',
-      'return dp[n-1];'
+      'return maxAmount[numsLength - 1];'
     ],
     simulate(input){
-      const a = input.nums, n = a.length, steps = [];
-      const dp = new Array(n + 1).fill(0);
-      const written = new Array(n + 1).fill(false);
-      let i = -1;
-      const panels = (pick, notPick) => [
-        pTiles('nums', a, (k) => ({
-          cls: k === i ? 'hot' : (i >= 0 && k > i) ? 'dim' : 'done'
-        }), {scale: 0.9}),
-        pTiles('dp  (length n+1)', dp, (k) => ({
-          cls: !written[k] ? 'ghost'
-             : k === i ? 'hot'
-             : (i >= 0 && k === i - 1) ? 'good'
-             : (i >= 0 && k === i - 2) ? 'in-window' : ''
-        }), {ptrs: i >= 0 ? [{name:'i-2', idx: i-2}, {name:'i-1', idx: i-1, cls:'accent'}, {name:'i', idx: i, cls:'accent'}] : [], scale: 0.9}),
-        pPills('state', [
-          {k:'i', v: i < 0 ? '–' : i, cls:'hot'},
-          {k:'pick', v: pick === undefined ? '–' : pick},
-          {k:'notPick', v: notPick === undefined ? '–' : notPick}
-        ])
-      ];
-      steps.push({lines:[1,6], msg:'<b>' + n + '</b> houses, and <code>dp</code> is allocated with <b>' + (n+1) + '</b> slots — one more than is ever used. The last slot stays 0 forever; the return reads <code>dp[n-1]</code>, not <code>dp[n]</code>. C# zero-fills the array, so every cell starts at 0.', panels: panels()});
-      if (n === 1){
-        steps.push({lines:[3,4], msg:'One house only: return <b>' + a[0] + '</b>. The seeding below writes <code>dp[1]</code> from <code>nums[1]</code>, which does not exist, so this guard is not optional.', panels: panels()});
+      const a = input.n, steps = [];
+      const dp = [];
+      let rob = null, skip = null;
+      const panels = (i, writing) => {
+        const out = [
+          pTiles('nums', a, (k) => ({
+            cls: k === i ? 'hot'
+               : (i >= 0 && k > i) ? 'dim' : 'done'
+          }), {scale: 0.9})
+        ];
+        if (dp.length || writing !== undefined){
+          const cells = [];
+          for (let k = 0; k < a.length + 1; k++){
+            const has = dp[k] !== undefined;
+            cells.push({
+              v: has ? dp[k] : '-',
+              cls: !has ? 'ghost'
+                 : (writing && k === i) ? 'hot'
+                 : (writing && (k === i - 1 || k === i - 2)) ? 'in-window'
+                 : 'done',
+              fresh: writing && k === i
+            });
+          }
+          const ptrs = [];
+          if (i >= 2 && writing){
+            ptrs.push({name:'i-2', idx: i - 2});
+            ptrs.push({name:'i-1', idx: i - 1});
+            ptrs.push({name:'i', idx: i, cls:'accent'});
+          }
+          out.push(Object.assign(pTiles('maxAmount', cells.map(c => c.v), (k) => ({cls: cells[k].cls, fresh: cells[k].fresh}), {ptrs: ptrs, scale: 0.9})));
+        }
+        out.push(pPills('this cell', [
+          {k:'i', v: i < 0 ? '-' : i, cls:'accent'},
+          {k:'robCurrent', v: rob === null ? '-' : rob, cls:'hot'},
+          {k:'skipCurrent', v: skip === null ? '-' : skip},
+          {k:'maxAmount[i]', v: (i >= 0 && dp[i] !== undefined) ? dp[i] : '-', cls:'good'}
+        ]));
+        return out;
+      };
+      steps.push({lines:[1,6], msg:'<b>' + a.length + '</b> houses, so the table is allocated with <code>numsLength + 1</code> cells. The extra trailing cell is never read — the loop stops at <code>numsLength - 1</code> — it is simply slack.', panels: panels(-1, false)});
+      if (a.length === 1){
+        steps.push({lines:[3,4], msg:'One house: nothing to conflict with, return <b>' + a[0] + '</b> before <code>nums[1]</code> is ever touched.', panels: panels(0, false)});
         return steps;
       }
-      steps.push({lines:[3], msg:'More than one house, so we carry on and build the table.', panels: panels()});
-      dp[0] = a[0]; written[0] = true;
-      dp[1] = Math.max(a[0], a[1]); written[1] = true;
-      steps.push({lines:[8,9,10,11,12], msg:'The two base cases. <code>dp[0]</code> = <b>' + a[0] + '</b> — one house, take it. <code>dp[1]</code> = max(' + a[0] + ', ' + a[1] + ') = <b>' + dp[1] + '</b> — two adjacent houses, keep the richer one. Every later cell is defined in terms of these, so they cannot come from the loop.', panels: panels()});
-      for (i = 2; i < n; i++){
-        const pick = a[i] + dp[i-2];
-        const notPick = 0 + dp[i-1];
-        steps.push({lines:[15,16], msg:'At house ' + i + ': <code>pick</code> = nums[' + i + '] ' + a[i] + ' + dp[' + (i-2) + '] ' + dp[i-2] + ' = <b>' + pick + '</b> (rob here, so the best legal haul before it stops at house ' + (i-2) + '). <code>notPick</code> = dp[' + (i-1) + '] = <b>' + notPick + '</b> — walk past and inherit.', panels: panels(pick, notPick)});
-        dp[i] = Math.max(pick, notPick); written[i] = true;
-        steps.push({lines:[17], msg:'<code>dp[' + i + ']</code> = <b>' + dp[i] + '</b>. Because it is stored, the cell is a finished answer: "the most you can take from houses 0..' + i + '". Nothing ever revisits it except the next two iterations.', panels: panels(pick, notPick)});
+      dp[0] = a[0];
+      dp[1] = Math.max(a[0], a[1]);
+      steps.push({lines:[11,12], msg:'Two base cells. <code>maxAmount[0]</code> = <b>' + a[0] + '</b>, the only choice. <code>maxAmount[1]</code> = <code>max(' + a[0] + ', ' + a[1] + ')</code> = <b>' + dp[1] + '</b>, because houses 0 and 1 are adjacent and you may take only one.', panels: panels(1, true)});
+      for (let i = 2; i < a.length; i++){
+        rob = a[i] + dp[i-2];
+        skip = 0 + dp[i-1];
+        dp[i] = Math.max(rob, skip);
+        steps.push({lines:[16,17,18], msg:'At house ' + i + ' worth <b>' + a[i] + '</b>: <code>robCurrent</code> = ' + a[i] + ' + maxAmount[' + (i-2) + '] = <b>' + rob + '</b>, because robbing here forbids house ' + (i-1) + ' and jumps back to ' + (i-2) + '. <code>skipCurrent</code> = maxAmount[' + (i-1) + '] = <b>' + skip + '</b>. Store the larger, <b>' + dp[i] + '</b> — the past is now sealed and never revisited.', panels: panels(i, true)});
       }
-      i = -1;
-      steps.push({lines:[19], msg:'Return <code>dp[' + (n-1) + '] = <b>' + dp[n-1] + '</b></code>. Notice the whole left end of the table is now dead weight — only the final two cells were live at any moment, which is precisely what the O(1) version exploits.', panels: panels()});
+      rob = null; skip = null;
+      steps.push({lines:[20], msg:'The answer is the last filled cell, <code>maxAmount[' + (a.length - 1) + ']</code> = <b>' + dp[a.length - 1] + '</b>. Identical arithmetic to the rolling version — this one just keeps every intermediate answer it will never look at again, which is the O(n) space you can drop.', panels: panels(a.length - 1, false)});
       return steps;
     }
   }]

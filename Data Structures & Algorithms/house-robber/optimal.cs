@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Space-optimized dynamic programming   [house-robber-dp]
+// -  Space-optimized linear DP, rolling variables   [house-robber-dp]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Single pass through houses, tracking only the previous two DP states
-// -  with rolling variables for constant space.
+// -  Only the two most recent DP states are retained in variables; no table
+// -  allocated.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -14,22 +14,22 @@ public class Solution
     public int Rob(int[] nums)
     {
         //Dp space Optimized
-        int n = nums.Length;
+        int length = nums.Length;
 
-        if (n == 1)
+        if (length == 1)
             return nums[0];
 
-        int prev2 = nums[0];
+        int prevPrev = nums[0];
         int prev = Math.Max(nums[0], nums[1]);
         int curr = 0;
 
-        for (int i = 2; i < n; i++)
+        for (int i = 2; i < length; i++)
         {
-            int pick = nums[i] + prev2;
+            int pick = nums[i] + prevPrev;
             int notPick = 0 + prev;
             curr = Math.Max(pick, notPick);
 
-            prev2 = prev;
+            prevPrev = prev;
             prev = curr;
         }
 
@@ -39,66 +39,65 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Linear DP, space-optimized to two rolling variables
+ PATTERN : Linear DP with rolling variables - two-state house robber
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 WHY THIS PATTERN
-  The problem asks for the maximum sum of chosen numbers where no two chosen
-  positions are next to each other. That "cannot take i and i-1" rule means the
-  best answer at house i depends only on the best answers at i-1 and i-2, which
-  is a one-dimensional recurrence. Since the recurrence looks back exactly two
-  steps, the whole DP table collapses into prev2 (best up to i-2) and prev (best
-  up to i-1), and the loop advances them one house at a time.
+  The problem asks for the maximum sum of a subset of nums where no two chosen
+  indexes are adjacent. That gives a clean recurrence: the best answer at house
+  i is either nums[i] plus the best answer two houses back, or the best answer
+  one house back. Because each step only reads the two previous answers, the
+  whole DP table collapses into prevPrev and prev, which slide forward once per
+  index.
 BRUTE FORCE
   The first thing most people write is recursion: rob(i) = max(nums[i] +
-  rob(i-2), rob(i-1)), with no memo. That explores both branches at every index,
-  so it costs about O(2^n) time and O(n) stack depth. Adding a memo array fixes
-  the time to O(n) but still holds an O(n) table; this file keeps the same time
-  and drops the table because only the last two entries are ever read.
+  rob(i-2), rob(i-1)), with no memo. That explores both branches at every index
+  and costs O(2^n) time. Adding a memo array or a full dp[] table fixes the time
+  to O(n) but keeps an O(n) array; this file drops that array because only two
+  cells are ever read.
 INVARIANT
-  At the top of each iteration for index i, prev holds the best total robbing
-  only houses 0..i-1, and prev2 holds the best total for houses 0..i-2. Both
-  choices at house i are covered: pick = nums[i] + prev2 is legal because prev2
-  never includes house i-1, and notPick = prev keeps the previous best
-  untouched. The two assignments at the end shift the window so the invariant
-  holds again for i+1, and after the last iteration prev is the best over all
-  houses, which is what is returned.
+  At the top of each iteration for index i, prev holds the best loot from houses
+  0..i-1 and prevPrev holds the best loot from houses 0..i-2. Both are "best
+  over the whole prefix", not "best ending exactly at that house", which is why
+  max(pick, notPick) is a valid choice - notPick simply carries the prefix
+  answer forward unchanged. The seeds prevPrev = nums[0] and prev = max(nums[0],
+  nums[1]) satisfy the invariant for i = 2, so it holds for every later index
+  and prev at the end is the answer for the whole array.
 WATCH OUT
-  An empty array breaks this: n == 0 skips the n == 1 guard and then nums[0]
-  throws IndexOutOfRangeException. curr is declared outside the loop and
-  initialized to 0, but nothing outside the loop reads it, so that 0 is dead and
-  the return uses prev instead - if someone later changes the return to curr,
-  the n == 2 case would wrongly return 0 because the loop never runs. The 0 + in
-  notPick = 0 + prev is a leftover from writing the recurrence and adds nothing.
-  Note also that prev is seeded with Math.Max(nums[0], nums[1]), which silently
-  assumes n >= 2 at that line.
+  An empty array crashes: length == 1 is checked, but length == 0 falls through
+  to nums[0] and throws IndexOutOfRangeException. The method returns prev, not
+  curr - that is deliberate and must stay that way, because with length == 2 the
+  loop body never runs and curr is still 0. The notPick line is written as 0 +
+  prev; the 0 is dead weight left from the "skip this house" idea and adds
+  nothing.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What changes if the houses are in a circle, so the first and last are
-  adjacent?
-     Run this same loop twice, once on nums[0..n-2] and once on nums[1..n-1],
-     and take the larger result; the cost is two passes instead of one, and n ==
-     1 still needs its own guard.
-  2. How do you report which houses were robbed, not just the total?
-     You need the choice at each index, so keep an O(n) array of booleans (or
-     the full DP table) and walk backwards from the end; that gives up the
-     constant space this version was written for.
-  3. What if the rule becomes "no two robbed houses within k of each other"?
-     The recurrence becomes max(nums[i] + best[i-k-1], best[i-1]), so two
-     variables are no longer enough - keep a rolling buffer of the last k+1
-     values, which is O(k) space.
-  4. What if the input arrives as a stream and you cannot index backwards?
-     Nothing needs to change - the loop only ever reads nums[i] once and keeps
-     two ints, so it already works as a single forward pass over a stream.
+  1. The houses are in a circle, so the first and last are adjacent. What
+  changes?
+     Run this same routine twice, once on nums[0..n-2] and once on nums[1..n-1],
+     and take the larger result; the single-element case must be returned before
+     that split. Cost is still O(n) time, just two passes.
+  2. Return which houses were robbed, not only the total.
+     Rolling variables are no longer enough - you need an O(n) array of the
+     per-index choice, or store the picked index sets, then walk backwards from
+     the end choosing pick whenever dp[i] != dp[i-1]. You trade the O(1) space
+     for the ability to reconstruct.
+  3. The rule becomes "no two robbed houses within k of each other".
+     The recurrence turns into max(nums[i] + best(i-k-1), best(i-1)), so you
+     keep a window of the last k+1 answers in a small ring buffer instead of two
+     scalars. Time stays O(n), space becomes O(k).
+  4. The houses form a binary tree instead of a line.
+     Do a post-order traversal returning a pair (best with this node robbed,
+     best without); the parent combines children the same way max(pick, notPick)
+     does here. Time is O(nodes), space is the recursion depth.
 TRIGGER
-  A maximize-the-sum problem with a "you cannot use two neighbours" or "must
-  skip at least one" restriction on a line of items.
+  A linear sequence where choosing an element forbids its immediate neighbour,
+  and the recurrence only ever looks one or two steps back.
 C# NOTE
-  The shift at the end of the loop can be written as (prev2, prev) = (prev,
-  Math.Max(nums[i] + prev2, prev)) using C# tuple assignment, which removes curr
-  entirely and makes the rolling step one line with no temporary to keep in
-  sync.
+  curr is declared before the loop and set to 0 only so it survives the loop
+  scope, but nothing after the loop reads it - moving int curr inside the loop
+  body would compile the same and keep the variable's meaning local.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
