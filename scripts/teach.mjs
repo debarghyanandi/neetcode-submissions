@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
-import { stripHeader } from './lib/header.mjs';
+import { stripHeader, solutionBody } from './lib/header.mjs';
 import { TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach, toSections, parseTeachText } from './lib/teach.mjs';
 import { isSelfMarked } from './lib/complexity.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
@@ -129,7 +129,7 @@ function ask(dir, file, ctx, feedback = null) {
   let raw;
   try {
     raw = execFileSync('claude', args, {
-      input: stripHeader(splitTrailingTeach(readFileSync(join(dir, file), 'utf8')).code).body,
+      input: solutionBody(readFileSync(join(dir, file), 'utf8')),
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -241,7 +241,7 @@ for (const p of targets) {
     }
 
     const prov = rec.provenance?.[file] ?? {
-      selfMarked: isSelfMarked(stripHeader(splitTrailingTeach(src).code).body) || null,
+      selfMarked: isSelfMarked(solutionBody(src)) || null,
       evidence: 'detected from the curated file',
     };
     const ctx = {

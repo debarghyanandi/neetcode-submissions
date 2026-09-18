@@ -22,7 +22,7 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, REPO } from './lib/scan.mjs';
-import { stripHeader } from './lib/header.mjs';
+import { stripHeader, solutionBody } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
@@ -298,7 +298,7 @@ if (only) targets = targets.filter((p) => only.includes(p.slug) || (unfinished &
 else if (unfinished) targets = targets.filter(stranded);
 /** What the code looks like now, ignoring comments and whitespace. */
 const codePrints = (p, files) => Object.fromEntries(files.map((f) => [
-  f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body),
+  f, shortPrint(solutionBody(readFileSync(join(p.dir, f), 'utf8'))),
 ]));
 
 const skipped = [];
@@ -380,7 +380,7 @@ for (const p of targets) {
 
   // The same stripped bodies twice: joined for the model on stdin, and kept per
   // file so validate() can check the code panel is that file copied verbatim.
-  const bodies = chosen.map((f) => stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body);
+  const bodies = chosen.map((f) => solutionBody(readFileSync(join(p.dir, f), 'utf8')));
   const code = chosen
     .map((f, i) => `===== FILE: ${f} =====\n${bodies[i]}`)
     .join('\n\n');

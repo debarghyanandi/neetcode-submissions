@@ -10,7 +10,8 @@
  *   node scripts/lib/header.test.mjs
  */
 
-import { standing } from './header.mjs';
+import { standing, solutionBody } from './header.mjs';
+import { isSelfMarked } from './complexity.mjs';
 
 let pass = 0, fail = 0;
 const is = (name, got, want) => {
@@ -45,6 +46,60 @@ is('same time but more space still ranks',
   standing('optimal.cs', SPACE), 'ranks above optimal-variant.cs (O(n) time / O(n) space)');
 is('and reads as below from the other side',
   standing('optimal-variant.cs', SPACE), 'ranks below optimal.cs (O(n) time / O(1) space)');
+
+// ---- solutionBody, and the //My solution marker -------------------------
+//
+// The marker is how a solution is recorded as YOURS rather than a reference, and
+// it is read by matching //My solution against the BODY. Nothing else in the
+// pipeline decides this: classify never asks the model, and once provenance is
+// recorded it is never re-derived. So what the body is matters, and these pin it.
+
+const CURATED = [
+  '// ------------------------------------------------------------------',
+  '// -  optimal.cs         O(n) time / O(1) space',
+  '// ------------------------------------------------------------------',
+  '',
+  'public class Solution',
+  '{',
+  '    //My solution',
+  '    public int Rob(int[] nums)',
+  '    {',
+  '        return nums[0];',
+  '    }',
+  '}',
+  '',
+  '/*',
+  '================================================================================',
+  ' PATTERN : something',
+  '================================================================================',
+  'WHY THIS PATTERN',
+  '  A reader might well write "my solution" in here while discussing it.',
+  '================================================================================',
+  '*/',
+].join('\n');
+
+const body = solutionBody(CURATED);
+is('solutionBody drops the header banner', body.includes('optimal.cs         O(n)'), false);
+is('and the teaching block', body.includes('WHY THIS PATTERN'), false);
+is('and keeps the code', body.includes('public int Rob(int[] nums)'), true);
+is('the marker inside the code is still found', isSelfMarked(body), true);
+
+// The reason the search must run on the body and not the whole file. Prose alone
+// cannot trip the marker - it is anchored to a // comment - but a teaching block
+// that QUOTES the marker can, and quoting the code is exactly what teach does.
+const REFERENCE = CURATED.replace('    //My solution\n', '')
+  .replace('A reader might well write "my solution" in here while discussing it.',
+           'The author tags solutions they wrote themselves with //My solution at the top.');
+is('a reference solution stays unmarked when the teaching block merely quotes the marker',
+  isSelfMarked(solutionBody(REFERENCE)), false);
+is('...and it would be marked if the whole file were searched', isSelfMarked(REFERENCE), true);
+// Prose without the // is not a marker in either place, which is why the regex is anchored.
+is('plain prose is never a marker', isSelfMarked('this is my solution, roughly'), false);
+
+is('an empty input is empty, not a crash', solutionBody('').trim(), '');
+is('and so is a nullish one', solutionBody(null).trim(), '');
+is('a bare file with no header or block comes through whole',
+  solutionBody('public class S { }').trim(), 'public class S { }');
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

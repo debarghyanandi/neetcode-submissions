@@ -32,7 +32,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { loadState, scanRepo } from './lib/scan.mjs';
-import { stripHeader } from './lib/header.mjs';
+import { stripHeader, solutionBody } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 
 const argv = process.argv.slice(2);
@@ -79,7 +79,7 @@ for (const p of problems) {
   // knowing before the money is spent, not after.
   for (const file of [...p.curatedFiles, ...p.pending.filter((x) => !x.supersededBy).map((x) => x.file)]) {
     const raw = readFileSync(join(p.dir, file), 'utf8');
-    const body = stripHeader(splitTrailingTeach(raw).code).body.trim();
+    const body = solutionBody(raw).trim();
     if (!body) { console.log(`  skipped ${p.slug}/${file} - no code once the header and block are stripped`); continue; }
     const ns = `N${units.length}`;
     const declares = (t) => new RegExp(`\\bclass\\s+${t}\\b`).test(body);

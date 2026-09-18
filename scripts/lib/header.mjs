@@ -1,3 +1,4 @@
+import { splitTrailingTeach } from './teach.mjs';
 /**
  * Generating and replacing the banner header at the top of a solution file.
  *
@@ -184,4 +185,26 @@ export function buildHeader(name, origin, sol, selfMark, ranked) {
 export function applyHeader(src, header) {
   const { body, eol } = stripHeader(src);
   return header.split('\n').join(eol) + eol + eol + body.replace(/^(\r?\n)+/, '');
+}
+
+/**
+ * A curated file with everything the pipeline generated taken back off: the header
+ * banner at the top, the teaching block at the bottom. What is left is the code as
+ * it was written.
+ *
+ * Seven call sites had this expression inlined - classify twice, teach twice,
+ * visualize twice, compile-check once - which is six chances for one of them to
+ * drift. It matters most in classify, where getting it wrong is not a crash but a
+ * quiet cost: the payload sent to the model was the WHOLE file, teaching block and
+ * all, so a reclassification paid for ~4,000 tokens of prose the model has no use
+ * for when judging complexity. On a fresh submission there is no block yet and
+ * nothing is wasted; on every backfill folder there is.
+ *
+ * It also has a safety role. The marker that says "I solved this one myself" is
+ * found by matching //My solution against the BODY - if the search ran over the
+ * whole file, a teaching block that merely discussed the phrase could mark a
+ * reference solution as yours. header.test.mjs pins that.
+ */
+export function solutionBody(src) {
+  return stripHeader(splitTrailingTeach(String(src ?? '')).code).body;
 }

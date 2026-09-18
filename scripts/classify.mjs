@@ -27,7 +27,7 @@ import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './l
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
 import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
-import { stripHeader, buildHeader, applyHeader, headerSignature, HEADER_FORMAT } from './lib/header.mjs';
+import { stripHeader, buildHeader, applyHeader, headerSignature, solutionBody, HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { loadState as _ls, saveState } from './lib/scan.mjs';
@@ -72,7 +72,7 @@ const deleteDupes = has('--delete-duplicates');
 // Strip the top banner AND any trailing teaching block before looking for the
 // marker. Both quote the marker text, so scanning past them lets an annotation
 // manufacture the very evidence it claims to be reporting.
-const markedInCode = (src) => isSelfMarked(stripHeader(splitTrailingTeach(src).code).body);
+const markedInCode = (src) => isSelfMarked(solutionBody(src));
 
 const git = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', stdio: ['pipe','pipe','pipe'] });
 
@@ -142,8 +142,12 @@ const INSTRUCTIONS = [
 ].join('\n');
 
 function classify(dir, files) {
+  // The CODE only. Sending the whole file meant a reclassification also shipped the
+  // header and the teaching block - about 4,000 tokens of prose that say nothing
+  // about complexity, and which the model had already written itself. Harmless on a
+  // fresh submission, which has neither; pure waste on every backfill folder.
   const payload = files
-    .map((f) => `===== FILE: ${f} =====\n${readFileSync(join(dir, f), 'utf8')}`)
+    .map((f) => `===== FILE: ${f} =====\n${solutionBody(readFileSync(join(dir, f), 'utf8'))}`)
     .join('\n\n');
 
   const args = [
@@ -361,7 +365,7 @@ for (const p of targets) {
   const recorded = state.problems[p.slug]?.provenance ?? {};
   // Fingerprint the code as classified, so a later edit or lint rename shows up
   // as a changed signature rather than as silence.
-  const prints = new Map(files.map((f) => [f, shortPrint(stripHeader(splitTrailingTeach(readFileSync(join(p.dir, f), 'utf8')).code).body)]));
+  const prints = new Map(files.map((f) => [f, shortPrint(solutionBody(readFileSync(join(p.dir, f), 'utf8')))]));
 
   const marks = new Map(files.map((f) => [
     f,
