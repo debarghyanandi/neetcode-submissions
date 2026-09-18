@@ -46,9 +46,9 @@ public class LRUCache
     private void Remove(Node node)
     {
         Node prev = node.prev;
-        Node afterNode = node.next;
-        prev.next = afterNode;
-        afterNode.prev = prev;
+        Node nxt = node.next;
+        prev.next = nxt;
+        nxt.prev = prev;
     }
 
     private void Insert(Node node)
@@ -84,12 +84,13 @@ public class LRUCache
 
         if (cache.Count > cap)
         {
-            Node lruNode = left.next;
-            Remove(lruNode);
-            cache.Remove(lruNode.key);
+            Node lru = left.next;
+            Remove(lru);
+            cache.Remove(lru.key);
         }
     }
 }
+
 
 /*
 ================================================================================
@@ -112,8 +113,8 @@ WALKTHROUGH
   2. Put(key, value): if the key is present, Remove(cache[key]) unlinks the
   stale node from the list. Then a fresh Node is built, cache[key] overwrites
   (or adds) the dictionary entry, and Insert puts it at the right end.
-  3. Eviction: if cache.Count > cap, take lruNode = left.next, unlink it, and
-  cache.Remove(lruNode.key). The order matters - read lruNode.key before you
+  3. Eviction: if cache.Count > cap, take lru = left.next, unlink it, and
+  cache.Remove(lru.key). The order matters - read lru.key before you
   lose the reference.
 WHY SENTINELS EARN THEIR KEEP
   left and right are Node(0,0) that never enter cache, so their key 0 can never
@@ -125,7 +126,7 @@ WHY SENTINELS EARN THEIR KEEP
 WHY THE NODE CARRIES ITS KEY
   Get and Put travel dictionary -> node, but eviction travels the other way: it
   picks left.next off the list and then has to delete the matching dictionary
-  entry. lruNode.key is the only bridge back. If Node stored only val, the
+  entry. lru.key is the only bridge back. If Node stored only val, the
   evicted key would stay in cache forever pointing at an unlinked node,
   cache.Count would never fall back to cap, and the cache would evict on every
   subsequent Put.

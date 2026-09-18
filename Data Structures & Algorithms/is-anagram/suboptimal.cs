@@ -13,31 +13,31 @@
 
 public class Solution
 {
-    public bool IsAnagram(string first, string second)
+    public bool IsAnagram(string s, string t)
     {
         // Different lengths can never be anagrams. O(1) rejection.
-        if (first.Length != second.Length)
+        if (s.Length != t.Length)
             return false;
 
         // Build the frequency map of the first string.
         var charFrequency = new Dictionary<char, int>();
 
-        foreach (char letter in first)
+        foreach (char c in s)
         {
-            charFrequency.TryGetValue(letter, out int currentCount);
-            charFrequency[letter] = currentCount + 1;
+            charFrequency.TryGetValue(c, out int currentCount);
+            charFrequency[c] = currentCount + 1;
         }
 
         // Walk the second string and spend one unit of each character's budget.
-        foreach (char letter in second)
+        foreach (char c in t)
         {
-            if (!charFrequency.TryGetValue(letter, out int remaining))
+            if (!charFrequency.TryGetValue(c, out int remaining))
                 return false;              // character not in first at all
 
             if (remaining == 0)
                 return false;              // second uses this character more often than first
 
-            charFrequency[letter] = remaining - 1;
+            charFrequency[c] = remaining - 1;
         }
 
         // Lengths matched and every character in t was covered by s's budget,
@@ -45,6 +45,7 @@ public class Solution
         return true;
     }
 }
+
 
 /*
 ================================================================================

@@ -15,26 +15,27 @@ public class Solution
 {
     public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q)
     {
-        TreeNode curr = root;
+        TreeNode node = root;
 
-        while (curr != null)
+        while (node != null)
         {
-            if (p.val > curr.val && q.val > curr.val)
+            if (p.val > node.val && q.val > node.val)
             {
-                curr = curr.right;
+                node = node.right;
             }
-            else if (p.val < curr.val && q.val < curr.val)
+            else if (p.val < node.val && q.val < node.val)
             {
-                curr = curr.left;
+                node = node.left;
             }
             else
             {
-                return curr;
+                return node;
             }
         }
         return null;
     }
 }
+
 
 /*
 ================================================================================
@@ -45,29 +46,29 @@ public class Solution
 ================================================================================
 WHY THIS PATTERN
   The ordering is information the generic LCA algorithm throws away. Everything
-  in curr.left is below curr.val and everything in curr.right is above it, so
-  one comparison of p.val and q.val against curr.val already says which subtree
+  in node.left is below node.val and everything in node.right is above it, so
+  one comparison of p.val and q.val against node.val already says which subtree
   can still hold both nodes. That turns a search into a walk: one node per
-  level, no branching, no backtracking, which is why a single curr pointer is
+  level, no branching, no backtracking, which is why a single node pointer is
   the entire state.
 INVARIANT
-  At the top of every iteration, the subtree rooted at curr contains both p and
-  q. True initially since curr = root. Preserved because curr only moves right
-  when p.val and q.val both exceed curr.val (both nodes must then live in the
-  right subtree) and only moves left when both are below. curr strictly descends
+  At the top of every iteration, the subtree rooted at node contains both p and
+  q. True initially since node = root. Preserved because node only moves right
+  when p.val and q.val both exceed node.val (both nodes must then live in the
+  right subtree) and only moves left when both are below. node strictly descends
   each pass and the invariant guarantees the chosen child is non-null, so the
   loop cannot spin.
 WHY THE SPLIT NODE IS THE ANSWER
   The else branch fires exactly when p and q disagree on a direction: p.val <=
-  curr.val <= q.val, or the mirror. By the invariant curr is a common ancestor.
+  node.val <= q.val, or the mirror. By the invariant node is a common ancestor.
   Neither child can be one, because whichever child you descend into excludes
-  the other node. So curr is the lowest such node, and it is unique - there is
+  the other node. So node is the lowest such node, and it is unique - there is
   exactly one place where the two search paths diverge.
 WHY NO EQUALITY CHECK IS NEEDED
-  The else also absorbs the case p.val == curr.val (or q.val == curr.val):
-  neither strict comparison holds, so it returns curr. That is correct, since
-  this problem counts a node as a descendant of itself - when curr is p, p is
-  the LCA. An explicit guard like 'if curr == p or curr == q return curr' would
+  The else also absorbs the case p.val == node.val (or q.val == node.val):
+  neither strict comparison holds, so it returns node. That is correct, since
+  this problem counts a node as a descendant of itself - when node is p, p is
+  the LCA. An explicit guard like 'if node == p or node == q return node' would
   be dead weight, and interviewers often expect you to justify leaving it out
   rather than add it.
 WATCH OUT

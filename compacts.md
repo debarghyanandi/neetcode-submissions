@@ -202,7 +202,7 @@ a real conflicting rebase, a real folder from the repo. When a log arrives, read
 what the steps actually did rather than the run's badge.
 
 **Tests.** `node scripts/lib/<name>.test.mjs`, or all of them:
-`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 252 cases across ten
+`for t in scripts/lib/*.test.mjs; do node "$t"; done`. 270 cases across ten
 files. The workflow runs the glob before the first model call, so a new test
 file needs no workflow change. Pure functions only — anything that needs git or
 the network gets a throwaway fixture instead.

@@ -18,7 +18,7 @@ public class Solution
         int cols = grid[0].Length;
 
         int[,] visited = new int[rows, cols];
-        int maxArea = 0;
+        int size = 0;
 
         for (int row = 0; row < rows; row++)
         {
@@ -27,11 +27,11 @@ public class Solution
                 if (visited[row, col] == 0 && grid[row][col] == 1)
                 {
                     int islandSize = Dfs(row, col, visited, grid);
-                    maxArea = Math.Max(maxArea, islandSize);
+                    size = Math.Max(size, islandSize);
                 }
             }
         }
-        return maxArea;
+        return size;
     }
 
     private int Dfs(int row, int col, int[,] visited, int[][] grid)
@@ -53,24 +53,25 @@ public class Solution
                 if (Math.Abs(delRow) == Math.Abs(delCol))
                     continue;
 
-                int neighborRow = row + delRow;
-                int neighborCol = col + delCol;
+                int nRow = row + delRow;
+                int nCol = col + delCol;
 
                 // Invalid neighbour validation
                 // Land validation
                 // Visited validation
-                if (neighborRow >= 0 && neighborRow < rows &&
-                    neighborCol >= 0 && neighborCol < cols &&
-                    visited[neighborRow, neighborCol] == 0 &&
-                    grid[neighborRow][neighborCol] == 1)
+                if (nRow >= 0 && nRow < rows &&
+                    nCol >= 0 && nCol < cols &&
+                    visited[nRow, nCol] == 0 &&
+                    grid[nRow][nCol] == 1)
                 {
-                    size += Dfs(neighborRow, neighborCol, visited, grid);
+                    size += Dfs(nRow, nCol, visited, grid);
                 }
             }
         }
         return size;
     }
 }
+
 
 /*
 ================================================================================
@@ -84,7 +85,7 @@ WHY THIS PATTERN
   means a connected component in a grid graph where each cell has up to 4 edges.
   Flood fill is the direct tool: from any unvisited land cell, walk the whole
   component once and return its cell count. The outer double loop finds one
-  starting cell per island, Dfs returns islandSize, and maxArea keeps the
+  starting cell per island, Dfs returns islandSize, and size keeps the
   running best.
 BRUTE FORCE
   The simplest first attempt is: for every land cell, run a flood fill with a
@@ -94,12 +95,12 @@ BRUTE FORCE
   once and the total work collapses to one pass.
 INVARIANT
   A cell is written into visited at the very top of Dfs, before any recursion,
-  and a neighbour is only recursed into when visited[neighborRow, neighborCol]
+  and a neighbour is only recursed into when visited[nRow, nCol]
   == 0 and the cell is land. So every land cell enters Dfs at most once, and
   size = 1 plus the sizes returned by its children counts each cell of the
   component exactly once. In the outer loop, a cell that is already visited
   never starts a new Dfs, so each island contributes one islandSize value to
-  maxArea, not several partial ones.
+  size, not several partial ones.
 THE NEIGHBOUR TRICK
   Instead of a directions array, the inner loops run delRow and delCol over
   -1..1 (nine pairs) and skip when Math.Abs(delRow) == Math.Abs(delCol). That

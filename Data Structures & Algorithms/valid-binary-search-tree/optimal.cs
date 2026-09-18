@@ -16,8 +16,8 @@ public class Solution
     //my solution
     public bool IsValidBST(TreeNode root)
     {
-        var info = IsValidBSTWithMinMax(root);
-        return info.found;
+        var result = IsValidBSTWithMinMax(root);
+        return result.found;
     }
 
     public (int min, int max, bool found) IsValidBSTWithMinMax(TreeNode root)
@@ -48,6 +48,7 @@ public class Solution
     }
 }
 
+
 /*
 ================================================================================
  PATTERN : Post-order DFS returning (min, max, found) upward
@@ -62,7 +63,7 @@ CORE IDEA
   tests root.val against left.max and right.min - the extremes of entire
   subtrees, not the values of its immediate children. IsValidBST itself is a
   thin wrapper that calls IsValidBSTWithMinMax(root) and throws away min and
-  max, keeping only info.found.
+  max, keeping only result.found.
 INVARIANT
   When found is true, min is the minimum value over the whole subtree and max is
   the maximum, and every ancestor may rely on those two numbers alone. When

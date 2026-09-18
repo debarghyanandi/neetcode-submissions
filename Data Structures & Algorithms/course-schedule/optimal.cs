@@ -32,35 +32,36 @@ public class Solution
             inDeg[course]++;
         }
 
-        Queue<int> queue = new Queue<int>();
+        Queue<int> q = new Queue<int>();
         //insert all the nodes whose indegree is 0;
         for (int i = 0; i < numCourses; i++)
         {
             if (inDeg[i] == 0)
             {
-                queue.Enqueue(i);
+                q.Enqueue(i);
             }
         }
 
         int topoCnt = 0;
 
-        while (queue.Count > 0)
+        while (q.Count > 0)
         {
-            int current = queue.Dequeue();
+            int node = q.Dequeue();
             topoCnt++;
 
             //remove this node from its neightbours indegree
-            foreach (int neighbor in adj[current])
+            foreach (int nei in adj[node])
             {
-                inDeg[neighbor]--;
-                if (inDeg[neighbor] == 0)
-                    queue.Enqueue(neighbor);
+                inDeg[nei]--;
+                if (inDeg[nei] == 0)
+                    q.Enqueue(nei);
             }
         }
 
         return topoCnt == numCourses;
     }
 }
+
 
 /*
 ================================================================================

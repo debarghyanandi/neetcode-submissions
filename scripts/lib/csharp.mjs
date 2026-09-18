@@ -315,6 +315,82 @@ function countMismatch(A, B) {
 }
 
 /**
+ * Rename local identifiers in a C# source, exactly, by the same rules sameShape()
+ * uses to judge a rename.
+ *
+ * Written for the one-off repair that undid lint's 92 historical renames, and kept
+ * because "apply a rename map to C# safely" is a thing worth having once rather
+ * than twice. A regex over the text is NOT this: `\bnode\b` also hits `x.node`,
+ * `class node`, a string literal and every occurrence in a comment.
+ *
+ * Only tokens that sameShape would have allowed to be renamed are touched:
+ * never a member after a dot, never a declared or constructed type, never a name
+ * from the public signature NeetCode generated. Whitespace, comments, strings and
+ * every other token come through byte for byte.
+ *
+ * Comments are handled separately by the caller, on purpose. A rename makes a
+ * comment name a variable that no longer exists, so they DO need updating - but a
+ * comment is prose, and replacing `result` with `res` inside prose is how you end
+ * up with "the res is the longest path". The caller decides which names are safe
+ * to touch in text; this function decides nothing about text at all.
+ *
+ * `opts.includeSignature` lifts the one rule that exists for lint's benefit: normally the
+ * names NeetCode generated - the public method and its parameters - are untouchable,
+ * because renaming one breaks the submission against the grader. The repair needs the
+ * opposite, because the old lint DID rename them: is-anagram shipped as
+ * `IsAnagram(string original, string candidate)` when the stub says `(string s, string t)`.
+ * Restoring the grader's own names is the only way back, so the repair passes this and
+ * nothing else does. Members after a dot and type names stay pinned either way.
+ *
+ * @param   {string} src
+ * @param   {Record<string,string>} map  old name -> new name
+ * @param   {{includeSignature?: boolean}} opts
+ * @returns {{code: string, applied: Array<[string,string]>}}
+ */
+export function renameIdentifiers(src, map, opts = {}) {
+  const toks = tokenize(src);
+  const sig = significant(toks);
+  const boilerplate = publicSignatureNames(sig);
+
+  // fixedIdentifier() indexes into the SIGNIFICANT stream (it looks at neighbours,
+  // and whitespace is not a neighbour), so walk that stream and remember which
+  // entries of the full stream each one came from.
+  const sigIndexOf = [];
+  for (let i = 0, j = 0; i < toks.length; i++) {
+    if (toks[i].t === 'ws' || toks[i].t === 'comment') continue;
+    sigIndexOf[j++] = i;
+  }
+
+  // A name pinned ANYWHERE in the file is refused everywhere in it, not just at the
+  // position that pinned it. `Queue<int> queue = new Queue<int>();` is why: the
+  // declaration's `Queue` is followed by `<`, and fixedIdentifier deliberately does
+  // not read `<` as the start of a generic argument list - the tokenizer emits it one
+  // character at a time, so `l < r` would look identical. sameShape does not care,
+  // because `new Queue<..>` pins the name for the comparison; a rewriter does, because
+  // nothing stops it renaming the declaration and leaving the construction behind.
+  //
+  // Refusing by name is the same rule the public signature already uses, and it errs
+  // the safe way: at worst a local that happens to share a member's name is left alone.
+  const guard = opts.includeSignature ? null : boilerplate;
+  const pinned = new Set();
+  for (let j = 0; j < sig.length; j++) {
+    if (sig[j].t === 'id' && fixedIdentifier(sig, j, guard)) pinned.add(sig[j].v);
+  }
+
+  const applied = new Map();
+  for (let j = 0; j < sig.length; j++) {
+    const t = sig[j];
+    if (t.t !== 'id') continue;
+    const to = map[t.v];
+    if (to == null || to === t.v) continue;
+    if (pinned.has(t.v)) continue;                        // member, type, or the grader's name
+    toks[sigIndexOf[j]] = { t: 'id', v: to };
+    applied.set(t.v, to);
+  }
+  return { code: toks.map((t) => t.v).join(''), applied: [...applied] };
+}
+
+/**
  * @returns {{ok: boolean, errors: string[], renames: Array<[string,string]>}}
  */
 export function sameShape(before, after) {

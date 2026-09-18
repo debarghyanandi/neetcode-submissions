@@ -15,38 +15,38 @@ public class Solution
         //My solution
         int rows = grid.Length;
         int cols = grid[0].Length;
-        Queue<(int row, int col, int time)> queue = new();
-        int[,] state = new int[rows, cols];
+        Queue<(int row, int col, int time)> q = new();
+        int[,] vis = new int[rows, cols];
 
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
             {
-                state[i, j] = grid[i][j];
-                if (state[i, j] == 2)
-                    queue.Enqueue((i, j, 0));
+                vis[i, j] = grid[i][j];
+                if (vis[i, j] == 2)
+                    q.Enqueue((i, j, 0));
             }
         }
 
-        List<int> rowDirs = new List<int> { -1, 0, 1, 0 };
-        List<int> colDirs = new List<int> { 0, 1, 0, -1 };
+        List<int> dRow = new List<int> { -1, 0, 1, 0 };
+        List<int> dCol = new List<int> { 0, 1, 0, -1 };
 
-        int maxTime = 0;
-        while (queue.Count > 0)
+        int tm = 0;
+        while (q.Count > 0)
         {
-            var (row, col, time) = queue.Dequeue();
-            maxTime = Math.Max(time, maxTime);
+            var (row, col, time) = q.Dequeue();
+            tm = Math.Max(time, tm);
 
             for (int i = 0; i < 4; i++)
             {
-                int nextRow = row + rowDirs[i];
-                int nextCol = col + colDirs[i];
+                int nRow = row + dRow[i];
+                int nCol = col + dCol[i];
 
-                if (nextRow >= 0 && nextCol >= 0 && nextRow < rows && nextCol < cols
-                    && state[nextRow, nextCol] == 1)
+                if (nRow >= 0 && nCol >= 0 && nRow < rows && nCol < cols
+                    && vis[nRow, nCol] == 1)
                 {
-                    queue.Enqueue((nextRow, nextCol, time + 1));
-                    state[nextRow, nextCol] = 2;
+                    q.Enqueue((nRow, nCol, time + 1));
+                    vis[nRow, nCol] = 2;
                 }
             }
         }
@@ -55,14 +55,15 @@ public class Solution
         {
             for (int j = 0; j < cols; j++)
             {
-                if (state[i, j] == 1)
+                if (vis[i, j] == 1)
                     return -1;
             }
         }
 
-        return maxTime;
+        return tm;
     }
 }
+
 
 /*
 ================================================================================
@@ -77,7 +78,7 @@ WHY THIS PATTERN
   problem with many starting points, so all cells holding 2 go into the queue at
   time 0 and BFS expands them together. Because BFS visits cells in
   non-decreasing time order, the time value on the last dequeued cell is the
-  answer, which is what maxTime collects.
+  answer, which is what tm collects.
 BRUTE FORCE
   The first thing most people write is a simulation loop: scan the whole grid
   each minute, rot every 1 that touches a 2, repeat until a full pass changes
@@ -87,28 +88,28 @@ BRUTE FORCE
   just rotted.
 INVARIANT
   Every cell in the queue is rotten, and its stored time is the exact minute at
-  which it rotted. A cell is set to 2 in state at the moment it is enqueued, not
+  which it rotted. A cell is set to 2 in vis at the moment it is enqueued, not
   when it is dequeued, so no cell can ever enter the queue twice and no cell
   gets a larger time than its true one. When the queue drains, every cell
   reachable from an initial rotten orange has been marked, so any remaining 1 in
-  state is unreachable and the method returns -1.
+  vis is unreachable and the method returns -1.
 WHY MARK AT ENQUEUE, NOT AT DEQUEUE
-  state[nextRow, nextCol] = 2 sits right next to the Enqueue call. If you moved
+  vis[nRow, nCol] = 2 sits right next to the Enqueue call. If you moved
   that line into the dequeue step instead, two neighbours of the same fresh
   orange could both push it, and the queue could grow far past m*n. Marking on
   push is what keeps each cell in the queue at most once.
 THE COPY INTO STATE
-  The code copies grid into a separate int[,] state instead of writing over the
+  The code copies grid into a separate int[,] vis instead of writing over the
   caller's int[][] grid. That keeps the input unchanged, which is polite and
   safe if the caller reuses the grid. It costs one extra m*n array; say this out
-  loud in an interview, because the obvious memory saving is to drop state and
+  loud in an interview, because the obvious memory saving is to drop vis and
   mutate grid directly.
 WATCH OUT
   cols comes from grid[0].Length, so a null grid or a grid with zero rows throws
   before any logic runs; mention the guard if the interviewer cares. The final
   double loop is not optional - without it a grid that still has a 1 stranded
-  behind empty cells would wrongly return maxTime instead of -1. Also note
-  maxTime starts at 0 and the all-empty grid never enters the loop, so 0 is
+  behind empty cells would wrongly return tm instead of -1. Also note
+  tm starts at 0 and the all-empty grid never enters the loop, so 0 is
   returned, which is the expected answer but only by luck of the initial value,
   not by any explicit check.
 FOLLOW-UP AN INTERVIEWER WILL ASK
@@ -123,13 +124,13 @@ FOLLOW-UP AN INTERVIEWER WILL ASK
      not zero. It removes one m*n pass, though the overall complexity is
      unchanged.
   3. What changes if rot also spreads diagonally?
-     Extend rowDirs and colDirs to the eight offsets and change the inner loop
+     Extend dRow and dCol to the eight offsets and change the inner loop
      bound from 4 to 8; nothing else in the BFS changes, since the algorithm
      never assumes only four neighbours.
   4. The grid is far too big to hold in memory at once - now what?
      Stream it in row bands and run BFS on a frontier of boundary cells, or move
      to a disk-backed or distributed level-synchronous BFS. The per-level
-     structure of this algorithm survives; only the storage of state has to be
+     structure of this algorithm survives; only the storage of vis has to be
      paged.
 TRIGGER
   Many starting points spread outward at the same speed and you need the time
@@ -139,7 +140,7 @@ C# NOTE
   Queue<(int row, int col, int time)> uses a value tuple, so each entry is
   stored inline in the queue's backing array with no per-node object, and var
   (row, col, time) = queue.Dequeue() deconstructs it in one line; the List<int>
-  rowDirs and colDirs could be int[] literals since they are never resized.
+  dRow and dCol could be int[] literals since they are never resized.
 COMPLEXITY
   Time  : O(m * n)
   Space : O(m * n)

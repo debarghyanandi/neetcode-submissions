@@ -9,25 +9,27 @@
 // -  while loop is bounded by n
 // --------------------------------------------------------------------------
 
-public class Solution {
+public class Solution
+{
     public int[] DailyTemperatures(int[] temperatures)
     {
-        int[] result = new int[temperatures.Length];
+        int[] res = new int[temperatures.Length];
         var stack = new Stack<int>(); //indices
 
         for (int i = 0; i < temperatures.Length; i++)
         {
-            int currentTemp = temperatures[i];
-            while (stack.Count > 0 && currentTemp > temperatures[stack.Peek()])
+            int curr = temperatures[i];
+            while (stack.Count > 0 && curr > temperatures[stack.Peek()])
             {
-                int index = stack.Pop();
-                result[index] = i - index;
+                int val = stack.Pop();
+                res[val] = i - val;
             }
             stack.Push(i);
         }
-        return result;
+        return res;
     }
 }
+
 
 /*
 ================================================================================
@@ -55,18 +57,18 @@ INVARIANT
 
   Both halves matter. "Not yet known" is why an index leaving the stack is the
   moment to write result[index]. "Strictly decreasing" is why the inner while
-  loop is allowed to stop at the first non-match: once currentTemp is not
+  loop is allowed to stop at the first non-match: once curr is not
   greater than temperatures[stack.Peek()], it cannot be greater than anything
   deeper either, so nothing below is resolvable by day i.
 
   The push at the end of each iteration preserves the invariant: after the while
-  loop drains everything with temperature < currentTemp, the new top is >=
-  currentTemp, so pushing i keeps the strict decrease.
+  loop drains everything with temperature < curr, the new top is >=
+  curr, so pushing i keeps the strict decrease.
 ALGORITHM
   1. Allocate result of the same length as temperatures. Its zero-fill is
   load-bearing - see WATCH OUT.
-  2. For each i, read currentTemp = temperatures[i].
-  3. While the stack is non-empty and currentTemp > temperatures[stack.Peek()],
+  2. For each i, read curr = temperatures[i].
+  3. While the stack is non-empty and curr > temperatures[stack.Peek()],
   pop that index and set result[index] = i - index. Day i is the answer for that
   day.
   4. Push i, whether or not anything was popped. Day i now has an unknown answer
@@ -76,7 +78,7 @@ WHY IT IS CORRECT
   The claim to defend is that when index is popped at step i, day i really is
   the nearest warmer day, not just some warmer day.
 
-  Warmer: the while condition tested currentTemp > temperatures[index] before
+  Warmer: the while condition tested curr > temperatures[index] before
   popping.
 
   Nearest: suppose some j with index < j < i had temperatures[j] >

@@ -783,14 +783,14 @@ const PROBLEM = {
       '        {',
       '            return null;',
       '        }',
-      '        ListNode reversedHead = head;',
+      '        ListNode newHead = head;',
       '        if (head.next != null)',
       '        {',
-      '            reversedHead = ReverseList(head.next);',
+      '            newHead = ReverseList(head.next);',
       '            head.next.next = head;',
       '        }',
       '        head.next = null;',
-      '        return reversedHead;',
+      '        return newHead;',
       '    }',
       '}'
     ],
@@ -811,7 +811,7 @@ const PROBLEM = {
       const stackPanel = () => {
         const items = frames.map((f, i) => ({
           text: 'ReverseList(' + vals[f.idx] + ')',
-          sub: i === frames.length - 1 ? 'running' : 'parked on line 12, waiting for reversedHead',
+          sub: i === frames.length - 1 ? 'running' : 'parked on line 12, waiting for newHead',
           cls: i === frames.length - 1 ? 'hot' : 'in-window'
         }));
         return pStack('call stack', [{label: 'frames', items: items, mode: 'stack', empty: 'no frames yet', top: 'innermost call', foot: 'caller'}]);
@@ -846,20 +846,20 @@ const PROBLEM = {
       const walk = (idx) => {
         frames.push({idx: idx});
         steps.push({lines: [5, 8], msg: 'A new frame opens with head = <b>' + vals[idx] + '</b>. It is not null, so the base case is skipped - that guard only fires on an empty list.', panels: panels(idx)});
-        steps.push({lines: [9, 10], msg: 'reversedHead starts as <b>' + vals[idx] + '</b>, which is only the final answer if this node is the tail. Then head.next is checked to see whether there is anything left to recurse into.', panels: panels(idx, {k: 'reversedHead', v: vals[idx]})});
+        steps.push({lines: [9, 10], msg: 'newHead starts as <b>' + vals[idx] + '</b>, which is only the final answer if this node is the tail. Then head.next is checked to see whether there is anything left to recurse into.', panels: panels(idx, {k: 'newHead', v: vals[idx]})});
         let result;
         if (next[idx] === null){
-          steps.push({lines: [15, 16], msg: '<b>' + vals[idx] + '</b> is the tail, so the if block is skipped entirely. head.next is already null, and this node is returned as reversedHead - the deepest frame decides the new head, and every frame above will pass that same value straight back up.', panels: panels(idx, {k: 'returns', v: vals[idx]})});
+          steps.push({lines: [15, 16], msg: '<b>' + vals[idx] + '</b> is the tail, so the if block is skipped entirely. head.next is already null, and this node is returned as newHead - the deepest frame decides the new head, and every frame above will pass that same value straight back up.', panels: panels(idx, {k: 'returns', v: vals[idx]})});
           result = idx;
         } else {
           const s = next[idx];
           steps.push({lines: [12], msg: '<b>' + vals[idx] + '</b> has a successor <b>' + vals[s] + '</b>, so the tail of the list must be reversed before this frame can do anything useful. This frame parks here until the call returns.', panels: panels(idx, {k: 'recurse on', v: vals[s]})});
           const nh = walk(s);
-          steps.push({lines: [13], msg: 'The call handed back <b>' + vals[nh] + '</b>. Everything after <b>' + vals[idx] + '</b> is reversed now, which means <b>' + vals[s] + '</b> is the tail of that reversed piece - so head.next.next = head turns its pointer around to aim back at <b>' + vals[idx] + '</b>.', panels: panels(idx, {k: 'reversedHead', v: vals[nh]})});
+          steps.push({lines: [13], msg: 'The call handed back <b>' + vals[nh] + '</b>. Everything after <b>' + vals[idx] + '</b> is reversed now, which means <b>' + vals[s] + '</b> is the tail of that reversed piece - so head.next.next = head turns its pointer around to aim back at <b>' + vals[idx] + '</b>.', panels: panels(idx, {k: 'newHead', v: vals[nh]})});
           next[s] = idx;
-          steps.push({lines: [13], msg: '<b>' + vals[s] + '</b> now points at <b>' + vals[idx] + '</b> - but <b>' + vals[idx] + '</b> still points forward at <b>' + vals[s] + '</b>, so for this instant the two form a cycle. The next line breaks it.', panels: panels(idx, {k: 'reversedHead', v: vals[nh]})});
+          steps.push({lines: [13], msg: '<b>' + vals[s] + '</b> now points at <b>' + vals[idx] + '</b> - but <b>' + vals[idx] + '</b> still points forward at <b>' + vals[s] + '</b>, so for this instant the two form a cycle. The next line breaks it.', panels: panels(idx, {k: 'newHead', v: vals[nh]})});
           next[idx] = null;
-          steps.push({lines: [15, 16], msg: 'head.next = null cuts the stale forward link, leaving <b>' + vals[idx] + '</b> as the temporary tail; the parent frame will overwrite it on its own line 13. reversedHead is returned untouched: <b>' + vals[nh] + '</b>.', panels: panels(idx, {k: 'returns', v: vals[nh]})});
+          steps.push({lines: [15, 16], msg: 'head.next = null cuts the stale forward link, leaving <b>' + vals[idx] + '</b> as the temporary tail; the parent frame will overwrite it on its own line 13. newHead is returned untouched: <b>' + vals[nh] + '</b>.', panels: panels(idx, {k: 'returns', v: vals[nh]})});
           result = nh;
         }
         doneSet.add(idx);

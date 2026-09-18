@@ -25,33 +25,34 @@ public class Solution
         return false;
     }
 
-    private bool BinarySearch(int left, int right, int target, int[] array)
+    private bool BinarySearch(int left, int right, int target, int[] nums)
     {
         if (left > right)
             return false;
 
         int mid = left + (right - left) / 2;
 
-        if (array[mid] == target)
+        if (nums[mid] == target)
             return true;
 
-        if (array[mid] < target)
-            return BinarySearch(mid + 1, right, target, array);
+        if (nums[mid] < target)
+            return BinarySearch(mid + 1, right, target, nums);
 
-        return BinarySearch(left, mid - 1, target, array);
+        return BinarySearch(left, mid - 1, target, nums);
     }
 }
 
+
 /*
 ================================================================================
- PATTERN : Row-wise Binary Search - one sorted array per row
+ PATTERN : Row-wise Binary Search - one sorted nums per row
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Suboptimal
 ================================================================================
 WHY THIS PATTERN
   The problem gives a matrix whose rows are sorted left to right, so each `row`
-  is a sorted array and binary search applies directly to it. The outer
+  is a sorted nums and binary search applies directly to it. The outer
   `foreach` walks every row and calls `BinarySearch(0, row.Length - 1, target,
   row)`; the first `true` is returned immediately. This is the obvious reading
   of "sorted rows" and it is correct, but it uses only half of what the
@@ -65,9 +66,9 @@ BETTER APPROACH
   for every one of the m rows instead of spending O(log m) to find the single
   candidate row first.
 INVARIANT
-  Inside `BinarySearch`, the target can only exist in `array[left..right]`;
+  Inside `BinarySearch`, the target can only exist in `nums[left..right]`;
   every recursive call preserves that by discarding the half that cannot contain
-  it, since `array[mid] < target` rules out everything at or below `mid`. The
+  it, since `nums[mid] < target` rules out everything at or below `mid`. The
   outer loop keeps a weaker invariant: after finishing row k, the target is not
   in rows 0..k. Because the loop ends only after testing all rows, returning
   `false` at the end means the target is absent from all of them.
@@ -87,7 +88,7 @@ WATCH OUT
   thing.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. Write the O(log(m*n)) version without flattening the matrix into a new
-  array.
+  nums.
      Binary search `lo = 0`, `hi = m*n - 1` and read `matrix[mid / n][mid % n]`
      where `n = matrix[0].Length`. No extra memory, but it now requires every
      row to have the same length and requires the cross-row ordering to hold.
@@ -107,12 +108,12 @@ FOLLOW-UP AN INTERVIEWER WILL ASK
      rejected after two reads.
 TRIGGER
   Sorted order that continues across row boundaries, not just inside a row -
-  that is the signal to index the grid as one flat sorted array.
+  that is the signal to index the grid as one flat sorted nums.
 C# NOTE
   The whole `BinarySearch` helper duplicates `Array.BinarySearch(row, target)`,
   which returns a non-negative index on a hit; `if (Array.BinarySearch(row,
   target) >= 0) return true;` is the same algorithm in one line. Note also that
-  `int[][]` is a jagged array, so `row.Length` can differ per row - the flat
+  `int[][]` is a jagged nums, so `row.Length` can differ per row - the flat
   `mid / n` mapping silently assumes it does not.
 COMPLEXITY
   Time  : O(m log n)

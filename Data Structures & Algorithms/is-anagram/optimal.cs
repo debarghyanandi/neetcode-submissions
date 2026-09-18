@@ -13,19 +13,19 @@
 
 public class Solution
 {
-    public bool IsAnagram(string original, string candidate)
+    public bool IsAnagram(string s, string t)
     {
-        if (original.Length != candidate.Length)
+        if (s.Length != t.Length)
             return false;
 
         // One slot per lowercase letter. Index 0 = 'a', index 25 = 'z'.
         int[] letterBalance = new int[26];
 
         // Single pass over both strings at once: credit for s, debit for t.
-        for (int i = 0; i < original.Length; i++)
+        for (int i = 0; i < s.Length; i++)
         {
-            letterBalance[original[i] - 'a']++;
-            letterBalance[candidate[i] - 'a']--;
+            letterBalance[s[i] - 'a']++;
+            letterBalance[t[i] - 'a']--;
         }
 
         // Anagrams cancel out exactly, so every slot must be back to zero.
@@ -38,6 +38,7 @@ public class Solution
         return true;
     }
 }
+
 
 /*
 ================================================================================

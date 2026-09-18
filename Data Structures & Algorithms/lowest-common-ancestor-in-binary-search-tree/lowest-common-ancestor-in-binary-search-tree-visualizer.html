@@ -702,9 +702,9 @@ const PROBLEM = {
   {
     label: 'Walk down until the values split',
     badge: 'O(n) time · O(1) space · BST descent · optimal.cs',
-    blurb: 'The lowest common ancestor is the first node the two values <b>disagree</b> about. While both are larger than <code>curr</code>, both live in the right subtree, so <code>curr</code> cannot be the answer and the whole left side is gone; same story mirrored. The moment one is not larger and one is not smaller, the paths part here — that node is the LCA.',
+    blurb: 'The lowest common ancestor is the first node the two values <b>disagree</b> about. While both are larger than <code>node</code>, both live in the right subtree, so <code>node</code> cannot be the answer and the whole left side is gone; same story mirrored. The moment one is not larger and one is not smaller, the paths part here — that node is the LCA.',
     legend: [
-      {cls:'hot', text:'curr'},
+      {cls:'hot', text:'node'},
       {cls:'in-window', text:'p and q, the two targets'},
       {cls:'dim', text:'subtree the ordering ruled out'},
       {cls:'done', text:'already walked past'},
@@ -712,21 +712,21 @@ const PROBLEM = {
     ],
     shapeOverride: {skip: ['call-stack'], reason: 'This version is a plain while loop over one pointer - there is no recursion and no stack to draw, which is exactly the space win over the recursive solution below.'},
     code: [
-      'TreeNode curr = root;',
+      'TreeNode node = root;',
       '',
-      'while (curr != null)',
+      'while (node != null)',
       '{',
-      '    if (p.val > curr.val && q.val > curr.val)',
+      '    if (p.val > node.val && q.val > node.val)',
       '    {',
-      '        curr = curr.right;   // both targets are bigger',
+      '        node = node.right;   // both targets are bigger',
       '    }',
-      '    else if (p.val < curr.val && q.val < curr.val)',
+      '    else if (p.val < node.val && q.val < node.val)',
       '    {',
-      '        curr = curr.left;    // both targets are smaller',
+      '        node = node.left;    // both targets are smaller',
       '    }',
       '    else',
       '    {',
-      '        return curr;         // the values split right here',
+      '        return node;         // the values split right here',
       '    }',
       '}',
       'return null;'
@@ -763,13 +763,13 @@ const PROBLEM = {
              : (n.id === pid || n.id === qid) ? 'in-window'
              : done[n.id] ? 'done' : ''
         })), {
-          tags: (curId ? [{name:'curr', id: curId, cls:'accent'}] : []).concat([
+          tags: (curId ? [{name:'node', id: curId, cls:'accent'}] : []).concat([
             {name:'p', id: pid}, {name:'q', id: qid}
           ]),
           scale: 0.8
         }),
         pPills('state', [
-          {k:'curr', v: curId ? byId[curId].v : 'null', cls:'hot'},
+          {k:'node', v: curId ? byId[curId].v : 'null', cls:'hot'},
           {k:'p.val', v: P},
           {k:'q.val', v: Q},
           {k:'this node says', v: verdict},
@@ -779,21 +779,21 @@ const PROBLEM = {
 
       let cur = 'n0';
       hops = 1;
-      steps.push({lines:[1], msg:'<code>curr</code> starts at the root, because the root is the one node guaranteed to be an ancestor of both <b>' + P + '</b> and <b>' + Q + '</b>. Everything after this is a single pointer moving down — no queue, no recursion, no second traversal.', panels: panels(cur, 'not asked yet')});
+      steps.push({lines:[1], msg:'<code>node</code> starts at the root, because the root is the one node guaranteed to be an ancestor of both <b>' + P + '</b> and <b>' + Q + '</b>. Everything after this is a single pointer moving down — no queue, no recursion, no second traversal.', panels: panels(cur, 'not asked yet')});
 
       while (true){
         const v = byId[cur].v;
         if (P > v && Q > v){
           const gone = child(cur, 'L');
           subtree(gone).forEach(id => dim[id] = true);
-          steps.push({lines:[3,5,7], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are larger than <b>' + v + '</b>, so in a BST both must live in the right subtree. Neither the left subtree nor <b>' + v + '</b> itself can be an ancestor of either one, so half the tree is discarded in a single comparison and <code>curr</code> steps right.', panels: panels(cur, 'both bigger, go right')});
+          steps.push({lines:[3,5,7], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are larger than <b>' + v + '</b>, so in a BST both must live in the right subtree. Neither the left subtree nor <b>' + v + '</b> itself can be an ancestor of either one, so half the tree is discarded in a single comparison and <code>node</code> steps right.', panels: panels(cur, 'both bigger, go right')});
           done[cur] = true;
           cur = child(cur, 'R');
           hops++;
         } else if (P < v && Q < v){
           const gone = child(cur, 'R');
           subtree(gone).forEach(id => dim[id] = true);
-          steps.push({lines:[3,9,11], msg:'Both targets are smaller than <b>' + v + '</b>, so both sit in the left subtree. The mirror of the last case: the right subtree and <b>' + v + '</b> are ruled out together, and <code>curr</code> steps left.', panels: panels(cur, 'both smaller, go left')});
+          steps.push({lines:[3,9,11], msg:'Both targets are smaller than <b>' + v + '</b>, so both sit in the left subtree. The mirror of the last case: the right subtree and <b>' + v + '</b> are ruled out together, and <code>node</code> steps left.', panels: panels(cur, 'both smaller, go left')});
           done[cur] = true;
           cur = child(cur, 'L');
           hops++;

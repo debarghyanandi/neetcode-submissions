@@ -44,27 +44,27 @@ public class Solution
         {
             if ("+-*/".Contains(head.val))
             {
-                int left = int.Parse(head.prev.prev.val);
-                int right = int.Parse(head.prev.val);
-                int result = 0;
+                int l = int.Parse(head.prev.prev.val);
+                int r = int.Parse(head.prev.val);
+                int res = 0;
                 if (head.val == "+")
                 {
-                    result = left + right;
+                    res = l + r;
                 }
                 else if (head.val == "-")
                 {
-                    result = left - right;
+                    res = l - r;
                 }
                 else if (head.val == "*")
                 {
-                    result = left * right;
+                    res = l * r;
                 }
                 else
                 {
-                    result = left / right;
+                    res = l / r;
                 }
 
-                head.val = result.ToString();
+                head.val = res.ToString();
                 head.prev = head.prev.prev.prev;
                 if (head.prev != null)
                 {
@@ -79,6 +79,7 @@ public class Solution
         return ans;
     }
 }
+
 
 /*
 ================================================================================

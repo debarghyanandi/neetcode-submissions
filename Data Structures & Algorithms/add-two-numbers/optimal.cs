@@ -10,24 +10,25 @@
 // #  only the required output list
 // ##########################################################################
 
-public class Solution {
+public class Solution
+{
     public ListNode AddTwoNumbers(ListNode l1, ListNode l2)
     {
         // my solution
         ListNode dummy = new ListNode(0);
-        ListNode current = dummy;
+        ListNode res = dummy;
 
         int carry = 0;
         while (l1 != null || l2 != null || carry != 0)
         {
-            int digit1 = l1 != null ? l1.val : 0;
-            int digit2 = l2 != null ? l2.val : 0;
+            int x = l1 != null ? l1.val : 0;
+            int y = l2 != null ? l2.val : 0;
 
-            int sum = digit1 + digit2 + carry;
+            int sum = x + y + carry;
             carry = (sum) / 10;
 
-            current.next = new ListNode(sum % 10);
-            current = current.next;
+            res.next = new ListNode(sum % 10);
+            res = res.next;
 
             if (l1 != null)
                 l1 = l1.next;
@@ -40,6 +41,7 @@ public class Solution {
         return dummy.next;
     }
 }
+
 
 /*
 ================================================================================
@@ -60,7 +62,7 @@ INVARIANT
   At the top of each iteration: the nodes from dummy.next through current hold
   the correct digits for every column already processed, and carry holds the
   single value spilling out of those columns into the next one. carry is always
-  0 or 1, never more - sum = digit1 + digit2 + carry is at most 9 + 9 + 1 = 19,
+  0 or 1, never more - sum = x + y + carry is at most 9 + 9 + 1 = 19,
   so sum / 10 cannot reach 2 and sum % 10 is always a legal digit. That bound is
   why one int suffices as the entire carried state, and it is the correctness
   argument an interviewer is fishing for.
@@ -68,7 +70,7 @@ THE THREE-PART LOOP CONDITION
   l1 != null || l2 != null || carry != 0 - the third clause is the one people
   forget, and dropping it makes 5 + 5 return [0] instead of [0, 1]. It exists so
   the final carry gets its own node after both lists are exhausted. It also
-  cannot loop forever: once l1 and l2 are both null, digit1 and digit2 are 0, so
+  cannot loop forever: once l1 and l2 are both null, x and y are 0, so
   sum equals carry which is at most 1, making the new carry 0. The condition
   fails on the next check, so the tail can grow by at most one node.
 WHY THE DUMMY NODE
@@ -80,7 +82,7 @@ WHY THE DUMMY NODE
   because the list is least-significant-first, that spurious 0 would sit in the
   ones place and multiply the answer by ten.
 HOW UNEQUAL LENGTHS DISAPPEAR
-  The digit1 and digit2 ternaries substitute 0 once a list runs out - virtual
+  The x and y ternaries substitute 0 once a list runs out - virtual
   zero padding of the shorter number, which does not change its value. That is
   why there is no second drain loop copying the remainder of the longer list.
   Note that the advance is a separate guarded if, not folded into the ternary:
@@ -105,7 +107,7 @@ FOLLOW-UPS TO EXPECT
   survive the call.
   3. The space figure is auxiliary only. The result list is max(len(l1),
   len(l2)) + 1 nodes, but that is the required output, not scratch space; only
-  dummy, current, carry, digit1, digit2 and sum are working storage.
+  dummy, current, carry, x, y and sum are working storage.
 TRIGGER
   Reach for this shape when two sequences are combined position by position,
   each position's output depends on the previous position only through a small

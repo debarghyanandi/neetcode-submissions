@@ -12,42 +12,43 @@
 
 public class Solution
 {
-    public ListNode Add(ListNode first, ListNode second, int carry)
+    public ListNode Add(ListNode l1, ListNode l2, int carry)
     {
-        if (first == null && second == null && carry == 0)
+        if (l1 == null && l2 == null && carry == 0)
         {
             return null;
         }
 
-        int firstValue = 0;
-        int secondValue = 0;
-        if (first != null)
+        int v1 = 0;
+        int v2 = 0;
+        if (l1 != null)
         {
-            firstValue = first.val;
+            v1 = l1.val;
         }
-        if (second != null)
+        if (l2 != null)
         {
-            secondValue = second.val;
+            v2 = l2.val;
         }
 
-        int sum = firstValue + secondValue + carry;
+        int sum = v1 + v2 + carry;
         int newCarry = sum / 10;
         int nodeValue = sum % 10;
 
         ListNode nextNode = Add(
-            (first != null ? first.next : null),
-            (second != null ? second.next : null),
+            (l1 != null ? l1.next : null),
+            (l2 != null ? l2.next : null),
             newCarry
         );
 
         return new ListNode(nodeValue) { next = nextNode };
     }
 
-    public ListNode AddTwoNumbers(ListNode first, ListNode second)
+    public ListNode AddTwoNumbers(ListNode l1, ListNode l2)
     {
-        return Add(first, second, 0);
+        return Add(l1, l2, 0);
     }
 }
+
 
 /*
 ================================================================================
@@ -65,7 +66,7 @@ THE BASE CASE HAS THREE CLAUSES
   Add returns null only when first == null && second == null && carry == 0. The
   carry == 0 clause is the one people drop. With it gone, 5 -> null plus 5 ->
   null returns just 0 and silently loses the leading 1; with it in place, one
-  extra frame runs with both inputs null, firstValue and secondValue default to
+  extra frame runs with both inputs null, v1 and v2 default to
   0, and it emits the final 1 node. That same defaulting to 0 is what makes
   unequal lengths work - the short list just contributes zeros until the long
   one runs out.
@@ -80,7 +81,7 @@ INVARIANT
   still yields the digits in the right order.
 WHY THIS LOSES TO THE ITERATIVE VERSION
   This burns one stack frame per output digit, and that stack is pure overhead -
-  it holds firstValue, secondValue, sum and newCarry, none of which are needed
+  it holds v1, v2, sum and newCarry, none of which are needed
   after the recursive call returns. The recursion is tail-shaped in spirit but
   not in form, since the new node is constructed after the call, so nothing
   collapses it for you. The iterative version keeps a dummy head plus a tail

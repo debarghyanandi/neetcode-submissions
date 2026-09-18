@@ -392,8 +392,8 @@ button.primary:hover{background:#F7B85F;}
 }
 .bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
 /* A normal flex child, appended last, so column-reverse lands it directly above
-   the topmost item. Absolutely positioned against the box it floated at the top
-   of the bucket instead - pointing at empty space above a two-item stack. */
+   the topmost x. Absolutely positioned against the box it floated at the top
+   of the bucket instead - pointing at empty space above a two-x stack. */
 .bucket-top{
   align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
   line-height:1;padding:0 2px calc(2px * var(--pscale));
@@ -698,7 +698,7 @@ const PROBLEM = {
   {
     label: 'Two stacks, lazy transfer',
     badge: 'amortized O(1) per call · O(n) space · two stacks · optimal.cs',
-    blurb: 'A stack hands things back in reverse, so reversing a second time restores arrival order. Arrivals pile up on <code>stack</code>; the first time a read finds <code>reverse</code> empty, the whole pile is tipped across and the oldest item lands on top. The tip only ever happens onto an <b>empty</b> <code>reverse</code>, so each element moves at most once — amortized O(1).',
+    blurb: 'A stack hands things back in reverse, so reversing a second time restores arrival order. Arrivals pile up on <code>stack</code>; the first time a read finds <code>reverse</code> empty, the whole pile is tipped across and the oldest x lands on top. The tip only ever happens onto an <b>empty</b> <code>reverse</code>, so each element moves at most once — amortized O(1).',
     legend: [
       {cls:'hot', text:'element being pushed or moved'},
       {cls:'accent', text:'top of stack — newest arrival'},
@@ -706,9 +706,9 @@ const PROBLEM = {
       {cls:'dim', text:'empty stack'}
     ],
     code: [
-      'public void Push(int item)',
+      'public void Push(int x)',
       '{',
-      '    stack.Push(item);            // always O(1)',
+      '    stack.Push(x);            // always O(1)',
       '}',
       '',
       'public int Pop()',
@@ -764,7 +764,7 @@ const PROBLEM = {
         pSlots('returned so far', log.length ? log.slice() : [{text:'nothing yet', cls:'dim'}])
       ];
 
-      steps.push({lines:[1,6,19,32], msg:'Two stacks, each with one job. <code>stack</code> takes every arrival; <code>reverse</code> hands out departures. A single stack can never be a queue because its newest item is the only reachable one — but pouring one stack into another inverts it, and the <em>inverse of newest-first is oldest-first</em>. That is the whole trick.', panels: panels('new MyQueue()', '–', -1, -1)});
+      steps.push({lines:[1,6,19,32], msg:'Two stacks, each with one job. <code>stack</code> takes every arrival; <code>reverse</code> hands out departures. A single stack can never be a queue because its newest x is the only reachable one — but pouring one stack into another inverts it, and the <em>inverse of newest-first is oldest-first</em>. That is the whole trick.', panels: panels('new MyQueue()', '–', -1, -1)});
 
       for (let i = 0; i < ops.length; i++){
         const o = ops[i];
@@ -791,7 +791,7 @@ const PROBLEM = {
             const v = stack.pop();
             rev.push(v);
             moves++;
-            steps.push({lines: isPop ? [10,12] : [23,25], msg:'<code>stack.Pop()</code> hands over <b>' + v + '</b> and <code>reverse.Push</code> lands it on top. Because the newest item crosses first, it ends up buried deepest — the pile arrives inverted, which is exactly queue order. ' + (stack.length ? stack.length + ' still to move.' : 'The arrival pile is now empty.'), panels: panels(call, '–', stack.length - 1, rev.length - 1)});
+            steps.push({lines: isPop ? [10,12] : [23,25], msg:'<code>stack.Pop()</code> hands over <b>' + v + '</b> and <code>reverse.Push</code> lands it on top. Because the newest x crosses first, it ends up buried deepest — the pile arrives inverted, which is exactly queue order. ' + (stack.length ? stack.length + ' still to move.' : 'The arrival pile is now empty.'), panels: panels(call, '–', stack.length - 1, rev.length - 1)});
           }
           if (isPop){
             const v = rev.pop();

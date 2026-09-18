@@ -710,8 +710,8 @@ const PROBLEM = {
     code: [
       'public bool IsValidBST(TreeNode root)',
       '{',
-      '    var info = IsValidBSTWithMinMax(root);',
-      '    return info.found;',
+      '    var result = IsValidBSTWithMinMax(root);',
+      '    return result.found;',
       '}',
       '',
       '// one call returns the subtree min, its max, and the verdict',
@@ -739,8 +739,8 @@ const PROBLEM = {
     ],
     simulate(input){
       const base = treeFromLevelOrder(input.vals);
-      const info = {}, kid = {}, leaf = {};
-      base.forEach(n => { info[n.id] = n; });
+      const result = {}, kid = {}, leaf = {};
+      base.forEach(n => { result[n.id] = n; });
       base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
       base.forEach(n => { const k = kid[n.id] || {}; leaf[n.id] = !k.L && !k.R; });
       /* Line 13 answers for a leaf before any call is made, so a leaf's two null
@@ -753,7 +753,7 @@ const PROBLEM = {
         ['L','R'].forEach(side => {
           if (!(kid[n.id] || {})[side]){
             const e = {id:'e' + (seq++), v: null, parent: n.id, side: side};
-            nodes.push(e); info[e.id] = e; leaf[e.id] = false;
+            nodes.push(e); result[e.id] = e; leaf[e.id] = false;
             (kid[n.id] = kid[n.id] || {})[side] = e.id;
           }
         });
@@ -762,7 +762,7 @@ const PROBLEM = {
 
       const MAX = 2147483647, MIN = -2147483648;
       const num = (x) => x === MAX ? 'int.MaxValue' : (x === MIN ? 'int.MinValue' : String(x));
-      const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
+      const shown = (id) => result[id].v === null ? 'null' : String(result[id].v);
 
       const res = {}, frames = [], steps = [];
       let calls = 0, maxF = 0;
@@ -797,7 +797,7 @@ const PROBLEM = {
           mode: 'stack',
           items: frames.map((f, i) => ({
             text: 'root = ' + shown(f.id),
-            sub: info[f.id].v === null
+            sub: result[f.id].v === null
               ? 'null, sentinel pair'
               : (leaf[f.id]
                   ? 'leaf, answers at once'
@@ -827,15 +827,15 @@ const PROBLEM = {
         calls++;
         maxF = Math.max(maxF, frames.length);
 
-        if (info[id].v === null){
-          const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[10,11], msg:'<b>' + shown(info[id].parent) + '</b> has no ' + side + ' child, but it is not a leaf either, so line 13 did not apply and line ' + (side === 'left' ? 16 : 17) + ' called into the empty side anyway. Line 11 answers <code>(int.MaxValue, int.MinValue, true)</code>. The pair is backwards on purpose: the parent will test <code>left.max &gt;= root.val</code> and <code>right.min &lt;= root.val</code>, and a max of <code>int.MinValue</code> or a min of <code>int.MaxValue</code> loses both, so a missing child can never veto anything.' + parkedNote(), panels: panels(id, id, id)});
+        if (result[id].v === null){
+          const side = result[id].side === 'L' ? 'left' : 'right';
+          steps.push({lines:[10,11], msg:'<b>' + shown(result[id].parent) + '</b> has no ' + side + ' child, but it is not a leaf either, so line 13 did not apply and line ' + (side === 'left' ? 16 : 17) + ' called into the empty side anyway. Line 11 answers <code>(int.MaxValue, int.MinValue, true)</code>. The pair is backwards on purpose: the parent will test <code>left.max &gt;= root.val</code> and <code>right.min &lt;= root.val</code>, and a max of <code>int.MinValue</code> or a min of <code>int.MaxValue</code> loses both, so a missing child can never veto anything.' + parkedNote(), panels: panels(id, id, id)});
           res[id] = {min: MAX, max: MIN, found: true};
           frames.pop();
           return res[id];
         }
 
-        const v = info[id].v;
+        const v = result[id].v;
 
         if (leaf[id]){
           steps.push({lines:[13,14], msg:'<b>' + v + '</b> has no children at all, so line 13 fires before any recursion: a single node is a BST, and the smallest and largest value it covers are both <b>' + v + '</b>, hence <code>(' + v + ', ' + v + ', true)</code>. This shortcut is why leaves show no dashed slots - their two null children are never visited.' + parkedNote(), panels: panels(id, id, id)});
@@ -907,22 +907,22 @@ const PROBLEM = {
     code: [
       'public bool IsValidBST(TreeNode root)',
       '{',
-      '    return IsWithinBounds(root, long.MinValue, long.MaxValue);',
+      '    return Validate(root, long.MinValue, long.MaxValue);',
       '}',
       '',
-      'private bool IsWithinBounds(TreeNode node, long lower, long upper)',
+      'private bool Validate(TreeNode node, long lower, long upper)',
       '{',
       '    if (node == null) return true;',
       '    if (node.val <= lower || node.val >= upper) return false;',
       '',
-      '    return IsWithinBounds(node.left, lower, node.val) &&',
-      '           IsWithinBounds(node.right, node.val, upper);',
+      '    return Validate(node.left, lower, node.val) &&',
+      '           Validate(node.right, node.val, upper);',
       '}'
     ],
     simulate(input){
       const base = treeFromLevelOrder(input.vals);
-      const info = {}, kid = {};
-      base.forEach(n => { info[n.id] = n; });
+      const result = {}, kid = {};
+      base.forEach(n => { result[n.id] = n; });
       base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
       /* Every missing child is a real call here - line 8 is where most of this
          recursion ends - so every empty slot is drawn. */
@@ -932,14 +932,14 @@ const PROBLEM = {
         ['L','R'].forEach(side => {
           if (!(kid[n.id] || {})[side]){
             const e = {id:'e' + (seq++), v: null, parent: n.id, side: side};
-            nodes.push(e); info[e.id] = e;
+            nodes.push(e); result[e.id] = e;
             (kid[n.id] = kid[n.id] || {})[side] = e.id;
           }
         });
       });
       const child = (id, s) => (kid[id] || {})[s] || null;
 
-      const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
+      const shown = (id) => result[id].v === null ? 'null' : String(result[id].v);
       const lo = (x) => x === null ? '-inf' : String(x);
       const hi = (x) => x === null ? '+inf' : String(x);
       const win = (a, b) => '(' + lo(a) + ', ' + hi(b) + ')';
@@ -969,7 +969,7 @@ const PROBLEM = {
           scale: 0.72
         }),
         pStack('call stack', [{
-          label: 'IsWithinBounds(node, lower, upper)',
+          label: 'Validate(node, lower, upper)',
           mode: 'stack',
           items: frames.map((f, i) => ({
             text: 'node = ' + shown(f.id),
@@ -1000,15 +1000,15 @@ const PROBLEM = {
         calls++;
         maxF = Math.max(maxF, frames.length);
 
-        if (info[id].v === null){
-          const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[6,8], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>node</code> arrives as <code>null</code> and line 8 returns <b>true</b> immediately - an empty subtree cannot break any rule, whatever window it was handed. Most of the calls in this run end right here, which is why the dashed slots are worth drawing.' + parkedNote(), panels: panels(id, id, id)});
+        if (result[id].v === null){
+          const side = result[id].side === 'L' ? 'left' : 'right';
+          steps.push({lines:[6,8], msg:'The ' + side + ' child of <b>' + shown(result[id].parent) + '</b> does not exist, so <code>node</code> arrives as <code>null</code> and line 8 returns <b>true</b> immediately - an empty subtree cannot break any rule, whatever window it was handed. Most of the calls in this run end right here, which is why the dashed slots are worth drawing.' + parkedNote(), panels: panels(id, id, id)});
           res[id] = true;
           frames.pop();
           return true;
         }
 
-        const v = info[id].v;
+        const v = result[id].v;
         wins[id] = win(a, b);
         const tooSmall = (a !== null && v <= a), tooBig = (b !== null && v >= b);
 

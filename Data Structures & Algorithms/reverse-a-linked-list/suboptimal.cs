@@ -17,16 +17,17 @@ public class Solution
         {
             return null;
         }
-        ListNode reversedHead = head;
+        ListNode newHead = head;
         if (head.next != null)
         {
-            reversedHead = ReverseList(head.next);
+            newHead = ReverseList(head.next);
             head.next.next = head;
         }
         head.next = null;
-        return reversedHead;
+        return newHead;
     }
 }
+
 
 /*
 ================================================================================
@@ -38,7 +39,7 @@ public class Solution
 WHY THIS PATTERN
   The task is to flip every `next` pointer in a singly linked list, and a list
   is a recursive structure: head plus a smaller list. ReverseList(head.next)
-  hands back the head of the already reversed tail, stored in reversedHead, and
+  hands back the head of the already reversed tail, stored in newHead, and
   that same node is passed unchanged all the way back to the caller. The only
   local work left is one rewire: head.next.next = head makes the old successor
   point back at head, and head.next = null cuts the old forward link.
@@ -51,7 +52,7 @@ BETTER APPROACH
   runs after the recursive call returns, so each frame must stay alive holding
   its own head.
 INVARIANT
-  At every return, reversedHead is the last node of the original list, and the
+  At every return, newHead is the last node of the original list, and the
   sublist starting at head.next has already been fully reversed with head still
   pointing into it. That is why head.next.next = head is safe: head.next is the
   old successor, which after reversal is now the tail of the reversed sublist,
@@ -60,7 +61,7 @@ INVARIANT
 WATCH OUT
   The depth of recursion equals the length of the list, so a long input can
   overflow the stack - this is the concrete failure mode, not a slow runtime.
-  The initial `ListNode reversedHead = head;` matters for the single node case:
+  The initial `ListNode newHead = head;` matters for the single node case:
   with head.next == null nothing is recursed and head itself is returned, so do
   not "simplify" it away. Also note head.next = null is executed on both paths,
   including the base case where head.next is already null - harmless, but it

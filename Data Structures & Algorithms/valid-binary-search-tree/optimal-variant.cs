@@ -14,18 +14,21 @@ public class Solution
 {
     public bool IsValidBST(TreeNode root)
     {
-        return IsWithinBounds(root, long.MinValue, long.MaxValue);
+        return Validate(root, long.MinValue, long.MaxValue);
     }
 
-    private bool IsWithinBounds(TreeNode node, long lower, long upper)
+    private bool Validate(TreeNode node, long lower, long upper)
     {
-        if (node == null) return true;
-        if (node.val <= lower || node.val >= upper) return false;
+        if (node == null)
+            return true;
+        if (node.val <= lower || node.val >= upper)
+            return false;
 
-        return IsWithinBounds(node.left, lower, node.val) &&
-               IsWithinBounds(node.right, node.val, upper);
+        return Validate(node.left, lower, node.val) &&
+               Validate(node.right, node.val, upper);
     }
 }
+
 
 /*
 ================================================================================
@@ -38,11 +41,11 @@ WHY THIS PATTERN
   BST-ness is not a property you can check one parent at a time. A node deep in
   the left subtree is constrained by every ancestor it hangs under, not just its
   immediate parent. The fix is to carry that accumulated constraint down the
-  recursion: IsWithinBounds receives the exact range the current node is allowed
+  recursion: Validate receives the exact range the current node is allowed
   to occupy, so each node is validated against all of its ancestors in one
   comparison pair.
 THE INVARIANT
-  When IsWithinBounds(node, lower, upper) is called, lower and upper are the
+  When Validate(node, lower, upper) is called, lower and upper are the
   intersection of every ancestor constraint on node's subtree: lower < every
   value in the subtree < upper. The recursion preserves this. Going left, the
   window narrows to (lower, node.val) because everything left of node must stay
@@ -50,7 +53,7 @@ THE INVARIANT
   to (node.val, upper). The window only ever shrinks, and node.val itself
   becomes the new wall on the side it splits.
 ALGORITHM
-  1. Seed the root with the widest possible window: IsWithinBounds(root,
+  1. Seed the root with the widest possible window: Validate(root,
   long.MinValue, long.MaxValue).
   2. A null node vacuously satisfies any window, so return true.
   3. Reject immediately if node.val <= lower or node.val >= upper.

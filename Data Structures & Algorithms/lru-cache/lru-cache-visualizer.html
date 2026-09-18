@@ -746,9 +746,9 @@ const PROBLEM = {
       '',
       '    if (cache.Count > cap)',
       '    {',
-      '        Node lruNode = left.next;   // coldest real node',
-      '        Remove(lruNode);',
-      '        cache.Remove(lruNode.key);',
+      '        Node lru = left.next;   // coldest real node',
+      '        Remove(lru);',
+      '        cache.Remove(lru.key);',
       '    }',
       '}'
     ],

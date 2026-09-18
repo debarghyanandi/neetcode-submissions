@@ -19,9 +19,9 @@ public class KthLargest
     {
         this.k = k;
         this.pq = new PriorityQueue<int, int>();
-        foreach (int num in nums)
+        foreach (int v in nums)
         {
-            pq.Enqueue(num, num);
+            pq.Enqueue(v, v);
 
             if (pq.Count > k)
                 pq.Dequeue();
@@ -39,6 +39,7 @@ public class KthLargest
     }
 
 }
+
 
 /*
 ================================================================================
@@ -85,7 +86,7 @@ WATCH OUT
   comparer argument. If you ever reach for the max-heap version of a problem you
   must pass Comparer<int>.Create((a,b) => b - a) or negate the priority;
   forgetting is the classic bug.
-  2. Enqueue(num, num) passes the value as both element and priority. Peek()
+  2. Enqueue(v, v) passes the value as both element and priority. Peek()
   returns the ELEMENT, not the priority. They are identical here, so it does not
   matter - but in problems where the priority is a derived key (distance,
   frequency) the two differ and Peek gives you back the payload.

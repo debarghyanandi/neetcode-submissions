@@ -9,39 +9,40 @@
 // -  enqueue to avoid duplicates; queue can hold O(m*n) cells worst case
 // --------------------------------------------------------------------------
 
-public class Solution {
+public class Solution
+{
     public int NumIslands(char[][] grid)
     {
         int rows = grid.Length;
         int cols = grid[0].Length;
-        bool[,] visited = new bool[rows, cols];
-        int islandCount = 0;
+        bool[,] vis = new bool[rows, cols];
+        int cnt = 0;
 
-        int[] rowDelta = { -1, 1, 0, 0 };
-        int[] colDelta = { 0, 0, -1, 1 };
+        int[] dRow = { -1, 1, 0, 0 };
+        int[] dCol = { 0, 0, -1, 1 };
 
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < cols; col++)
             {
-                if (!visited[row, col] && grid[row][col] == '1')
+                if (!vis[row, col] && grid[row][col] == '1')
                 {
-                    islandCount++;
+                    cnt++;
                     Queue<(int, int)> queue = new();
                     queue.Enqueue((row, col));
-                    visited[row, col] = true; // mark visited when ENQUEUED, not when dequeued
+                    vis[row, col] = true; // mark visited when ENQUEUED, not when dequeued
 
                     while (queue.Count > 0)
                     {
-                        var (currRow, currCol) = queue.Dequeue();
+                        var (r, c) = queue.Dequeue();
                         for (int i = 0; i < 4; i++)
                         {
-                            int nRow = currRow + rowDelta[i];
-                            int nCol = currCol + colDelta[i];
+                            int nRow = r + dRow[i];
+                            int nCol = c + dCol[i];
                             if (nRow >= 0 && nRow < rows && nCol >= 0 && nCol < cols &&
-                                !visited[nRow, nCol] && grid[nRow][nCol] == '1')
+                                !vis[nRow, nCol] && grid[nRow][nCol] == '1')
                             {
-                                visited[nRow, nCol] = true;
+                                vis[nRow, nCol] = true;
                                 queue.Enqueue((nRow, nCol));
                             }
                         }
@@ -49,9 +50,10 @@ public class Solution {
                 }
             }
         }
-        return islandCount;
+        return cnt;
     }
 }
+
 
 /*
 ================================================================================
@@ -74,16 +76,16 @@ ALGORITHM
   as bool[rows, cols].
   2. Scan every (row, col) in row-major order.
   3. If grid[row][col] == '1' and !visited[row, col], this cell belongs to a
-  component nothing has touched yet. Do islandCount++.
+  component nothing has touched yet. Do cnt++.
   4. Seed a fresh Queue<(int, int)> with (row, col) and set visited[row, col] =
   true immediately.
-  5. While the queue is non-empty, dequeue (currRow, currCol) and walk i from 0
-  to 3, forming (nRow, nCol) from rowDelta[i] and colDelta[i]. The paired arrays
+  5. While the queue is non-empty, dequeue (r, c) and walk i from 0
+  to 3, forming (nRow, nCol) from dRow[i] and dCol[i]. The paired arrays
   { -1, 1, 0, 0 } and { 0, 0, -1, 1 } spell out up, down, left, right.
   6. Enqueue the neighbour only if it passes all four guards at once: in bounds
   on both axes, not visited, and equal to '1'. Mark it visited in the same
   breath as the enqueue.
-  7. Return islandCount after the sweep finishes.
+  7. Return cnt after the sweep finishes.
 INVARIANT
   Every cell is enqueued at most once across the entire run. visited[r, c] is
   set to true in the same statement block that enqueues (r, c), and it is never
@@ -94,7 +96,7 @@ INVARIANT
   The counting argument rides on top of that. When the outer scan arrives at a
   land cell with visited still false, that cell cannot be connected to any
   island already counted - if it were, the BFS for that earlier island would
-  have reached it and flipped the flag before the scan got here. So islandCount
+  have reached it and flipped the flag before the scan got here. So cnt
   increments exactly once per connected component: never twice for the same
   island (the BFS consumes the rest of it), never zero times (the scan visits
   every cell, so it must reach at least one member of every component).
@@ -146,7 +148,7 @@ FOLLOW-UP
 
   "What about diagonal connectivity?" That is a two-line change and the reason
   the deltas are in arrays rather than four hand-written branches: extend
-  rowDelta and colDelta to the eight offsets and raise the loop bound from 4 to
+  dRow and dCol to the eight offsets and raise the loop bound from 4 to
   8. Nothing else in the traversal cares.
 TRIGGER
   Reach for this shape whenever the input is a grid and the question counts,

@@ -15,20 +15,21 @@ public class Solution
         if (n <= 2)
             return n;
 
-        int twoStepsBack = 1;
-        int oneStepBack = 2;
-        int current = 0;
+        int prev2 = 1;
+        int prev1 = 2;
+        int curr = 0;
 
         for (int i = 3; i <= n; i++)
         {
-            current = oneStepBack + twoStepsBack;
-            twoStepsBack = oneStepBack;
-            oneStepBack = current;
+            curr = prev1 + prev2;
+            prev2 = prev1;
+            prev1 = curr;
         }
 
-        return oneStepBack;
+        return prev1;
     }
 }
+
 
 /*
 ================================================================================
@@ -41,7 +42,7 @@ WHY THIS PATTERN
   To reach step n you must arrive from step n-1 (taking one step) or from step
   n-2 (taking two), and those two route sets never overlap, so ways(n) =
   ways(n-1) + ways(n-2). That recurrence only ever looks back two positions, so
-  a full DP table is waste: twoStepsBack and oneStepBack are enough state. The
+  a full DP table is waste: prev2 and prev1 are enough state. The
   loop from i = 3 to n walks forward and rebuilds that pair each time.
 BRUTE FORCE
   The first thing most people write is plain recursion: return ClimbStairs(n-1)
@@ -51,11 +52,11 @@ BRUTE FORCE
   still holds n entries; this file keeps the same forward order and drops the
   array.
 INVARIANT
-  At the top of each iteration for index i, oneStepBack holds the number of ways
-  to reach step i-1 and twoStepsBack holds the number of ways to reach step i-2.
+  At the top of each iteration for index i, prev1 holds the number of ways
+  to reach step i-1 and prev2 holds the number of ways to reach step i-2.
   The body computes current for step i, then shifts the window so the invariant
   holds again for i+1. The seeds 1 and 2 are the true counts for steps 1 and 2,
-  so by induction oneStepBack is the count for step n when the loop ends, which
+  so by induction prev1 is the count for step n when the loop ends, which
   is what gets returned.
 WATCH OUT
   The guard if (n <= 2) return n means n = 0 returns 0 and any negative n is
@@ -63,7 +64,7 @@ WATCH OUT
   is wrong. The values are int and Fibonacci grows fast, so a large n silently
   overflows and wraps to a wrong or negative result - there is no checked block
   here. Also note current is declared outside the loop and initialized to 0 but
-  never read after the loop; the return uses oneStepBack, so the 0 is harmless
+  never read after the loop; the return uses prev1, so the 0 is harmless
   but misleading to a reader.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. What if you can take 1, 2 or 3 steps at a time?
@@ -77,7 +78,7 @@ FOLLOW-UP AN INTERVIEWER WILL ASK
      fixed-width integer long before that.
   3. Each step has a cost and you want the cheapest climb instead of the count.
      Same two-variable shape, but current becomes cost[i] +
-     Math.Min(oneStepBack, twoStepsBack) - min replaces sum. The rolling-window
+     Math.Min(prev1, prev2) - min replaces sum. The rolling-window
      trick survives because the recurrence still looks back only two positions.
   4. Return the actual list of step sequences, not the count.
      You must backtrack and emit each path, so the output alone is exponential
@@ -87,8 +88,8 @@ TRIGGER
   only on a fixed number of earlier positions - collapse the DP table to that
   many variables.
 C# NOTE
-  C# tuple assignment would remove the current variable entirely: (twoStepsBack,
-  oneStepBack) = (oneStepBack, oneStepBack + twoStepsBack) evaluates the right
+  C# tuple assignment would remove the current variable entirely: (prev2,
+  prev1) = (prev1, prev1 + prev2) evaluates the right
   side first, so no temporary is needed. If overflow matters, change the return
   type to long or wrap the addition in checked so it throws instead of wrapping
   quietly.

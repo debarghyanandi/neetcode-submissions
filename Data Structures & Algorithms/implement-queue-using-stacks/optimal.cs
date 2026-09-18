@@ -22,9 +22,9 @@ public class MyQueue
         reverse = new Stack<int>();
     }
 
-    public void Push(int item)
+    public void Push(int x)
     {
-        stack.Push(item);
+        stack.Push(x);
     }
 
     public int Pop()
@@ -37,7 +37,8 @@ public class MyQueue
             }
             return reverse.Pop();
         }
-        else return reverse.Pop();
+        else
+            return reverse.Pop();
     }
 
     public int Peek()
@@ -50,7 +51,8 @@ public class MyQueue
             }
             return reverse.Peek();
         }
-        else return reverse.Peek();
+        else
+            return reverse.Peek();
     }
 
     public bool Empty()
@@ -67,6 +69,7 @@ public class MyQueue
  * int param_3 = obj.Peek();
  * bool param_4 = obj.Empty();
  */
+
 
 /*
 ================================================================================
@@ -86,7 +89,7 @@ INVARIANT
   At all times, reading reverse from top to bottom and then stack from bottom to
   top yields the queue in exact front-to-back order. Every operation preserves
   it:
-  1. Push(item) appends to the tail of the stack segment, which is the tail of
+  1. Push(x) appends to the tail of the stack segment, which is the tail of
   the queue.
   2. Pop/Peek read reverse's top, which is the head of the queue.
   3. The drain loop moves the entire stack segment into reverse, reversing it -
@@ -132,7 +135,7 @@ SHAPE OF THE CODE
   outside.
 ALTERNATIVE DESIGN
   The mirror image is the costly-push variant: on every Push, drain reverse back
-  into stack, push the new item, drain back. That makes Pop and Peek a single
+  into stack, push the new x, drain back. That makes Pop and Peek a single
   stack operation with no branch, but Push becomes linear every single time, so
   a push-heavy workload has no amortization to fall back on. This version is the
   better default because it charges the transfer only when a reader actually

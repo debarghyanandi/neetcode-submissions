@@ -9,20 +9,23 @@
 // -  scanning for distinct values
 // --------------------------------------------------------------------------
 
-public class Solution {
-    public int RemoveDuplicates(int[] nums) {
-        int left = 1;
-        for (int right = 1; right < nums.Length; right++)
+public class Solution
+{
+    public int RemoveDuplicates(int[] nums)
+    {
+        int l = 1;
+        for (int r = 1; r < nums.Length; r++)
         {
-            if (nums[right] != nums[right - 1])
+            if (nums[r] != nums[r - 1])
             {
-                nums[left] = nums[right];
-                left++;
+                nums[l] = nums[r];
+                l++;
             }
         }
-        return left;
+        return l;
     }
 }
+
 
 /*
 ================================================================================

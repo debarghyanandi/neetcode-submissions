@@ -709,7 +709,7 @@ const PROBLEM = {
       '        int cols = grid[0].Length;',
       '',
       '        int[,] visited = new int[rows, cols];',
-      '        int maxArea = 0;',
+      '        int size = 0;',
       '',
       '        for (int row = 0; row < rows; row++)',
       '        {',
@@ -718,11 +718,11 @@ const PROBLEM = {
       '                if (visited[row, col] == 0 && grid[row][col] == 1)',
       '                {',
       '                    int islandSize = Dfs(row, col, visited, grid);',
-      '                    maxArea = Math.Max(maxArea, islandSize);',
+      '                    size = Math.Max(size, islandSize);',
       '                }',
       '            }',
       '        }',
-      '        return maxArea;',
+      '        return size;',
       '    }',
       '',
       '    private int Dfs(int row, int col, int[,] visited, int[][] grid)',
@@ -744,18 +744,18 @@ const PROBLEM = {
       '                if (Math.Abs(delRow) == Math.Abs(delCol))',
       '                    continue;',
       '',
-      '                int neighborRow = row + delRow;',
-      '                int neighborCol = col + delCol;',
+      '                int nRow = row + delRow;',
+      '                int nCol = col + delCol;',
       '',
       '                // Invalid neighbour validation',
       '                // Land validation',
       '                // Visited validation',
-      '                if (neighborRow >= 0 && neighborRow < rows &&',
-      '                    neighborCol >= 0 && neighborCol < cols &&',
-      '                    visited[neighborRow, neighborCol] == 0 &&',
-      '                    grid[neighborRow][neighborCol] == 1)',
+      '                if (nRow >= 0 && nRow < rows &&',
+      '                    nCol >= 0 && nCol < cols &&',
+      '                    visited[nRow, nCol] == 0 &&',
+      '                    grid[nRow][nCol] == 1)',
       '                {',
-      '                    size += Dfs(neighborRow, neighborCol, visited, grid);',
+      '                    size += Dfs(nRow, nCol, visited, grid);',
       '                }',
       '            }',
       '        }',
@@ -768,7 +768,7 @@ const PROBLEM = {
       const R = g.length, C = g[0].length;
       const vis = Array.from({length: R}, () => Array(C).fill(0));
       const frames = [], steps = [];
-      let maxArea = 0, calls = 0, maxF = 0, scanTxt = 'not started';
+      let size = 0, calls = 0, maxF = 0, scanTxt = 'not started';
       const rc = (r, c) => r + ',' + c;
 
       const DELTAS = [];
@@ -810,11 +810,11 @@ const PROBLEM = {
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
           {k:'Dfs calls', v: calls},
-          {k:'maxArea', v: maxArea, cls: maxArea ? 'good' : ''}
+          {k:'size', v: size, cls: size ? 'good' : ''}
         ])
       ];
 
-      steps.push({lines:[6,7,9,10], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>maxArea</code> at 0. The two loops below sweep every cell in reading order looking only for land the scan has not already claimed - each one it finds becomes the seed of a fresh walk, and that walk will report back exactly how many cells it touched.', panels: panels(null, null, null)});
+      steps.push({lines:[6,7,9,10], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>size</code> at 0. The two loops below sweep every cell in reading order looking only for land the scan has not already claimed - each one it finds becomes the seed of a fresh walk, and that walk will report back exactly how many cells it touched.', panels: panels(null, null, null)});
 
       const dfs = (r, c, via) => {
         frames.push({r: r, c: c, size: 1, note: 'entered, neighbours not scanned yet'});
@@ -855,10 +855,10 @@ const PROBLEM = {
           if (g[r][c] === 1 && vis[r][c] === 0){
             steps.push({lines:[16,18], msg:'The scan arrives at <b>' + rc(r, c) + '</b>. It is land and <code>visited</code> is still 0 here, so it cannot belong to an island already measured - line 18 calls <code>Dfs</code> and the outer scan freezes until the whole island reachable from here has been counted.', panels: panels([r, c], null, null)});
             const size = dfs(r, c, null);
-            const before = maxArea;
-            maxArea = Math.max(maxArea, size);
-            const grew = maxArea > before;
-            steps.push({lines:[18,19], msg:'<code>Dfs</code> unwound all the way back with <b>islandSize = ' + size + '</b> - the total cells reachable from <b>' + rc(r, c) + '</b>. Line 19 compares it against the running <code>maxArea</code> (' + before + '); ' + (grew ? ('this island is bigger, so <code>maxArea</code> becomes <b>' + maxArea + '</b>.') : ('it is not bigger than the current best, so <code>maxArea</code> stays <b>' + maxArea + '</b>.')), panels: panels([r, c], null, null)});
+            const before = size;
+            size = Math.max(size, size);
+            const grew = size > before;
+            steps.push({lines:[18,19], msg:'<code>Dfs</code> unwound all the way back with <b>islandSize = ' + size + '</b> - the total cells reachable from <b>' + rc(r, c) + '</b>. Line 19 compares it against the running <code>size</code> (' + before + '); ' + (grew ? ('this island is bigger, so <code>size</code> becomes <b>' + size + '</b>.') : ('it is not bigger than the current best, so <code>size</code> stays <b>' + size + '</b>.')), panels: panels([r, c], null, null)});
           } else if (g[r][c] === 1){
             steps.push({lines:[16], msg:'<b>' + rc(r, c) + '</b> is land, but it was already claimed while measuring an earlier island, so <code>visited</code> is 1 here and the condition on line 16 fails. No new walk starts - this is what stops a cell already counted from also being counted as its own seed.', panels: panels([r, c], null, null)});
           } else {
@@ -868,7 +868,7 @@ const PROBLEM = {
       }
 
       scanTxt = 'finished';
-      steps.push({lines:[23], msg:'Both loops are done and line 23 returns <b>maxArea = ' + maxArea + '</b>. Every cell was tested once by the outer scan, and each land cell was visited by <code>Dfs</code> exactly once - ' + calls + ' call(s) total - because line 32 marks it the instant its frame opens. That is the O(m * n) time; the space is the <code>visited</code> matrix plus the call stack, which peaked at ' + maxF + ' frame(s) deep.', panels: panels(null, null, null)});
+      steps.push({lines:[23], msg:'Both loops are done and line 23 returns <b>size = ' + size + '</b>. Every cell was tested once by the outer scan, and each land cell was visited by <code>Dfs</code> exactly once - ' + calls + ' call(s) total - because line 32 marks it the instant its frame opens. That is the O(m * n) time; the space is the <code>visited</code> matrix plus the call stack, which peaked at ' + maxF + ' frame(s) deep.', panels: panels(null, null, null)});
       return steps;
     }
   }]

@@ -14,22 +14,22 @@ public class Solution
 {
     public int Search(int[] nums, int target)
     {
-        int low = 0, high = nums.Length - 1;
+        int l = 0, r = nums.Length - 1;
 
-        while (low < high)
+        while (l < r)
         {
-            int center = (low + high) / 2;
-            if (nums[center] > nums[high])
+            int m = (l + r) / 2;
+            if (nums[m] > nums[r])
             {
-                low = center + 1;
+                l = m + 1;
             }
             else
             {
-                high = center;
+                r = m;
             }
         }
 
-        int pivot = low;
+        int pivot = l;
 
         int result = BinarySearch(nums, target, 0, pivot - 1);
         if (result != -1)
@@ -62,6 +62,7 @@ public class Solution
     }
 }
 
+
 /*
 ================================================================================
  PATTERN : Find rotation pivot, then binary search each sorted run
@@ -82,12 +83,12 @@ THE SPLIT
 PIVOT LOOP INVARIANT
   Invariant: the minimum always lies inside nums[low..high].
 
-  If nums[center] > nums[high], then center sits in the high-valued first run
-  while high sits in the second, so the minimum is strictly right of center -
-  low = center + 1 discards center safely.
+  If nums[m] > nums[high], then m sits in the high-valued first run
+  while high sits in the second, so the minimum is strictly right of m -
+  low = m + 1 discards m safely.
 
-  Otherwise nums[center] <= nums[high] puts center and high in the same run, so
-  the minimum is at center or left of it - high = center keeps center as a live
+  Otherwise nums[m] <= nums[high] puts m and high in the same run, so
+  the minimum is at m or left of it - high = m keeps m as a live
   candidate.
 
   When low == high the range holds exactly one element, and it is the minimum.
@@ -96,9 +97,9 @@ WHY NUMS[HIGH] AND NOT NUMS[LOW]
   Anchoring the comparison to the right end is what makes the zero-rotation case
   work for free.
 
-  Take [1,2,3]. Against nums[low]: center = 1, nums[1] = 2 > nums[0] = 1, so low
+  Take [1,2,3]. Against nums[low]: m = 1, nums[1] = 2 > nums[0] = 1, so low
   = 2 and pivot = 2 - wrong, the minimum is at 0. Against nums[high]: 2 > 3 is
-  false so high = 1, then center = 0, 1 > 2 is false so high = 0, pivot = 0 -
+  false so high = 1, then m = 0, 1 > 2 is false so high = 0, pivot = 0 -
   correct.
 
   The nums[low] variant needs an explicit "array is already sorted" pre-check.
@@ -106,13 +107,13 @@ WHY NUMS[HIGH] AND NOT NUMS[LOW]
 TERMINATION AND THE OFF BY ONE
   Two choices are coupled and must move together.
 
-  high = center, not center - 1, because center may itself be the minimum.
+  high = m, not m - 1, because m may itself be the minimum.
 
-  while (low < high), not <=, because with high = center the state low == high
-  == center would set center back to itself forever.
+  while (low < high), not <=, because with high = m the state low == high
+  == m would set m back to itself forever.
 
-  Progress still holds: with low < high, center = (low + high) / 2 satisfies low
-  <= center < high, so low = center + 1 strictly raises low and high = center
+  Progress still holds: with low < high, m = (low + high) / 2 satisfies low
+  <= m < high, so low = m + 1 strictly raises low and high = m
   strictly lowers high. The window shrinks every iteration.
 DEGENERATE CASES
   Non-rotated input gives pivot = 0. The first call becomes BinarySearch(nums,
@@ -135,7 +136,7 @@ COST OF THE TWO-PASS SHAPE
 WATCH OUT
   Duplicates break the pivot loop, and the problem statement is what protects
   you - it promises distinct values. Counterexample [2,2,2,0,2]: every
-  nums[center] > nums[high] test is false, high walks down to 0, pivot = 0, and
+  nums[m] > nums[high] test is false, high walks down to 0, pivot = 0, and
   the second call runs a plain binary search over [2,2,2,0,2], which is not
   sorted. It returns -1 while 0 sits at index 3. Supporting duplicates requires
   a high-- fallback on ties, which surrenders the logarithmic worst case.

@@ -14,17 +14,17 @@ public class Solution
 {
     public int DiameterOfBinaryTree(TreeNode root)
     {
-        var (_, diameter) = ComputeHeightAndDiameter(root);
+        var (_, diameter) = DFS(root);
         return diameter;
     }
 
-    private (int height, int diameter) ComputeHeightAndDiameter(TreeNode node)
+    private (int height, int diameter) DFS(TreeNode node)
     {
         if (node == null)
             return (0, 0);
 
-        var left = ComputeHeightAndDiameter(node.left);
-        var right = ComputeHeightAndDiameter(node.right);
+        var left = DFS(node.left);
+        var right = DFS(node.right);
 
         int height = 1 + Math.Max(left.height, right.height);
         int diameterThroughHere = left.height + right.height;
@@ -33,6 +33,7 @@ public class Solution
         return (height, diameter);
     }
 }
+
 
 /*
 ================================================================================
@@ -46,7 +47,7 @@ WHY THIS PATTERN
   side and down the right side of that node. So for every node you need
   left.height + right.height, and the answer is the biggest such sum over all
   nodes. One post-order pass (children first, then the node) gives every node
-  its two child heights for free, and ComputeHeightAndDiameter carries both the
+  its two child heights for free, and DFS carries both the
   height and the best diameter seen in that subtree back up in one return value.
 BRUTE FORCE
   The first thing most people write is a Height(node) helper, then a recursion
@@ -55,7 +56,7 @@ BRUTE FORCE
   O(n log n) on a balanced one. It loses because the height information is
   recomputed instead of being returned alongside the partial answer.
 INVARIANT
-  Every call to ComputeHeightAndDiameter(node) returns the true height of that
+  Every call to DFS(node) returns the true height of that
   subtree in edges-plus-one (null is 0, a leaf is 1) and the largest left.height
   + right.height over all nodes inside that subtree. The node combines three
   candidates: the path bending here (diameterThroughHere), the best in the left

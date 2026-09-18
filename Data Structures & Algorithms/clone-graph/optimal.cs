@@ -13,28 +13,29 @@ public class Solution
 {
     public Node CloneGraph(Node node)
     {
-        Dictionary<Node, Node> visited = new Dictionary<Node, Node>();
-        return Dfs(node, visited);
+        Dictionary<Node, Node> map = new Dictionary<Node, Node>();
+        return Dfs(node, map);
     }
 
-    private Node Dfs(Node node, Dictionary<Node, Node> visited)
+    private Node Dfs(Node node, Dictionary<Node, Node> map)
     {
         if (node == null)
             return null;
 
-        if (visited.ContainsKey(node))
-            return visited[node];
+        if (map.ContainsKey(node))
+            return map[node];
 
         Node copy = new Node(node.val);
-        visited[node] = copy;
+        map[node] = copy;
 
-        foreach (Node neighbor in node.neighbors)
+        foreach (Node n in node.neighbors)
         {
-            copy.neighbors.Add(Dfs(neighbor, visited));
+            copy.neighbors.Add(Dfs(n, map));
         }
         return copy;
     }
 }
+
 
 /*
 ================================================================================

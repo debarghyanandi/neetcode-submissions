@@ -12,12 +12,12 @@
 
 public class Solution
 {
-    public int diameter = 0;
+    public int res = 0;
 
     public int DiameterOfBinaryTree(TreeNode root)
     {
         Height(root);
-        return diameter;
+        return res;
     }
 
     private int Height(TreeNode root)
@@ -28,11 +28,12 @@ public class Solution
         int left = Height(root.left);
         int right = Height(root.right);
 
-        diameter = Math.Max(diameter, left + right);
+        res = Math.Max(res, left + right);
 
         return 1 + Math.Max(left, right);
     }
 }
+
 
 /*
 ================================================================================

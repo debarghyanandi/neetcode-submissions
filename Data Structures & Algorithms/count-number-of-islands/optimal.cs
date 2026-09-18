@@ -18,29 +18,29 @@ public class Solution
         int cols = grid[0].Length;
 
         // Visited array
-        int[,] visited = new int[rows, cols];
-        int islandCount = 0;
+        int[,] vis = new int[rows, cols];
+        int cnt = 0;
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < cols; col++)
             {
-                if (visited[row, col] == 0 && grid[row][col] == '1')
+                if (vis[row, col] == 0 && grid[row][col] == '1')
                 {
-                    Dfs(row, col, visited, grid);
-                    islandCount++;
+                    Dfs(row, col, vis, grid);
+                    cnt++;
                 }
             }
         }
-        return islandCount;
+        return cnt;
     }
 
-    private void Dfs(int row, int col, int[,] visited, char[][] grid)
+    private void Dfs(int row, int col, int[,] vis, char[][] grid)
     {
         int rows = grid.Length;
         int cols = grid[0].Length;
 
         //mark this node visisted
-        visited[row, col] = 1;
+        vis[row, col] = 1;
 
         //visit all 6 neighbours
         for (int delRow = -1; delRow <= 1; delRow++)
@@ -59,15 +59,16 @@ public class Solution
                 //visited validation
                 if (nRow >= 0 && nRow < rows &&
                     nCol >= 0 && nCol < cols &&
-                    visited[nRow, nCol] == 0 &&
+                    vis[nRow, nCol] == 0 &&
                     grid[nRow][nCol] == '1')
                 {
-                    Dfs(nRow, nCol, visited, grid);
+                    Dfs(nRow, nCol, vis, grid);
                 }
             }
         }
     }
 }
+
 
 /*
 ================================================================================
@@ -81,7 +82,7 @@ WHY THIS PATTERN
   counting trick rather than a graph build: the grid is its own adjacency list,
   so no nodes or edges are ever materialized. The outer double loop touches
   every cell once; a Dfs is launched only when a cell is land and unmarked. Each
-  launch consumes one whole component, so islandCount moves exactly once per
+  launch consumes one whole component, so cnt moves exactly once per
   component. Note that Dfs returns void - its only job is to paint visited, and
   the counting lives entirely in the caller.
 WHY THE COUNT IS EXACT
@@ -91,7 +92,7 @@ WHY THE COUNT IS EXACT
   only stops at the component boundary, so by the time the launching call
   returns, every cell reachable from (row, col) via orthogonal land steps has
   visited == 1. When the outer scan later walks over those cells, the
-  visited[row, col] == 0 half of the guard fails and islandCount does not move.
+  visited[row, col] == 0 half of the guard fails and cnt does not move.
 
   2. No component missed. The outer loop visits every (row, col), so whichever
   cell of a component comes first in row-major order is the one that launches.

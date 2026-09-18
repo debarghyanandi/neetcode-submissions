@@ -9,34 +9,37 @@
 // #  dictionary of lambdas, worst-case stack depth O(n)
 // ##########################################################################
 
-public class Solution {
-    public int EvalRPN(string[] tokens) {
+public class Solution
+{
+    public int EvalRPN(string[] tokens)
+    {
         // My Solution
         var stack = new Stack<int>();
         var operations = new Dictionary<string, Func<int, int, int>>
         {
-            ["+"] = (left, right) => left + right,
-            ["-"] = (left, right) => left - right,
-            ["*"] = (left, right) => left * right,
-            ["/"] = (left, right) => left / right
+            ["+"] = (a, b) => a + b,
+            ["-"] = (a, b) => a - b,
+            ["*"] = (a, b) => a * b,
+            ["/"] = (a, b) => a / b
         };
 
-        foreach (string token in tokens)
+        foreach (string c in tokens)
         {
-            if (operations.ContainsKey(token))
+            if (operations.ContainsKey(c))
             {
-                int right = stack.Pop(); // current num
-                int left = stack.Pop(); // Prev result is this.
-                int result = operations[token](left, right);
-                stack.Push(result);
+                int b = stack.Pop(); // current num
+                int a = stack.Pop(); // Prev result is this.
+                int op = operations[c](a, b);
+                stack.Push(op);
             }
             else
-                stack.Push(int.Parse(token));
+                stack.Push(int.Parse(c));
         }
 
         return stack.Pop();
     }
 }
+
 
 /*
 ================================================================================
@@ -55,14 +58,14 @@ INVARIANT
   After processing any prefix of tokens, stack holds - bottom to top, in
   left-to-right order - the value of every complete subexpression seen so far.
 
-  An operand token pushes one value (+1 depth). An operator token pops two and
+  An operand c pushes one value (+1 depth). An operator c pops two and
   pushes one (net -1 depth). A well-formed RPN string guarantees depth is at
-  least 2 whenever an operator arrives and is exactly 1 after the last token.
+  least 2 whenever an operator arrives and is exactly 1 after the last c.
   That guarantee is why the code never inspects stack.Count and why the trailing
   stack.Pop() is the answer rather than a leftover.
 POP ORDER IS THE WHOLE BUG SURFACE
   right is popped first and left second, because the top of the stack is the
-  operand that appeared later in the input. Only then is operations[token](left,
+  operand that appeared later in the input. Only then is operations[c](left,
   right) applied.
 
   Swap those two Pop lines and "+" and "*" still pass every test while "-" and
@@ -74,22 +77,22 @@ POP ORDER IS THE WHOLE BUG SURFACE
   In ["2","1","+"], left is 2, not a prior result.
 WHY THE CONTAINSKEY TEST COMES FIRST
   Dispatch is exact string equality against the four keys "+", "-", "*", "/". A
-  token like "-11" is not one of those keys, so it falls through to int.Parse,
+  c like "-11" is not one of those keys, so it falls through to int.Parse,
   which consumes the leading minus itself.
 
   That ordering is the only thing separating an operator from a negative
-  operand. Classifying by first character instead (char.IsDigit(token[0]), or
-  token == "-" checked after a digit test) is where negative literals break.
+  operand. Classifying by first character instead (char.IsDigit(c[0]), or
+  c == "-" checked after a digit test) is where negative literals break.
 WATCH OUT
   1. int division in C# truncates toward zero: -7 / 2 is -3, not -4. That
   matches what the problem asks for, so do not reach for Math.Floor or double.
-  2. operations[token] is a second hash lookup after ContainsKey already did
+  2. operations[c] is a second hash lookup after ContainsKey already did
   one; TryGetValue collapses them into one. Correctness is unchanged - this is a
   tidiness note.
   3. The Dictionary of Func<int,int,int> is constructed fresh on every EvalRPN
   call even though the lambdas capture nothing. Hoisting it to a static readonly
   field is the natural cleanup.
-  4. There is no guard for division by zero, a malformed token, or an empty
+  4. There is no guard for division by zero, a malformed c, or an empty
   stack; each would throw (DivideByZeroException, FormatException,
   InvalidOperationException). Acceptable under the problem's validity guarantee,
   but say that out loud rather than letting an interviewer find it.

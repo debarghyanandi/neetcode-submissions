@@ -12,7 +12,7 @@
  * will refuse honest rewrites. Both are worth stopping for.
  */
 
-import { sameShape, shapeForm, tokenDelta, tokenize } from './csharp.mjs';
+import { sameShape, shapeForm, tokenDelta, tokenize, renameIdentifiers } from './csharp.mjs';
 
 let pass = 0, fail = 0;
 
@@ -275,6 +275,8 @@ refuses('braces removed from a braced if', BRACED, BRACELESS, 'Braces are struct
 
 // The brace line is specific to braces. An unrelated size change must not
 // collect a lecture about braces it can do nothing with.
+function ok2(name, cond, extra = '') { if (cond) { pass++; console.log(`ok    ${name}`); } else { fail++; console.log(`FAIL  ${name}${extra ? '\n      ' + extra : ''}`); } }
+
 function refusalHas(name, before, after, phrase, want) {
   const r = sameShape(before, after);
   const got = r.errors.some((e) => e.includes(phrase));
@@ -302,6 +304,83 @@ delta('an inserted brace pair', 'if (a) b();', 'if (a) { b(); }', ['{', '}'], []
 delta('a removed brace pair', 'if (a) { b(); }', 'if (a) b();', [], ['{', '}']);
 delta('an identical file has no delta', BASE, BASE, [], []);
 delta('a pure rename has no delta either - it is length-equal', 'int l = 0;', 'int left = 0;', ['left'], ['l']);
+
+// ---- renameIdentifiers ---------------------------------------------------
+//
+// This is what put 92 of lint's renames back. It rewrites real files in place, so
+// what it must NOT touch matters more than what it does.
+
+function ren2(name, src, map, want) {
+  const got = renameIdentifiers(src, map).code;
+  if (got === want) { pass++; console.log(`ok    ${name}`); }
+  else { fail++; console.log(`FAIL  ${name}\n      got:    ${JSON.stringify(got)}\n      wanted: ${JSON.stringify(want)}`); }
+}
+
+ren2('a local is renamed',
+  'public class S { public int F() { int result = 1; return result; } }', { result: 'res' },
+  'public class S { public int F() { int res = 1; return res; } }');
+
+ren2('a member after a dot is not',
+  'public class S { public int F(int[] nums) { return nums.Length; } }', { Length: 'Count' },
+  'public class S { public int F(int[] nums) { return nums.Length; } }');
+
+ren2('nor a parameter of the public signature',
+  'public class S { public int F(int[] nums) { return nums[0]; } }', { nums: 'values' },
+  'public class S { public int F(int[] nums) { return nums[0]; } }');
+
+ren2('nor the declared type',
+  'public class Solution { public int F() { return 1; } }', { Solution: 'S' },
+  'public class Solution { public int F() { return 1; } }');
+
+ren2('nor a constructed type - only the variable holding it',
+  'public class S { public void F() { Queue<int> queue = new Queue<int>(); } }', { Queue: 'Q', queue: 'q' },
+  'public class S { public void F() { Queue<int> q = new Queue<int>(); } }');
+
+// The whole reason prose is handled separately by the caller.
+ren2('a comment is left exactly alone',
+  'public class S { public int F() { int result = 1; /* result is the answer */ return result; } }', { result: 'res' },
+  'public class S { public int F() { int res = 1; /* result is the answer */ return res; } }');
+
+ren2('and so is a string literal',
+  'public class S { public void F() { var result = "result"; } }', { result: 'res' },
+  'public class S { public void F() { var res = "result"; } }');
+
+ren2('spacing and indentation come through byte for byte',
+  'public class S\n{\n    public int F()\n    {\n        int result   =  1;\n        return result;\n    }\n}', { result: 'res' },
+  'public class S\n{\n    public int F()\n    {\n        int res   =  1;\n        return res;\n    }\n}');
+
+ren2('a name not in the map is untouched',
+  'public class S { public int F() { int a = 1, b = 2; return a + b; } }', { a: 'x' },
+  'public class S { public int F() { int x = 1, b = 2; return x + b; } }');
+
+ren2('two names swap in one pass, not in two',
+  'public class S { public int F() { int a = 1, b = 2; return a - b; } }', { a: 'b', b: 'a' },
+  'public class S { public int F() { int b = 1, a = 2; return b - a; } }');
+
+// includeSignature: the one rule the repair has to lift. The old lint renamed the
+// names NeetCode generated - is-anagram shipped as IsAnagram(string original, string
+// candidate) when the stub says (string s, string t) - so the file no longer matched
+// the grader. Putting those back is the only way to fix it.
+const STUB_RENAMED = 'public class Solution { public bool IsAnagram(string original, string candidate) { return original.Length == candidate.Length; } }';
+ren2('by default a renamed signature parameter is still refused',
+  STUB_RENAMED, { original: 's', candidate: 't' }, STUB_RENAMED);
+ok2('with includeSignature it is restored',
+  renameIdentifiers(STUB_RENAMED, { original: 's', candidate: 't' }, { includeSignature: true }).code ===
+  'public class Solution { public bool IsAnagram(string s, string t) { return s.Length == t.Length; } }',
+  renameIdentifiers(STUB_RENAMED, { original: 's', candidate: 't' }, { includeSignature: true }).code);
+ok2('and even then a member after a dot is not',
+  renameIdentifiers(STUB_RENAMED, { Length: 'Count' }, { includeSignature: true }).code === STUB_RENAMED);
+ok2('nor the declared type',
+  renameIdentifiers(STUB_RENAMED, { Solution: 'S' }, { includeSignature: true }).code.includes('class Solution'));
+
+// The repair leans on this: revert, then prove the revert IS the reverse map.
+const before = 'public class S\n{\n    public int F(int[] nums)\n    {\n        int res = 0, n = nums.Length;\n        return res + n;\n    }\n}';
+const after = renameIdentifiers(before, { res: 'result', n: 'length' }).code;
+const back = renameIdentifiers(after, { result: 'res', length: 'n' }).code;
+ok2('a rename and its reverse land back on the original', back === before, JSON.stringify(back));
+ok2('and sameShape agrees the round trip moved no token', sameShape(before, back).ok);
+ok2('the applied list reports what actually changed',
+  JSON.stringify(renameIdentifiers(before, { res: 'result', nums: 'values' }).applied) === JSON.stringify([['res', 'result']]));
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

@@ -13,21 +13,21 @@
 
 public class Solution
 {
-    public bool IsPalindrome(string text)
+    public bool IsPalindrome(string s)
     {
         int left = 0;
-        int right = text.Length - 1;
+        int right = s.Length - 1;
 
         while (left < right)
         {
             // Skip anything that is not part of the comparison.
-            while (left < right && !char.IsLetterOrDigit(text[left]))
+            while (left < right && !char.IsLetterOrDigit(s[left]))
                 left++;
 
-            while (right > left && !char.IsLetterOrDigit(text[right]))
+            while (right > left && !char.IsLetterOrDigit(s[right]))
                 right--;
 
-            if (char.ToLower(text[left]) != char.ToLower(text[right]))
+            if (char.ToLower(s[left]) != char.ToLower(s[right]))
                 return false;
 
             left++;
@@ -37,6 +37,7 @@ public class Solution
         return true;
     }
 }
+
 
 /*
 ================================================================================
@@ -48,7 +49,7 @@ public class Solution
 WHY THIS PATTERN
   A palindrome check is a statement about pairs: position i from the front must
   match position i from the back. Two pointers walk those pairs directly, so no
-  copy of the input is needed. The obvious alternative - filter text into a new
+  copy of the input is needed. The obvious alternative - filter s into a new
   string of lowercase alphanumerics, then compare it to its reverse (or run two
   pointers over it) - is easier to write and just as fast asymptotically, but it
   allocates a second buffer proportional to the input. This version pays nothing
@@ -63,25 +64,25 @@ INVARIANT
   and not <=.
 
   The nested while loops do not make this quadratic. left only ever increases
-  and right only ever decreases; between them they can take at most text.Length
+  and right only ever decreases; between them they can take at most s.Length
   steps in total across the whole run, no matter how they are distributed
   between the skip loops and the trailing left++/right--.
 ALGORITHM
-  1. left = 0, right = text.Length - 1.
+  1. left = 0, right = s.Length - 1.
   2. While left < right:
   3. Advance left past any character where char.IsLetterOrDigit is false.
   4. Retreat right past any such character.
-  5. Compare char.ToLower(text[left]) against char.ToLower(text[right]); return
+  5. Compare char.ToLower(s[left]) against char.ToLower(s[right]); return
   false on mismatch.
   6. Step both pointers inward past the pair just matched.
   7. Surviving the loop means no mismatching pair exists - return true.
 WHY THE INNER GUARDS MATTER
   The skip loops re-test left < right (and right > left) rather than just left <
-  text.Length. Drop that guard and the code crashes on any input with no
-  alphanumerics at all: for text = ".,", left would run off the end and
-  text[left] throws IndexOutOfRangeException. With the guard, left stops at 1,
+  s.Length. Drop that guard and the code crashes on any input with no
+  alphanumerics at all: for s = ".,", left would run off the end and
+  s[left] throws IndexOutOfRangeException. With the guard, left stops at 1,
   the second skip loop sees right > left is false and does nothing, and the
-  comparison degenerates to text[1] against text[1] - a character compared with
+  comparison degenerates to s[1] against s[1] - a character compared with
   itself, trivially equal. So the guard converts the degenerate case into a
   harmless self-comparison instead of an out-of-range read.
 
@@ -89,10 +90,10 @@ WHY THE INNER GUARDS MATTER
   "a.": correctness does not depend on avoiding it, only on it being safe.
 THE TOLOWER TRAP
   char.ToLower(char) uses the current culture, not the invariant one. Under a
-  Turkish culture, 'I' lowercases to dotless 'i' while 'i' stays 'i', so text =
+  Turkish culture, 'I' lowercases to dotless 'i' while 'i' stays 'i', so s =
   "Ii" would report false on a machine set to tr-TR and true everywhere else.
   char.ToLowerInvariant is the correct call here, since the comparison is about
-  character identity, not about how a human reads the text.
+  character identity, not about how a human reads the s.
 
   Related: char.IsLetterOrDigit is Unicode-aware, so accented letters, non-Latin
   scripts, and non-ASCII digits all count as comparable characters. If the

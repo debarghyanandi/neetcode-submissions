@@ -14,28 +14,29 @@ public class Solution
     public int Rob(int[] nums)
     {
         //Dp space Optimized
-        int length = nums.Length;
+        int n = nums.Length;
 
-        if (length == 1)
+        if (n == 1)
             return nums[0];
 
-        int prevPrev = nums[0];
+        int prev2 = nums[0];
         int prev = Math.Max(nums[0], nums[1]);
         int curr = 0;
 
-        for (int i = 2; i < length; i++)
+        for (int i = 2; i < n; i++)
         {
-            int pick = nums[i] + prevPrev;
+            int pick = nums[i] + prev2;
             int notPick = 0 + prev;
             curr = Math.Max(pick, notPick);
 
-            prevPrev = prev;
+            prev2 = prev;
             prev = curr;
         }
 
         return prev;
     }
 }
+
 
 /*
 ================================================================================
@@ -49,7 +50,7 @@ WHY THIS PATTERN
   indexes are adjacent. That gives a clean recurrence: the best answer at house
   i is either nums[i] plus the best answer two houses back, or the best answer
   one house back. Because each step only reads the two previous answers, the
-  whole DP table collapses into prevPrev and prev, which slide forward once per
+  whole DP table collapses into prev2 and prev, which slide forward once per
   index.
 BRUTE FORCE
   The first thing most people write is recursion: rob(i) = max(nums[i] +
@@ -59,10 +60,10 @@ BRUTE FORCE
   cells are ever read.
 INVARIANT
   At the top of each iteration for index i, prev holds the best loot from houses
-  0..i-1 and prevPrev holds the best loot from houses 0..i-2. Both are "best
+  0..i-1 and prev2 holds the best loot from houses 0..i-2. Both are "best
   over the whole prefix", not "best ending exactly at that house", which is why
   max(pick, notPick) is a valid choice - notPick simply carries the prefix
-  answer forward unchanged. The seeds prevPrev = nums[0] and prev = max(nums[0],
+  answer forward unchanged. The seeds prev2 = nums[0] and prev = max(nums[0],
   nums[1]) satisfy the invariant for i = 2, so it holds for every later index
   and prev at the end is the answer for the whole array.
 WATCH OUT
