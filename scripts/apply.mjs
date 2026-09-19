@@ -17,7 +17,7 @@
 
 import { readFileSync, writeFileSync, existsSync, appendFileSync, rmSync } from 'node:fs';
 import { fingerprint } from './lib/normalise.mjs';
-import { REPO, README_PATH, STATE_PATH, loadState, saveState, scanRepo } from './lib/scan.mjs';
+import { REPO, README_PATH, STATE_PATH, loadState, saveState, scanRepo, stateDiffers } from './lib/scan.mjs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { buildIndexHtml } from './lib/indexpage.mjs';
@@ -211,7 +211,7 @@ for (const slug of Object.keys(state.problems)) {
 
 const indexChanged = writeIndex(buildIndex(problems));
 const pageChanged = writeIndexPage(buildIndexPage(problems, state));
-const stateChanged = dryRun ? true : saveState(state);
+const stateChanged = dryRun ? stateDiffers(state) : saveState(state);
 const changed = indexChanged || pageChanged || stateChanged;
 
 const awaiting = problems.filter((p) => p.pending.length);

@@ -137,8 +137,12 @@ const RULES = [
       /is-palindrome|two-integer-sum-ii|three-integer-sum|max-water|move-zeroes|remove-duplicates-from-sorted|trapping-rain/.test(c.slug) },
 
   { group: '2-D DP', test: (c) =>
-      (has(c.structures, 'dp-table') || c.says(DP)) &&
-      c.says(/matrix|grid|2-d|two[- ]dimensional|subsequence of two|edit distance/) },
+      // A dp-table paired with matrix is classify's own strongest signal - it means a
+      // dp[i][j] grid, not a dp[i] row - so it settles this on its own, with the prose
+      // match kept only for folders classified before that pairing existed.
+      (has(c.structures, 'dp-table') && has(c.structures, 'matrix')) ||
+      ((has(c.structures, 'dp-table') || c.says(DP)) &&
+       c.says(/matrix|grid|2-d|two[- ]dimensional|subsequence of two|edit distance/)) },
 
   // `\bdp\b` matters as much as the long phrase: the teach block writes "two linear
   // DP runs" and "bottom-up DP", never "dynamic programming" in full. Kept word-bounded

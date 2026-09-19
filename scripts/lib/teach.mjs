@@ -174,15 +174,13 @@ const guide = (k) => {
 };
 
 export const TEACH_INSTRUCTIONS = (ctx) => [
+  // Everything down to the closing C# NOTE marker is identical on every call, for every
+  // file, forever - kept first, ahead of the three facts that vary per file, so the prompt
+  // cache can actually serve it instead of every call paying full price for the same text.
   'You are writing the study preamble for ONE C# solution file, given on stdin.',
   '',
   'The reader is the person who wrote it, revising weeks later for an interview. Write for recall',
   'and for the follow-up an interviewer would ask.',
-  '',
-  'Facts already printed in the banner ABOVE your sections. Never restate any of them:',
-  `  SOURCE  : ${ctx.source}`,
-  `  STATUS  : ${ctx.status}`,
-  `  COMPLEXITY is emitted separately as ${ctx.time} time / ${ctx.space} space. Do not write it again.`,
   '',
   'Rules:',
   '- Never repeat a point across two sections. If a follow-up would repeat WATCH OUT or a key detail,',
@@ -227,6 +225,11 @@ export const TEACH_INSTRUCTIONS = (ctx) => [
   `   ${guide('trigger')}`,
   `@@ C# NOTE`,
   `   ${guide('csharpNote')}`,
+  '',
+  'Facts already printed in the banner ABOVE your sections. Never restate any of them:',
+  `  SOURCE  : ${ctx.source}`,
+  `  STATUS  : ${ctx.status}`,
+  `  COMPLEXITY is emitted separately as ${ctx.time} time / ${ctx.space} space. Do not write it again.`,
 ].join('\n');
 
 const wrap = (text, width) => {

@@ -455,16 +455,16 @@ failure is still committed, and the summary shows the estimated cost of the run.
 | `--force` | lint, teach | Rewrite even if nothing changed, and retry a file lint gave up on. |
 | `--verbose` | classify | Show the model's reasoning. |
 | `--model <name>` | lint, classify, teach, visualize | Override the model: `sonnet`, `opus`, `haiku`. |
-| `--effort <level>` | teach, visualize | `low`, `medium`, `high`, `xhigh`, `max`. Leave it out for the model's default. |
+| `--effort <level>` | teach, visualize | `low`, `medium`, `high`, `xhigh`, `max`. Leave it out and `teach` takes the model's default, while `visualize` picks `low` or `medium` per folder from what the code is made of. |
 | `--file <name>` | teach | Only this file inside the folder, e.g. `optimal.cs`. |
 | `--repair-from <file>` | visualize | Dry run of the repair step alone, starting from an existing visualizer `.html` or a saved rejected `.js`. A valid definition gets one bad line number injected. |
-| `--repair-effort <level>` | visualize | Effort for the Opus repair. Leave it out for Opus's default (high). |
+| `--repair-effort <level>` | visualize | Effort for the Opus repair. Leave it out for Opus's default (high), or `medium` when the attempt being repaired ran at `low`. |
 | `--exclude <slugs>` | detect, lint, classify | Hold these back. Comma-separated. |
 | `--dry-run` | apply | Report without writing. |
 | `--json` | detect | Machine-readable output. |
 | `--delete-duplicates` | classify | Remove a resubmission identical to code you already have. |
 
-Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Opus at medium effort**; if validation rejects it, **Opus at its default (high) effort repairs** that answer (one attempt, no rebuild).
+Defaults worth knowing: `lint` and `classify` use **Haiku**, `teach` uses **Opus**, `visualize` uses **Opus at `low` or `medium` effort, chosen per folder** by `visualEffort()` (`low` only when nothing the folder is made of needs a structural panel); if validation rejects it, **Opus repairs** that answer at its default (high) effort - or at `medium` when the attempt it is repairing ran at `low` (one attempt, no rebuild).
 Every call replaces Claude Code's default system prompt and turns tools off (`PIPELINE_FULL_PROMPT=1` undoes that).
 Prompt caching is pinned to a 5-minute TTL for every call (`PIPELINE_PROMPT_CACHE=1` restores the CLI default). The pipeline never reads a cache entry back, so the write is pure overhead - but `DISABLE_PROMPT_CACHING=1` does not actually stop it on subscription auth, it only downgrades the TTL from 1h to 5m. Measured 2026-09-17 on binary-tree-diameter: 1h write $0.4317, 5m write $0.3522, cache read 0 either way. 5m is the cheapest setting the CLI honours.
 Every model call now prints its tokens: fresh input, cache write, cache read, output.

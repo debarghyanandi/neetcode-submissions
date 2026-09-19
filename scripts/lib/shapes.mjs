@@ -96,7 +96,7 @@ export const STRUCTURE_HELP = {
   'hash-map': 'Dictionary, a frequency count, a seen-value map, memoisation',
   'hash-set': 'HashSet, membership testing',
   'union-find': 'disjoint set, find/union with parent array',
-  'dp-table': 'a table of subproblem answers filled in order, 1-D or 2-D',
+  'dp-table': 'a table of subproblem answers filled in order. If it is indexed by ONE variable (dp[i]), report dp-table alone. If it is indexed by TWO (dp[i][j], a grid of subproblems, two strings/arrays compared against each other), ALSO report matrix - a 1-D table is a row of boxes, a 2-D one is a grid, and they need different panels',
   'bitmask': 'integers used as sets of bits, shifting and masking',
 };
 
@@ -217,6 +217,24 @@ export const ENFORCED = new Set([
 
 export const isStructure = (s) => STRUCTURES.includes(s);
 export const panelsFor = (s) => RENDERABLE_BY[s] ?? [];
+
+/**
+ * How much thinking a folder's visualizer is worth, from what the code is made of.
+ *
+ * A folder with nothing ENFORCED in it - a plain array, string, hash map or interval - has no
+ * panel judgement to make: a row of boxes is the honest drawing, and all that is left is
+ * producing a correctly shaped object. A folder with a tree, a heap or a call stack in it is
+ * where the design decision lives, and that is what the higher tier is being paid for.
+ *
+ * Nothing recorded means no EVIDENCE, not evidence of simplicity, so it takes the safe tier -
+ * required([]) is empty for "simple" and for "unknown" alike, and an unclassified folder may
+ * well be a tree. Lives here rather than in visualize.mjs so it is a pure function with tests,
+ * like every other decision this pipeline makes for itself.
+ */
+export function visualEffort(structures) {
+  if (!Array.isArray(structures) || structures.length === 0) return 'medium';
+  return required(structures).length === 0 ? 'low' : 'medium';
+}
 
 /**
  * Which structures this run must show, and what would count as showing each.

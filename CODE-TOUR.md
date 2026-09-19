@@ -63,7 +63,7 @@ turn them into a curated folder.
 | 2 | `lint.mjs` | `dotnet format` (no model) | format the code; variables are never renamed |
 | 3 | `classify.mjs` | Haiku | work out complexity, rename files, write the header |
 | 4 | `teach.mjs` | Opus | write the study block at the bottom of each file |
-| 5 | `visualize.mjs` | Opus, medium effort | build the animation |
+| 5 | `visualize.mjs` | Opus, `low`/`medium` per folder | build the animation |
 | 6 | `apply.mjs` | none | regenerate `README.md`, `index.md`, `.agent/state.json` |
 
 **Lint is first, and that is not arbitrary.** The header, the teaching block and
@@ -618,7 +618,8 @@ the visualizer HTML. Each of those was a separate bug when it was missing.
 
 ### `teach.mjs` and `visualize.mjs`
 
-Same skeleton, both on Opus (`visualize` at medium effort), and the same signature
+Same skeleton, both on Opus (`visualize` at `low` or `medium`, chosen per folder by
+`visualEffort()`), and the same signature
 trick: a block is rewritten only when `teachSignature` changes.
 
 `splitTrailingTeach()` finds the existing block at the bottom of a file. It

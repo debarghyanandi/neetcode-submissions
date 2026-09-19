@@ -43,6 +43,27 @@ export function loadState() {
   }
 }
 
+/** The problems block in the order saveState writes it. One definition, so the "has anything
+ *  changed" test and the write itself can never disagree about what "the same" means. */
+const sortedProblems = (state) =>
+  Object.fromEntries(Object.keys(state.problems).sort().map((k) => [k, state.problems[k]]));
+
+/**
+ * Would saveState() write anything? Same comparison, no write.
+ *
+ * Exists so --dry-run can answer "is there anything to commit" honestly. apply.mjs used to
+ * assume yes under --dry-run, so a clean repo reported CHANGES TO COMMIT every time and the
+ * one number the dry run exists to give you was the one it could not give you.
+ */
+export function stateDiffers(state) {
+  if (!existsSync(STATE_PATH)) return true;
+  const body = JSON.stringify(sortedProblems(state), null, 2);
+  try {
+    const prev = JSON.parse(readFileSync(STATE_PATH, "utf8"));
+    return JSON.stringify(prev.problems ?? {}, null, 2) !== body;
+  } catch { return true; }   // unreadable - a rewrite is the repair
+}
+
 /**
  * Write state only if the substance changed.
  *
@@ -51,19 +72,11 @@ export function loadState() {
  * night forever - a repo full of commits that say nothing happened.
  */
 export function saveState(state) {
+  if (!stateDiffers(state)) return false;
+
   mkdirSync(dirname(STATE_PATH), { recursive: true });
 
-  const problems = Object.fromEntries(
-    Object.keys(state.problems).sort().map((k) => [k, state.problems[k]])
-  );
-  const body = JSON.stringify(problems, null, 2);
-
-  if (existsSync(STATE_PATH)) {
-    try {
-      const prev = JSON.parse(readFileSync(STATE_PATH, "utf8"));
-      if (JSON.stringify(prev.problems ?? {}, null, 2) === body) return false;
-    } catch { /* unreadable - fall through and rewrite */ }
-  }
+  const problems = sortedProblems(state);
 
   state.updatedAt = new Date().toISOString();
   writeFileSync(

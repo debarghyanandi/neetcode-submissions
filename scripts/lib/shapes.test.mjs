@@ -12,7 +12,7 @@
  *   node scripts/lib/shapes.test.mjs
  */
 
-import { coverage, required, panelsFor, STRUCTURES, STRUCTURE_HELP, PANELS, ENFORCED, catalogueSection, contractSection } from './shapes.mjs';
+import { coverage, required, panelsFor, visualEffort, STRUCTURES, STRUCTURE_HELP, PANELS, ENFORCED, catalogueSection, contractSection } from './shapes.mjs';
 
 let pass = 0, fail = 0;
 const is = (name, got, want) => {
@@ -94,6 +94,26 @@ ok('the catalogue names every panel', PANELS.every((p) => catalogueSection(['tre
 ok('the catalogue marks the panels that suit the problem', catalogueSection(['tree']).includes('<- suits this problem'));
 ok('the contract names the structures on record', contractSection(['tree', 'heap']).includes('tree, heap'));
 ok('the contract explains itself when nothing is on record', contractSection([]).includes('no structures on record'));
+
+// ---- which folders are worth extra thinking -------------------------------
+// The cheap tier is only for folders where there is no panel decision to make. The expensive
+// half of this table is the point: getting it wrong costs a repair, which is a whole extra call.
+is('a plain array is the cheap tier', visualEffort(['array']), 'low');
+is('so is an array with a hash set', visualEffort(['array', 'hash-set']), 'low');
+is('a 1-D dp table is still the cheap tier', visualEffort(['array', 'dp-table']), 'low');
+is('intervals too - a timeline is not a design decision', visualEffort(['array', 'interval']), 'low');
+
+is('a tree is not', visualEffort(['tree']), 'medium');
+is('nor a recursive solution', visualEffort(['array', 'call-stack']), 'medium');
+is('nor a heap', visualEffort(['array', 'heap']), 'medium');
+is('a 2-D dp table is a grid, so it is not the cheap tier', visualEffort(['dp-table', 'matrix']), 'medium');
+is('one enforced structure among many unenforced ones is enough', visualEffort(['array', 'hash-map', 'linked-list']), 'medium');
+
+// The regression this test exists for: required([]) is empty for "simple" AND for "unknown",
+// so an unclassified folder took the cheap tier - and an unclassified folder may be a tree.
+is('nothing on record takes the safe tier, not the cheap one', visualEffort([]), 'medium');
+is('and so does a missing list', visualEffort(undefined), 'medium');
+is('and a nullish one', visualEffort(null), 'medium');
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);
