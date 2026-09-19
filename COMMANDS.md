@@ -357,7 +357,7 @@ git checkout -- .                                        # undo everything uncom
 git checkout -- "Data Structures & Algorithms/<slug>"    # undo just one problem
 ```
 
-Already committed and pushed? The pipeline's own commits all start with `chore(pipeline)`:
+Already committed and pushed? The pipeline's own commits all start with `chore(pipeline)`, followed by the folder it processed (or a count, when a run did several). The prefix is fixed - the loop guard keys on it - so the grep below keeps working whatever the run touched, and the commit body lists every file that changed:
 
 ```powershell
 git log --oneline --grep "chore(pipeline)"

@@ -640,7 +640,10 @@ independent guards:
    deliberately does not start new workflow runs from commits made with it. *Swapping in a
    personal access token defeats this — never do it.*
 2. **The message.** Its commits are prefixed `chore(pipeline)`, and the workflow refuses to
-   act on a commit whose message starts with that.
+   act on a commit whose message starts with that. What follows the prefix names the folders the
+   commit touched, worked out from the staged paths rather than from what a step reported - a
+   step can be skipped, or fail after writing half its work, so what landed is the only honest
+   source. The prefix itself is fixed, because this guard is what reads it.
 
 Verified by pushing test submissions and confirming exactly one run each time.
 

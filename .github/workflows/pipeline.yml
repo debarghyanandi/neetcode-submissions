@@ -426,9 +426,33 @@ jobs:
             echo "nothing staged after all - not committing"
             exit 0
           fi
-          # The chore(pipeline) prefix is what guard 1 above keys on. Do not change
-          # it in one place without changing it in the other.
-          git commit -m "chore(pipeline): refresh index and state"
+          # The message names the folders this commit actually touched, worked out from the
+          # staged paths rather than from a step output. A step can be skipped, or can fail
+          # after writing part of its work, so what landed is the only honest source - the same
+          # argument as the index page's standard marker, which is derived and never declared.
+          #
+          # The chore(pipeline) PREFIX is what loop guard 1 at the top of this file keys on, so
+          # it has to survive whatever follows it. Do not change it in one place without
+          # changing it in the other.
+          slugs="$(git diff --cached --name-only -- "Data Structures & Algorithms" \
+                   | awk -F/ 'NF > 2 { print $2 }' | sort -u)"
+          n="$(printf '%s\n' "$slugs" | grep -c . || true)"
+          case "$n" in
+            # Only README, index.html or state.json moved - there is no folder to name.
+            0) subject='refresh index and state' ;;
+            1) subject="$slugs" ;;
+            *) list="$(printf '%s\n' "$slugs" | head -2 | paste -sd, - | sed 's/,/, /g')"
+               if [ "$n" -gt 2 ]; then list="$list +$((n - 2)) more"; fi
+               subject="$n folders - $list"
+               # A slug runs to 44 characters, so two of them overflow the single line that git
+               # log and the GitHub commit list show. Past that, name one and count the rest.
+               if [ "${#subject}" -gt 55 ]; then
+                 subject="$n folders - $(printf '%s\n' "$slugs" | head -1) +$((n - 1)) more"
+               fi ;;
+          esac
+          # The body carries every staged path, so `git log` answers "what did that run change"
+          # without anyone having to open the diff.
+          git commit -m "chore(pipeline): $subject" -m "$(git diff --cached --name-only)"
 
           # A run takes minutes, and the checkout is from the minute it began.
           # Submit two problems back to back and the second push lands on main
