@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-19T05:13:42.178Z",
+  "updatedAt": "2026-09-19T05:22:52.394Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2063,19 +2063,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "8bf36e8e529a",
-          "renames": []
+          "version": 2,
+          "codePrint": "8bf36e8e529a"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "e3520d78f033",
-          "renames": []
+          "version": 2,
+          "codePrint": "e3520d78f033"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion carrying depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, snapshotting queue size per level\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS with implicit level tracking\",\"approachKey\":\"dfs-implicit-levels\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with explicit queue level-order\",\"approachKey\":\"bfs-queue-levels\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2093,33 +2091,36 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "DFS recursion carrying depth as level index",
-          "approachKey": "dfs-track-level",
+          "algorithm": "Recursive DFS with implicit level tracking",
+          "approachKey": "dfs-implicit-levels",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "array",
-            "call-stack"
+            "call-stack",
+            "array"
           ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS with queue, snapshotting queue size per level",
-          "approachKey": "bfs-queue-level-size",
+          "algorithm": "BFS with explicit queue level-order",
+          "approachKey": "bfs-queue-levels",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "array",
-            "queue"
+            "queue",
+            "array"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS with implicit level tracking\",\"approachKey\":\"dfs-implicit-levels\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with explicit queue level-order\",\"approachKey\":\"bfs-queue-levels\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -2130,11 +2131,11 @@
         },
         "structures": [
           "tree",
-          "array",
           "call-stack",
+          "array",
           "queue"
         ],
-        "builtAt": "2026-09-13T15:04:33.449Z"
+        "builtAt": "2026-09-19T05:22:52.391Z"
       }
     },
     "linked-list-cycle-detection": {

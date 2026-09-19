@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  DFS recursion carrying depth as level index   [dfs-track-level]
+// #  Recursive DFS with implicit level tracking   [dfs-implicit-levels]
 // #  ties with optimal-variant.cs on O(n) time / O(n) space
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  Preorder DFS visits each node once, appending into res[level] using
-// #  the depth parameter; recursion stack depth is O(h) which is O(n) worst
-// #  case for a skewed tree.
+// #  Recursion depth becomes the tree height; worst-case call stack is O(n)
+// #  for a skewed tree.
 // ##########################################################################
 
 public class Solution
@@ -47,84 +46,69 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS preorder, res.Count as the new-level marker
+ PATTERN : DFS preorder with depth index - build level buckets
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  res      res[level] = all node values at that depth, left to right
+  level    depth of the current node, root is 0
 WHY THIS PATTERN
-  The output is grouped by depth, which normally says "BFS with a queue,
-  snapshot the queue size once per level." This file skips the queue entirely by
-  carrying the depth as an explicit parameter: Traverse(root, 0) at the top,
-  level + 1 on both recursive calls. Once every node knows its own depth,
-  grouping is just an index into res - no queue, no per-level count, no null
-  sentinel between levels. Remember the trick, not the problem: any "bucket the
-  nodes by depth" question collapses into a plain DFS the moment you pass the
-  depth down.
-CORRECTNESS - WHY DFS PRODUCES LEFT-TO-RIGHT ORDER
-  The non-obvious part is that res[level] comes out in the correct left-to-right
-  order even though the traversal never visits a level contiguously. Take two
-  nodes u and v on the same level with u to the left of v. Their lowest common
-  ancestor a has u somewhere in a.left's subtree and v somewhere in a.right's
-  subtree (they cannot share a side, or a would not be lowest). Traverse(a.left,
-  ...) runs to completion before Traverse(a.right, ...) is ever called, so
-  root.val for u is appended to res[level] before v's. That holds for every such
-  pair, so each inner list ends up in exactly the order BFS would have produced.
+  The problem asks for values grouped by depth, so every node needs to know its
+  own depth and write into the bucket for that depth. Passing `level + 1` down
+  the recursion gives each node its depth for free, and `res[level].Add` puts
+  the value in the right group. A queue-based BFS is the usual answer, but any
+  traversal works as long as nodes at the same depth are visited left before
+  right - preorder does that, because the whole left subtree is walked before
+  the right one.
+BRUTE FORCE
+  The first thing most people write is: compute the height, then for each depth
+  d from 0 to height-1, walk the whole tree again and collect only the nodes at
+  depth d. That is O(n) per level and O(n * h) total, which degrades to O(n^2)
+  on a skewed tree. This file touches every node exactly once instead.
 INVARIANT
-  res.Count is always exactly the number of distinct levels discovered so far,
-  and every call to Traverse is entered with level <= res.Count.
-
-  It holds inductively: the root enters with level 0 and res.Count 0. Any child
-  is only reached after its parent has already run the res.Add guard and the
-  res[level].Add, so at that moment res.Count >= parentLevel + 1 = childLevel.
-  Two things fall out. First, res.Count == level is a complete and exact test
-  for "this is the first node of a level I have never seen" - it can never be a
-  false positive, because level can never exceed res.Count. Second, res[level]
-  is guaranteed in range on the very next line, so no bounds check or
-  ContainsKey is needed.
-ALGORITHM
-  1. If root is null, return res (empty).
-  2. Call Traverse(root, 0).
-  3. In Traverse: return immediately on a null node.
-  4. If res.Count == level, this is the first node seen at this depth - append a
-  fresh List<int> to res, which makes res.Count equal level + 1.
-  5. Append root.val to res[level].
-  6. Recurse into root.left with level + 1, then root.right with level + 1. Left
-  before right is load-bearing, see the correctness argument.
-  7. Return res.
+  Before visiting a node at depth `level`, `res` already holds a list for every
+  depth from 0 up to `level - 1`, so `res.Count` is either `level` (this is the
+  first node seen at this depth) or greater. That is why `res.Count == level` is
+  a safe test for "create the bucket now" - depths are always reached in
+  increasing order, never skipped. Because the left child is visited before the
+  right child, values are appended to each bucket in left-to-right order, which
+  is exactly level order.
 WATCH OUT
-  res is an instance field, not a local. Calling LevelOrder twice on the same
-  Solution object appends the second tree's nodes onto the first tree's lists,
-  and the null-root early return hands back whatever the previous call left
-  behind instead of an empty list. The judge constructs a fresh Solution per
-  test case so it passes, but an interviewer will ask about reuse. The fix is to
-  declare List<List<int>> res inside LevelOrder and pass it into Traverse, or
-  reassign res = new List<List<int>>() as the first statement of LevelOrder.
-
-  Also: the root == null check in LevelOrder is dead weight. Traverse already
-  returns on a null node, so the guard only skips a call that would have done
-  nothing.
-
-  And the real difference from the BFS version - this recurses to the depth of
-  the tree. A degenerate 100k-node chain blows the call stack here; the queue
-  version does not care.
-INTERVIEWER FOLLOW-UPS
-  "Do it iteratively" - queue, take int count = queue.Count at the top of each
-  outer iteration, drain exactly that many nodes into one list, enqueue their
-  non-null children.
-
-  "Bottom-up level order" - res.Reverse() at the end, nothing else changes.
-
-  "Zigzag" - with this DFS you still fill res the same way, then reverse every
-  list at an odd index; the depth parameter is what makes that a one-liner.
-
-  "Right side view" - keep the level parameter but recurse right before left and
-  append only when res.Count == level, so the first node reached at each depth
-  wins.
-
-  "Why not a Dictionary<int, List<int>>" - it would work, but the levels are
-  dense 0..h with no gaps and are discovered in increasing order, so a List
-  indexed by level is strictly simpler and needs no final sort by key.
+  `res` is an instance field, not a local. If the same `Solution` object is used
+  for two trees, the second call appends to the first call's lists and returns
+  both mixed together. The early `return res` for a null root has the same
+  problem: it returns whatever was left from before, not an empty list.
+  Recursion depth equals the tree height, so a long chain of left children (a
+  degenerate tree) can overflow the stack. The method also hands the caller its
+  own private list, so the caller can mutate the solver's state.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How would you remove the recursion?
+     Use a queue: push the root, then on each round record `queue.Count` as the
+     size of the current level, pop exactly that many nodes into one list and
+     push their children. Same O(n) time, and the memory becomes heap queue
+     space instead of call-stack frames, which survives a skewed tree.
+  2. What changes for zigzag level order (left-to-right, then right-to-left)?
+     Keep this traversal unchanged and reverse `res[i]` for every odd `i` at the
+     end, or insert at the front of the bucket on odd levels. Reversing at the
+     end is O(n) total; front-insertion into a List is O(n) per insert, so
+     prefer the reverse or use a LinkedList.
+  3. What if you only need the rightmost node of each level (right side view)?
+     Recurse right child first, and only write when `res.Count == level`, so the
+     first node seen at each depth is the rightmost. That drops the per-level
+     lists and the space becomes O(h) for the stack plus O(h) for the answer.
+  4. The tree is huge and you only need level sums, not the values.
+     Replace `List<List<int>>` with a `List<long>` of sums and do `res[level] +=
+     root.val`, growing with `res.Add(0)` on a new level. Space falls from O(n)
+     to O(h).
+TRIGGER
+  The output must be grouped by distance from the root, or by "layer" - hand the
+  depth down the recursion and index a list of buckets by it.
+C# NOTE
+  Make `res` a local inside `LevelOrder` and pass it as a parameter to
+  `Traverse`; `List` is a reference type, so the helper still appends to the
+  same list, and the stale-state bug disappears with no copying cost.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

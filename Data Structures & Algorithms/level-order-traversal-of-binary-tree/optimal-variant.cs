@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  BFS with queue, snapshotting queue size per level
-// -  [bfs-queue-level-size]
+// -  BFS with explicit queue level-order   [bfs-queue-levels]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Each node (plus null children) enqueued/dequeued exactly once; queue
-// -  holds up to O(n) entries at the widest level, giving O(n) time and
-// -  space.
+// -  Queue stores at most the maximum level width; worst-case width is
+// -  O(n).
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -48,62 +46,86 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS queue with null placeholders, size snapshot per level
+ PATTERN : BFS level order - null-padded queue, one level per pass
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
-WHAT MAKES THIS THE VARIANT
-  The usual BFS tests a child for null before enqueueing it. This one does the
-  opposite: queue.Enqueue(node.left) and queue.Enqueue(node.right) fire
-  unconditionally, so the queue is allowed to hold nulls, and the filtering
-  happens on the consuming side with if (node != null). That single move
-  relocates the null test from producer to consumer, and correctness then rests
-  entirely on two guards further down: the if (node != null) skip and the if
-  (level.Count > 0) skip. Recall the file by that trade, not by the BFS.
+VARIABLES
+  result   result[d] = list of values at depth d, top to bottom
+  queue    nodes of the current level, plus null slots pushed by leaves
+  level    values collected for the depth being processed right now
+  i        counts down from the frozen size of the current level
+WHY THIS PATTERN
+  The problem asks for the node values grouped by depth, left to right, which is
+  exactly the order a breadth-first search visits them. A queue gives that order
+  for free; the only extra work is knowing where one depth ends and the next
+  begins. This code gets that boundary by reading queue.Count once per while
+  pass, so every node taken out during the inner for loop belongs to the same
+  depth and lands in the same level list.
+BRUTE FORCE
+  The naive version first measures the tree height, then for each depth d walks
+  the whole tree from the root and collects only nodes at depth d. That is O(n)
+  work per level, so O(n * h) total, degrading to O(n^2) on a skewed tree. BFS
+  touches every node once instead, and the level boundary comes from a counter
+  rather than from re-walking.
 INVARIANT
-  At the top of every while iteration, the queue holds exactly the child slots
-  produced by the previous level: one entry for every real node at the current
-  depth, plus one null entry for every missing child of the level above. So
-  queue.Count at that moment is a slot count, not a node count. Reading it into
-  i makes the for loop drain precisely that frontier; everything enqueued during
-  the drain sits behind the boundary and belongs to the next iteration.
-WHY THE LOOP BOUND IS CORRECT
-  for (int i = queue.Count; i > 0; i--) evaluates queue.Count once, in the
-  initializer, and then counts down against a fixed number. The two Enqueue
-  calls in the body grow the queue without moving the target. Write it instead
-  as for (int i = 0; i < queue.Count; i++) and Count is re-read on every test,
-  so the children you just appended get pulled into the same level list and the
-  whole tree collapses into one row. This is the most likely follow-up question
-  on the file: state that the bound is a snapshot, not a live read.
-WHY LEVEL.COUNT > 0 IS LOAD-BEARING
-  The deepest real level enqueues only nulls - one or two per leaf, never zero.
-  The queue is therefore non-empty, so while runs one extra time, dequeues that
-  all-null frontier, adds nothing to level, and enqueues nothing. Without the
-  guard, result would end with a stray empty list and be wrong by one element.
-  That same all-null pass is also what terminates the algorithm: a null dequeue
-  produces no successors, so the queue drains and cannot refill.
-THE ROOT NULL CHECK IS REDUNDANT
-  if (root == null) return result is defensive, not required. Delete it and the
-  null-root case still works: the queue starts as [null], the first pass
-  dequeues it, if (node != null) skips it, level stays empty, if (level.Count >
-  0) drops it, the queue is empty, and an empty result is returned. Worth
-  knowing so you can answer honestly if asked which checks are structural - only
-  the two inside the loop are.
-WHAT THIS COSTS
-  Total enqueues are roughly 2n + 1 rather than n, and the queue peaks near
-  twice the maximum tree width because the null siblings occupy slots alongside
-  the real ones. The asymptotics do not move, but if an interviewer asks what
-  you would change, the answer is to test each child before enqueueing: that
-  removes the null filter, removes the empty-level guard, removes the extra
-  trailing pass, and halves peak queue occupancy. This variant exists to show
-  the pattern, not to beat the direct form.
+  At the top of each while pass, the queue holds exactly the entries of one
+  depth, in left-to-right order (real nodes plus null placeholders left by
+  leaves at the previous depth). The inner loop removes exactly that many
+  entries and appends the children of each real node, so when the loop ends the
+  queue holds exactly the next depth, again in order. Since result gets one list
+  appended per pass, result[d] is the values at depth d.
+NULL SLOTS ARE ALLOWED IN THE QUEUE
+  Unlike the usual version, children are enqueued without checking for null; the
+  null test happens after Dequeue. This keeps the enqueue side branch-free at
+  the cost of putting up to two nulls in the queue per leaf. The consequence is
+  that the last pass dequeues a batch made only of nulls and builds an empty
+  level, which is why the `if (level.Count > 0)` guard exists - without it the
+  answer would end with a stray empty list.
+THE COUNTDOWN FREEZES THE LEVEL WIDTH
+  `for (int i = queue.Count; i > 0; i--)` reads queue.Count once, in the
+  initializer, so the growth caused by Enqueue inside the body cannot extend the
+  loop. That single read is what separates one depth from the next.
+WATCH OUT
+  Rewriting the inner loop as `for (int i = 0; i < queue.Count; i++)` re-reads
+  Count every iteration and silently merges levels - this is the classic break
+  of this code. The `if (root == null) return result;` guard is redundant:
+  enqueueing a null root would dequeue one null, build an empty level, and fall
+  through the Count > 0 guard to the same empty result; it is harmless, just not
+  load-bearing. The null-padding also means the queue can hold up to twice the
+  widest level, so peak memory is larger than a null-checking BFS. Finally, an
+  inner level list is added whenever it is non-empty, so a depth with a mix of
+  real nodes and null slots is fine - only the all-null tail batch is dropped.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How would you return the levels bottom-up?
+     Build result the same way and call result.Reverse() at the end, or insert
+     each level at index 0. Reverse is O(n) once; Insert(0, level) is O(levels)
+     per level because List shifts elements.
+  2. Zigzag order - left to right, then right to left?
+     Keep the same loop and track a bool flipped, toggled once per while pass;
+     when it is true, call level.Reverse() before adding, or fill level back to
+     front. The queue logic never changes.
+  3. Can you do this without a queue?
+     Yes, recursive DFS passing a depth: if depth == result.Count add a new
+     list, then result[depth].Add(node.val). Memory drops to O(h) call stack
+     instead of O(width) queue, but on a skewed tree h is n and you risk stack
+     overflow.
+  4. You only need the last value of each level (right side view) - what
+  changes?
+     Keep the counting loop, but inside it only record the value when i == 1,
+     that is, the last real entry of the batch. Output shrinks to O(levels)
+     while the queue cost stays the same.
 TRIGGER
-  Reach for snapshot-the-queue-size BFS whenever the output is grouped by depth
-  rather than flattened - right side view, level averages, zigzag ordering,
-  minimum depth, bottom-up levels. The instant the problem says per level, the
-  fixed-count inner drain is the shape you want; the level list that gets
-  appended to result is just the accumulator hung off it.
+  The problem asks for tree or graph nodes grouped by distance from the start,
+  or says "level by level".
+C# NOTE
+  Queue<TreeNode> is the right structure here: Enqueue and Dequeue are amortized
+  O(1) on its internal circular array, while a List with RemoveAt(0) would shift
+  every element. Note that LeetCode's C# signature is usually IList<IList<int>>,
+  and List<List<int>> does not convert to it - generics are not covariant that
+  way - so if the judge rejects the return, declare result as IList<IList<int>>
+  and add List<int> items.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
