@@ -734,7 +734,7 @@ Estimates from real runs, on a Claude Pro subscription:
 |---|---|---|
 | Classify a folder | Haiku | ~3 turns |
 | Teaching block, per file | Opus | ~2 turns |
-| Visualizer, per problem | Opus, `low` or `medium` by structure (a repair steps up one rung) | ~2 turns, the largest single call |
+| Visualizer, per problem | Opus, medium effort (Opus at high on retry) | ~2 turns, the largest single call |
 
 The dollar figures the CLI prints are **client-side estimates of API pricing**, not bills.
 On a subscription they're not charged; treat them as a relative cost signal only.
@@ -744,19 +744,6 @@ fixed list, ranked by code I can read — there's very little room for a larger 
 better, and Sonnet reproduced my hand-made `optimal` / `optimal-variant` split on the hardest
 folder in the repo. Opus is saved for the teaching blocks and visualizers, where the task is
 open-ended and judged by eye.
-
-**Visualizer effort is chosen per folder, not per run.** `visualEffort()` in `lib/shapes.mjs`
-returns `low` when nothing the folder is made of needs a structural panel — a plain array, a
-string, a hash map, an interval, where a row of boxes is the honest drawing and there is no panel
-decision to make — and `medium` otherwise. A folder with nothing on record takes `medium`:
-nothing recorded is an absence of evidence, not evidence of simplicity, and an unclassified
-folder may well be a tree.
-
-The number to watch is attempt 2. A repair is a whole second Opus call, so a `low` folder that
-regularly fails validation costs more than it saves. To bound that, a repair after a `low`
-attempt runs at `medium` rather than falling through to Opus's default (high). If the run log
-shows `low` folders repairing often, put `return 'medium'` back in the body of `visualEffort()` —
-nothing else moves with it.
 
 One real cost worth knowing: because `--bare` had to be dropped, every call also loads my
 local Claude configuration — roughly 28,000 tokens of context that have nothing to do with

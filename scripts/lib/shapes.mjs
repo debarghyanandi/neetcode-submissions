@@ -219,24 +219,6 @@ export const isStructure = (s) => STRUCTURES.includes(s);
 export const panelsFor = (s) => RENDERABLE_BY[s] ?? [];
 
 /**
- * How much thinking a folder's visualizer is worth, from what the code is made of.
- *
- * A folder with nothing ENFORCED in it - a plain array, string, hash map or interval - has no
- * panel judgement to make: a row of boxes is the honest drawing, and all that is left is
- * producing a correctly shaped object. A folder with a tree, a heap or a call stack in it is
- * where the design decision lives, and that is what the higher tier is being paid for.
- *
- * Nothing recorded means no EVIDENCE, not evidence of simplicity, so it takes the safe tier -
- * required([]) is empty for "simple" and for "unknown" alike, and an unclassified folder may
- * well be a tree. Lives here rather than in visualize.mjs so it is a pure function with tests,
- * like every other decision this pipeline makes for itself.
- */
-export function visualEffort(structures) {
-  if (!Array.isArray(structures) || structures.length === 0) return 'medium';
-  return required(structures).length === 0 ? 'low' : 'medium';
-}
-
-/**
  * Which structures this run must show, and what would count as showing each.
  *
  * A structure with no renderer yet is dropped rather than enforced - listing

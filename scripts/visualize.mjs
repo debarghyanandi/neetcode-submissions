@@ -26,7 +26,7 @@ import { stripHeader, solutionBody } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
 import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
-import { catalogueSection, contractSection, required, visualEffort, VISUALIZER_FORMAT } from './lib/shapes.mjs';
+import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { effortArgs, usageOf, usageLine, addUsage, leanArgs } from './lib/usage.mjs';
@@ -60,31 +60,15 @@ const doApply = has('--apply');
 const modelGiven = argv.includes('--model');
 const model = arg('--model', 'opus');
 const RETRY_MODEL = 'opus';
-// The repair's effort. Unset = Opus's own default (high) after a medium attempt: a repair is the
-// one place extra thinking is worth paying for, because attempt 1 already failed. The exception is
-// a folder auto-tiered to low, which steps up one rung instead - see stepUp in the loop - so the
-// cheap tier cannot end up costing more than never having used it.
+// The repair's effort. Unset = Opus's own default (high): a repair is the one place extra thinking
+// is worth paying for, because attempt 1 already failed.
 const repairEffort = arg('--repair-effort');
 // Local test of the repair alone: start from an existing definition (a visualizer .html or a .js
 // holding `const PROBLEM = ...`) instead of paying for attempt 1. If that definition passes, one
 // deliberate error is injected so there is something to repair. Dry runs only.
 const repairFrom = arg('--repair-from');
-// Explicit --effort always wins, for every folder. Otherwise the tier comes from what the code
-// is made of - see visualEffort() in lib/shapes.mjs, where it is a pure function with tests.
-// Validation still gates the result exactly as it does today, so a bad low-effort attempt costs
-// one repair on Opus, not a broken visualizer.
-//
-// The tier table is tested; what it is WORTH is not, because no model was called when this was
-// written. The number to watch on the first real runs is how often a low folder needs attempt 2 -
-// a repair is a whole second call, so a tier that regularly fails validation is a net loss and the
-// body of visualEffort() goes back to `return 'medium'`. Nothing else moves with it.
-const effortGiven = argv.includes('--effort');
-const explicitEffort = arg('--effort');
-const effortFor = (structures) => {
-  if (effortGiven) return explicitEffort;
-  if (modelGiven) return null; // a hand-picked model gets its own default unless told otherwise
-  return visualEffort(structures);
-};
+// No --effort means the model's own default. Only ever set by hand, for comparisons.
+const effort = arg('--effort', modelGiven ? null : 'medium');
 const backfill = has('--backfill');
 // Also pick up any curated folder with no visualizer at all. Nothing is in that state
 // normally; it is how a folder gets finished after a failed run stopped before visualize.
@@ -201,13 +185,32 @@ function repairInstructions(slug, sols, structures, previous, errors) {
 
 function instructions(slug, sols, structures, example, feedback) {
   return [
-    // Everything down to the Requirements list is identical on every call, for every folder -
-    // kept first, ahead of the slug, the worked example and the code, so the prompt cache can
-    // serve it instead of every call paying full price for the same chassis contract and rules.
-    'Write the PROBLEM definition for a NeetCode problem, to be spliced into an existing visualizer.',
+    `Write the PROBLEM definition for the NeetCode problem "${slug}", to be spliced into an existing visualizer.`,
     '',
     'These helper functions and panel constructors already exist. Use them; do not redefine them:',
     '```', contract(), '```',
+    '',
+    // The example teaches the OBJECT - its fields, its register, how much
+    // detail a msg carries. It must not teach the panel choice unless it
+    // genuinely shares a shape, or every problem inherits the last one's
+    // drawing, which is exactly how this step came to render trees as rows.
+    example.sameShape
+      ? `Here is a complete, working definition for "${example.from}", which is built from the same kind of` +
+        '\nstructure as this one. Match its voice and its level of detail, and treat its panel choices as a' +
+        '\nsound starting point - though yours should follow this problem\'s code, not copy that one\'s:'
+      : `Here is a complete, working definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
+        '\nvoice and the level of detail. Do NOT copy its choice of panels - it is a differently shaped' +
+        '\nproblem, and its panels are right for it and probably wrong for yours:',
+    '```', example.source, '```',
+    '',
+    `Build one entry in "solutions" for each of these ${sols.length} solution file(s), in this order,`,
+    'faithfully animating what that code actually does - not a tidier algorithm you would prefer:',
+    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".` +
+      ((s.structures ?? []).length ? `\n      made of: ${s.structures.join(', ')}` : '')),
+    '',
+    contractSection(structures),
+    '',
+    catalogueSection(structures),
     '',
     'Requirements:',
     '- Draw each structure as the thing it IS. A tree has edges, a stack is a bucket you push onto and',
@@ -237,31 +240,6 @@ function instructions(slug, sols, structures, example, feedback) {
     '- Use `scale` to keep a panel on one screen rather than letting it scroll sideways.',
     '- Output only the statement: const PROBLEM = { ... };',
     '',
-    // Folder-specific from here on - nothing above this line changes.
-    `Problem: "${slug}".`,
-    '',
-    contractSection(structures),
-    '',
-    catalogueSection(structures),
-    '',
-    // The example teaches the OBJECT - its fields, its register, how much
-    // detail a msg carries. It must not teach the panel choice unless it
-    // genuinely shares a shape, or every problem inherits the last one's
-    // drawing, which is exactly how this step came to render trees as rows.
-    example.sameShape
-      ? `Here is a complete, working definition for "${example.from}", which is built from the same kind of` +
-        '\nstructure as this one. Match its voice and its level of detail, and treat its panel choices as a' +
-        '\nsound starting point - though yours should follow this problem\'s code, not copy that one\'s:'
-      : `Here is a complete, working definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
-        '\nvoice and the level of detail. Do NOT copy its choice of panels - it is a differently shaped' +
-        '\nproblem, and its panels are right for it and probably wrong for yours:',
-    '```', example.source, '```',
-    '',
-    `Build one entry in "solutions" for each of these ${sols.length} solution file(s), in this order,`,
-    'faithfully animating what that code actually does - not a tidier algorithm you would prefer:',
-    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".` +
-      ((s.structures ?? []).length ? `\n      made of: ${s.structures.join(', ')}` : '')),
-    '',
     'You have no tools and no filesystem access. The solution code follows below, and everything else',
     'you need is above. Do not attempt to read, list or search files - answer directly.',
     ...(feedback ? ['', 'Your previous attempt failed validation. Fix exactly these:', ...feedback.map((e) => `  - ${e}`)] : []),
@@ -275,8 +253,7 @@ function instructions(slug, sols, structures, example, feedback) {
 // with the code, and the argument is one short line. stdin allows 10MB.
 const STDIN_POINTER = 'Your full instructions come first on stdin, followed by the solution code. Follow the instructions exactly.';
 
-// useEffort has no default: effort is per-folder now (effortFor), so every call site passes it explicitly.
-function ask(prompt, code, useModel = model, useEffort = null) {
+function ask(prompt, code, useModel = model, useEffort = effort) {
   const args = ['-p', STDIN_POINTER, '--output-format', 'json', '--json-schema', JSON.stringify(SCHEMA),
                 '--permission-mode', 'dontAsk', '--max-turns', '20', '--model', useModel, ...effortArgs(useEffort), ...leanArgs()];
   let raw;
@@ -365,9 +342,7 @@ if (limit) targets = targets.slice(0, limit);
 
 if (!targets.length) { console.log('\nNothing to build - every problem already has a visualizer.\n'); process.exit(0); }
 
-console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, effort ${
-  effortGiven ? explicitEffort : modelGiven ? 'default' : 'auto (low/medium by structure)'
-}, ${targets.length} folder(s)\n`);
+console.log(`\n${doApply ? 'APPLY' : 'DRY RUN'} - visualizers, model ${model}, effort ${effort ?? 'default'}, ${targets.length} folder(s)\n`);
 if (haltIfStopped('visualize', targets.map((p) => p.slug))) process.exit(1);
 
 let failures = 0, wrote = 0;
@@ -398,9 +373,6 @@ for (const p of targets) {
     // old behaviour, because the old behaviour is the bug being fixed.
     console.log('  no structures on record - run classify --backfill --apply first for shape enforcement');
   }
-  // Per folder, not per run: two folders in the same batch can land in different tiers.
-  const effort = effortFor(structures);
-  if (!effortGiven && !modelGiven) console.log(`  effort: ${effort} (auto, by structure)`);
 
   const example = pickExample(p.slug, structures, state, all);
   if (!example.source) { console.log('  cannot read the worked example'); report('visualize', p.slug, 'failed', 'worked example unreadable'); failures++; endGroup(); continue; }
@@ -433,11 +405,7 @@ for (const p of targets) {
     let r;
     const repairing = !!rejected;
     const useModel = repairing && !modelGiven ? RETRY_MODEL : model;
-    // A folder auto-tiered to low steps up one rung to repair rather than falling through to
-    // Opus's default (high), so the downside of the cheap tier stays bounded. --repair-effort still
-    // wins, and a folder that ran at medium repairs exactly as it always has.
-    const stepUp = repairEffort ?? (!effortGiven && effort === 'low' ? 'medium' : null);
-    const useEffort = repairing && !modelGiven ? stepUp : effort;
+    const useEffort = repairing && !modelGiven ? repairEffort : effort;
     try {
       if (repairing) {
         console.log(`  attempt ${attempt}: repairing on ${useModel}${useEffort ? ` (effort ${useEffort})` : ''} - ${rejected.errors.length} error(s) to fix`);
