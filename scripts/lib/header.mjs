@@ -1,4 +1,5 @@
 import { splitTrailingTeach } from './teach.mjs';
+import { rank } from './complexity.mjs';
 /**
  * Generating and replacing the banner header at the top of a solution file.
  *
@@ -72,7 +73,11 @@ export function standing(name, ranked) {
   if (ranked.length === 1) return 'the only solution in this folder';
   const me = ranked.findIndex((r) => r.name === name);
   const best = ranked[0];
-  const tied = (a, b) => a.time === b.time && a.space === b.space;
+  // Compared by RANK, not by spelling. O(m) and O(n) are one tier wearing two letters, so
+  // string equality would call them a ranking while assignNames - which ranks - called them
+  // a tie, and the two headers in the folder would contradict each other. That exact
+  // contradiction is what the comment below was written for; this is the second way in.
+  const tied = (a, b) => rank(a.time) === rank(b.time) && rank(a.space) === rank(b.space);
 
   if (me === 0) {
     const next = ranked[1];

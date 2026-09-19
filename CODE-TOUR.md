@@ -429,6 +429,25 @@ for classification**: the model must pick a rung from this exact list, and the
 A complexity the ladder has no rung for is refused, not guessed — and the run
 prints what it was so a rung can be added.
 
+Two things sit between "not on the ladder" and that refusal, because a *tier*
+the ladder spells with another letter is not a new tier:
+
+```js
+export const ALIAS = { 'O(m)': 'O(n)', 'O(n * m)': 'O(m * n)', ... };
+export function canonical(text) { /* rename single-letter variables onto n and m */ }
+```
+
+`ALIAS` is offered to the model as well, so it can answer `O(m)` directly and
+the header prints the letter the code actually uses, while `rank` returns the
+target's position — **equal to `O(n)`, not one rung worse.** `canonical` is the
+second net, for a letter nobody listed: it resolves by variable rename only, so
+`O(a * b)` becomes `O(m * n)` and `O(n * 2^n)` still resolves to nothing and is
+still refused. No rename ever moves a magnitude.
+
+This exists because `longest-common-subsequence` took a run down. Its rolling
+two-row DP is `O(m)` space — a tier the ladder already had, under the letter
+`n` — and the whole folder was left uncurated for it.
+
 ```js
 const cmp = (a, b) => rank(a.time) - rank(b.time) || rank(a.space) - rank(b.space);
 const bestTier = sorted.filter((s) => rank(s.time) === bt && rank(s.space) === bs);

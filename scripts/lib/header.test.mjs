@@ -37,6 +37,15 @@ is('the slower one ranks below',
 const TIED = [S('optimal.cs', 'O(n)', 'O(n)'), S('optimal-variant.cs', 'O(n)', 'O(n)')];
 is('a tie does not become a ranking',
   standing('optimal.cs', TIED), 'ties with optimal-variant.cs on O(n) time / O(n) space');
+
+// One tier, two letters. assignNames ranks these equal, so standing() must agree - it
+// compares rank now, not spelling. When it compared strings, optimal.cs claimed to rank
+// above a solution the naming step had already called interchangeable with it.
+const ALIASED = [S('optimal.cs', 'O(m * n)', 'O(n)'), S('optimal-variant.cs', 'O(n * m)', 'O(m)')];
+is('O(n) and O(m) are a tie, not a ranking',
+  standing('optimal.cs', ALIASED), 'ties with optimal-variant.cs on O(n * m) time / O(m) space');
+is('and it reads as a tie from the other side too',
+  standing('optimal-variant.cs', ALIASED), 'ties with optimal.cs on O(m * n) time / O(n) space');
 is('and the other side agrees',
   standing('optimal-variant.cs', TIED), 'ties with optimal.cs on O(n) time / O(n) space');
 

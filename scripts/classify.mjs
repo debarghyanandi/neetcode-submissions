@@ -26,7 +26,7 @@ import { loadState, scanRepo, pendingOnly, foldersChangedSince, REPO } from './l
 
 // Gitignored (.agent/tmp/). The whole envelope, for when the summary isn't enough.
 const DUMP = join(REPO, '.agent', 'tmp', 'last-claude-response.json');
-import { COMPLEXITY, assignNames, isSelfMarked } from './lib/complexity.mjs';
+import { CHOICES, canonical, rank, assignNames, isSelfMarked } from './lib/complexity.mjs';
 import { stripHeader, buildHeader, applyHeader, headerSignature, solutionBody, HEADER_FORMAT } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
@@ -88,8 +88,8 @@ const SCHEMA = {
         properties: {
           file: { type: 'string', description: 'exact filename as given' },
           algorithm: { type: 'string', description: 'the technique, 2-6 words, e.g. "sliding window, shrink while valid"' },
-          time: { type: 'string', enum: COMPLEXITY },
-          space: { type: 'string', enum: COMPLEXITY },
+          time: { type: 'string', enum: CHOICES },
+          space: { type: 'string', enum: CHOICES },
           approachKey: { type: 'string', description: 'short slug for the technique, e.g. "hashmap-complement". Two files sharing a key are the same idea.' },
           correct: { type: 'boolean', description: 'false only if the code is clearly wrong, not merely slow' },
           bruteForce: {
@@ -122,7 +122,8 @@ const INSTRUCTIONS = [
   'You are given several C# solutions to one coding problem, on stdin, each delimited by a ===== FILE: <name> ===== banner.',
   '',
   'For every file, report its worst-case time and space complexity, the technique it uses, and a short approachKey.',
-  'Choose time and space ONLY from the allowed enum values. If a solution genuinely does not fit any of them, answer "other" - do not round to the nearest - and put what you WOULD have written in actualComplexity, so the missing value can be added.',
+  'Choose time and space ONLY from the allowed enum values. Some tiers appear twice under different letters - O(m) beside O(n), O(n * m) beside O(m * n) - so pick the one whose letters match your own reasoning; they are treated as equal, not as a ranking.',
+  'If a solution genuinely does not fit any enum value, answer "other" - do not round to the nearest - and put what you WOULD have written in actualComplexity.',
   'For a matrix, m is the number of rows and n the number of columns.',
   'Space complexity means auxiliary space, excluding the input and excluding the output where the problem requires building one.',
   'Two files that implement the same idea must share an approachKey. Two files with the same complexity but genuinely different mechanisms must not.',
@@ -379,6 +380,27 @@ for (const p of targets) {
     if (verbose) console.log(`        ${s.note}`);
   }
 
+  // An "other" whose written-in value is an existing tier under a different letter is
+  // ADOPTED rather than refused. The enum already offers the common renames, so this is the
+  // second net: it catches a letter nobody thought to list. canonical() resolves by variable
+  // rename only - it never moves a magnitude - so a genuinely new shape still falls through
+  // to the refusal below, which is the outcome that should stop a run. The written value is
+  // kept verbatim for display, because the header should print the letters the code uses.
+  const adopted = [];
+  for (const s of res.solutions) {
+    for (const axis of ['time', 'space']) {
+      if (s[axis] !== 'other') continue;
+      const canon = canonical(s.actualComplexity);
+      if (!canon) continue;
+      s[axis] = s.actualComplexity.trim().replace(/\s+/g, ' ');
+      adopted.push(`${s.file} ${axis}: ${s[axis]} ranks as ${canon}`);
+    }
+  }
+  if (adopted.length) {
+    console.log('  off the ladder, resolved by variable rename:');
+    for (const a of adopted) console.log(`    ${a}`);
+  }
+
   // assignNames breaks a tie in your favour, so it has to be told which are
   // yours. The model is never asked - provenance is recorded once, from the
   // marker in the raw submission, and never re-derived.
@@ -426,8 +448,8 @@ for (const p of targets) {
     // computed against the same ordering the names came from.
     const ranked = [...res.solutions]
       .map((s) => ({ ...s, name: plan.names.get(s.file) }))
-      .sort((a, b) => COMPLEXITY.indexOf(a.time) - COMPLEXITY.indexOf(b.time)
-                   || COMPLEXITY.indexOf(a.space) - COMPLEXITY.indexOf(b.space));
+      .sort((a, b) => rank(a.time) - rank(b.time)
+                   || rank(a.space) - rank(b.space));
 
     const rec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
     const sigs = rec.headerSignatures ?? (rec.headerSignatures = {});

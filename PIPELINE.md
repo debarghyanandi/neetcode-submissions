@@ -174,7 +174,9 @@ live in `scripts/lib/complexity.mjs` and never change:
 5. A file already called `optimal.cs` that's still best **keeps its name** — otherwise the
    git history churns for no reason.
 6. If any complexity came back as `other`, **refuse to name anything** and leave the folder
-   for a human.
+   for a human — unless the written-in value is an existing tier under a different letter
+   (`O(m)` is `O(n)` for the other input), in which case it is adopted and ranks as that
+   tier. Renaming a variable is not guessing at a magnitude; `O(n * 2^n)` still refuses.
 
 Rule 6 matters more than it looks. When the classifier met a bounded min-heap, the honest
 answer was O(n log k), which wasn't on the list at the time. It answered `other` and the

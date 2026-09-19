@@ -24,7 +24,7 @@ export const COMPLEXITY = [
   'O(n log n)',
   'O(m log n)',   // a binary search per row - m rows, log n columns
   'O(n * k)',     // n items of length k - the whole input, once
-  'O(m * n)',     // every cell of a matrix     // n items of length k - the whole input, once
+  'O(m * n)',     // every cell of a matrix, or of a two-input DP table
   'O(n * k log k)', // ...and again with a sort per item. anagram-groups lives here.
   'O(n^2)',
   'O(n^2 log n)',
@@ -34,9 +34,97 @@ export const COMPLEXITY = [
   'other',
 ];
 
+/**
+ * The same rung wearing a different letter.
+ *
+ * The ladder above is a list of TIERS, and a tier's letter is an accident of which input the
+ * author happened to call n. O(m) is not a worse O(n); it IS O(n), for the other string. The
+ * ladder cannot express two entries at one rank - rank is an array index - so a renamed tier
+ * lives here and ranks as the thing it points at. Exact equality, not a near-miss ordering.
+ *
+ * These are OFFERED TO THE MODEL as well (see CHOICES), so it can answer O(m) directly and the
+ * header can print the honest letter, rather than going through "other" and a repair.
+ *
+ * Nothing here changes a magnitude. Every entry is its target with the variables renamed, which
+ * is the one kind of off-ladder answer that can be resolved without guessing.
+ */
+export const ALIAS = {
+  'O(m)': 'O(n)',
+  'O(log m)': 'O(log n)',
+  'O(m + n)': 'O(n + m)',
+  'O(n * m)': 'O(m * n)',
+  'O(m log m)': 'O(n log n)',
+  'O(m log k)': 'O(n log k)',
+  'O(m * k)': 'O(n * k)',
+  'O(m^2)': 'O(n^2)',
+  'O(m^3)': 'O(n^3)',
+  'O(2^m)': 'O(2^n)',
+  'O(m!)': 'O(n!)',
+};
+
+/** What the model may answer: every rung, every alias, and "other" as the last resort. */
+export const CHOICES = [
+  ...COMPLEXITY.filter((c) => c !== 'other'),
+  ...Object.keys(ALIAS),
+  'other',
+];
+
+/** Spacing and case are not meaning: "O(m*n)", "O(m * n)" and "o(M * N)" are one answer. */
+const key = (s) => String(s).replace(/\s+/g, '').toLowerCase();
+const BY_KEY = new Map();
+for (const c of COMPLEXITY) BY_KEY.set(key(c), c);
+for (const [a, target] of Object.entries(ALIAS)) BY_KEY.set(key(a), target);
+
+/**
+ * A freehand complexity mapped onto the ladder, or null if it genuinely is not on it.
+ *
+ * This is the rule that stops a new letter from stopping the pipeline. classify's enum only
+ * lets the model answer from CHOICES, so anything else arrives as "other" plus a written
+ * actualComplexity - and the run then REFUSED the whole folder, which is what happened to
+ * longest-common-subsequence: its rolling two-row DP is O(m) space, a tier the ladder held
+ * under another name.
+ *
+ * Resolution is by variable rename ONLY. Single-letter variables are renamed onto n and m,
+ * every injective way, and a result is accepted only if it lands exactly on a rung. So
+ * "O(a * b)" resolves to O(m * n) and "O(p)" to O(n), while "O(n * 2^n)" resolves to nothing
+ * and is still refused - the pipeline should stop for a genuinely new shape, and only for one.
+ *
+ * k is left alone deliberately: O(k) and O(n log k) are rungs whose whole meaning is "bounded
+ * by n but not n", so renaming k would erase the distinction the rung exists to make.
+ *
+ * When two renames both land, the WORSE rung wins. A rename is inference, and inference here
+ * should never promote a solution it does not understand.
+ */
+export function canonical(text) {
+  if (typeof text !== 'string') return null;
+  const direct = BY_KEY.get(key(text));
+  if (direct) return direct;
+
+  const vars = [...new Set(text.match(/\b[a-z]\b/g) ?? [])].filter((v) => v !== 'k');
+  if (!vars.length || vars.length > 2) return null;
+
+  const maps = vars.length === 1
+    ? [{ [vars[0]]: 'n' }, { [vars[0]]: 'm' }]
+    : [{ [vars[0]]: 'n', [vars[1]]: 'm' }, { [vars[0]]: 'm', [vars[1]]: 'n' }];
+
+  let worst = null;
+  for (const map of maps) {
+    const hit = BY_KEY.get(key(text.replace(/\b([a-z])\b/g, (ch) => map[ch] ?? ch)));
+    if (hit && (worst === null || COMPLEXITY.indexOf(hit) > COMPLEXITY.indexOf(worst))) worst = hit;
+  }
+  return worst;
+}
+
+/**
+ * Where a complexity sits on the ladder. An alias or a renamed variable ranks as the tier it
+ * is, so O(m) and O(n) come out equal rather than one rung apart - which is the truth, and
+ * means a folder holding both reads as a tie instead of a ranking.
+ */
 export const rank = (c) => {
   const i = COMPLEXITY.indexOf(c);
-  return i === -1 ? COMPLEXITY.length : i;
+  if (i !== -1) return i;
+  const canon = canonical(c);
+  return canon === null ? COMPLEXITY.length : COMPLEXITY.indexOf(canon);
 };
 
 export const isUnrankable = (c) => c === 'other' || rank(c) >= COMPLEXITY.length - 1;
