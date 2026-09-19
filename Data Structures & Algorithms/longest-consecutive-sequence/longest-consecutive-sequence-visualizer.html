@@ -651,29 +651,25 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Longest Consecutive Sequence',
-  note: 'only the number with no left neighbour is allowed to count',
-  inputs: [{id:'nums', label:'nums', value:'2,20,4,10,3,4,5', width:260}],
+  note: 'only the left edge of a run is allowed to do the counting',
+  inputs: [{id:'nums', label:'nums', value:'2,20,4,10,3,4,5', width:280}],
   parse(raw){
-    const nums = parseInts(raw.nums, 12);
+    const nums = parseInts(raw.nums, 14);
     if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (!nums.length) return {ok:false, msg:'Needs at least one number.'};
-    if (nums.some(v => !Number.isInteger(v))) return {ok:false, msg:'Whole numbers only.'};
+    if (nums.length < 1) return {ok:false, msg:'Needs at least one number.'};
     return {ok:true, value:{nums}, normalized:{nums: nums.join(',')}};
   },
-  shuffle(){
-    const n = 6 + Math.floor(Math.random()*3);
-    return {nums: randInts(n, 1, 14).join(',')};
-  },
+  shuffle(){ return {nums: randInts(6 + Math.floor(Math.random()*3), 1, 12).join(',')}; },
   solutions: [
   {
-    label: 'HashSet, count only from the left edge',
+    label: 'Hash set, count only from left edges',
     badge: 'O(n) time · O(n) space · hash set · optimal.cs',
-    blurb: 'Sorting is more than the problem asks for: a run only needs <b>membership</b> tests. Drop everything into a <code>HashSet</code>, then walk a run forward from a number only when <code>number - 1</code> is absent. That guard makes each run counted exactly once, so the total walking across all runs is <b>n</b>, not n per element.',
+    blurb: 'Sorting is more than the problem needs: a run is only ever asked "is the next number present?". A set answers that in O(1). The trick that keeps it linear is refusing to count from the middle — a number with <code>number - 1</code> in the set is skipped, so every run is walked exactly once, from its left edge.',
     legend: [
-      {cls:'hot', text:'number being tested / probed'},
-      {cls:'in-window', text:'current run'},
+      {cls:'hot', text:'number — current set element'},
+      {cls:'in-window', text:'run being counted right now'},
       {cls:'good', text:'longest run so far'},
-      {cls:'dim', text:'mid-run — skipped by the guard'}
+      {cls:'dim', text:'skipped — not a left edge'}
     ],
     code: [
       'public int LongestConsecutive(int[] nums)',
@@ -706,74 +702,52 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const nums = input.nums;
-      const set = new Set();
-      const order = [];
-      for (const n of nums){ if (!set.has(n)){ set.add(n); order.push(n); } }
-      const dupes = nums.length - order.length;
-      const steps = [];
-
-      let best = 0, bestStart = null;
-      let cur = null, runStart = null, runLen = 0, probe = null;
-      const skipped = [];
-
-      const inRun = () => (v) => runStart !== null && runLen > 0 && v >= runStart && v < runStart + runLen;
-      const isBest = (v) => bestStart !== null && best > 0 && v >= bestStart && v < bestStart + best;
-      const isRun = (v) => runStart !== null && runLen > 0 && v >= runStart && v < runStart + runLen;
-      const clsFor = (v) => {
-        if (probe !== null && v === probe) return 'hot';
-        if (cur !== null && v === cur) return 'hot';
-        if (isRun(v)) return 'in-window';
-        if (isBest(v)) return 'good';
-        if (skipped.indexOf(v) >= 0) return 'dim';
-        return '';
-      };
+      const nums = input.nums, steps = [];
+      const set = [];
+      for (const n of nums) if (set.indexOf(n) < 0) set.push(n);
+      const has = (x) => set.indexOf(x) >= 0;
+      let longest = 0, cur = null, runFrom = null, runLen = 0, best = null, skipped = [];
+      const inRun = (v) => runFrom !== null && v >= runFrom && v < runFrom + runLen;
+      const inBest = (v) => best !== null && v >= best[0] && v < best[0] + best[1];
       const panels = () => [
-        pTiles('nums — the input array, duplicates and all', nums, (i, v) => ({cls: clsFor(v)})),
-        pChips('numberSet — HashSet<int>, one slot per distinct value', [
-          {left: 'values', items: order.map(v => ({text: String(v), cls: clsFor(v)})), empty: 'empty'}
-        ]),
-        pPills('', [
+        pTiles('nums — the raw array, duplicates and all', nums, (i, v) => {
+          const n = Number(v);
+          return {cls: n === cur ? 'hot' : inRun(n) ? 'in-window' : inBest(n) ? 'good' : ''};
+        }),
+        pChips('numberSet — duplicates collapsed, Contains is O(1)', [{
+          left: 'set',
+          items: set.map(v => ({
+            text: String(v),
+            cls: v === cur ? 'hot' : inRun(v) ? 'in-window' : inBest(v) ? 'good' : (skipped.indexOf(v) >= 0 ? 'dim' : '')
+          }))
+        }]),
+        pPills('state', [
           {k:'number', v: cur === null ? '–' : cur, cls:'hot'},
-          {k:'probing', v: probe === null ? '–' : probe},
-          {k:'runLength', v: runStart === null ? '–' : runLen},
-          {k:'longestRun', v: best, cls:'good'}
+          {k:'runLength', v: runLen},
+          {k:'longestRun', v: longest, cls:'good'}
         ])
       ];
-
-      steps.push({lines:[4], msg:'Every value goes into a <code>HashSet</code>. Two things fall out for free: membership becomes <b>O(1)</b>, and duplicates collapse' + (dupes ? ' — ' + dupes + ' repeated value' + (dupes > 1 ? 's' : '') + ' vanished, and a duplicate could never lengthen a run anyway.' : ' (there were none here).'), panels: panels()});
-      steps.push({lines:[6], msg:'<code>longestRun</code> starts at <b>0</b>, which is also the correct answer for an empty array — no special case needed.', panels: panels()});
-
-      for (const number of order){
-        cur = number; probe = null; runStart = null; runLen = 0;
-        if (set.has(number - 1)){
-          steps.push({lines:[8,13,14], msg:'<b>' + number + '</b>: the set contains <b>' + (number - 1) + '</b>, so ' + number + ' sits in the <em>middle</em> of some run, not at its left edge. Counting from here would re-count a run someone else owns, so <code>continue</code>. This guard is the whole reason the algorithm is linear.', panels: panels()});
-          skipped.push(number);
-          cur = null;
+      steps.push({lines:[3,4], msg:'Every element is poured into a hash set. Two things happen at once: duplicates vanish (the ' + nums.length + ' values become <b>' + set.length + '</b> distinct ones), and from here on the question "does <code>x</code> exist?" costs O(1) instead of a scan.', panels: panels()});
+      steps.push({lines:[6], msg:'<code>longestRun</code> starts at <b>0</b>, which is also the correct answer for an empty input — no run is ever forced.', panels: panels()});
+      for (const n of set){
+        cur = n; runFrom = null; runLen = 0;
+        if (has(n - 1)){
+          skipped = skipped.concat([n]);
+          steps.push({lines:[8,12,13], msg:'<b>' + n + '</b>: the set also contains <code>' + (n - 1) + '</code>, so ' + n + ' sits in the <em>middle</em> of a run. Counting from here would re-walk a run someone else already owns. Skip it — this single guard is what keeps the total work linear instead of quadratic.', panels: panels()});
           continue;
         }
-        steps.push({lines:[8,13,16], msg:'<b>' + number + '</b>: <b>' + (number - 1) + '</b> is <em>not</em> in the set, so ' + number + ' is the <b>left edge</b> of its run. This is the one number allowed to walk it, and <code>runLength</code> opens at 0.', panels: panels()});
-        runStart = number;
-        while (set.has(number + runLen)){
-          probe = number + runLen;
+        steps.push({lines:[12,16], msg:'<b>' + n + '</b>: <code>' + (n - 1) + '</code> is not in the set, so ' + n + ' is the <b>left edge</b> of its run — the only element allowed to count it. Start <code>runLength</code> at 0.', panels: panels()});
+        runFrom = n;
+        while (has(n + runLen)){
           runLen++;
-          steps.push({lines:[18,20], msg:'<code>Contains(' + number + ' + ' + (runLen - 1) + ')</code> → <b>' + probe + '</b> is present, so the run reaches it. <code>runLength</code> becomes <b>' + runLen + '</b>. Each probe is one hash lookup, and across the whole method each value is probed at most once this way.', panels: panels()});
+          steps.push({lines:[18,20], msg:'<code>' + (n + runLen - 1) + '</code> is in the set → <code>runLength</code> becomes <b>' + runLen + '</b>. The walk only ever moves right, and only from an edge, so each number is visited by at most one of these while loops.', panels: panels()});
         }
-        probe = number + runLen;
-        steps.push({lines:[18], msg:'<code>Contains(' + probe + ')</code> → missing, so the run breaks here. The run starting at <b>' + number + '</b> has length <b>' + runLen + '</b> (' + number + ' … ' + (number + runLen - 1) + ').', panels: panels()});
-        probe = null;
-        if (runLen > best){
-          const old = best;
-          best = runLen; bestStart = number;
-          steps.push({lines:[23,24], msg:'<b>' + runLen + ' > ' + old + '</b>, so this run is the new best. Only the <em>length</em> is kept — the algorithm never needs to remember which numbers they were.', panels: panels()});
-        } else {
-          steps.push({lines:[23], msg:'<b>' + runLen + '</b> does not beat <b>' + best + '</b>, so <code>longestRun</code> is untouched.', panels: panels()});
-        }
-        runStart = null; runLen = 0; cur = null;
+        const beat = runLen > longest;
+        if (beat){ longest = runLen; best = [n, runLen]; }
+        steps.push({lines: beat ? [18,22,23] : [18,22], msg:'<code>' + (n + runLen) + '</code> is missing, so the run ends: <b>' + n + '…' + (n + runLen - 1) + '</b>, length <b>' + runLen + '</b>. ' + (beat ? 'That beats ' + '<code>longestRun</code>' + ', which becomes <b>' + runLen + '</b>.' : '<code>longestRun</code> stays <b>' + longest + '</b>.'), panels: panels()});
       }
-
-      cur = null; probe = null; runStart = null; runLen = 0;
-      steps.push({lines:[27], msg:'Answer <b>' + best + '</b>' + (bestStart !== null ? ' — the run ' + bestStart + ' … ' + (bestStart + best - 1) + '.' : '.') + ' Every value was visited once by the <code>foreach</code>, and walked over once more only as part of the single run that owns it: <b>O(n)</b> in total, with no sort in sight.', panels: panels()});
+      cur = null; runFrom = null; runLen = 0;
+      steps.push({lines:[27], msg:'Every distinct value was touched twice at most — once by the <code>foreach</code>, once by the walk that owns it — so this is O(n) despite the nested loop. Longest consecutive run: <b>' + longest + '</b>' + (best ? ' (' + best[0] + '…' + (best[0] + best[1] - 1) + ')' : '') + '.', panels: panels()});
       return steps;
     }
   }]

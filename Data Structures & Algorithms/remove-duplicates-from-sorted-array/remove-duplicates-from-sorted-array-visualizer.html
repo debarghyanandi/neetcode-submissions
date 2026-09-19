@@ -651,12 +651,12 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Remove Duplicates from Sorted Array',
-  note: 'sorted means every duplicate stands next to its twin, so one comparison is enough',
+  note: 'sorted means a duplicate is always the neighbour you just left',
   inputs: [{id:'n', label:'nums (sorted)', value:'1,1,2,3,3,3,4', width:260}],
   parse(raw){
-    const n = parseInts(raw.n, 14);
+    const n = parseInts(raw.n, 12);
     if (!n) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (n.length < 1) return {ok:false, msg:'Needs at least one number.'};
+    if (n.length < 1) return {ok:false, msg:'Needs at least one element.'};
     for (let i = 1; i < n.length; i++){
       if (n[i] < n[i-1]) return {ok:false, msg:'The array must be sorted in non-decreasing order.'};
     }
@@ -664,70 +664,79 @@ const PROBLEM = {
   },
   shuffle(){
     const len = 6 + Math.floor(Math.random()*3);
-    const a = randInts(len, 1, 5).sort((x,y) => x - y);
-    return {n: a.join(',')};
+    const out = [];
+    let v = 1 + Math.floor(Math.random()*3);
+    for (let i = 0; i < len; i++){
+      out.push(v);
+      if (Math.random() < 0.55) v += 1 + Math.floor(Math.random()*2);
+    }
+    return {n: out.join(',')};
   },
   solutions: [
   {
-    label: 'Two pointers, overwrite in place',
+    label: 'Two pointers, write in place',
     badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'Because the array is sorted, a value is new exactly when it differs from the element immediately before it — no set, no lookback. <code>r</code> reads every element once; <code>l</code> marks the next free slot in the answer prefix. Writes only ever land at or before <code>r</code>, so nothing unread is ever clobbered.',
+    blurb: 'Because the array is sorted, every copy of a value sits in one solid block, so <code>nums[r] != nums[r-1]</code> is the whole duplicate test — no set, no lookback. <b>r</b> reads every slot; <b>l</b> marks where the next unique value belongs. The write index never overtakes the read index, so overwriting is always safe.',
     legend: [
-      {cls:'hot', text:'r — element being read'},
-      {cls:'good', text:'kept prefix nums[0..l-1]'},
-      {cls:'in-window', text:'l — next write slot'},
-      {cls:'dim', text:'past the prefix / junk tail'}
+      {cls:'good', text:'kept — the unique prefix'},
+      {cls:'hot', text:'r — the slot being read'},
+      {cls:'in-window', text:'l — where the next unique goes'},
+      {cls:'dim', text:'stale tail, beyond the answer'}
     ],
     code: [
-      'public int RemoveDuplicates(int[] nums)',
+      'public class Solution',
       '{',
-      '    int l = 1;',
-      '    for (int r = 1; r < nums.Length; r++)',
+      '    public int RemoveDuplicates(int[] nums)',
       '    {',
-      '        if (nums[r] != nums[r - 1])',
+      '        int l = 1;',
+      '        for (int r = 1; r < nums.Length; r++)',
       '        {',
-      '            nums[l] = nums[r];',
-      '            l++;',
+      '            if (nums[r] != nums[r - 1])',
+      '            {',
+      '                nums[l] = nums[r];',
+      '                l++;',
+      '            }',
       '        }',
+      '        return l;',
       '    }',
-      '    return l;',
       '}'
     ],
     simulate(input){
-      const a = input.n.slice(), steps = [];
-      let l = 1, dropped = 0;
-      const panels = (r, fresh, done) => [
-        pTiles('nums (mutated in place)', a, (k) => ({
-          cls: done ? (k < l ? 'good' : 'dim')
-             : k === r ? 'hot'
-             : k < l ? 'good'
-             : k === l ? 'in-window'
-             : 'dim',
-          fresh: fresh === k
-        }), {ptrs: [{name:'l', idx: l, cls:'accent'}, {name:'r', idx: r >= 0 ? r : 0}]}),
+      const a = input.n.slice(), orig = input.n.slice(), steps = [];
+      let l = 1, freshIdx = -1;
+      const panels = (r, done) => [
+        pTiles('nums (mutated in place)', a, (i) => ({
+          cls: i === freshIdx ? 'hot'
+             : (r >= 0 && i === r) ? 'hot'
+             : i < l ? 'good'
+             : (done || i >= l) && done ? 'dim'
+             : i === l ? 'in-window' : '',
+          fresh: i === freshIdx
+        }), {ptrs: done ? [{name:'k', idx: l - 1, cls:'good'}] : [{name:'l', idx: l, cls:'accent'}, {name:'r', idx: r < 0 ? 0 : r}]}),
+        pTiles('original input (for reference)', orig, (i) => ({cls: (r >= 0 && i === r) ? 'hot' : 'dim'}), {scale: 0.85}),
         pPills('state', [
-          {k:'l (length so far)', v: l, cls:'accent'},
-          {k:'r', v: r >= 0 ? r : '–', cls:'hot'},
-          {k:'nums[r]', v: r >= 0 ? a[r] : '–'},
-          {k:'nums[r-1]', v: r >= 1 ? a[r-1] : '–'},
-          {k:'duplicates dropped', v: dropped}
+          {k:'l (write index)', v: l, cls:'accent'},
+          {k:'r (read index)', v: r < 0 ? '–' : r, cls:'hot'},
+          {k:'nums[r]', v: r < 0 ? '–' : a[r]},
+          {k:'nums[r-1]', v: r < 1 ? '–' : a[r-1]},
+          {k:'unique count', v: l, cls:'good'}
         ])
       ];
-      steps.push({lines:[1,3], msg:'<code>l</code> starts at <b>1</b>, not 0: index 0 is trivially part of the answer — the first element can never be a duplicate of something before it. So <code>l</code> is both the length of the kept prefix and the index of the next free slot.', panels: panels(-1, -1, false)});
+      steps.push({lines:[5,6], msg:'<code>l</code> starts at <b>1</b>, not 0: index 0 is trivially unique, so the first slot that might need rewriting is index 1. <code>r</code> starts at 1 too, because comparing <code>nums[r]</code> with <code>nums[r-1]</code> needs a predecessor to exist.', panels: panels(-1, false)});
       for (let r = 1; r < a.length; r++){
-        if (a[r] !== a[r-1]){
-          steps.push({lines:[4,6], msg:'<code>r = ' + r + '</code>: <b>' + a[r] + '</b> differs from its neighbour <b>' + a[r-1] + '</b>. Sorted order guarantees equal values are adjacent, so differing from the one element behind it is enough to prove this value has never been seen — a new value.', panels: panels(r, -1, false)});
-          const wrote = a[r];
-          a[l] = a[r];
-          const at = l;
+        freshIdx = -1;
+        const cur = a[r], prev = a[r-1];
+        if (cur !== prev){
+          steps.push({lines:[8], msg:'<code>nums[' + r + '] = ' + cur + '</code> differs from <code>nums[' + (r-1) + '] = ' + prev + '</code>. The array is sorted, so all copies of ' + prev + ' are behind us for good — this is the <b>first</b> sighting of ' + cur + ', and it must be kept.', panels: panels(r, false)});
+          a[l] = cur; freshIdx = l;
+          steps.push({lines:[10,11], msg:'Write <b>' + cur + '</b> into slot <code>' + l + '</code>' + (l === r ? ' — here <code>l == r</code>, so the write is a harmless self-assignment' : ' — <code>l = ' + l + '</code> is behind <code>r = ' + r + '</code>, so we are overwriting a slot already read') + '. Then <code>l++</code> extends the unique prefix.', panels: panels(r, false)});
           l++;
-          steps.push({lines:[8,9], msg:'Write <b>' + wrote + '</b> into slot <b>' + at + '</b>' + (at === r ? ' — which is where it already sat, so nothing changed yet; no duplicate has been skipped so far' : ', overwriting a duplicate that was already copied past. The write index ' + at + ' is behind the read index ' + r + ', so no unread element is destroyed') + '. <code>l</code> becomes <b>' + l + '</b>.', panels: panels(r, at, false)});
+          freshIdx = -1;
         } else {
-          dropped++;
-          steps.push({lines:[4,6], msg:'<code>r = ' + r + '</code>: <b>' + a[r] + '</b> equals <code>nums[' + (r-1) + ']</code>, a repeat. Skip it entirely — <code>l</code> stays at <b>' + l + '</b>, which opens the gap that lets the next new value be pulled forward.', panels: panels(r, -1, false)});
+          steps.push({lines:[8], msg:'<code>nums[' + r + '] = ' + cur + '</code> equals <code>nums[' + (r-1) + '] = ' + prev + '</code>, so this is a repeat inside a run. Skip it: <code>l</code> stays at <b>' + l + '</b>, and the gap between <code>l</code> and <code>r</code> grows by one — that gap is exactly how many duplicates have been dropped.', panels: panels(r, false)});
         }
       }
-      steps.push({lines:[12], msg:'Every element read once. The first <b>' + l + '</b> slots hold the distinct values in order; whatever sits past index ' + (l-1) + ' is leftover junk the caller is told to ignore. Return <b>' + l + '</b>.', panels: panels(-1, -1, true)});
+      steps.push({lines:[14], msg:'Return <b>' + l + '</b>. The first ' + l + ' slots hold every distinct value in order; anything past index ' + (l-1) + ' is leftover junk the caller is told to ignore. One pass, one extra int, no allocation.', panels: panels(-1, true)});
       return steps;
     }
   }]

@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  HashSet with left-edge iteration   [hashset-left-edge]
+// -  Hash set, left-edge counting   [hashset-left-edge]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Each number visited at most once across all while loops; HashSet
-// -  enables O(1) membership checks at run boundaries.
+// -  Each number is visited at most once because iteration only starts from
+// -  sequence left edges where n-1 doesn't exist.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -43,75 +43,77 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Set - expand only from each run's left edge
+ PATTERN : Hash Set - expand each run only from its left edge
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  numberSet    all values from nums, deduplicated, for O(1) membership tests
-  longestRun   best run length seen so far across all start points
-  runLength    how far the run starting at number has reached; number + runLength is the next value to test
+  numberSet    all distinct values of nums, for O(1) membership tests
+  longestRun   best run length seen so far across all starts
+  runLength    length of the run that begins at the current number
 WHY THIS PATTERN
-  The problem asks for the longest block of consecutive integers, and the order
-  they appear in nums does not matter. That means we only need to answer "is
-  value v present?", which is exactly what a hash set gives in constant time.
-  Once numberSet exists, a run can be walked forward one value at a time with
-  numberSet.Contains(number + runLength), and the guard on number - 1 makes sure
-  each run is walked from one place only.
+  The problem asks for the longest block of consecutive integers, and the input
+  order does not matter - only which values are present. That is a membership
+  question, so numberSet turns "is number + 1 here?" into a constant-time
+  lookup. Once lookups are free, a run can be walked forward one value at a time
+  with runLength, and no sorting is needed.
 BRUTE FORCE
-  The natural first attempt is to sort nums, then sweep once counting
-  consecutive steps and resetting on a gap, skipping equal neighbours. That is
-  correct and only O(n log n) time with O(1) extra space, but the sort
-  dominates. A worse attempt is, for each value, to scan the whole array looking
-  for value + 1 repeatedly, which is O(n^2).
+  The first thing most people write is sort the array, then scan once and count
+  consecutive values, skipping equal neighbours. That is correct and costs O(n
+  log n) time because of the sort. It loses only on the sort step; the hash set
+  replaces the ordering with direct lookups and drops the log factor.
 INVARIANT
-  At the start of each foreach body, longestRun holds the longest run among all
-  runs whose left edge has already been visited. The continue guarantees the
-  body only runs when number - 1 is absent, so number is the smallest member of
-  its run, and the while loop then counts that run completely. Every run has
-  exactly one left edge, so every run is measured exactly once and longestRun
-  ends up as the maximum over all of them.
-WHY THE TOTAL WORK IS LINEAR
-  The while loop looks nested, but it only executes for values that start a run,
-  and it walks each run's members once. Summing the runs gives at most one visit
-  per distinct value, so the inner loop does bounded total work across the whole
-  foreach. Dropping the number - 1 check would keep the answer correct but turn
-  a single long run into repeated full walks.
+  The inner while loop is entered only when numberSet does not contain number -
+  1, so number is the smallest value of its run. Each run therefore has exactly
+  one starting point, and its full length is measured once, from that point.
+  Since longestRun keeps the maximum over all starts, and every run has a
+  smallest element that will be reached by the foreach, the answer is the length
+  of the longest run.
+WHY THE GUARD KEEPS IT LINEAR
+  Without the `continue` guard the code is still correct but quadratic: a run of
+  length m would be walked from each of its m members. With the guard, every
+  value is touched by an inner while loop only for the single run it belongs to,
+  so the total work of all while loops together is bounded by the size of
+  numberSet. The guard is what makes the linear bound real, not just an
+  optimisation.
 WATCH OUT
-  Iterating numberSet rather than nums matters: with nums full of duplicates of
-  the same left edge, a loop over nums would walk that run once per copy.
-  Arithmetic here is unchecked, so int.MinValue - 1 wraps to int.MaxValue; if
-  both extremes are in nums, the MinValue element is wrongly treated as mid-run
-  and its run is never started. The same wrap can hit number + runLength near
-  int.MaxValue. Empty nums is safe: the foreach body never runs and longestRun
-  stays 0.
+  `number + runLength` is unchecked int arithmetic. If int.MaxValue sits at the
+  end of a run, the next probe wraps around to a negative value, and if that
+  wrapped value happens to be in numberSet the run keeps growing and the answer
+  is too large. The comment says an "earlier (or later) iteration will count the
+  run" - "earlier" is misleading: HashSet iteration order is not defined, so it
+  is simply some other iteration, and you must not rely on the order. An empty
+  nums gives an empty numberSet, the foreach body never runs, and 0 is returned,
+  which is the right answer.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. Return the actual sequence, not just its length.
-     Record bestStart = number whenever runLength > longestRun, then emit
-     bestStart .. bestStart + longestRun - 1. No change to the complexity, one
-     extra variable.
-  2. Memory is tight and nums can be modified in place.
-     Sort nums and sweep, comparing nums[i] to nums[i-1] and skipping equal
-     values. O(1) extra space at the cost of O(n log n) time.
-  3. Values arrive as a stream and you must report the longest run after each
-  insert.
-     Keep a dictionary from value to the length of the run it belongs to, and on
-     insert merge with the runs at value - 1 and value + 1 by updating only the
-     two endpoints. Each insert is O(1) amortized; the current code would have
-     to rerun from scratch.
-  4. The data does not fit on one machine.
-     Partition by value range, compute runs per partition, then stitch runs that
-     touch a partition boundary. The per-partition work is the same as here; the
-     join is the new cost.
+     Store the winning start value alongside longestRun when you update it, then
+     rebuild start..start+longestRun-1 at the end. Same complexity, one extra
+     int.
+  2. Can you do it without the extra hash set memory?
+     Sort a copy (or nums itself if mutation is allowed) and scan, which is O(1)
+     extra space beyond the sort but O(n log n) time. You trade time for space.
+  3. The numbers arrive as a stream too large for memory - now what?
+     Hold the runs instead of the values: a map from endpoint to run length,
+     merging a new value with the run on its left and on its right in O(1) each.
+     Memory then scales with the number of distinct runs, not all values.
+  4. What if the input can have huge gaps but you want the longest run of values
+  differing by at most 2?
+     The left-edge test becomes "no value in [number-2, number-1]" and the walk
+     probes a small window forward, which is still linear because the window is
+     constant size.
 TRIGGER
-  The answer depends on which values exist, not on their order or index, and you
-  find yourself wanting to ask "is v+1 there?".
+  You need the longest or largest group of values related by +1 or by exact
+  equality, and the input order is irrelevant - reach for a hash set and expand
+  from group edges only.
 C# NOTE
-  new HashSet<int>(nums) uses the default EqualityComparer<int>, so Contains
-  needs no boxing and no custom comparer. The manual if (runLength > longestRun)
-  can be written as longestRun = Math.Max(longestRun, runLength) for the same
-  result in one line.
+  `new HashSet<int>(nums)` does the dedup in one pass, so the foreach walks
+  distinct values only; iterating nums instead would repeat work on duplicates.
+  Note that the loop only reads numberSet - a tempting variant that calls Remove
+  on visited numbers inside the same foreach would throw
+  InvalidOperationException because the collection was modified during
+  enumeration.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

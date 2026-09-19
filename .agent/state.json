@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T18:21:43.106Z",
+  "updatedAt": "2026-09-19T06:38:27.613Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2063,19 +2063,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "8bf36e8e529a",
-          "renames": []
+          "version": 2,
+          "codePrint": "8bf36e8e529a"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "e3520d78f033",
-          "renames": []
+          "version": 2,
+          "codePrint": "e3520d78f033"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion carrying depth as level index\",\"approachKey\":\"dfs-track-level\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, snapshotting queue size per level\",\"approachKey\":\"bfs-queue-level-size\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion, pre-order traversal\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-order traversal\",\"approachKey\":\"bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2093,33 +2091,34 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "DFS recursion carrying depth as level index",
-          "approachKey": "dfs-track-level",
+          "algorithm": "DFS recursion, pre-order traversal",
+          "approachKey": "dfs-recursion",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "array",
             "call-stack"
           ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS with queue, snapshotting queue size per level",
-          "approachKey": "bfs-queue-level-size",
+          "algorithm": "BFS with queue, level-order traversal",
+          "approachKey": "bfs-queue",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "tree",
-            "array",
             "queue"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion, pre-order traversal\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-order traversal\",\"approachKey\":\"bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -2130,11 +2129,10 @@
         },
         "structures": [
           "tree",
-          "array",
           "call-stack",
           "queue"
         ],
-        "builtAt": "2026-09-13T15:04:33.449Z"
+        "builtAt": "2026-09-19T06:37:11.363Z"
       }
     },
     "linked-list-cycle-detection": {
@@ -2220,13 +2218,13 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with left-edge iteration\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash set, left-edge counting\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "HashSet with left-edge iteration",
+          "algorithm": "Hash set, left-edge counting",
           "approachKey": "hashset-left-edge",
           "correct": true,
           "bruteForce": false,
@@ -2237,7 +2235,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with left-edge iteration\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash set, left-edge counting\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -2257,7 +2255,7 @@
           "array",
           "hash-set"
         ],
-        "builtAt": "2026-09-18T18:21:43.104Z"
+        "builtAt": "2026-09-19T06:38:00.147Z"
       }
     },
     "longest-repeating-substring-with-replacement": {
@@ -3239,7 +3237,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer in-place removal\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3252,8 +3250,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Two-pointer, overwrite duplicates",
-          "approachKey": "two-pointer-duplicates",
+          "algorithm": "two-pointer in-place removal",
+          "approachKey": "two-pointer",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3262,7 +3260,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer in-place removal\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -3275,7 +3273,7 @@
         "structures": [
           "array"
         ],
-        "builtAt": "2026-09-18T12:30:32.929Z"
+        "builtAt": "2026-09-19T06:38:27.612Z"
       }
     },
     "remove-node-from-end-of-linked-list": {
