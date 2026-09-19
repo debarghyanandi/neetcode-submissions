@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-18T18:21:43.106Z",
+  "updatedAt": "2026-09-19T05:13:42.178Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3239,7 +3239,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, move unique elements\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3252,7 +3252,7 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Two-pointer, overwrite duplicates",
+          "algorithm": "Two-pointer, move unique elements",
           "approachKey": "two-pointer-duplicates",
           "correct": true,
           "bruteForce": false,
@@ -3262,7 +3262,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, overwrite duplicates\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, move unique elements\",\"approachKey\":\"two-pointer-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -3275,7 +3275,7 @@
         "structures": [
           "array"
         ],
-        "builtAt": "2026-09-18T12:30:32.929Z"
+        "builtAt": "2026-09-19T05:13:42.176Z"
       }
     },
     "remove-node-from-end-of-linked-list": {

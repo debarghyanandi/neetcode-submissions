@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pointer, overwrite duplicates   [two-pointer-duplicates]
+// -  Two-pointer, move unique elements   [two-pointer-duplicates]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Single pass with two pointers; duplicate elements overwritten in-place
-// -  with no extra storage.
+// -  Single forward pass with left pointer marking insertion position for
+// -  unique elements.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -34,67 +34,66 @@ public class Solution
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  l    next slot to write into; also the count of unique values kept so far
-  r    scan index; nums[r] is the candidate being examined
+  l    next write position; also the count of unique values kept so far
+  r    read cursor scanning for a value different from its left neighbour
 WHY THIS PATTERN
-  The input is sorted, so every group of equal values sits in one continuous
-  block, and a duplicate can only be the element right before it. The problem
-  also asks to edit the array in place and return a length, not to build a new
-  array. That is exactly a two-pointer split: nums[0..l-1] is the clean result
-  being written, and r walks ahead over the raw data. Because l never passes r,
-  the write never destroys a value that has not been read yet.
+  The array is already sorted, so equal values sit next to each other and one
+  comparison with nums[r - 1] is enough to know if nums[r] is new. The problem
+  also asks for the work to happen in place and to return a length, not a new
+  array. Two indices over the same array fit that: r reads every element once, l
+  marks where the next kept element goes. Everything before index l is the
+  answer, everything at or after it is free space.
 BRUTE FORCE
-  The first idea most people write is to copy nums into a HashSet or a List,
-  keep only values not seen before, sort if needed, then copy back. That is O(n)
-  time but O(n) extra memory, and it ignores the fact that the array is already
-  sorted. A second common try is to remove duplicates by shifting the tail left
-  each time a repeat is found, which costs O(n^2) in the worst case when the
-  array is all one value.
+  The first idea most people write is to copy into a HashSet or a List, then
+  sort or write the distinct values back and return the count. That is O(n)
+  extra memory and gives up the fact that duplicates are already grouped.
+  Another naive version deletes a duplicate by shifting the rest of the array
+  left, which is O(n^2) time when many duplicates exist.
 INVARIANT
-  Before each iteration, nums[0..l-1] holds the distinct values of nums[0..r-1]
-  in their original sorted order. The test nums[r] != nums[r-1] is enough to
-  detect a new value, because sorting means any earlier occurrence of nums[r]
-  would have to be adjacent to it. When the loop ends, r has covered the whole
-  array, so nums[0..l-1] is the full distinct list and l is its length.
-WHY BOTH POINTERS START AT 1
-  Index 0 is always unique by definition, so it is counted up front by setting l
-  = 1 and never compared. Starting r at 1 also makes nums[r - 1] safe on the
-  very first read. Note nums[r - 1] refers to the original array only while l ==
-  r; after the first duplicate, l lags behind r, but the comparison still uses r
-  - 1, the unmodified neighbour in the read region, which is what correctness
-  needs.
+  Before each iteration, nums[0..l-1] holds the unique values seen in
+  nums[0..r-1], in their original sorted order, and l >= 1. A new value is
+  detected only by comparing nums[r] with nums[r - 1] in the original array -
+  the comparison never reads the already-rewritten region, so overwriting is
+  safe. Since l only ever grows when a genuinely new value appears, l equals the
+  number of unique values when the loop ends, which is exactly what is returned.
+WRITE POSITION NEVER PASSES THE READ POSITION
+  l starts at 1 and increases only on a new value, while r increases every step,
+  so l <= r always. That means nums[l] = nums[r] either writes onto a slot
+  already consumed or writes an element onto itself. No unread element is ever
+  destroyed, which is why no temporary copy is needed.
 WATCH OUT
-  If nums is empty, the loop body never runs and the method returns 1, claiming
-  one valid element in a zero-length array; a caller that then reads nums[0]
-  throws. If nums is null, nums.Length throws a NullReferenceException before
-  anything else. The method mutates the caller's array, so any code holding the
-  same reference sees the rewritten contents and the stale tail beyond index l -
-  1 left untouched.
+  If nums is empty, the loop never runs and the method returns 1, claiming one
+  unique element in an array with none. If nums is null, nums.Length throws a
+  NullReferenceException before any check. Both cases are silent here because
+  the code relies on an unwritten assumption that the array has at least one
+  element; a guard like if (nums.Length == 0) return 0; makes that explicit.
+  Also, the code assumes sorted input - on unsorted data it compares only
+  neighbours and will keep duplicates that are not adjacent.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Allow each value to appear at most twice instead of once.
-     Compare against nums[l - 2] instead of nums[r - 1], and start l at 2 with a
-     guard for arrays shorter than 3. The comparison must move to the written
-     region so the count of kept copies is what limits you.
-  2. What if the array is not sorted but you must keep the first occurrence of
-  each value?
-     You need a HashSet<int> of seen values and the same write pointer l, which
-     costs O(n) extra space. Without sorting there is no way to detect a repeat
-     by looking only at the neighbour.
-  3. The array is huge and lives on disk or arrives as a stream.
-     Turn it into a single pass that yields a value only when it differs from
-     the previous one, keeping just the last emitted value in memory. You lose
-     the in-place return-a-length contract and return a sequence instead.
-  4. How would you also report how many elements were removed?
-     Return nums.Length - l, computed at the end from the same l; no extra
-     counter is needed since l already counts survivors.
+  1. What changes if each value may appear at most twice?
+     Start l at 2 and r at 2, and compare nums[r] with nums[l - 2] instead of
+     nums[r - 1]. The same one-line change generalises to at most k copies, with
+     l and r starting at k.
+  2. The caller wants the leftover slots cleaned instead of left as garbage.
+     After the loop, fill nums from l to nums.Length - 1 with a sentinel, for
+     example Array.Clear(nums, l, nums.Length - l). Still O(1) extra space, but
+     now O(n) writes even when there are no duplicates.
+  3. What if the input is a sorted linked list instead of an array?
+     Keep a single pointer and unlink the next node when its value equals the
+     current node's value. There is no write index because nodes move by pointer
+     reassignment, not by copying.
+  4. What if the input is too large to fit in memory, for example a sorted file?
+     Stream it: read one value at a time, keep only the previous value, and emit
+     a value when it differs. Same comparison logic, but the output goes to
+     another stream so the in-place property is lost.
 TRIGGER
-  Sorted input plus a requirement to compact or filter in place and return a new
-  length.
+  Input is sorted and you must compact or filter it in place while returning a
+  new length - reach for a write index trailing a read index.
 C# NOTE
-  This works on int[] directly, so nums[l] = nums[r] is a plain array store with
-  no bounds surprises beyond the loop condition; reaching for
-  List<int>.Distinct() or a new array here would allocate and break the in-place
-  contract the signature implies.
+  int[] is a reference type, so the caller sees the mutation of nums directly
+  and only the count has to be returned. A LINQ one-liner such as
+  nums.Distinct().ToArray() reads nicer but allocates a new array and a hash
+  set, which breaks the in-place requirement.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
