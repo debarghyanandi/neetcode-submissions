@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-19T09:08:15.187Z",
+  "updatedAt": "2026-09-19T16:47:10.284Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2380,14 +2380,63 @@
     },
     "longest-palindromic-substring": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "77e40ece172ceb23e9a8b685d9b86c1e5da1a854c5577a769adac4cc8f9f959f": "optimal.cs"
+      },
+      "fingerprints": {
+        "77e40ece172ceb23e9a8b685d9b86c1e5da1a854c5577a769adac4cc8f9f959f": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "4914366afc22"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"4914366afc22\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"expand around center\",\"approachKey\":\"expand-around-center\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n^2)",
+          "space": "O(1)",
+          "algorithm": "expand around center",
+          "approachKey": "expand-around-center",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "string"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"4914366afc22\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"expand around center\",\"approachKey\":\"expand-around-center\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "4914366afc22"
+        },
+        "structures": [
+          "string"
+        ],
+        "builtAt": "2026-09-19T16:47:10.022Z"
+      }
     },
     "longest-repeating-substring-with-replacement": {
       "topic": "Data Structures & Algorithms",
