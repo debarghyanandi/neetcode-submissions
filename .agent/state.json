@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-19T08:44:52.823Z",
+  "updatedAt": "2026-09-19T09:08:15.187Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2194,29 +2194,122 @@
     },
     "longest-common-subsequence": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-2.cs",
-        "submission-4.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal-2.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {},
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "74e07af9633f5a99bbdb9f3133bb600f5043bfcc1f530787e5ad3f6b58bb0449": "optimal.cs",
+        "107f451f9a345d0e6c8aebcd6bf4312274e0eb47d4677e7d46eb00f8451d7b38": "suboptimal-2.cs",
+        "14ac189a7202113003b6e56dc45b7740d285a7d93773de1f11c1ea32a9db7a69": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "74e07af9633f5a99bbdb9f3133bb600f5043bfcc1f530787e5ad3f6b58bb0449": "optimal.cs",
+        "107f451f9a345d0e6c8aebcd6bf4312274e0eb47d4677e7d46eb00f8451d7b38": "suboptimal-2.cs",
+        "14ac189a7202113003b6e56dc45b7740d285a7d93773de1f11c1ea32a9db7a69": "suboptimal.cs"
+      },
       "lint": {
-        "submission-0.cs": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "40dcaa47f253"
+        },
+        "suboptimal.cs": {
           "version": 2,
           "codePrint": "500b48143a75"
         },
-        "submission-2.cs": {
+        "suboptimal-2.cs": {
           "version": 2,
           "codePrint": "fbd7cb886e74"
-        },
-        "submission-4.cs": {
-          "version": 2,
-          "codePrint": "40dcaa47f253"
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"40dcaa47f253\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"Space-optimized tabulation, rolling array\",\"approachKey\":\"space-optimized-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"500b48143a75\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Memoization with recursion\",\"approachKey\":\"memoization-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
+        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"fbd7cb886e74\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Tabulation, bottom-up DP\",\"approachKey\":\"tabulation-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-4.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal-2.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n * m)",
+          "space": "O(m)",
+          "algorithm": "Space-optimized tabulation, rolling array",
+          "approachKey": "space-optimized-lcs",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n * m)",
+          "space": "O(n * m)",
+          "algorithm": "Memoization with recursion",
+          "approachKey": "memoization-lcs",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "dp-table",
+            "matrix",
+            "call-stack"
+          ]
+        },
+        "suboptimal-2.cs": {
+          "time": "O(n * m)",
+          "space": "O(n * m)",
+          "algorithm": "Tabulation, bottom-up DP",
+          "approachKey": "tabulation-lcs",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "dp-table",
+            "matrix"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"40dcaa47f253\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"Space-optimized tabulation, rolling array\",\"approachKey\":\"space-optimized-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"fbd7cb886e74\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Tabulation, bottom-up DP\",\"approachKey\":\"tabulation-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"500b48143a75\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Memoization with recursion\",\"approachKey\":\"memoization-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal-2.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "40dcaa47f253",
+          "suboptimal-2.cs": "fbd7cb886e74",
+          "suboptimal.cs": "500b48143a75"
+        },
+        "structures": [
+          "array",
+          "dp-table",
+          "matrix",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-19T09:08:14.924Z"
       }
     },
     "longest-consecutive-sequence": {
