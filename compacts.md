@@ -25,7 +25,7 @@ Every model output passes a mechanical gate before it is allowed near the repo:
 |---|---|---|
 | lint | `sameShape()` — token-by-token proof the rewrite changed only names and spacing | `scripts/lib/csharp.mjs` |
 | classify | the complexity ladder — the model picks from a fixed enum, the script ranks | `scripts/lib/complexity.mjs` |
-| visualize | `validate()` — runs the generated object, checks steps, line numbers, panel shapes, and that the code panel is the `.cs` file copied verbatim | `scripts/lib/visualizer.mjs` |
+| visualize | `injectCodePanels()` writes the code array from disk, then `validate()` runs the object — steps, line numbers, panel shapes | `scripts/lib/visualizer.mjs` |
 
 If you add a model call, add its gate. That is the house style, and it is the
 reason this thing can run unattended.

@@ -10,7 +10,7 @@
  *   node scripts/lib/visualizer.test.mjs
  */
 
-import { renameInVisualizer, structuresFor, validate, hasMethodSignature, loadChassis } from './visualizer.mjs';
+import { renameInVisualizer, structuresFor, validate, hasMethodSignature, loadChassis, injectCodePanels, panelLines, numberedListing } from './visualizer.mjs';
 import { coverage } from './shapes.mjs';
 
 let pass = 0, fail = 0;
@@ -125,6 +125,46 @@ is('a blank line is ignored rather than flagged',
 is('with no source bodies the check does not run',
   validate(defWith(['// entirely invented']), [], [[]], null)
     .errors.filter((e) => /not a line of the solution file/.test(e)).length, 0);
+
+// ---- the script writes the code panel; the model does not transcribe it ----
+//
+// Opus at medium invented comments and reflowed a statement (binary-tree-diameter,
+// 2026-09-17). The check above still exists as the injector's gate. The injector is
+// what stops that class of answer ever reaching the HTML.
+
+is('panelLines drops leading and trailing blanks',
+  JSON.stringify(panelLines('\n\n' + FILE_BODY + '\n\n')), JSON.stringify(FILE_BODY.split('\n')));
+
+is('numberedListing is 1-based into that array',
+  numberedListing(['a', 'b']), '1|a\n2|b');
+
+{
+  const paraphrased = [...FILE_BODY.split('\n')];
+  paraphrased[2] = '    int sum = 0;                 // start at zero';
+  const put = injectCodePanels(defWith(paraphrased), [FILE_BODY]);
+  is('inject reports one replacement', put.injected, 1);
+  is('and does not keep the paraphrased comment', put.src.includes('start at zero'), false);
+  const got = new Function(put.src + '; return PROBLEM.solutions[0].code;')();
+  is('the written array is the file', JSON.stringify(got), JSON.stringify(FILE_BODY.split('\n')));
+  is('validate then has no stray lines',
+    validate(put.src, [], [[]], [FILE_BODY]).errors.filter((e) => /not a line of the solution file/.test(e)).length, 0);
+}
+
+{
+  const noCode = defWith(['x']).replace(/\n\s*code: \[[\s\S]*?\],/, '');
+  is('a definition with code stripped still has simulate', noCode.includes('simulate'), true);
+  const put = injectCodePanels(noCode, [FILE_BODY]);
+  is('omitted code is inserted before simulate', put.injected, 1);
+  is('and contains no insert error', put.error ?? null, null);
+  const got = new Function(put.src + '; return PROBLEM.solutions[0].code;')();
+  is('inserted array is the file', JSON.stringify(got), JSON.stringify(FILE_BODY.split('\n')));
+}
+
+{
+  const two = injectCodePanels(defWith(['nope']), [FILE_BODY, FILE_BODY]);
+  is('a count mismatch is an error, not a partial write', two.injected, 0);
+  is('and names both counts', /found 1 code array\(s\) for 2 file\(s\)/.test(two.error ?? ''), true);
+}
 
 const ok = (name, cond, extra = '') => is(name, !!cond, true) ;
 

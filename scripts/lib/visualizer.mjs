@@ -29,6 +29,126 @@ export function splice(problemSource) {
   return chassis.replace(MARKER, problemSource);
 }
 
+/**
+ * The code panel is the reader's file. The model does not transcribe it.
+ *
+ * Strip leading and trailing blank lines from a solution body (header and
+ * teaching block already gone) and return the remaining lines. That array is
+ * what the visualizer highlights, and what the prompt numbers 1-based so
+ * simulate() can point at it.
+ */
+export function panelLines(body) {
+  const lines = String(body ?? '').split(/\r?\n/);
+  let a = 0, b = lines.length - 1;
+  while (a <= b && !lines[a].trim()) a++;
+  while (b >= a && !lines[b].trim()) b--;
+  return a > b ? [] : lines.slice(a, b + 1);
+}
+
+/** Numbered listing handed to the model. Line N here is code[N-1] after inject. */
+export function numberedListing(lines) {
+  const width = String((lines ?? []).length).length;
+  return (lines ?? []).map((l, i) => `${String(i + 1).padStart(width, ' ')}|${l}`).join('\n');
+}
+
+function matchBracket(src, open) {
+  const openCh = src[open], closeCh = openCh === '[' ? ']' : '}';
+  let depth = 0, quote = null;
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    if (quote) {
+      if (c === '\\') { i++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+    if (c === openCh) depth++;
+    else if (c === closeCh) {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function findCodeArrays(src) {
+  const hits = [];
+  const re = /\bcode\s*:/g;
+  let m;
+  while ((m = re.exec(src))) {
+    let k = m.index + m[0].length;
+    while (k < src.length && /\s/.test(src[k])) k++;
+    if (src[k] !== '[') continue;
+    const end = matchBracket(src, k);
+    if (end < 0) continue;
+    hits.push({ start: m.index, arrayStart: k, arrayEnd: end });
+  }
+  return hits;
+}
+
+function indentAt(src, index) {
+  let i = index;
+  while (i > 0 && src[i - 1] !== '\n' && src[i - 1] !== '\r') i--;
+  const pad = src.slice(i, index);
+  return /^\s*$/.test(pad) ? pad : '    ';
+}
+
+function formatCodeArray(lines, indent) {
+  const inner = `${indent}  `;
+  if (!(lines ?? []).length) return '[]';
+  return `[\n${lines.map((l) => `${inner}${JSON.stringify(l)},`).join('\n')}\n${indent}]`;
+}
+
+function insertCodeBeforeSimulate(src, panels) {
+  let n = 0;
+  const out = src.replace(/(\n)([ \t]*)simulate\s*\(/g, (all, nl, indent) => {
+    if (n >= panels.length) return all;
+    const lit = formatCodeArray(panels[n], indent);
+    n++;
+    return `${nl}${indent}code: ${lit},\n${indent}simulate(`;
+  });
+  return { src: out, injected: n };
+}
+
+/**
+ * Overwrite every solution's `code` array with the matching .cs file.
+ *
+ * The model used to transcribe that array. Opus at medium paraphrased it
+ * (binary-tree-diameter, 2026-09-17): invented comments, reflowed a statement,
+ * every line number still resolved, and a repair paid for a second generation.
+ * The file is already on disk. The script writes it. The model keeps parse(),
+ * panels and steps, and points `lines` at the numbered listing.
+ *
+ * If the model omitted `code` entirely, one is inserted before each simulate().
+ *
+ * @returns {{src: string, injected: number, error?: string}}
+ */
+export function injectCodePanels(src, bodies) {
+  const text = String(src ?? '');
+  const panels = (bodies ?? []).map(panelLines);
+  if (!panels.length) return { src: text, injected: 0 };
+
+  const hits = findCodeArrays(text);
+  if (hits.length === 0) {
+    const inserted = insertCodeBeforeSimulate(text, panels);
+    if (inserted.injected !== panels.length) {
+      return { src: text, injected: 0, error: `could not insert code panels: found ${inserted.injected} simulate() for ${panels.length} file(s)` };
+    }
+    return inserted;
+  }
+  if (hits.length !== panels.length) {
+    return { src: text, injected: 0, error: `could not inject code panels: found ${hits.length} code array(s) for ${panels.length} file(s)` };
+  }
+
+  let out = text;
+  for (let i = hits.length - 1; i >= 0; i--) {
+    const indent = indentAt(out, hits[i].start);
+    const lit = formatCodeArray(panels[i], indent);
+    out = out.slice(0, hits[i].arrayStart) + lit + out.slice(hits[i].arrayEnd + 1);
+  }
+  return { src: out, injected: hits.length };
+}
+
 /** The shared helpers the PROBLEM object is allowed to call. */
 function helpersFromChassis() {
   const c = loadChassis();
@@ -403,6 +523,10 @@ process.stdout.write(JSON.stringify(out));
   });
   // ---- code fidelity ----
   //
+  // visualize.mjs overwrites each code array from disk before it calls validate.
+  // This check is the injector's gate: if a line here is not in the file,
+  // injectCodePanels wrote the wrong thing. The model used to transcribe this
+  // array (and paraphrased it); that path is gone.
   // The code panel is supposed to BE the reader's file, so that a line number in
   // a msg means the same line in the editor. Opus at medium effort was measured
   // (2026-09-17, binary-tree-diameter) inventing explanatory comments and

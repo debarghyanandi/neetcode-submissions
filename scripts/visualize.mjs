@@ -7,10 +7,10 @@
  * built and checked by hand; regenerating them would trade work that is known
  * good for work that merely validates.
  *
- * Only the PROBLEM object is generated. The surrounding 32KB - palette, fonts,
- * panels, transport, keyboard handling - is spliced verbatim from the chassis,
- * so a new visualizer matches the existing ones exactly rather than
- * approximately.
+ * Only parse(), panels and steps are generated. The code panel is the .cs file,
+ * written by injectCodePanels() after the model returns, so a paraphrased
+ * transcription cannot land in the HTML. The surrounding 32KB - palette, fonts,
+ * panels, transport, keyboard handling - is spliced verbatim from the chassis.
  *
  *   node scripts/visualize.mjs --slug two-integer-sum          # dry run
  *   node scripts/visualize.mjs --slug two-integer-sum --apply
@@ -25,7 +25,7 @@ import { loadState, saveState, scanRepo, REPO } from './lib/scan.mjs';
 import { stripHeader, solutionBody } from './lib/header.mjs';
 import { splitTrailingTeach } from './lib/teach.mjs';
 import { shortPrint } from './lib/normalise.mjs';
-import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
+import { splice, validate, selectForVisualizer, loadChassis, injectCodePanels, panelLines, numberedListing } from './lib/visualizer.mjs';
 import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
@@ -46,10 +46,10 @@ const doApply = has('--apply');
 // measured on binary-tree-diameter: Sonnet high $0.22, Opus medium $0.31 (and $0.31 included a
 // wasted cache write; see lib/usage.mjs). The wall-clock is the real win on a multi-folder run.
 //
-// Opus medium's one weakness was fidelity: it paraphrased the code panel, inventing comments and
-// reflowing a statement, while every other check still passed. The prompt now states that "code"
-// is the file copied verbatim and validate() enforces it against the real source, so that class of
-// drift fails the build instead of shipping quietly.
+// The code panel is not generated. injectCodePanels() writes it from the .cs file after the
+// model returns, so the paraphrasing that Opus medium used to ship (invented comments, a
+// statement split across two lines) cannot land in the HTML. The model is given a numbered
+// listing and only has to point simulate().lines at it.
 //
 // If validation rejects the first attempt, attempt 2 is a REPAIR on Opus, not a fresh build. It
 // gets the rejected definition and the exact errors, and returns the same object with only those
@@ -161,7 +161,8 @@ function repairInstructions(slug, sols, structures, previous, errors) {
     'These helper functions and panel constructors already exist. Use them; do not redefine them:',
     '```', contract(), '```',
     '',
-    `The solutions, in order (each "lines" index is 1-based into THAT solution's own "code" array):`,
+    `The solutions, in order. Each step's "lines" are 1-based into that file's numbered listing on stdin`,
+    '(the script writes the code panel from that listing; do not emit or edit a "code" array):',
     ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}` +
       ((s.structures ?? []).length ? `; made of: ${s.structures.join(', ')}` : '')),
     '',
@@ -216,18 +217,12 @@ function instructions(slug, sols, structures, example, feedback) {
     '- Draw each structure as the thing it IS. A tree has edges, a stack is a bucket you push onto and',
     '  pop off, a linked list is boxes joined by arrows, a matrix is a grid. A row of boxes is the right',
     '  drawing for an array and the wrong one for everything else.',
-    '- "code" MUST BEGIN AT THE METHOD SIGNATURE - the `public ... (...)` line, its opening brace,',
-    '  and the matching closing brace - not at the first statement inside the body. The panel folds',
-    '  one collapsible layer per method and works that out by parsing this array, so a panel that',
-    '  starts halfway down a method has no layers and loses the layer view entirely.',
-    '- Every step\'s "lines" must be 1-based indices into THAT solution\'s own "code" array. A line',
-    '  number outside it highlights nothing and the visualizer silently reads as broken.',
-    '- "code" is the reader\'s own file, not a retelling of it. Copy the lines of that solution file',
-    '  character for character, in order, starting at the first line of code below the stripped',
-    '  header. Do not add explanatory comments, do not reword or drop the comments that are there,',
-    '  do not reflow one statement across two lines or join two onto one, and do not rename anything.',
-    '  You may stop early at a natural end, but every line you emit must appear verbatim in the file.',
-    '  A reader following a line number here opens that file and expects to land on the same line.',
+    '- Do NOT emit a "code" array. The script writes one from the numbered listing on stdin after you',
+    '  return; anything you put there is discarded. The worked example still has one because it is a',
+    '  finished file - that is not a template for you to copy.',
+    '- Every step\'s "lines" must be 1-based indices into THAT solution\'s numbered listing on stdin.',
+    '  Line N is the line printed with N| before it. A number outside that listing highlights nothing',
+    '  and the visualizer silently reads as broken.',
     '- parse() must accept its own default input value.',
     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
@@ -378,12 +373,19 @@ for (const p of targets) {
   if (!example.source) { console.log('  cannot read the worked example'); report('visualize', p.slug, 'failed', 'worked example unreadable'); failures++; endGroup(); continue; }
   console.log(`  example: ${example.from}${example.sameShape ? ' (same shape)' : ' (different shape - voice only)'}`);
 
-  // The same stripped bodies twice: joined for the model on stdin, and kept per
-  // file so validate() can check the code panel is that file copied verbatim.
+  // Numbered listing on stdin: line N is what injectCodePanels will write as
+  // code[N-1]. validate() still checks the written array against these bodies.
   const bodies = chosen.map((f) => solutionBody(readFileSync(join(p.dir, f), 'utf8')));
+  const panels = bodies.map(panelLines);
   const code = chosen
-    .map((f, i) => `===== FILE: ${f} =====\n${bodies[i]}`)
+    .map((f, i) => `===== FILE: ${f} — ${panels[i].length} lines. steps.lines are 1-based into this listing. =====\n${numberedListing(panels[i])}`)
     .join('\n\n');
+
+  const takeDiskCode = (src) => {
+    const put = injectCodePanels(src, bodies);
+    if (put.error) return { src, errors: [put.error] };
+    return { src: put.src, errors: [], injected: put.injected };
+  };
 
   let result = null, feedback = null, spend = 0, used = null;
   // The definition validation last rejected. When set, the next attempt repairs it.
@@ -391,7 +393,11 @@ for (const p of targets) {
   if (repairFrom) {
     if (doApply) { console.log('  --repair-from is for dry runs only'); process.exit(1); }
     let src = /\.html?$/i.test(repairFrom) ? definitionFromFile(repairFrom) : readFileSync(repairFrom, 'utf8');
-    let errs = validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
+    const fromDisk = takeDiskCode(src);
+    src = fromDisk.src;
+    let errs = fromDisk.errors.length
+      ? fromDisk.errors
+      : validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
     if (!errs.length) {
       // Nothing wrong with it: break one step's line number so the repair has a real job to do.
       src = src.replace(/lines\s*:\s*\[/, 'lines:[999, ');
@@ -432,6 +438,14 @@ for (const p of targets) {
     used = addUsage(used, r.usage);
     reportCost('visualize', p.slug, r.cost, r.usage);
     console.log(`  attempt ${attempt}: $${(r.cost ?? 0).toFixed(4)} · ${r.turns} turns · ${usageLine(r.usage)}`);
+    const fromDisk = takeDiskCode(r.src);
+    if (fromDisk.errors.length) {
+      console.log(`  attempt ${attempt} rejected: ${fromDisk.errors[0]}`);
+      rejected = { src: r.src, errors: fromDisk.errors };
+      continue;
+    }
+    r = { ...r, src: fromDisk.src };
+    console.log(`      code panel from disk (${fromDisk.injected} file(s))`);
     // Each solution is checked against its OWN file's structures - see structuresFor.
     const v = validate(r.src, structures, sols.map((s) => s.structures ?? []), bodies);
     if (!v.errors.length) {
@@ -445,7 +459,7 @@ for (const p of targets) {
     } else {
       console.log(`  attempt ${attempt} rejected by validation (${v.errors.length} error(s)):`);
       v.errors.slice(0, 6).forEach((e) => console.log(`      ${e}`));
-      rejected = { src: r.src, errors: [...new Set(v.errors)] };
+      rejected = { src: fromDisk.src, errors: [...new Set(v.errors)] };
       // Kept locally (gitignored) so a repair can be re-run with --repair-from without paying again.
       try {
         mkdirSync(join(REPO, '.agent', 'tmp'), { recursive: true });
