@@ -29,6 +29,52 @@ export function splice(problemSource) {
   return chassis.replace(MARKER, problemSource);
 }
 
+/** Insert the exact source lines after generation, so the model never copies code. */
+export function hydrateCode(problemSource, sourceBodies) {
+  if (!Array.isArray(sourceBodies) || !sourceBodies.length) {
+    throw new Error('source bodies are required to fill visualizer code panels');
+  }
+  const seen = new Set();
+  const hydrated = problemSource.replace(/\bcode\s*:\s*__SOURCE_CODE_(\d+)__\b/g, (match, rawIndex) => {
+    const index = Number(rawIndex);
+    if (index >= sourceBodies.length) throw new Error(`code placeholder ${index} has no solution file`);
+    if (seen.has(index)) throw new Error(`code placeholder ${index} is repeated`);
+    seen.add(index);
+    const lines = String(sourceBodies[index]).replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n');
+    // A C# string can contain </script>; keep it from closing the HTML script element.
+    const literal = JSON.stringify(lines).replace(/</g, '\\u003c');
+    return match.replace(`__SOURCE_CODE_${rawIndex}__`, literal);
+  });
+  for (let i = 0; i < sourceBodies.length; i++) {
+    if (!seen.has(i)) throw new Error(`missing code: __SOURCE_CODE_${i}__ for solution ${i}`);
+  }
+  if (/__SOURCE_CODE_\d+__/.test(hydrated)) throw new Error('unfilled source code placeholder');
+  return hydrated;
+}
+
+/** Keep a worked example's simulation while omitting its copied C# code. */
+export function exampleWithoutCode(problemSource) {
+  const lines = problemSource.split('\n');
+  const out = [];
+  let index = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const start = lines[i].match(/^(\s*)code:\s*\[\s*$/);
+    if (!start) { out.push(lines[i]); continue; }
+    let end = i + 1;
+    while (end < lines.length && !/^\s*\],?\s*$/.test(lines[end])) end++;
+    if (end === lines.length) { out.push(lines[i]); continue; }
+    out.push(`${start[1]}code: __SOURCE_CODE_${index++}__,`);
+    i = end;
+  }
+  return out.join('\n');
+}
+
+/** A new or removed selected solution changes the tabs even if old code is untouched. */
+export function needsVisualizerRebuild(record, chosen, prints) {
+  return JSON.stringify(record?.files ?? []) !== JSON.stringify(chosen) ||
+    JSON.stringify(record?.prints ?? {}) !== JSON.stringify(prints);
+}
+
 /** The shared helpers the PROBLEM object is allowed to call. */
 function helpersFromChassis() {
   const c = loadChassis();

@@ -10,7 +10,8 @@
  *   node scripts/lib/visualizer.test.mjs
  */
 
-import { renameInVisualizer, structuresFor, validate, hasMethodSignature, loadChassis } from './visualizer.mjs';
+import { renameInVisualizer, structuresFor, validate, hasMethodSignature, loadChassis,
+  hydrateCode, exampleWithoutCode, needsVisualizerRebuild } from './visualizer.mjs';
 import { coverage } from './shapes.mjs';
 
 let pass = 0, fail = 0;
@@ -84,6 +85,34 @@ const FILE_BODY = [
   '}',
 ].join('\n');
 
+// The model emits placeholders; the script supplies the code panel from disk.
+const sourceTemplate = `const PROBLEM = {solutions:[{code: __SOURCE_CODE_0__}, {code: __SOURCE_CODE_1__}]};`;
+const firstBody = FILE_BODY + '\n';
+const secondBody = 'public string Echo(string s)\r\n{\r\n    return "</script>" + s;\r\n}';
+const filled = hydrateCode(sourceTemplate, [firstBody, secondBody]);
+const example = "solutions: [{\n  code: [\n    'a',\n    'b'\n  ],\n  simulate(){ return []; }\n}]";
+is('the worked example omits copied code but keeps its simulation',
+  exampleWithoutCode(example),
+  "solutions: [{\n  code: __SOURCE_CODE_0__,\n  simulate(){ return []; }\n}]");
+is('code panels are filled in solution order',
+  filled.includes(`code: ${JSON.stringify(FILE_BODY.split('\n'))}`), true);
+is('CRLF is normalized and script-closing text is escaped in the HTML source',
+  filled.includes('\\u003c/script>') && !filled.includes('"</script>"'), true);
+is('hydrated code executes with the original string value',
+  new Function(`${filled}; return PROBLEM.solutions[1].code[2];`)(), '    return "</script>" + s;');
+is('a missing placeholder is rejected',
+  (() => { try { hydrateCode('code: __SOURCE_CODE_0__', [firstBody, secondBody]); return false; } catch { return true; } })(), true);
+is('a repeated placeholder is rejected',
+  (() => { try { hydrateCode('code: __SOURCE_CODE_0__, code: __SOURCE_CODE_0__', [firstBody]); return false; } catch { return true; } })(), true);
+
+const record = { files: ['optimal.cs'], prints: { 'optimal.cs': 'abc' } };
+is('unchanged selected files skip regeneration',
+  needsVisualizerRebuild(record, ['optimal.cs'], { 'optimal.cs': 'abc' }), false);
+is('a new selected solution triggers regeneration',
+  needsVisualizerRebuild(record, ['optimal.cs', 'suboptimal.cs'], { 'optimal.cs': 'abc', 'suboptimal.cs': 'def' }), true);
+is('a removed selected solution triggers regeneration',
+  needsVisualizerRebuild(record, [], {}), true);
+
 const defWith = (codeLines) => `
 const PROBLEM = {
   title: 'T', note: 'n',
@@ -97,6 +126,11 @@ const PROBLEM = {
     shapeOverride: {skip: ['*'], reason: 'fixture'},
   }],
 };`;
+
+const placeholderDef = defWith(FILE_BODY.split('\n'))
+  .replace(`code: ${JSON.stringify(FILE_BODY.split('\n'))}`, 'code: __SOURCE_CODE_0__');
+is('a hydrated definition passes the existing validator',
+  validate(hydrateCode(placeholderDef, [FILE_BODY]), [], [[]], [FILE_BODY]).errors.length, 0);
 
 const fidelityErrors = (codeLines) =>
   validate(defWith(codeLines), [], [[]], [FILE_BODY]).errors.filter((e) => /not a line of the solution file|not in the solution file/.test(e));

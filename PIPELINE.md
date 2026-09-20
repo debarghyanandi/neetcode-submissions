@@ -297,7 +297,10 @@ So the pipeline doesn't ask a model to match a style it can't see. Instead:
    problem-specific part goes.
 2. The model generates **only** that part: a `PROBLEM` object with the input parsing, and a
    `simulate()` function that produces the animation frames.
-3. The script splices it in.
+3. The model leaves `code: __SOURCE_CODE_N__` placeholders. The script inserts the exact C#
+   solution lines into those panels, validates the completed definition, then splices it in.
+   Worked examples sent to the model omit their copied code arrays too. This saves tokens and
+   removes a source of code-panel drift.
 
 A generated visualizer is visually identical to the hand-built ones **by construction**, not
 by instruction. The extraction was verified by putting the original piece back and checking

@@ -644,8 +644,10 @@ trick: a block is rewritten only when `teachSignature` changes.
 requires a full-width `=` rule before it will claim a `/* ... */` block belongs
 to the pipeline — otherwise a long comment you wrote could be eaten.
 
-`visualize` builds only when there is no visualizer, or when the recorded code
-prints no longer match the file. A visualizer with **no** record is one of your
+`visualize` builds only when there is no visualizer, the selected solution files
+change, or their recorded code prints no longer match. The model writes animation
+logic with `code: __SOURCE_CODE_N__` placeholders; the script fills those panels
+from the exact C# bodies before running validation. A visualizer with **no** record is one of your
 23 hand-built ones and is never touched without `--backfill`.
 
 ### `apply.mjs` — the free step

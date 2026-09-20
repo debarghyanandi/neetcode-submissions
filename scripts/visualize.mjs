@@ -22,10 +22,9 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, REPO } from './lib/scan.mjs';
-import { stripHeader, solutionBody } from './lib/header.mjs';
-import { splitTrailingTeach } from './lib/teach.mjs';
+import { solutionBody } from './lib/header.mjs';
 import { shortPrint } from './lib/normalise.mjs';
-import { splice, validate, selectForVisualizer, loadChassis } from './lib/visualizer.mjs';
+import { splice, validate, selectForVisualizer, loadChassis, hydrateCode, exampleWithoutCode, needsVisualizerRebuild } from './lib/visualizer.mjs';
 import { catalogueSection, contractSection, required, VISUALIZER_FORMAT } from './lib/shapes.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
@@ -139,11 +138,11 @@ function pickExample(slug, structures, state, all) {
       .sort((a, b) => b.hits - a.hits || a.p.slug.localeCompare(b.p.slug));
     for (const { p } of scored) {
       const def = definitionFrom(p.dir, p.slug);
-      if (def) return { source: def, from: p.slug, sameShape: true };
+      if (def) return { source: exampleWithoutCode(def), from: p.slug, sameShape: true };
     }
   }
   const def = definitionFrom(FALLBACK_EXAMPLE.dir, FALLBACK_EXAMPLE.slug);
-  return { source: def, from: FALLBACK_EXAMPLE.slug, sameShape: false };
+  return { source: def && exampleWithoutCode(def), from: FALLBACK_EXAMPLE.slug, sameShape: false };
 }
 
 /**
@@ -153,7 +152,7 @@ function pickExample(slug, structures, state, all) {
  * panel conventions and the worked example, so those are not sent again. The helper contract and
  * the structure rules stay, because a fix must still use the real panel API.
  */
-function repairInstructions(slug, sols, structures, previous, errors) {
+function repairInstructions(slug, sols, structures, previous, errors, legacyCode = false) {
   return [
     `You are REPAIRING the PROBLEM definition for the NeetCode problem "${slug}". It was written for an`,
     'existing visualizer and it failed validation. It is almost right.',
@@ -162,7 +161,8 @@ function repairInstructions(slug, sols, structures, previous, errors) {
     '```', contract(), '```',
     '',
     `The solutions, in order (each "lines" index is 1-based into THAT solution's own "code" array):`,
-    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}` +
+    ...sols.map((s, i) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}` +
+      (legacyCode ? '' : `; code: __SOURCE_CODE_${i}__`) +
       ((s.structures ?? []).length ? `; made of: ${s.structures.join(', ')}` : '')),
     '',
     contractSection(structures),
@@ -175,6 +175,10 @@ function repairInstructions(slug, sols, structures, previous, errors) {
     '',
     'Fix these problems and nothing else. Keep every panel, step, message and piece of wording as it is,',
     'unless fixing a listed problem requires changing it. Do not redesign, shorten or rewrite the animation.',
+    ...(legacyCode ? [] : [
+      'Each solution must have exactly one code: __SOURCE_CODE_N__ placeholder in the order listed above.',
+      'The script fills code from the solution file; do not copy source lines into a code array.',
+    ]),
     'Plain-text fields are escaped on the way in: write < and & as themselves, never as entities.',
     'Output only the full corrected statement: const PROBLEM = { ... };',
     '',
@@ -195,17 +199,18 @@ function instructions(slug, sols, structures, example, feedback) {
     // genuinely shares a shape, or every problem inherits the last one's
     // drawing, which is exactly how this step came to render trees as rows.
     example.sameShape
-      ? `Here is a complete, working definition for "${example.from}", which is built from the same kind of` +
+      ? `Here is a worked definition for "${example.from}", which is built from the same kind of` +
         '\nstructure as this one. Match its voice and its level of detail, and treat its panel choices as a' +
         '\nsound starting point - though yours should follow this problem\'s code, not copy that one\'s:'
-      : `Here is a complete, working definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
+      : `Here is a worked definition for "${example.from}". Match the SHAPE OF THE OBJECT, the` +
         '\nvoice and the level of detail. Do NOT copy its choice of panels - it is a differently shaped' +
         '\nproblem, and its panels are right for it and probably wrong for yours:',
+    'Its code arrays are placeholders; the script fills them from the solution files.',
     '```', example.source, '```',
     '',
     `Build one entry in "solutions" for each of these ${sols.length} solution file(s), in this order,`,
     'faithfully animating what that code actually does - not a tidier algorithm you would prefer:',
-    ...sols.map((s) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}".` +
+    ...sols.map((s, i) => `  - ${s.file}: ${s.time} time / ${s.space} space, ${s.algorithm}. badge should end with "${s.file}"; code: __SOURCE_CODE_${i}__.` +
       ((s.structures ?? []).length ? `\n      made of: ${s.structures.join(', ')}` : '')),
     '',
     contractSection(structures),
@@ -216,18 +221,13 @@ function instructions(slug, sols, structures, example, feedback) {
     '- Draw each structure as the thing it IS. A tree has edges, a stack is a bucket you push onto and',
     '  pop off, a linked list is boxes joined by arrows, a matrix is a grid. A row of boxes is the right',
     '  drawing for an array and the wrong one for everything else.',
-    '- "code" MUST BEGIN AT THE METHOD SIGNATURE - the `public ... (...)` line, its opening brace,',
-    '  and the matching closing brace - not at the first statement inside the body. The panel folds',
-    '  one collapsible layer per method and works that out by parsing this array, so a panel that',
-    '  starts halfway down a method has no layers and loses the layer view entirely.',
+    '- Put exactly one code: __SOURCE_CODE_N__ placeholder in each solution object, where N is its',
+    '  zero-based index in the order above. Do not emit a code array or copy any C# lines into the',
+    '  definition. The script inserts the complete, exact solution body after generation.',
     '- Every step\'s "lines" must be 1-based indices into THAT solution\'s own "code" array. A line',
     '  number outside it highlights nothing and the visualizer silently reads as broken.',
-    '- "code" is the reader\'s own file, not a retelling of it. Copy the lines of that solution file',
-    '  character for character, in order, starting at the first line of code below the stripped',
-    '  header. Do not add explanatory comments, do not reword or drop the comments that are there,',
-    '  do not reflow one statement across two lines or join two onto one, and do not rename anything.',
-    '  You may stop early at a natural end, but every line you emit must appear verbatim in the file.',
-    '  A reader following a line number here opens that file and expects to land on the same line.',
+    '- "lines" indices refer to the exact source body shown below for that solution, beginning at',
+    '  line 1 after the stripped header. Include its method signature when choosing highlights.',
     '- parse() must accept its own default input value.',
     '- Keep the default input small enough that the whole run is watchable - well under 60 steps.',
     '- "msg" is HTML; <b>, <code> and <em> are available. Explain WHY the step happens.',
@@ -322,8 +322,9 @@ targets = targets.filter((p) => {
     }
     return false;
   }
-  const now = codePrints(p, Object.keys(rec.prints).filter((f) => existsSync(join(p.dir, f))));
-  const changed = JSON.stringify(now) !== JSON.stringify(rec.prints);
+  const chosen = selectForVisualizer(p.curatedFiles, state.problems[p.slug]?.classification ?? {}).chosen;
+  const now = codePrints(p, chosen);
+  const changed = needsVisualizerRebuild(rec, chosen, now);
   if (!changed && only) {
     console.log(`\n${p.path} visualizer is current - the code it animates has not changed.\n`);
     skipped.push([p.slug, 'current - the code it animates has not changed']);
@@ -386,16 +387,19 @@ for (const p of targets) {
     .join('\n\n');
 
   let result = null, feedback = null, spend = 0, used = null;
+  let legacyRepair = false;
   // The definition validation last rejected. When set, the next attempt repairs it.
   let rejected = null;
   if (repairFrom) {
     if (doApply) { console.log('  --repair-from is for dry runs only'); process.exit(1); }
     let src = /\.html?$/i.test(repairFrom) ? definitionFromFile(repairFrom) : readFileSync(repairFrom, 'utf8');
-    let errs = validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
+    legacyRepair = !/__SOURCE_CODE_\d+__/.test(src);
+    const materialized = legacyRepair ? src : hydrateCode(src, bodies);
+    let errs = validate(materialized, structures, sols.map((s) => s.structures ?? []), bodies).errors;
     if (!errs.length) {
       // Nothing wrong with it: break one step's line number so the repair has a real job to do.
       src = src.replace(/lines\s*:\s*\[/, 'lines:[999, ');
-      errs = validate(src, structures, sols.map((s) => s.structures ?? []), bodies).errors;
+      errs = validate(legacyRepair ? src : hydrateCode(src, bodies), structures, sols.map((s) => s.structures ?? []), bodies).errors;
       console.log(`  --repair-from: definition was valid; injected a bad line number -> ${errs.length} error(s)`);
     }
     rejected = { src, errors: errs };
@@ -409,7 +413,7 @@ for (const p of targets) {
     try {
       if (repairing) {
         console.log(`  attempt ${attempt}: repairing on ${useModel}${useEffort ? ` (effort ${useEffort})` : ''} - ${rejected.errors.length} error(s) to fix`);
-        r = ask(repairInstructions(p.slug, sols, structures, rejected.src, rejected.errors.slice(0, 25)), code, useModel, useEffort);
+        r = ask(repairInstructions(p.slug, sols, structures, rejected.src, rejected.errors.slice(0, 25), legacyRepair), code, useModel, useEffort);
       } else {
         r = ask(instructions(p.slug, sols, structures, example, feedback), code, useModel, useEffort);
       }
@@ -432,10 +436,18 @@ for (const p of targets) {
     used = addUsage(used, r.usage);
     reportCost('visualize', p.slug, r.cost, r.usage);
     console.log(`  attempt ${attempt}: $${(r.cost ?? 0).toFixed(4)} · ${r.turns} turns · ${usageLine(r.usage)}`);
+    let materialized;
+    try {
+      materialized = legacyRepair ? r.src : hydrateCode(r.src, bodies);
+    } catch (e) {
+      rejected = { src: r.src, errors: [e.message] };
+      console.log(`  attempt ${attempt} rejected before validation: ${e.message}`);
+      continue;
+    }
     // Each solution is checked against its OWN file's structures - see structuresFor.
-    const v = validate(r.src, structures, sols.map((s) => s.structures ?? []), bodies);
+    const v = validate(materialized, structures, sols.map((s) => s.structures ?? []), bodies);
     if (!v.errors.length) {
-      result = r;
+      result = { ...r, src: materialized };
       if (repairing) console.log('      repaired - validation passes');
       for (const [k, n] of Object.entries(v.stats)) console.log(`      ${k}: ${n}`);
       // A waiver is a claim that a structure is not really there. Print it:
