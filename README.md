@@ -32,7 +32,7 @@ most of what looks like an easy improvement has already been tried and has a sca
 
 ---
 
-## Repository structure
+## Repository structure 
 
 Solutions are organized by topic folder, then problem ID. Each submission is stored as a separate file:
 
