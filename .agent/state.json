@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T18:17:34.104Z",
+  "updatedAt": "2026-09-22T18:28:56.356Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2503,18 +2503,181 @@
     },
     "longest-increasing-subsequence": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-5.cs",
-        "submission-6.cs",
-        "submission-9.cs",
-        "submission-11.cs",
-        "submission-12.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal-2.cs",
+        "suboptimal-3.cs",
+        "suboptimal-4.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "f84708f2ab2d5885c4d80c9905ea9d60f255bd518de6a00eb1dd7b9522e5dee2": "optimal.cs",
+        "39f7f0f743dcfa2edcae023c462c4dccec146390c857922de00e9d37fde1c457": "suboptimal-2.cs",
+        "1f1d4158337d1efd354b2baafb1d382c0cacea345be16c0a6837b073d47fbca4": "suboptimal-3.cs",
+        "eecc41cfcb9ebaf62a31c10c1c98dda6d37bb4cb3be9cf1f9078f37ae2aa345b": "suboptimal-4.cs",
+        "1a0b111c50c279e943300efd0af89b4c82115e908b36b979bf31ac69a2cae476": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "f84708f2ab2d5885c4d80c9905ea9d60f255bd518de6a00eb1dd7b9522e5dee2": "optimal.cs",
+        "39f7f0f743dcfa2edcae023c462c4dccec146390c857922de00e9d37fde1c457": "suboptimal-2.cs",
+        "1f1d4158337d1efd354b2baafb1d382c0cacea345be16c0a6837b073d47fbca4": "suboptimal-3.cs",
+        "eecc41cfcb9ebaf62a31c10c1c98dda6d37bb4cb3be9cf1f9078f37ae2aa345b": "suboptimal-4.cs",
+        "1a0b111c50c279e943300efd0af89b4c82115e908b36b979bf31ac69a2cae476": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "3270102ef368"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "3ff3ad8eb570"
+        },
+        "suboptimal-2.cs": {
+          "version": 2,
+          "codePrint": "00b653ff292d"
+        },
+        "suboptimal-3.cs": {
+          "version": 2,
+          "codePrint": "a971c3fe592c"
+        },
+        "suboptimal-4.cs": {
+          "version": 2,
+          "codePrint": "79096a129dad"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3270102ef368\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy approach with binary search\",\"approachKey\":\"greedy-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n^2) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"3ff3ad8eb570\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Space-optimized bottom-up DP with rolling arrays\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"00b653ff292d\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP with nested iteration over preceding elements\",\"approachKey\":\"lis-ending-position\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-3.cs": "{\"v\":3,\"name\":\"suboptimal-3.cs\",\"codePrint\":\"a971c3fe592c\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Recursive memoization, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-4.cs": "{\"v\":3,\"name\":\"suboptimal-4.cs\",\"codePrint\":\"79096a129dad\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Bottom-up tabulation, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-12.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-9.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal-2.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-11.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal-3.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-5.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal-4.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-6.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log n)",
+          "space": "O(n)",
+          "algorithm": "Greedy approach with binary search",
+          "approachKey": "greedy-binary-search",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n^2)",
+          "space": "O(n)",
+          "algorithm": "Space-optimized bottom-up DP with rolling arrays",
+          "approachKey": "pick-not-pick-dp",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        },
+        "suboptimal-2.cs": {
+          "time": "O(n^2)",
+          "space": "O(n)",
+          "algorithm": "1D DP with nested iteration over preceding elements",
+          "approachKey": "lis-ending-position",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        },
+        "suboptimal-3.cs": {
+          "time": "O(n^2)",
+          "space": "O(n^2)",
+          "algorithm": "Recursive memoization, pick or not pick",
+          "approachKey": "pick-not-pick-dp",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table",
+            "call-stack",
+            "matrix"
+          ]
+        },
+        "suboptimal-4.cs": {
+          "time": "O(n^2)",
+          "space": "O(n^2)",
+          "algorithm": "Bottom-up tabulation, pick or not pick",
+          "approachKey": "pick-not-pick-dp",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "dp-table",
+            "matrix"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3270102ef368\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy approach with binary search\",\"approachKey\":\"greedy-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n^2) time / O(n) space)\"}",
+        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"00b653ff292d\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP with nested iteration over preceding elements\",\"approachKey\":\"lis-ending-position\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-3.cs": "{\"v\":3,\"name\":\"suboptimal-3.cs\",\"codePrint\":\"a971c3fe592c\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Recursive memoization, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-4.cs": "{\"v\":3,\"name\":\"suboptimal-4.cs\",\"codePrint\":\"79096a129dad\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Bottom-up tabulation, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"3ff3ad8eb570\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Space-optimized bottom-up DP with rolling arrays\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal-2.cs",
+          "suboptimal-3.cs",
+          "suboptimal-4.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "3270102ef368",
+          "suboptimal-2.cs": "00b653ff292d",
+          "suboptimal-3.cs": "a971c3fe592c",
+          "suboptimal-4.cs": "79096a129dad",
+          "suboptimal.cs": "3ff3ad8eb570"
+        },
+        "structures": [
+          "array",
+          "dp-table",
+          "call-stack",
+          "matrix"
+        ],
+        "builtAt": "2026-09-22T18:28:56.049Z"
+      }
     },
     "longest-palindromic-substring": {
       "topic": "Data Structures & Algorithms",

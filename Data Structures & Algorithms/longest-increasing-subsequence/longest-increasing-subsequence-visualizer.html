@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Time to Buy and Sell — visualizer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap');
+
+/* "Lemonade & Sweet Tea" (Designing Digitals) is a paid font, so it can't be bundled here.
+   If it's installed on your machine, local() below picks it up automatically. */
+@font-face{
+  font-family:'Lemonade Sweet Tea';
+  src: local('Lemonade & Sweet Tea'), local('Lemonade Sweet Tea'), local('LemonadeSweetTea');
+  font-display: swap;
+}
+
+:root{
+  --paper:#FBF5E9;
+  --ink:#211E1A;
+  --pencil:#8A8175;
+  --pencil-light:#C9C0AF;
+  --orange:#F5A93F;
+  --orange-soft:#FBE3BC;
+  --red:#C94F2E;
+  --green:#5E8C61;
+  --tile:72px;
+  --hand:'Lemonade Sweet Tea','Patrick Hand',cursive;
+  --mono:'Courier Prime', ui-monospace, 'Courier New', monospace;
+  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
+  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
+  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--hand);
+  min-height:100vh;
+  padding:32px clamp(18px, 3vw, 56px) 30px;
+}
+.app{width:100%;max-width:1760px;margin:0 auto;}
+
+/* ---------- header ---------- */
+.topbar{
+  display:flex; flex-wrap:wrap; gap:24px 40px;
+  justify-content:space-between; align-items:flex-end;
+  margin-bottom:18px; padding-bottom:18px;
+  border-bottom:2px solid var(--ink);
+}
+.brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
+.brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
+.brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
+.brand-sub code, .status code, .note-text code{
+  font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
+}
+.brand-sub b{font-weight:700;}
+
+.config{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:2px;}
+.field span{font-size:14px;color:var(--pencil);line-height:1;}
+.field input{
+  font-family:var(--mono);font-size:14px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-md);color:var(--ink);padding:9px 12px;
+}
+.field input:focus-visible, button:focus-visible, input[type=range]:focus-visible{
+  outline:3px solid var(--orange);outline-offset:2px;
+}
+button{
+  font-family:var(--hand);font-weight:700;font-size:15px;line-height:1;cursor:pointer;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);color:var(--ink);
+  padding:9px 16px 11px;transition:transform .1s ease, background .15s ease;
+}
+button:hover{background:var(--orange-soft);}
+button:active{transform:translate(1px,1px);}
+button.primary{background:var(--orange);}
+button.primary:hover{background:#F7B85F;}
+
+/* ---------- solution tabs ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.tab{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:9px 18px 11px;text-align:left;background:var(--paper);
+}
+.tab b{font-size:17px;font-weight:700;line-height:1.1;}
+.tab span{font-family:var(--mono);font-size:11px;color:var(--pencil);line-height:1.1;}
+.tab.active{background:var(--orange);box-shadow:3px 3px 0 var(--ink);}
+.tab.active span{color:var(--ink);}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
+.legend span{display:inline-flex;align-items:center;gap:9px;}
+.swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
+.swatch.win{background:var(--orange-soft);}
+.swatch.hot{background:var(--orange);}
+.swatch.done{background:var(--ink);}
+.swatch.good{background:var(--green);}
+.swatch.dim{opacity:.42;}
+.swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
+.col-left{display:flex;flex-direction:column;gap:20px;min-width:0;}
+@media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
+
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
+
+/* ---------- tiles ---------- */
+.array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.array-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
+.array-row.no-ptrs{padding-bottom:8px;}
+.tile{
+  min-width:var(--tile);height:var(--tile);padding:0 6px;
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
+}
+.tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
+.tile .val{font-size:24px;font-weight:700;margin-top:6px;white-space:nowrap;}
+.tile .sub{font-size:12px;line-height:1;color:var(--pencil);margin-top:2px;}
+.tile.narrow{min-width:56px;}
+.tile.in-window{background:var(--orange-soft);}
+.tile.hot{background:var(--orange);}
+.tile.good{background:var(--green);color:var(--paper);}
+.tile.good .idx,.tile.good .sub{color:var(--paper);}
+.tile.dim{opacity:.42;}
+.tile.done{background:var(--ink);color:var(--paper);}
+.tile.done .idx,.tile.done .sub{color:var(--pencil-light);}
+.tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.tile.just-popped{animation:pop-fade .55s ease;}
+.tile.just-popped::after{
+  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
+}
+@keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
+@keyframes x-fade{0%{opacity:1;}70%{opacity:1;}100%{opacity:0;}}
+
+.window-bracket{
+  position:absolute;top:2px;height:calc(var(--tile) + 16px);
+  border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;
+  transition:left .3s ease, width .3s ease, opacity .2s ease;opacity:0;
+}
+.window-bracket.visible{opacity:1;}
+.window-bracket.dashed{border-style:dashed;border-color:var(--pencil);}
+
+.ptr-marker{
+  position:absolute;bottom:0;transform:translateX(-50%);
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
+}
+.ptr-marker.visible{opacity:1;}
+.ptr-marker::before{content:'↑';display:block;font-size:15px;line-height:1;}
+.ptr-marker.accent{color:var(--orange);text-shadow:0.5px 0 var(--ink);}
+.ptr-marker.accent::before{color:var(--orange);}
+.ptr-marker.red{color:var(--red);}
+.ptr-marker.red::before{color:var(--red);}
+
+/* ---------- chip rows ---------- */
+.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
+.row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
+.chip{
+  font-size:18px;font-weight:600;line-height:1;background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.chip small{font-family:var(--mono);font-size:11px;color:var(--pencil);}
+.chip.head{background:var(--orange);}
+.chip.head small{color:var(--ink);}
+.chip.good{background:var(--green);color:var(--paper);}
+.chip.good small{color:var(--paper);}
+.chip.done{background:var(--ink);color:var(--paper);}
+.chip.done small{color:var(--pencil-light);}
+.chip.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.chip.fresh{animation:fill-flash .5s ease;}
+.chips-empty{font-size:16px;color:var(--pencil);}
+
+/* ---------- slots (result row) ---------- */
+.slot-row{display:flex;gap:10px;flex-wrap:wrap;}
+.slot{
+  min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
+  transition:background .3s ease, color .3s ease, border-color .3s;
+}
+.slot.filled{background:var(--ink);border:2px solid var(--ink);color:var(--paper);}
+.slot.fresh{animation:fill-flash .5s ease;}
+@keyframes fill-flash{0%{transform:scale(1.18) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+
+/* ---------- bars ---------- */
+.bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
+.bar{
+  width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  transition:height .3s ease, background .25s ease;
+}
+.bar-wrap.hot .bar{background:var(--orange);}
+.bar-wrap.in-window .bar{background:var(--orange-soft);}
+.bar-wrap.dim{opacity:.35;}
+.bar-wrap .cap{font-size:14px;line-height:1;margin-bottom:4px;}
+.bar-wrap .foot{position:absolute;bottom:-22px;font-size:12px;color:var(--pencil);line-height:1;}
+.water{
+  position:absolute;border:2px dashed var(--orange);background:rgba(245,169,63,.22);
+  border-radius:var(--sk-sm);pointer-events:none;
+  transition:left .3s ease, width .3s ease, height .3s ease, bottom .3s ease, opacity .2s;
+}
+
+/* ---------- ranges (intervals) ---------- */
+.ranges{display:flex;flex-direction:column;gap:8px;}
+.range-line{position:relative;height:34px;}
+.range-bar{
+  position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;white-space:nowrap;
+  transition:left .3s ease, width .3s ease, background .25s ease;
+}
+.range-bar.hot{background:var(--orange);}
+.range-bar.done{background:var(--ink);color:var(--paper);}
+.range-bar.dim{opacity:.4;}
+.range-bar.ghost{border-style:dashed;color:var(--pencil);}
+
+/* ---------- pills ---------- */
+.pills{display:flex;gap:14px;flex-wrap:wrap;font-size:18px;}
+.pill{display:inline-flex;align-items:baseline;gap:8px;padding:3px 16px 6px;border:2px solid var(--ink);border-radius:var(--sk-md);}
+.pill b{font-size:20px;font-family:var(--mono);}
+.pill.accent{background:var(--orange-soft);}
+.pill.hot{background:var(--orange);}
+.pill.good{background:var(--green);color:var(--paper);}
+.note-text{font-size:17px;line-height:1.45;}
+
+/* ==========================================================================
+   Structural panels: tree, linked list, stack/queue, grid, heap.
+   Every one of these reuses the tokens and the state-class names above
+   (hot / good / done / dim / ghost / fresh), so a structural panel is the
+   same drawing as a tile row by construction rather than by resemblance.
+
+   --pscale is the density dial. A panel may ask to be drawn smaller so a
+   big structure fits one screen; panelShell() clamps it before it lands
+   here, so "smaller" can never become "unreadable".
+   ========================================================================== */
+.panel{--pscale:1;}
+.node{
+  position:absolute;box-sizing:border-box;
+  min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
+  border:2px solid var(--ink);border-radius:50%;background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transform:translate(-50%,-50%);
+  transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
+}
+.node .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.node.hot{background:var(--orange);}
+.node.in-window{background:var(--orange-soft);}
+.node.good{background:var(--green);color:var(--paper);}
+.node.good .sub{color:var(--paper);}
+.node.done{background:var(--ink);color:var(--paper);}
+.node.done .sub{color:var(--pencil-light);}
+.node.dim{opacity:.4;}
+.node.is-current{box-shadow:3px 3px 0 var(--ink);}
+.node.ghost,.node.nil{
+  border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);
+  min-width:calc(26px * var(--pscale));height:calc(26px * var(--pscale));font-size:calc(13px * var(--pscale));
+}
+.node.fresh{animation:fill-flash .5s ease;}
+.node.square{border-radius:var(--sk-md);}
+
+/* ---------- tree ---------- */
+.tree-scroll{overflow-x:auto;scrollbar-width:thin;}
+.tree-stage{position:relative;width:max-content;min-width:100%;}
+.tree-stage svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.tree-nodes,.tree-tags{position:absolute;inset:0;pointer-events:none;}
+.tree-stage .edge{
+  stroke:var(--ink);stroke-width:2;fill:none;
+  transition:stroke .25s ease, opacity .25s ease;
+}
+.tree-stage .edge.dim{opacity:.3;}
+.tree-stage .edge.hot{stroke:var(--orange);stroke-width:3.5;}
+.tree-stage .edge.good{stroke:var(--green);stroke-width:3.5;}
+.tree-stage .edge.ghost{stroke:var(--pencil-light);stroke-dasharray:5 5;}
+.tree-stage .edge-label{
+  font-family:var(--mono);font-size:calc(11px * var(--pscale));fill:var(--pencil);
+}
+.node-tag{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
+  transition:left .32s ease, top .32s ease, opacity .2s ease;
+}
+.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.node-tag.red{color:var(--red);}
+.node-tag.green{color:var(--green);}
+
+/* ---------- linked list ---------- */
+.list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
+.list-scroll{overflow-x:auto;scrollbar-width:thin;}
+.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
+.list-cell{
+  min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
+}
+.list-cell .sub{font-size:calc(11px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:3px;line-height:1;}
+.list-cell.hot{background:var(--orange);}
+.list-cell.in-window{background:var(--orange-soft);}
+.list-cell.good{background:var(--green);color:var(--paper);}
+.list-cell.good .sub{color:var(--paper);}
+.list-cell.done{background:var(--ink);color:var(--paper);}
+.list-cell.done .sub{color:var(--pencil-light);}
+.list-cell.dim{opacity:.4;}
+.list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
+.list-cell.fresh{animation:fill-flash .5s ease;}
+.list-arrow{
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
+  line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
+}
+.list-arrow.back{transform:scaleX(-1);}
+.list-arrow.hot{color:var(--orange);}
+.list-arrow.ghost{color:var(--pencil-light);}
+.list-arrow.gone{color:var(--pencil-light);opacity:.45;}
+.list-null{
+  flex:none;font-size:calc(19px * var(--pscale));color:var(--pencil);padding-left:calc(4px * var(--pscale));white-space:nowrap;
+}
+.list-tag{
+  position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
+  transition:left .3s ease, opacity .2s ease;opacity:0;
+}
+.list-tag.visible{opacity:1;}
+.list-tag.above{bottom:calc(100% - 26px * var(--pscale));}
+.list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.below{bottom:calc(2px * var(--pscale));}
+.list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
+.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
+.list-tag.red{color:var(--red);}
+.list-tag.green{color:var(--green);}
+.list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+.list-cycle path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 5;}
+
+/* ---------- stack / queue buckets ---------- */
+.buckets{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
+/* A grid, not a column, so that several buckets of different depths still line
+   their labels up along the top and their floors up along the bottom. Stacked
+   as a plain flex column they drifted against each other and the panel read as
+   three unrelated drawings. */
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
+/* three sides only: the top is open, because that is the whole point of a bucket */
+.bucket-box{
+  align-self:end;
+  position:relative;display:flex;flex-direction:column-reverse;justify-content:flex-start;
+  gap:calc(6px * var(--pscale));width:100%;min-height:calc(150px * var(--pscale));
+  padding:calc(10px * var(--pscale));
+  border:2px solid var(--ink);border-top:none;border-radius:0 0 var(--sk-md);
+}
+.bucket-box::before,.bucket-box::after{
+  content:'';position:absolute;top:0;width:calc(12px * var(--pscale));height:2px;background:var(--ink);
+}
+.bucket-box::before{left:-2px;}
+.bucket-box::after{right:-2px;}
+.bucket.queue .bucket-box{
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
+  border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
+}
+.cell{
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
+  padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
+.cell.hot{background:var(--orange);}
+.cell.head{background:var(--orange);}
+.cell.good{background:var(--green);color:var(--paper);}
+.cell.good small{color:var(--paper);}
+.cell.done{background:var(--ink);color:var(--paper);}
+.cell.done small{color:var(--pencil-light);}
+.cell.dim{opacity:.42;}
+.cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.cell.fresh{animation:fill-flash .5s ease;}
+.cell.popped{animation:pop-fade .55s ease;}
+.bucket-empty{
+  position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
+  text-align:center;font-size:15px;color:var(--pencil);
+}
+.bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
+/* A normal flex child, appended last, so column-reverse lands it directly above
+   the topmost item. Absolutely positioned against the box it floated at the top
+   of the bucket instead - pointing at empty space above a two-item stack. */
+.bucket-top{
+  align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
+  line-height:1;padding:0 2px calc(2px * var(--pscale));
+}
+.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
+
+/* ---------- grid / matrix ---------- */
+.grid-scroll{overflow-x:auto;scrollbar-width:thin;}
+.grid-stage{position:relative;width:max-content;}
+.grid-tbl{border-collapse:separate;border-spacing:calc(6px * var(--pscale));}
+.grid-tbl th{
+  font-family:var(--hand);font-size:calc(13px * var(--pscale));font-weight:400;color:var(--pencil);
+  padding:0;min-width:calc(20px * var(--pscale));
+}
+.grid-cell{
+  min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
+  vertical-align:middle;white-space:nowrap;position:relative;
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.grid-cell .sub{display:block;font-size:calc(10px * var(--pscale));font-weight:400;color:var(--pencil);margin-top:2px;line-height:1;}
+.grid-cell.hot{background:var(--orange);}
+.grid-cell.in-window{background:var(--orange-soft);}
+.grid-cell.good{background:var(--green);color:var(--paper);}
+.grid-cell.good .sub{color:var(--paper);}
+.grid-cell.done{background:var(--ink);color:var(--paper);}
+.grid-cell.done .sub{color:var(--pencil-light);}
+.grid-cell.dim{opacity:.4;}
+.grid-cell.ghost{border-style:dashed;border-color:var(--pencil-light);color:var(--pencil-light);}
+.grid-cell.wall{background:var(--pencil-light);color:var(--ink);}
+.grid-cell.fresh{animation:fill-flash .5s ease;}
+.grid-box{
+  position:absolute;border:2px solid var(--ink);border-radius:var(--sk-lg);pointer-events:none;opacity:0;
+  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease, opacity .2s ease;
+}
+.grid-box.visible{opacity:1;}
+.grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
+
+/* ---------- heap (array and the tree it implies) ---------- */
+.heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
+.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
+.heap-slot{
+  min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
+  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
+  transition:background .25s ease, color .25s ease;
+}
+.heap-slot .idx{position:absolute;top:2px;right:5px;font-size:calc(10px * var(--pscale));color:var(--pencil);line-height:1;}
+.heap-slot.hot{background:var(--orange);}
+.heap-slot.in-window{background:var(--orange-soft);}
+.heap-slot.good{background:var(--green);color:var(--paper);}
+.heap-slot.good .idx{color:var(--paper);}
+.heap-slot.done{background:var(--ink);color:var(--paper);}
+.heap-slot.done .idx{color:var(--pencil-light);}
+.heap-slot.dim{opacity:.4;}
+.heap-slot.fresh{animation:fill-flash .5s ease;}
+.heap-caption{font-size:15px;color:var(--pencil);}
+
+/* ---------- code panel ---------- */
+.code{font-family:var(--mono);font-size:13.5px;line-height:1.7;margin:0;color:var(--pencil);white-space:pre;overflow-x:auto;}
+.code .line{padding:1px 8px;border-radius:var(--sk-sm);}
+.code .line.active{background:var(--orange-soft);color:var(--ink);font-weight:700;}
+.status{margin-bottom:16px;padding-bottom:14px;border-bottom:2px dashed var(--pencil-light);font-size:19px;line-height:1.4;min-height:76px;}
+.status kbd, .shortcut-note kbd{font-family:var(--mono);font-size:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);padding:1px 7px;background:var(--paper);}
+
+/* ---------- code panel: one layer per method ----------
+   The code used to render as one flat block. On a problem with two or three
+   methods that made the right column taller than the screen, so the panels on
+   the left and the line being executed could not be looked at together - which
+   is the entire point of the thing. A layer is a method; the open one is the
+   method the step is inside, which is the same fact the call-stack panel is
+   already showing. */
+.code-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px;}
+.code-head .panel-title{margin:0;}
+.code-head-right{display:flex;align-items:center;gap:12px;}
+.layer-crumb{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
+.layer-crumb b{color:var(--ink);}
+.code-toggle{
+  font-family:var(--hand);font-size:15px;line-height:1;color:var(--ink);background:var(--paper);
+  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:5px 11px 7px;cursor:pointer;white-space:nowrap;
+}
+.code-toggle:hover{background:var(--orange-soft);}
+.code-toggle[aria-pressed="true"]{background:var(--orange);}
+/* Height is locked by script to the tallest single layer, so switching layers
+   never resizes the panel - a column that jumps on every step is worse than one
+   that is merely too long. */
+.code-wrap{overflow:auto;scrollbar-width:thin;}
+.layer{border-radius:var(--sk-sm);}
+.layer.open{background:rgba(245,169,63,.07);margin:3px -8px;padding:3px 8px;}
+.layer > .lines{display:none;}
+.layer.open > .lines{display:block;}
+.layer > .stub{
+  display:flex;gap:8px;align-items:baseline;cursor:pointer;color:var(--pencil);
+  padding:1px 8px;border-radius:var(--sk-sm);
+}
+.layer > .stub:hover{background:var(--orange-soft);color:var(--ink);}
+.layer > .stub .caret{font-size:11px;}
+.layer > .stub .sig{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.layer.open > .stub{display:none;}
+.code .line.outside{color:var(--pencil-light);}
+
+/* ---------- transport ---------- */
+/* Pinned to the bottom of the viewport. It used to sit under the whole stage,
+   so its distance from the panels was set by whichever column was taller - on a
+   long solution that put Play a screen and a half below the thing it drives. */
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
+  position:sticky;bottom:14px;z-index:30;background:var(--paper);box-shadow:0 3px 0 0 var(--ink);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
+#playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
+.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed input{accent-color:var(--orange);}
+.speed .hint{font-size:13px;}
+.progress{margin-left:auto;font-size:17px;color:var(--pencil);}
+.shortcut-note{width:100%;font-size:14px;color:var(--pencil);margin:2px 0 0;}
+.shortcut-note kbd{font-size:11px;border:1.5px solid var(--pencil);padding:0 5px;}
+
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms !important;transition-duration:.001ms !important;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <p class="brand-note" id="brandNote"></p>
+      <h1 class="brand-title" id="brandTitle"></h1>
+      <p class="brand-sub" id="brandSub"></p>
+    </div>
+    <form class="config" id="configForm"></form>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="legend" id="legend"></div>
+
+  <div class="stage">
+    <div class="col-left" id="colLeft"></div>
+    <aside class="panel">
+      <div class="code-head">
+        <p class="panel-title">Algorithm</p>
+        <div class="code-head-right">
+          <span class="layer-crumb" id="layerCrumb"></span>
+          <button class="code-toggle" id="codeToggle" aria-pressed="false">show all</button>
+        </div>
+      </div>
+      <div class="status" id="statusMsg">Press <kbd>Play</kbd> or step forward to begin.</div>
+      <div class="code-wrap" id="codeWrap"><pre class="code" id="codeBlock"></pre></div>
+    </aside>
+  </div>
+
+  <div class="transport">
+    <button id="resetBtn" title="Reset" aria-label="Reset">⟲</button>
+    <button id="backBtn" title="Step back" aria-label="Step back">◂</button>
+    <button id="playBtn" title="Play / Pause" aria-label="Play or pause">▶</button>
+    <button id="fwdBtn" title="Step forward" aria-label="Step forward">▸</button>
+    <label class="speed">speed
+      <span class="hint">slow</span>
+      <input type="range" id="speedInput" min="150" max="1800" value="1250" step="50" aria-label="Playback speed, right is faster">
+      <span class="hint">fast</span>
+    </label>
+    <div class="progress" id="progressLabel">0 / 0</div>
+    <p class="shortcut-note">shortcuts: <kbd>space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> step · <kbd>R</kbd> reset</p>
+  </div>
+</div>
+<script>
+/* ---- panel constructors shared by every problem definition ---- */
+function pTiles(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: String(v)}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'tiles', title: title, items: items}, extra || {});
+}
+function pChips(title, rows){ return {t:'chips', title: title, rows: rows}; }
+function pSlots(title, items){ return {t:'slots', title: title, items: items}; }
+function pPills(title, items){ return {t:'pills', title: title, items: items}; }
+function pBars(title, values, decorate, extra){
+  const items = values.map((v, i) => Object.assign({v: v}, decorate ? (decorate(i, v) || {}) : {}));
+  return Object.assign({t:'bars', title: title, items: items}, extra || {});
+}
+function pRanges(title, items, min, max){ return {t:'ranges', title: title, items: items, min: min, max: max}; }
+function pNote(title, html){ return {t:'note', title: title, html: html}; }
+function mapChips(map, hot){
+  return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+}
+/* ---- structural panel constructors ----
+   Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
+   stack as a bucket, a matrix as a grid - and every one of them uses the same
+   ink, paper and orange as the tile row above, because they all read the same
+   CSS custom properties.
+
+   Each of these accepts an `opts` object as its last argument. `scale` lives
+   there: a number from 0.7 to 1 that shrinks the drawing so a big structure
+   fits one screen. It is clamped on the way in, so it cannot make a panel
+   unreadable however small a number is passed. */
+function pTree(title, nodes, opts){ return Object.assign({t:'tree', title: title, nodes: nodes}, opts || {}); }
+function pList(title, rows, opts){ return Object.assign({t:'list', title: title, rows: rows}, opts || {}); }
+function pStack(title, buckets, opts){ return Object.assign({t:'stack', title: title, buckets: buckets}, opts || {}); }
+function pGrid(title, rows, opts){ return Object.assign({t:'grid', title: title, rows: rows}, opts || {}); }
+function pHeap(title, items, opts){ return Object.assign({t:'heap', title: title, items: items}, opts || {}); }
+/* Level order with nulls - the encoding NeetCode and LeetCode both print - into
+   the {id, v, parent, side} node list pTree wants. A null does not get children,
+   which is the part that is easy to get wrong by hand. */
+function treeFromLevelOrder(vals){
+  if (!vals || !vals.length || vals[0] === null || vals[0] === undefined) return [];
+  const nodes = [{id:'n0', v: vals[0], parent: null, side: null}];
+  const q = ['n0'];
+  let qi = 0, i = 1, made = 1;
+  while (qi < q.length && i < vals.length){
+    const pid = q[qi++];
+    for (const side of ['L','R']){
+      if (i >= vals.length) break;
+      const v = vals[i++];
+      if (v === null || v === undefined) continue;
+      const id = 'n' + (made++);
+      nodes.push({id: id, v: v, parent: pid, side: side});
+      q.push(id);
+    }
+  }
+  return nodes;
+}
+/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
+function heapNodes(values){
+  return values.map((v, i) => ({
+    id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
+  }));
+}
+/* ---- input parsing ---- */
+function parseInts(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim()).filter(s => s.length);
+  if (!parts.length) return null;
+  const nums = parts.map(Number);
+  if (nums.some(n => !Number.isFinite(n))) return null;
+  return cap ? nums.slice(0, cap) : nums;
+}
+/* "6,2,8,null,null,3,5" -> [6,2,8,null,null,3,5]. null, #, - and an empty slot
+   all mean "no node here", because every source writes it differently. */
+function parseLevelOrder(raw, cap){
+  const parts = String(raw).split(',').map(s => s.trim());
+  const out = [];
+  for (const s of parts){
+    if (!s.length || /^(null|nil|n|#|-)$/i.test(s)) { out.push(null); continue; }
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    out.push(n);
+  }
+  while (out.length && out[out.length - 1] === null) out.pop();
+  if (!out.length || out[0] === null) return null;
+  return cap ? out.slice(0, cap) : out;
+}
+function randInts(n, lo, hi){
+  return Array.from({length: n}, () => lo + Math.floor(Math.random() * (hi - lo + 1)));
+}
+function randWord(len, alphabet){
+  const a = alphabet || 'abc';
+  return Array.from({length: len}, () => a[Math.floor(Math.random() * a.length)]).join('');
+}
+
+const PROBLEM = {
+  title: 'Longest Increasing Subsequence',
+  note: 'four of these five are the same pick / not-pick recurrence at different levels of compression - a memo, a full matrix, two rolling rows, a single row indexed by "ends here"; the fifth throws the recurrence away and keeps a list of the smallest tail value achievable for every length',
+  inputs: [
+    {id:'nums', label:'nums (comma separated)', value:'1,4,3,5', width:240}
+  ],
+  parse(raw){
+    const nums = parseInts(raw.nums, 5);
+    if (!nums) return {ok:false, msg:'Enter numbers, e.g. 1,4,3,5'};
+    if (nums.length < 2) return {ok:false, msg:'Give at least 2 numbers, or the loops never run.'};
+    if (nums.length > 5) return {ok:false, msg:'Keep it to 5 numbers or fewer - the O(n^2) versions get long fast.'};
+    if (nums.some(v => !Number.isInteger(v) || v < -20 || v > 99)) return {ok:false, msg:'Whole numbers from -20 to 99 only.'};
+    return {ok:true, value:{nums: nums}, normalized:{nums: nums.join(',')}};
+  },
+  shuffle(){
+    const pool = [1,2,3,4,5,6,7,8,9];
+    const out = [];
+    while (out.length < 4 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return {nums: out.join(',')};
+  },
+  solutions: [
+  {
+    label: 'Patience piles - binary search over smallest tails',
+    badge: 'O(n log n) time · O(n) space · greedy with binary search · optimal.cs',
+    blurb: '<code>dp</code> is not a subsequence. <code>dp[k]</code> is the <em>smallest value that can end</em> an increasing subsequence of length <code>k + 1</code>. A bigger number extends the list; anything else overwrites the first tail that is not smaller than it, keeping future options as low as possible. The length of the list is the answer.',
+    shapeOverride: {skip: ['call-stack', 'matrix'], reason: 'this version never recurses and never builds a table - it keeps one list of at most n tails, so there are no frames and no matrix; the list is drawn as the array it is.'},
+    legend: [
+      {cls:'hot', text:'the element / tail being touched now'},
+      {cls:'in-window', text:'the binary search range still alive'},
+      {cls:'good', text:'a settled tail value'},
+      {cls:'done', text:'already processed'},
+      {cls:'dim', text:'not reached yet'}
+    ],
+    code: [
+      'public int LengthOfLIS(int[] nums)',
+      '{',
+      '    List<int> dp = new List<int>();',
+      '    dp.Add(nums[0]);',
+      '',
+      '    int LIS = 1;',
+      '    for (int i = 1; i < nums.Length; i++)',
+      '    {',
+      '        if (dp[dp.Count - 1] < nums[i])',
+      '        {',
+      '            dp.Add(nums[i]);',
+      '            LIS++;',
+      '            continue;',
+      '        }',
+      '',
+      '        int idx = dp.BinarySearch(nums[i]);',
+      '        if (idx < 0)',
+      '            idx = ~idx;',
+      '        dp[idx] = nums[i];',
+      '    }',
+      '',
+      '    return LIS;',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, n = nums.length;
+      const dp = [];
+      const steps = [];
+      let iVar = 0, LIS = 1, appends = 0, replaces = 0, idxTxt = '-';
+
+      const panels = (hotDp, freshDp, band) => [
+        pTiles('nums', nums, (k) => ({cls: k === iVar ? 'hot' : (k < iVar ? 'done' : 'dim')}), {ptrs: iVar < n ? [{name:'i', idx: iVar}] : []}),
+        pBars('nums as heights - an increasing subsequence is any left-to-right climb', nums, (k) => ({cls: k === iVar ? 'hot' : (k < iVar ? 'done' : 'dim')}), {scale: 0.9}),
+        pTiles('dp - smallest value that can end a subsequence of each length', dp, (k) => ({
+          cls: k === hotDp ? 'hot' : (band && k >= band.from && k <= band.to ? 'in-window' : 'good'),
+          fresh: freshDp === k
+        }), band && band.from <= band.to ? {bracket: {from: band.from, to: band.to, dashed: true}} : {}),
+        pPills('state', [
+          {k:'i', v: iVar < n ? iVar : 'done', cls:'hot'},
+          {k:'nums[i]', v: iVar < n ? nums[iVar] : '-'},
+          {k:'dp.Count', v: dp.length},
+          {k:'LIS', v: LIS, cls:'good'},
+          {k:'idx', v: idxTxt},
+          {k:'appends', v: appends},
+          {k:'overwrites', v: replaces}
+        ])
+      ];
+
+      dp.push(nums[0]);
+      steps.push({lines:[3,4,6], msg:'The list opens with <code>nums[0] = ' + nums[0] + '</code> and <code>LIS = 1</code>: a single element is always an increasing subsequence of length 1. Read <code>dp[k]</code> as "the smallest value I can make a length-' + '(k + 1)' + ' increasing subsequence end on". It stays sorted forever - that is what makes a binary search legal below - and its <em>length</em>, not its contents, is the answer.', panels: panels(0, 0, null)});
+
+      for (let i = 1; i < n; i++){
+        iVar = i; idxTxt = '-';
+        const last = dp[dp.length - 1];
+        if (last < nums[i]){
+          dp.push(nums[i]); LIS++; appends++;
+          steps.push({lines:[9,11,12,13], msg:'<code>dp[dp.Count - 1] = ' + last + '</code> is smaller than <code>nums[i] = ' + nums[i] + '</code>, so this value can be hung off the end of the longest run found so far: a subsequence of length <b>' + (dp.length - 1) + '</b> ending at ' + last + ' becomes one of length <b>' + dp.length + '</b> ending at ' + nums[i] + '. The list grows, <code>LIS</code> goes to <b>' + LIS + '</b>, and <code>continue</code> skips the search entirely - appending is the only case where the answer can increase.', panels: panels(dp.length - 1, dp.length - 1, null)});
+        } else {
+          steps.push({lines:[9,16], msg:'<code>nums[i] = ' + nums[i] + '</code> is not greater than the last tail <b>' + last + '</b>, so it cannot lengthen anything. It can still <em>improve</em> something: if some length already ends on a value at or above ' + nums[i] + ', ending that length on ' + nums[i] + ' instead is never worse, because a smaller tail is easier for later elements to beat. <code>BinarySearch</code> finds where it belongs in the sorted list.', panels: panels(null, null, {from: 0, to: dp.length - 1})});
+          let lo = 0, hi = dp.length - 1, found = -1;
+          while (lo <= hi){
+            const mid = lo + ((hi - lo) >> 1);
+            const cmp = dp[mid] - nums[i];
+            steps.push({lines:[16], msg:'Probe the middle of the live range <code>[' + lo + ', ' + hi + ']</code>: <code>dp[' + mid + '] = ' + dp[mid] + '</code> versus <b>' + nums[i] + '</b>. ' + (cmp === 0 ? 'Equal - <code>BinarySearch</code> stops and hands back <b>' + mid + '</b>, a non-negative index.' : (cmp < 0 ? 'Smaller, so everything at or left of ' + mid + ' is too small to overwrite; the search moves right.' : 'Bigger or equal-and-larger, so ' + mid + ' itself is a candidate and everything right of it is worse; the search moves left.')), panels: panels(mid, null, {from: lo, to: hi})});
+            if (cmp === 0){ found = mid; break; }
+            if (cmp < 0) lo = mid + 1; else hi = mid - 1;
+          }
+          const idx = found >= 0 ? found : lo;
+          idxTxt = String(idx);
+          const old = dp[idx];
+          dp[idx] = nums[i];
+          replaces++;
+          steps.push({lines: found >= 0 ? [16,19] : [16,17,18,19], msg: (found >= 0
+            ? 'An exact match was found at index <b>' + idx + '</b>, so <code>idx</code> is already non-negative and the <code>if</code> is skipped. Writing ' + nums[i] + ' over an equal value changes nothing, which is exactly right - duplicates must not extend a <em>strictly</em> increasing subsequence.'
+            : 'No exact match, so <code>BinarySearch</code> returned the bitwise complement of the insertion point - a negative number that encodes "not found, but it belongs here". <code>idx = ~idx</code> flips it back to <b>' + idx + '</b>, the first position holding a value greater than ' + nums[i] + '.')
+            + ' <code>dp[' + idx + ']</code> goes from <b>' + old + '</b> to <b>' + nums[i] + '</b>: the best length-' + (idx + 1) + ' run can now end on a smaller number, so more future elements can beat it. <code>LIS</code> is untouched - the list did not get longer.', panels: panels(idx, idx, null)});
+        }
+      }
+
+      iVar = n;
+      steps.push({lines:[22], msg:'Every element has been placed. <code>dp</code> = [' + dp.join(', ') + '] is <em>not</em> necessarily a real subsequence of the input - cells get overwritten out of order - but its length is provably the length of the longest increasing subsequence, and <code>LIS</code> tracked that length as it grew. Answer: <b>' + LIS + '</b>, after ' + appends + ' append(s) and ' + replaces + ' overwrite(s), each costing one O(log n) search rather than an O(n) scan.', panels: panels(null, null, null)});
+      return steps;
+    }
+  },
+  {
+    label: 'One row: best subsequence ending exactly at i',
+    badge: 'O(n^2) time · O(n) space · 1D DP over preceding elements · suboptimal-2.cs',
+    blurb: 'Redefine the state so it needs only one index: <code>dp[i]</code> is the length of the best increasing subsequence that <em>ends</em> at <code>i</code>. Every such run is some earlier run ending at a smaller value, plus <code>nums[i]</code>, so scan all <code>prev &lt; i</code> and keep the best. The answer is the largest cell, not the last.',
+    shapeOverride: {skip: ['call-stack', 'matrix'], reason: 'two flat for loops and a single n-length array - nothing recurses, and the second dimension of the pick/not-pick table is gone, replaced by the "ends exactly here" definition.'},
+    legend: [
+      {cls:'hot', text:'i - the cell being improved'},
+      {cls:'in-window', text:'prev - the earlier candidate being tested'},
+      {cls:'good', text:'finished cell'},
+      {cls:'ghost', text:'still at its initial 1'}
+    ],
+    code: [
+      'public int LengthOfLIS(int[] nums)',
+      '{',
+      '    int n = nums.Length;',
+      '    int[] dp = new int[n];',
+      '    Array.Fill(dp, 1); // Lowest Lis is 1',
+      '',
+      '    int maximum = 1;',
+      '    for (int i = 0; i < n; i++)',
+      '    {',
+      '        for (int prev = 0; prev < i; prev++)',
+      '        {',
+      '            if (nums[prev] < nums[i])',
+      '                dp[i] = Math.Max(dp[i], 1 + dp[prev]);',
+      '        }',
+      '        maximum = Math.Max(maximum, dp[i]);',
+      '    }',
+      '    return maximum;',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, n = nums.length;
+      const dp = new Array(n).fill(1);
+      const steps = [];
+      let iVar = -1, prevVar = -1, maximum = 1, improves = 0, tests = 0;
+
+      const panels = (fresh) => {
+        const ptrs = [];
+        if (iVar >= 0 && iVar < n) ptrs.push({name:'i', idx: iVar});
+        if (prevVar >= 0) ptrs.push({name:'prev', idx: prevVar, cls:'accent'});
+        return [
+          pTiles('nums', nums, (k) => ({cls: k === iVar ? 'hot' : (k === prevVar ? 'in-window' : (k < iVar ? 'done' : 'dim'))}), {ptrs: ptrs}),
+          pTiles('dp[i] - length of the best increasing subsequence ending exactly at i', dp, (k) => ({
+            cls: k === iVar ? 'hot' : (k === prevVar ? 'in-window' : (k < iVar ? 'good' : 'ghost')),
+            fresh: fresh === k
+          })),
+          pPills('state', [
+            {k:'i', v: iVar < 0 ? '-' : (iVar < n ? iVar : 'done'), cls:'hot'},
+            {k:'nums[i]', v: iVar >= 0 && iVar < n ? nums[iVar] : '-'},
+            {k:'prev', v: prevVar < 0 ? '-' : prevVar},
+            {k:'nums[prev]', v: prevVar >= 0 ? nums[prevVar] : '-'},
+            {k:'maximum', v: maximum, cls:'good'},
+            {k:'pairs tested', v: tests},
+            {k:'improvements', v: improves}
+          ])
+        ];
+      };
+
+      steps.push({lines:[3,4,5,7], msg:'Every cell starts at <b>1</b>, not 0: a single element on its own is already an increasing subsequence of length 1, so 1 is the floor for every position and the <code>Math.Max</code> below never has to special-case "nothing found". <code>maximum</code> starts at 1 for the same reason. Note the definition - <code>dp[i]</code> ends <em>exactly</em> at <code>i</code>, which is what lets one index describe the state.', panels: panels(null)});
+
+      for (let i = 0; i < n; i++){
+        iVar = i; prevVar = -1;
+        steps.push({lines:[8,10], msg:'Position <b>' + i + '</b> (value <b>' + nums[i] + '</b>). Any increasing subsequence ending here is either just <code>' + nums[i] + '</code> alone, or some run ending at an earlier position whose value is smaller, with <code>' + nums[i] + '</code> stuck on the end. All of <code>dp[0..' + (i - 1) + ']</code> is already final, so the inner loop can simply try every one of them.', panels: panels(null)});
+
+        for (let p = 0; p < i; p++){
+          prevVar = p;
+          tests++;
+          const fits = nums[p] < nums[i];
+          let msg;
+          let fresh = null;
+          if (fits){
+            const cand = 1 + dp[p];
+            if (cand > dp[i]){
+              dp[i] = cand; improves++; fresh = i;
+              msg = '<code>nums[' + p + '] = ' + nums[p] + '</code> is smaller than <b>' + nums[i] + '</b>, so the best run ending at ' + p + ' - length <b>' + dp[p] + '</b> - can be extended. Candidate length <code>1 + dp[' + p + '] = ' + cand + '</code> beats the current <code>dp[' + i + ']</code>, so the cell rises to <b>' + dp[i] + '</b>.';
+            } else {
+              msg = '<code>nums[' + p + '] = ' + nums[p] + '</code> is smaller than <b>' + nums[i] + '</b>, so extending is legal: <code>1 + dp[' + p + '] = ' + cand + '</code>. But <code>dp[' + i + ']</code> already holds <b>' + dp[i] + '</b>, so <code>Math.Max</code> keeps what is there - a legal extension is not automatically a better one.';
+            }
+          } else {
+            msg = '<code>nums[' + p + '] = ' + nums[p] + '</code> is not smaller than <b>' + nums[i] + '</b>, so appending ' + nums[i] + ' after it would not be strictly increasing. The <code>if</code> fails and nothing is written - this pair is simply not an option.';
+          }
+          steps.push({lines: fits ? [12,13] : [12], msg: msg, panels: panels(fresh)});
+        }
+
+        prevVar = -1;
+        const before = maximum;
+        maximum = Math.max(maximum, dp[i]);
+        steps.push({lines:[15], msg:'The inner loop is done, so <code>dp[' + i + '] = ' + dp[i] + '</code> is final. Because each cell only describes runs <em>ending</em> at its own index, the answer is not <code>dp[n - 1]</code> - the best run may end anywhere - so a running <code>maximum</code> is folded in here: ' + (dp[i] > before ? 'it rises from ' + before + ' to <b>' + maximum + '</b>.' : 'it stays at <b>' + maximum + '</b>, since ' + dp[i] + ' is no better.'), panels: panels(null)});
+      }
+
+      iVar = n; prevVar = -1;
+      steps.push({lines:[17], msg:'All cells are settled: dp = [' + dp.join(', ') + ']. The longest run ends at whichever index carries the largest value, and <code>maximum</code> has been tracking it, so <b>' + maximum + '</b> is returned. ' + tests + ' ordered pair(s) were examined - that inner loop over every earlier index is the whole O(n^2), and it is exactly what the binary-search version replaces with O(log n) work per element.', panels: panels(null)});
+      return steps;
+    }
+  },
+  {
+    label: 'Top-down pick / not-pick with a memo',
+    badge: 'O(n^2) time · O(n^2) space · recursive memoization · suboptimal-3.cs',
+    blurb: 'State the choice directly: at index <code>i</code>, with <code>prevIndex</code> the last index taken, either skip <code>i</code> or - if it is strictly bigger than <code>nums[prevIndex]</code> - take it and move <code>prevIndex</code> to <code>i</code>. <code>prevIndex</code> runs from -1, so every column is shifted by one; the memo collapses the exponential tree onto n x (n + 1) cells.',
+    legend: [
+      {cls:'hot', text:'the (i, prevIndex) the top frame is on'},
+      {cls:'in-window', text:'a frame is parked on this cell, still waiting'},
+      {cls:'good', text:'memoized - a real value is stored'},
+      {cls:'ghost', text:'still -1, never computed'}
+    ],
+    code: [
+      'public int LengthOfLIS(int[] nums)',
+      '{',
+      '    int n = nums.Length;',
+      '',
+      '    int[,] dp = new int[n, n + 1];',
+      '',
+      '    for (int i = 0; i < n; i++)',
+      '    {',
+      '        for (int prevIndex = 0; prevIndex <= n; prevIndex++)',
+      '        {',
+      '            dp[i, prevIndex] = -1;',
+      '        }',
+      '    }',
+      '',
+      '    return F(0, -1, nums, dp);',
+      '}',
+      '',
+      'private int F(int i, int prevIndex, int[] nums, int[,] dp)',
+      '{',
+      '    if (i == nums.Length)',
+      '        return 0;',
+      '',
+      '    if (dp[i, prevIndex + 1] != -1)',
+      '        return dp[i, prevIndex + 1];',
+      '',
+      '    // Recurrence:',
+      '    // notPick = F(i + 1, prevIndex)',
+      '    // pick    = 1 + F(i + 1, i)',
+      '    //           only if prevIndex == -1 || nums[i] > nums[prevIndex]',
+      '    // answer  = max(pick, notPick)',
+      '',
+      '    int notPick = F(i + 1, prevIndex, nums, dp);',
+      '',
+      '    int pick = 0;',
+      '',
+      '    if (prevIndex == -1 || nums[i] > nums[prevIndex])',
+      '    {',
+      '        pick = 1 + F(i + 1, i, nums, dp);',
+      '    }',
+      '',
+      '    return dp[i, prevIndex + 1] = Math.Max(pick, notPick);',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, n = nums.length;
+      const dp = Array.from({length: n}, () => new Array(n + 1).fill(-1));
+      const frames = [];
+      const steps = [];
+      let calls = 0, hits = 0, stores = 0, bases = 0, maxF = 0;
+      const colLabels = [];
+      for (let c = 0; c <= n; c++) colLabels.push('p=' + (c - 1));
+      const rowLabels = nums.map((v, i) => 'i' + i + ' v=' + v);
+
+      const panels = (hot, popTop, fresh) => {
+        const ptrs = [];
+        if (hot){
+          if (hot[0] < n) ptrs.push({name:'i', idx: hot[0]});
+          if (hot[1] >= 0) ptrs.push({name:'prev', idx: hot[1], cls:'accent'});
+        }
+        return [
+          pTiles('nums', nums, (k) => ({cls: hot && k === hot[0] ? 'hot' : (hot && k === hot[1] ? 'in-window' : '')}), {ptrs: ptrs}),
+          pGrid('dp[i, prevIndex + 1] - -1 means not computed yet', dp.map((row, i) => row.map((v, c) => {
+            let cls;
+            if (hot && hot[0] === i && hot[1] + 1 === c) cls = 'hot';
+            else if (frames.some(f => f.i === i && f.p + 1 === c)) cls = 'in-window';
+            else if (v !== -1) cls = 'good';
+            else cls = 'ghost';
+            return {v: v === -1 ? '-1' : String(v), cls: cls, fresh: fresh === i + ',' + c};
+          })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.85}),
+          pStack('call stack', [{
+            label: 'F(i, prevIndex)',
+            mode: 'stack',
+            items: frames.map((f, k) => ({
+              text: 'F(' + f.i + ', ' + f.p + ')',
+              sub: f.note,
+              cls: k === frames.length - 1 ? 'hot' : '',
+              fresh: fresh === 'frame',
+              popped: popTop && k === frames.length - 1
+            })),
+            empty: 'no frames - F has not been entered',
+            foot: 'LengthOfLIS',
+            top: 'running now'
+          }]),
+          pPills('state', [
+            {k:'calls', v: calls},
+            {k:'memo hits', v: hits},
+            {k:'stores', v: stores},
+            {k:'base hits', v: bases},
+            {k:'frames open', v: frames.length},
+            {k:'deepest', v: maxF}
+          ])
+        ];
+      };
+
+      steps.push({lines:[5,7,11,15], msg:'The memo is <b>' + n + '</b> rows by <b>' + (n + 1) + '</b> columns and is filled with <b>-1</b>, because 0 is a legitimate answer (take nothing from here on) and would be mistaken for a cached result. The extra column exists because <code>prevIndex</code> starts at <b>-1</b> meaning "nothing taken yet"; every access shifts it with <code>prevIndex + 1</code>, so column 0 is the -1 state. The whole problem is then one question: <code>F(0, -1)</code>.', panels: panels(null, false, null)});
+
+      const F = (i, prev, via) => {
+        frames.push({i: i, p: prev, note: 'just entered'});
+        calls++;
+        maxF = Math.max(maxF, frames.length);
+        const f = frames[frames.length - 1];
+        const lead = via ? 'Line ' + via + ' asked for this, so a frame opens on top. ' : '';
+
+        if (i === n){
+          bases++;
+          steps.push({lines:[20,21], msg: lead + '<b>F(' + i + ', ' + prev + ')</b> has walked off the end of the array. There is nothing left to pick, so the best possible extra length is <b>0</b>. This base value is returned without being stored - there is no row ' + n + ' in the table at all, which is why the memo is n rows and not n + 1.', panels: panels([i, prev], true, 'frame')});
+          frames.pop();
+          return 0;
+        }
+
+        if (dp[i][prev + 1] !== -1){
+          hits++;
+          steps.push({lines:[23,24], msg: lead + '<b>F(' + i + ', ' + prev + ')</b> was solved before: <code>dp[' + i + ', ' + (prev + 1) + ']</code> holds <b>' + dp[i][prev + 1] + '</b>. The whole subtree below this call is skipped. Different prefixes of decisions keep arriving at the same (i, prevIndex) pair, and that collision is precisely what turns an exponential tree into at most ' + (n * (n + 1)) + ' units of real work.', panels: panels([i, prev], true, null)});
+          frames.pop();
+          return dp[i][prev + 1];
+        }
+
+        steps.push({lines:[23,32], msg: lead + '<b>F(' + i + ', ' + prev + ')</b> is new - the cell is still -1. Take the easy branch first: <em>not pick</em> <code>nums[' + i + '] = ' + nums[i] + '</code>. Skipping is always allowed and costs nothing, so the sub-question is <code>F(' + (i + 1) + ', ' + prev + ')</code> with <code>prevIndex</code> unchanged - the last taken element is still ' + (prev === -1 ? 'nothing' : 'index ' + prev) + '. This frame parks on line 32.', panels: panels([i, prev], false, 'frame')});
+
+        f.note = 'waiting on F(' + (i + 1) + ', ' + prev + ')';
+        const notPick = F(i + 1, prev, 32);
+        f.note = 'notPick = ' + notPick;
+
+        let pick = 0;
+        const legal = (prev === -1 || nums[i] > nums[prev]);
+        if (legal){
+          steps.push({lines:[34,36,38], msg:'Back in <b>F(' + i + ', ' + prev + ')</b> with <code>notPick</code> = <b>' + notPick + '</b>. Now the other branch. ' + (prev === -1 ? 'Nothing has been taken yet (<code>prevIndex == -1</code>), so <code>' + nums[i] + '</code> may start the subsequence.' : '<code>nums[' + i + '] = ' + nums[i] + '</code> is strictly greater than <code>nums[' + prev + '] = ' + nums[prev] + '</code>, so it may follow it.') + ' Taking it adds 1 and moves the barrier: the sub-question is <code>F(' + (i + 1) + ', ' + i + ')</code> - <code>prevIndex</code> becomes <b>' + i + '</b>, because everything chosen later must beat this value.', panels: panels([i, prev], false, null)});
+          f.note = 'waiting on F(' + (i + 1) + ', ' + i + ')';
+          pick = 1 + F(i + 1, i, 38);
+          f.note = 'notPick = ' + notPick + ', pick = ' + pick;
+        } else {
+          f.note = 'notPick = ' + notPick + ', pick = 0';
+          steps.push({lines:[34,36], msg:'Back in <b>F(' + i + ', ' + prev + ')</b> with <code>notPick</code> = <b>' + notPick + '</b>. The pick branch is illegal: <code>nums[' + i + '] = ' + nums[i] + '</code> is not strictly greater than <code>nums[' + prev + '] = ' + nums[prev] + '</code>, so taking it would break the increasing rule. The <code>if</code> body never runs, <code>pick</code> stays <b>0</b>, and no second recursive call is made.', panels: panels([i, prev], false, null)});
+        }
+
+        dp[i][prev + 1] = Math.max(pick, notPick);
+        stores++;
+        steps.push({lines:[41], msg:'Both options are known: pick = <b>' + pick + '</b>, not pick = <b>' + notPick + '</b>. The assignment-expression stores the larger <em>and</em> returns it in one move, so <code>dp[' + i + ', ' + (prev + 1) + ']</code> becomes <b>' + dp[i][prev + 1] + '</b> and this state is never recomputed however many decision paths lead back to it. The frame pops.', panels: panels([i, prev], true, i + ',' + (prev + 1))});
+        frames.pop();
+        return dp[i][prev + 1];
+      };
+
+      const ans = F(0, -1, 15);
+
+      steps.push({lines:[15], msg:'The recursion has unwound and <code>F(0, -1)</code> = <b>' + ans + '</b> - the longest increasing subsequence of the whole array. <code>F</code> ran ' + calls + ' time(s): ' + stores + ' did real work, ' + hits + ' were served straight from the memo and ' + bases + ' hit the base case. The stack reached ' + maxF + ' frame(s), which is the cost top-down pays on top of the table - and the next version removes it by filling the same table bottom-up.', panels: panels(null, false, null)});
+      return steps;
+    }
+  },
+  {
+    label: 'Bottom-up tabulation of the same two-index state',
+    badge: 'O(n^2) time · O(n^2) space · iterative bottom-up tabulation · suboptimal-4.cs',
+    blurb: 'The same <code>(i, prevIndex)</code> recurrence with the recursion removed. Since <code>F(i, ...)</code> only reads row <code>i + 1</code>, rows are filled from <code>n - 1</code> downwards; row <code>n</code> is left as C# zeros, which is exactly the base case. The answer sits at <code>dp[0, 0]</code> - index 0, nothing taken yet.',
+    shapeOverride: {skip: ['call-stack'], reason: 'the loop order replaces the recursion: row i + 1 is already complete before row i starts, so no frames are ever created.'},
+    legend: [
+      {cls:'hot', text:'the cell being written now'},
+      {cls:'in-window', text:'a cell this write reads'},
+      {cls:'good', text:'already computed'},
+      {cls:'ghost', text:'not filled in yet'},
+      {cls:'dim', text:'unreachable state - prevIndex must be less than i'}
+    ],
+    code: [
+      'public int LengthOfLIS(int[] nums)',
+      '{',
+      '    int n = nums.Length;',
+      '',
+      '    // +1 shift for prevIndex',
+      '    // prevIndex = -1 -> column 0',
+      '    // prevIndex =  0 -> column 1',
+      '    // prevIndex =  1 -> column 2',
+      '    int[,] dp = new int[n + 1, n + 1];',
+      '',
+      '    // Base case:',
+      '    // dp[n, *] = 0',
+      '    // Already 0 by default in C#',
+      '',
+      '    for (int i = n - 1; i >= 0; i--)',
+      '    {',
+      '        for (int prevIndex = i - 1; prevIndex >= -1; prevIndex--)',
+      '        {',
+      '            // Not pick current',
+      '            int notPick = dp[i + 1, prevIndex + 1];',
+      '',
+      '            int pick = 0;',
+      '',
+      '            // Pick current',
+      '            if (prevIndex == -1 || nums[i] > nums[prevIndex])',
+      '            {',
+      '                pick = 1 + dp[i + 1, i + 1];',
+      '            }',
+      '',
+      '            dp[i, prevIndex + 1] = Math.Max(pick, notPick);',
+      '        }',
+      '    }',
+      '',
+      '    return dp[0, 0];',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, n = nums.length;
+      const dp = Array.from({length: n + 1}, () => new Array(n + 1).fill(0));
+      const ok = Array.from({length: n + 1}, (_, r) => new Array(n + 1).fill(r === n));
+      const steps = [];
+      let iVar = -1, pVar = -9, writes = 0;
+      let notPickTxt = '-', pickTxt = '-';
+      const colLabels = [];
+      for (let c = 0; c <= n; c++) colLabels.push('p=' + (c - 1));
+      const rowLabels = [];
+      for (let r = 0; r <= n; r++) rowLabels.push(r < n ? 'i' + r + ' v=' + nums[r] : 'i' + n + ' base');
+
+      const used = (r, c) => (r === n ? true : c <= r);
+
+      const panels = (hot, reads, fresh) => {
+        const ptrs = [];
+        if (iVar >= 0 && iVar < n) ptrs.push({name:'i', idx: iVar});
+        if (pVar >= 0) ptrs.push({name:'prev', idx: pVar, cls:'accent'});
+        return [
+          pTiles('nums', nums, (k) => ({cls: k === iVar ? 'hot' : (k === pVar ? 'in-window' : '')}), {ptrs: ptrs}),
+          pGrid('dp[i, prevIndex + 1] - best length obtainable from index i onward', dp.map((row, r) => row.map((v, c) => {
+            let cls;
+            if (hot && hot[0] === r && hot[1] === c) cls = 'hot';
+            else if (reads && reads.some(x => x[0] === r && x[1] === c)) cls = 'in-window';
+            else if (ok[r][c]) cls = 'good';
+            else cls = used(r, c) ? 'ghost' : 'dim';
+            return {v: ok[r][c] ? String(v) : (used(r, c) ? '' : '-'), cls: cls, fresh: fresh === r + ',' + c};
+          })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.85}),
+          pPills('state', [
+            {k:'i', v: iVar < 0 ? '-' : iVar, cls:'hot'},
+            {k:'nums[i]', v: iVar >= 0 && iVar < n ? nums[iVar] : '-'},
+            {k:'prevIndex', v: pVar === -9 ? '-' : pVar},
+            {k:'notPick', v: notPickTxt},
+            {k:'pick', v: pickTxt},
+            {k:'cells written', v: writes}
+          ])
+        ];
+      };
+
+      steps.push({lines:[9,11,12,13], msg:'A fresh <code>int[' + (n + 1) + ', ' + (n + 1) + ']</code>. The extra <em>row</em> is the base case: <code>dp[' + n + ', *] = 0</code> means "standing past the end, nothing more can be taken", and C# zero-fills, so it needs no code at all. The extra <em>column</em> is the <code>prevIndex + 1</code> shift, so column 0 is the -1 state. Cells with <code>prevIndex >= i</code> are drawn dim: you can never have taken an index at or ahead of where you are standing.', panels: panels(null, null, null)});
+
+      for (let i = n - 1; i >= 0; i--){
+        iVar = i; pVar = -9; notPickTxt = '-'; pickTxt = '-';
+        steps.push({lines:[15,17], msg:'Row <b>' + i + '</b> (value <b>' + nums[i] + '</b>). The recurrence for <code>i</code> only ever reads row <code>i + 1</code>, so <code>i</code> must count <em>down</em> - row ' + (i + 1) + ' is already complete and every read below is guaranteed real. The inner loop covers only <code>prevIndex</code> from <b>' + (i - 1) + '</b> down to <b>-1</b>, since any larger prevIndex is a state that cannot occur.', panels: panels(null, null, null)});
+
+        for (let p = i - 1; p >= -1; p--){
+          pVar = p;
+          const notPick = dp[i + 1][p + 1];
+          notPickTxt = String(notPick);
+          const reads = [[i + 1, p + 1]];
+          let pick = 0;
+          let pickMsg;
+          const legal = (p === -1 || nums[i] > nums[p]);
+          if (legal){
+            pick = 1 + dp[i + 1][i + 1];
+            reads.push([i + 1, i + 1]);
+            pickMsg = 'Picking is allowed ' + (p === -1 ? '(nothing taken yet)' : '(<code>' + nums[i] + '</code> is strictly greater than <code>nums[' + p + '] = ' + nums[p] + '</code>)') + ', so <code>pick = 1 + dp[' + (i + 1) + ', ' + (i + 1) + ']</code> = <b>' + pick + '</b>. The column jumps to <b>' + (i + 1) + '</b> because after taking index ' + i + ', the new barrier for everything ahead is ' + i + ' itself.';
+          } else {
+            pickMsg = 'Picking is illegal: <code>nums[' + i + '] = ' + nums[i] + '</code> is not strictly greater than <code>nums[' + p + '] = ' + nums[p] + '</code>, so it cannot follow. <code>pick</code> stays <b>0</b> and the second read never happens.';
+          }
+          pickTxt = String(pick);
+          dp[i][p + 1] = Math.max(pick, notPick);
+          ok[i][p + 1] = true;
+          writes++;
+          steps.push({lines: legal ? [20,22,25,27,30] : [20,22,25,30], msg:'<b>dp[' + i + ', ' + (p + 1) + ']</b> - standing at index ' + i + ' having last taken ' + (p === -1 ? 'nothing' : 'index ' + p) + '. Not picking leaves the barrier where it is and moves on: <code>dp[' + (i + 1) + ', ' + (p + 1) + ']</code> = <b>' + notPick + '</b>. ' + pickMsg + ' The larger, <b>' + dp[i][p + 1] + '</b>, is written in. Two lookups per cell - that is the constant work that makes the whole table O(n^2).', panels: panels([i, p + 1], reads, i + ',' + (p + 1))});
+        }
+      }
+
+      iVar = -1; pVar = -9;
+      steps.push({lines:[34], msg:'Every reachable cell is filled. The original question is "start at index 0 with nothing taken yet", which after the shift is exactly <code>dp[0, 0]</code> = <b>' + dp[0][0] + '</b>. ' + writes + ' cell(s) were written, and every intermediate row is still sitting in memory - notice that each row only ever read the row directly below it, which is the observation the rolling-array version cashes in.', panels: panels([0, 0], null, null)});
+      return steps;
+    }
+  },
+  {
+    label: 'Two rolling rows instead of the matrix',
+    badge: 'O(n^2) time · O(n) space · space-optimized rolling arrays · suboptimal.cs',
+    blurb: 'Row <code>i</code> of the previous table reads nothing but row <code>i + 1</code>, so two arrays of length <code>n + 1</code> carry everything. <code>next</code> is the finished row below, <code>curr</code> is being written, and the tuple swap makes the row just built the new <code>next</code>. The answer is <code>next[0]</code> after the last swap.',
+    shapeOverride: {skip: ['call-stack'], reason: 'plain nested for loops - no recursion and therefore no frames; the two live rows are drawn in the grid panel, and the full matrix is exactly what this version refuses to allocate.'},
+    legend: [
+      {cls:'hot', text:'the cell being written now'},
+      {cls:'in-window', text:'a cell this write reads'},
+      {cls:'good', text:'a real, current value'},
+      {cls:'ghost', text:'stale - left behind by an older row'}
+    ],
+    code: [
+      'public int LengthOfLIS(int[] nums)',
+      '{',
+      '    int n = nums.Length;',
+      '',
+      '    // +1 shift for prevIndex',
+      '    // prevIndex = -1 -> column 0',
+      '    // prevIndex =  0 -> column 1',
+      '    // prevIndex =  1 -> column 2',
+      '    int[] next = new int[n + 1];',
+      '    int[] curr = new int[n + 1];',
+      '',
+      '    // Base case:',
+      '    // dp[n, *] = 0',
+      '    // Already 0 by default in C#',
+      '',
+      '    for (int i = n - 1; i >= 0; i--)',
+      '    {',
+      '        for (int prevIndex = i - 1; prevIndex >= -1; prevIndex--)',
+      '        {',
+      '            // Not pick current',
+      '            int notPick = next[prevIndex + 1];',
+      '',
+      '            int pick = 0;',
+      '',
+      '            // Pick current',
+      '            if (prevIndex == -1 || nums[i] > nums[prevIndex])',
+      '            {',
+      '                pick = 1 + next[i + 1];',
+      '            }',
+      '',
+      '            curr[prevIndex + 1] = Math.Max(pick, notPick);',
+      '        }',
+      '        (next, curr) = (curr, next);',
+      '    }',
+      '',
+      '    return next[0];',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, n = nums.length;
+      let next = new Array(n + 1).fill(0);
+      let curr = new Array(n + 1).fill(0);
+      let nextOk = new Array(n + 1).fill(true);
+      let currOk = new Array(n + 1).fill(false);
+      const steps = [];
+      let iVar = -1, pVar = -9, writes = 0, swaps = 0;
+      let notPickTxt = '-', pickTxt = '-';
+      const colLabels = [];
+      for (let c = 0; c <= n; c++) colLabels.push('p=' + (c - 1));
+
+      const cell = (r, c, hot, reads, fresh) => {
+        const v = r === 0 ? next[c] : curr[c];
+        const okv = r === 0 ? nextOk[c] : currOk[c];
+        let cls;
+        if (hot && hot[0] === r && hot[1] === c) cls = 'hot';
+        else if (reads && reads.some(x => x[0] === r && x[1] === c)) cls = 'in-window';
+        else cls = okv ? 'good' : 'ghost';
+        return {v: String(v), cls: cls, sub: okv ? '' : 'stale', fresh: fresh === r + ',' + c};
+      };
+
+      const panels = (hot, reads, fresh) => {
+        const ptrs = [];
+        if (iVar >= 0 && iVar < n) ptrs.push({name:'i', idx: iVar});
+        if (pVar >= 0) ptrs.push({name:'prev', idx: pVar, cls:'accent'});
+        return [
+          pTiles('nums', nums, (k) => ({cls: k === iVar ? 'hot' : (k === pVar ? 'in-window' : '')}), {ptrs: ptrs}),
+          pGrid('the only two rows kept alive', [
+            next.map((_, c) => cell(0, c, hot, reads, fresh)),
+            curr.map((_, c) => cell(1, c, hot, reads, fresh))
+          ], {rowLabels: ['next', 'curr'], colLabels: colLabels, scale: 0.9}),
+          pPills('state', [
+            {k:'i', v: iVar < 0 ? '-' : iVar, cls:'hot'},
+            {k:'nums[i]', v: iVar >= 0 && iVar < n ? nums[iVar] : '-'},
+            {k:'prevIndex', v: pVar === -9 ? '-' : pVar},
+            {k:'notPick', v: notPickTxt},
+            {k:'pick', v: pickTxt},
+            {k:'writes', v: writes},
+            {k:'swaps', v: swaps}
+          ])
+        ];
+      };
+
+      steps.push({lines:[9,10,12,13,14], msg:'The full table would be <b>' + (n + 1) + '</b> rows by <b>' + (n + 1) + '</b> columns, but row <code>i</code> reads only row <code>i + 1</code>, so two arrays of length <code>n + 1</code> suffice. <code>next</code> starts as all zeros and that <em>is</em> the base row <code>dp[' + n + ', *] = 0</code> - nothing can be taken past the end. <code>curr</code> is also zeros, but those are meaningless and marked stale until a row writes them.', panels: panels(null, null, null)});
+
+      for (let i = n - 1; i >= 0; i--){
+        iVar = i; pVar = -9; notPickTxt = '-'; pickTxt = '-';
+        currOk = new Array(n + 1).fill(false);
+        steps.push({lines:[16,18], msg:'Row <b>' + i + '</b> (value <b>' + nums[i] + '</b>) begins. <code>next</code> currently means row ' + (i + 1) + ' and is trustworthy in every column the loop will read. <code>curr</code> is whatever the last swap left behind, so nothing in it may be believed until this pass writes it - and the pass writes columns ' + i + ' down to 0 only.', panels: panels(null, null, null)});
+
+        for (let p = i - 1; p >= -1; p--){
+          pVar = p;
+          const notPick = next[p + 1];
+          notPickTxt = String(notPick);
+          const reads = [[0, p + 1]];
+          let pick = 0;
+          let pickMsg;
+          const legal = (p === -1 || nums[i] > nums[p]);
+          if (legal){
+            pick = 1 + next[i + 1];
+            reads.push([0, i + 1]);
+            pickMsg = 'Picking is allowed ' + (p === -1 ? '(nothing has been taken yet)' : '(<code>' + nums[i] + '</code> beats <code>nums[' + p + '] = ' + nums[p] + '</code>)') + ', so <code>pick = 1 + next[' + (i + 1) + ']</code> = <b>' + pick + '</b> - one for this element, plus the best from row ' + (i + 1) + ' with the barrier moved to index ' + i + '. Both reads are from <code>next</code>, never from <code>curr</code>, which is why a half-written <code>curr</code> is harmless.';
+          } else {
+            pickMsg = 'Picking is illegal - <code>nums[' + i + '] = ' + nums[i] + '</code> is not strictly greater than <code>nums[' + p + '] = ' + nums[p] + '</code> - so <code>pick</code> stays <b>0</b>.';
+          }
+          pickTxt = String(pick);
+          curr[p + 1] = Math.max(pick, notPick);
+          currOk[p + 1] = true;
+          writes++;
+          steps.push({lines: legal ? [21,23,26,28,31] : [21,23,26,31], msg:'<b>curr[' + (p + 1) + ']</b>, the state "at index ' + i + ', last taken ' + (p === -1 ? 'nothing' : 'index ' + p) + '". Not picking is <code>next[' + (p + 1) + ']</code> = <b>' + notPick + '</b>. ' + pickMsg + ' The larger of the two, <b>' + curr[p + 1] + '</b>, is written into <code>curr</code>.', panels: panels([1, p + 1], reads, '1,' + (p + 1))});
+        }
+
+        const t = next; next = curr; curr = t;
+        const tk = nextOk; nextOk = currOk; currOk = tk;
+        swaps++;
+        pVar = -9; notPickTxt = '-'; pickTxt = '-';
+        steps.push({lines:[33], msg:'<code>(next, curr) = (curr, next)</code> swaps the two references in one move: the row just built becomes <code>next</code>, ready to serve as "the row below" for index ' + (i - 1) + ', and the old <code>next</code> becomes the scratch <code>curr</code>. It is deliberately not cleared - row ' + (i - 1) + ' only reads columns up to <b>' + i + '</b>, all of which were written this pass, so the stale tail is never touched. Nothing is copied; only two references move, so the space stays O(n).', panels: panels(null, null, null)});
+      }
+
+      iVar = -1;
+      steps.push({lines:[36], msg:'All rows are folded in and after the final swap <code>next</code> holds row 0. <code>next[0]</code> is the shifted state "index 0, prevIndex = -1", the original question, and it reads <b>' + next[0] + '</b>. Same ' + writes + ' write(s) and same O(n^2) work as the full matrix, across ' + swaps + ' swap(s), but only ' + (2 * (n + 1)) + ' integers were ever held - and the binary-search version cuts even the work down to O(n log n).', panels: panels([0, 0], null, null)});
+      return steps;
+    }
+  }]
+};
+
+/* ==========================================================================
+   Shared visualizer engine.
+   A problem file defines PROBLEM = { title, note, inputs, parse, shuffle,
+   solutions:[{ label, badge, blurb, legend, code, simulate }] }.
+   simulate(input) returns an array of steps:
+     { lines:[1-based], msg:'html', panels:[ ...panel descriptors... ] }
+   Panel descriptors are declarative; everything below is generic rendering.
+   ========================================================================== */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+let solIdx = 0, sol = null, steps = [], stepIndex = -1, playing = false, timer = null;
+
+/* ---------------- header + config form ---------------- */
+function buildHeader(){
+  document.title = PROBLEM.title + ' — visualizer';
+  $('brandTitle').textContent = PROBLEM.title;
+  $('brandNote').textContent = PROBLEM.note || '';
+  const f = $('configForm');
+  f.innerHTML = '';
+  PROBLEM.inputs.forEach(inp => {
+    const d = document.createElement('div');
+    d.className = 'field';
+    d.innerHTML = '<span>' + esc(inp.label) + '</span>' +
+      '<input id="in_' + inp.id + '" type="' + (inp.type || 'text') + '" value="' + esc(inp.value) +
+      '" spellcheck="false" style="width:' + (inp.width || 210) + 'px" aria-label="' + esc(inp.label) + '">';
+    f.appendChild(d);
+  });
+  const run = document.createElement('button');
+  run.type = 'submit'; run.className = 'primary'; run.textContent = 'Run';
+  f.appendChild(run);
+  if (PROBLEM.shuffle){
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = 'Shuffle';
+    b.addEventListener('click', () => {
+      const vals = PROBLEM.shuffle();
+      PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+      rebuild();
+    });
+    f.appendChild(b);
+  }
+  f.addEventListener('submit', e => { e.preventDefault(); rebuild(); });
+}
+
+function readRaw(){
+  const o = {};
+  PROBLEM.inputs.forEach(i => { o[i.id] = $('in_' + i.id).value; });
+  return o;
+}
+function writeBack(vals){
+  PROBLEM.inputs.forEach(i => { if (vals[i.id] !== undefined) $('in_' + i.id).value = vals[i.id]; });
+}
+
+/* ---------------- solution tabs ---------------- */
+function buildTabs(){
+  const t = $('tabs');
+  t.innerHTML = '';
+  PROBLEM.solutions.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (i === solIdx ? ' active' : '');
+    b.innerHTML = '<b>' + esc(s.label) + '</b><span>' + esc(s.badge) + '</span>';
+    b.addEventListener('click', () => { if (i === solIdx) return; solIdx = i; buildTabs(); loadSolution(); rebuild(); });
+    t.appendChild(b);
+  });
+}
+
+/* ---------------- code layers ----------------
+   A layer is a method, worked out from the code array itself rather than
+   declared by the problem definition. That matters: it costs the generator
+   nothing, needs no schema field that could be filled in wrong, and applies to
+   every visualizer already written. When the parse finds nothing - a code array
+   that is a bare fragment rather than a class - layers are simply off and the
+   panel renders exactly as it always did. */
+const CTRL_WORD = /^\s*(?:if|else|for|foreach|while|do|switch|case|return|using|lock|try|catch|finally|new)\b/;
+
+function findLayers(code){
+  const out = [];
+  for (let i = 0; i < code.length; i++){
+    const line = code[i];
+    if (line.indexOf('(') < 0) continue;          // a signature has parameters
+    if (/;\s*$/.test(line)) continue;             // a call, not a declaration
+    if (CTRL_WORD.test(line)) continue;           // if (...) is not a method
+    const m = line.match(/(\w+)\s*\(/);
+    if (!m) continue;
+    if (!line.slice(0, line.indexOf(m[0])).trim()) continue;   // needs a return type
+    let open = -1;
+    for (let k = i; k < Math.min(i + 3, code.length); k++){
+      if (code[k].indexOf(';') >= 0) break;
+      if (code[k].indexOf('{') >= 0){ open = k; break; }
+    }
+    if (open < 0) continue;
+    let depth = 0, end = -1;
+    for (let k = open; k < code.length; k++){
+      for (const ch of code[k]){ if (ch === '{') depth++; else if (ch === '}') depth--; }
+      if (depth === 0){ end = k; break; }
+    }
+    if (end < 0 || end - i < 2) continue;         // too small to be worth folding
+    out.push({name: m[1], sig: line.trim(), from: i + 1, to: end + 1});
+    i = end;                                       // nested locals belong to this layer
+  }
+  return out;
+}
+
+const layerOf = (n) => (sol.__layers || []).find(L => n >= L.from && n <= L.to);
+let showAll = false;
+let pinned = new Set();
+let lockedH = 0;
+let lastActive = [];
+
+function loadSolution(){
+  sol = PROBLEM.solutions[solIdx];
+  $('brandSub').innerHTML = sol.blurb;
+  $('legend').innerHTML = (sol.legend || []).map(l =>
+    l.cls === null ? '<span>' + l.text + '</span>'
+                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
+
+  sol.__layers = findLayers(sol.code);
+  pinned = new Set();
+  const lineHtml = (n, extra) =>
+    '<div class="line' + (extra || '') + '" data-line="' + n + '">' +
+    (sol.code[n - 1].length ? esc(sol.code[n - 1]) : '&nbsp;') + '</div>';
+
+  if (!sol.__layers.length){
+    $('codeBlock').innerHTML = sol.code.map((l, i) => lineHtml(i + 1)).join('');
+    $('codeToggle').style.display = 'none';
+    $('layerCrumb').textContent = '';
+    $('codeWrap').style.height = '';
+    return;
+  }
+  $('codeToggle').style.display = '';
+
+  let html = '', cursor = 1;
+  sol.__layers.forEach((L, idx) => {
+    while (cursor < L.from) html += lineHtml(cursor++, ' outside');
+    html += '<div class="layer" data-idx="' + idx + '">' +
+            '<div class="stub" data-idx="' + idx + '" role="button" tabindex="0">' +
+              '<span class="caret">&#9656;</span><span class="sig">' + esc(L.sig) + ' { \u2026 }</span>' +
+            '</div><div class="lines">';
+    for (let k = L.from; k <= L.to; k++) html += lineHtml(k);
+    html += '</div></div>';
+    cursor = L.to + 1;
+  });
+  while (cursor <= sol.code.length) html += lineHtml(cursor++, ' outside');
+  $('codeBlock').innerHTML = html;
+
+  $('codeBlock').querySelectorAll('.stub').forEach(el => {
+    const open = () => { pinned.add(Number(el.dataset.idx)); applyLayers(lastActive); };
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+
+  lockHeight();
+  applyLayers([]);
+}
+
+/* Lock the panel to the tallest SINGLE layer, not to the whole file. Sizing it
+   to the whole file would leave the column exactly as long as it was and fix
+   nothing; letting it size itself per layer makes the page jump on every step. */
+function lockHeight(){
+  const wrap = $('codeWrap'), block = $('codeBlock');
+  const layers = [...block.querySelectorAll('.layer')];
+  wrap.style.height = 'auto';
+  const was = layers.map(el => el.classList.contains('open'));
+  layers.forEach(el => el.classList.remove('open'));
+  let tallest = block.scrollHeight;
+  layers.forEach(el => {
+    el.classList.add('open');
+    tallest = Math.max(tallest, block.scrollHeight);
+    el.classList.remove('open');
+  });
+  layers.forEach((el, i) => el.classList.toggle('open', was[i]));
+  lockedH = Math.max(200, Math.min(tallest + 12, Math.round(window.innerHeight * 0.42)));
+  wrap.style.height = lockedH + 'px';
+}
+
+function applyLayers(active){
+  lastActive = active || [];
+  if (!sol.__layers || !sol.__layers.length) return;
+  const here = lastActive.length ? layerOf(Math.min.apply(null, lastActive)) : null;
+  const hereIdx = here ? sol.__layers.indexOf(here) : -1;
+
+  $('codeBlock').querySelectorAll('.layer').forEach((el) => {
+    const i = Number(el.dataset.idx);
+    el.classList.toggle('open', showAll || i === hereIdx || pinned.has(i));
+  });
+
+  const wrap = $('codeWrap');
+  wrap.style.height = showAll ? Math.round(window.innerHeight * 0.42) + 'px' : lockedH + 'px';
+  $('layerCrumb').innerHTML = showAll
+    ? sol.__layers.length + ' methods'
+    : (here ? 'inside <b>' + esc(here.name) + '</b>' : sol.__layers.length + ' methods');
+
+  const live = $('codeBlock').querySelector('.line.active');
+  if (live){
+    const top = live.offsetTop, bottom = top + live.offsetHeight;
+    if (top < wrap.scrollTop + 8) wrap.scrollTo({top: Math.max(top - 40, 0), behavior: 'smooth'});
+    else if (bottom > wrap.scrollTop + wrap.clientHeight - 8)
+      wrap.scrollTo({top: bottom - wrap.clientHeight + 40, behavior: 'smooth'});
+  }
+}
+
+/* ---------------- panel rendering ---------------- */
+const host = () => $('colLeft');
+
+function panelShell(p){
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.dataset.t = p.t;
+  el.innerHTML = '<p class="panel-title"></p><div class="body"></div>';
+  return el;
+}
+
+function renderPanels(panels, animate){
+  const h = host();
+  while (h.children.length > panels.length) h.removeChild(h.lastChild);
+  panels.forEach((p, i) => {
+    let el = h.children[i];
+    if (!el || el.dataset.t !== p.t){
+      const fresh = panelShell(p);
+      if (el) h.replaceChild(fresh, el); else h.appendChild(fresh);
+      el = fresh;
+    }
+    el.querySelector('.panel-title').innerHTML = p.title || '';
+    el.querySelector('.panel-title').style.display = p.title ? '' : 'none';
+    // The density dial. Clamped here, once, so no renderer has to defend
+    // itself against a panel that asked to be drawn at 0.1.
+    el.style.setProperty('--pscale', pscale(p));
+    RENDER[p.t](el.querySelector('.body'), p, animate);
+  });
+}
+
+const RENDER = {};
+
+/* --- tiles: an array or string laid out as boxes, with optional bracket + pointers --- */
+RENDER.tiles = function(body, p, animate){
+  let scroll = body.querySelector('.array-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="array-scroll"><div class="array-row">' +
+      '<div class="window-bracket"></div></div></div>';
+    scroll = body.querySelector('.array-scroll');
+  }
+  const row = scroll.querySelector('.array-row');
+  const bracket = row.querySelector('.window-bracket');
+  const ptrs = p.ptrs || [];
+  row.classList.toggle('no-ptrs', ptrs.length === 0);
+
+  let tiles = [...row.querySelectorAll('.tile')];
+  if (tiles.length !== p.items.length){
+    tiles.forEach(t => t.remove());
+    p.items.forEach(() => {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.innerHTML = '<span class="idx"></span><span class="val"></span><span class="sub"></span>';
+      row.appendChild(t);
+    });
+    tiles = [...row.querySelectorAll('.tile')];
+  }
+  p.items.forEach((it, i) => {
+    const t = tiles[i];
+    t.className = 'tile ' + (it.cls || '') + (p.narrow ? ' narrow' : '') +
+                  (animate && it.flash ? ' just-popped' : '');
+    const idx = t.querySelector('.idx'), val = t.querySelector('.val'), sub = t.querySelector('.sub');
+    const top = it.top !== undefined ? it.top : i;
+    idx.textContent = top === '' ? '' : top;
+    val.textContent = it.v;
+    sub.textContent = it.sub || '';
+    sub.style.display = it.sub ? '' : 'none';
+  });
+
+  // window bracket
+  if (p.bracket && tiles[p.bracket.from] && tiles[p.bracket.to] && p.bracket.from <= p.bracket.to){
+    const a = tiles[p.bracket.from], b = tiles[p.bracket.to];
+    bracket.className = 'window-bracket visible' + (p.bracket.dashed ? ' dashed' : '');
+    bracket.style.left = (a.offsetLeft - 4) + 'px';
+    bracket.style.width = (b.offsetLeft + b.offsetWidth - a.offsetLeft + 8) + 'px';
+  } else {
+    bracket.className = 'window-bracket';
+  }
+
+  // pointer markers
+  let marks = [...row.querySelectorAll('.ptr-marker')];
+  if (marks.length !== ptrs.length){
+    marks.forEach(m => m.remove());
+    ptrs.forEach(() => {
+      const m = document.createElement('div');
+      m.className = 'ptr-marker';
+      row.appendChild(m);
+    });
+    marks = [...row.querySelectorAll('.ptr-marker')];
+  }
+  const seen = {};
+  ptrs.forEach((pt, i) => {
+    const m = marks[i];
+    m.textContent = pt.name;
+    const tile = tiles[pt.idx];
+    if (!tile || pt.idx < 0){ m.className = 'ptr-marker ' + (pt.cls || ''); return; }
+    m.className = 'ptr-marker visible ' + (pt.cls || '');
+    const n = (seen[pt.idx] = (seen[pt.idx] || 0) + 1);
+    const nudge = n === 1 ? 0 : (n === 2 ? 20 : -20);
+    m.style.left = (tile.offsetLeft + tile.offsetWidth / 2 + nudge) + 'px';
+  });
+
+  // keep the focused tile in view
+  if (p.focus !== undefined && tiles[p.focus] && scroll.scrollWidth > scroll.clientWidth){
+    const t = tiles[p.focus], left = t.offsetLeft, right = left + t.offsetWidth;
+    if (left < scroll.scrollLeft + 12) scroll.scrollTo({left: Math.max(left - 24, 0), behavior:'smooth'});
+    else if (right > scroll.scrollLeft + scroll.clientWidth - 12)
+      scroll.scrollTo({left: right - scroll.clientWidth + 24, behavior:'smooth'});
+  }
+};
+
+/* --- chips: one or more labelled rows of small boxes (deque, stack, map, heap) --- */
+RENDER.chips = function(body, p, animate){
+  const rows = p.rows;
+  let els = [...body.querySelectorAll('.chip-row')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="chip-row"><span class="row-label left"></span><div class="chips"></div><span class="row-label right"></span></div>').join('');
+    els = [...body.querySelectorAll('.chip-row')];
+  }
+  rows.forEach((r, i) => {
+    const el = els[i];
+    const L = el.querySelector('.left'), R = el.querySelector('.right'), box = el.querySelector('.chips');
+    L.textContent = r.left || ''; L.style.display = r.left ? '' : 'none';
+    R.textContent = r.right || ''; R.style.display = r.right ? '' : 'none';
+    if (!r.items.length){
+      box.innerHTML = '<span class="chips-empty">' + esc(r.empty || 'empty') + '</span>';
+    } else {
+      box.innerHTML = r.items.map(c =>
+        '<span class="chip ' + (c.cls || '') + (animate && c.fresh ? ' fresh' : '') + '">' +
+        esc(c.text) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
+    }
+  });
+};
+
+/* --- slots: the output array, dashes until written --- */
+RENDER.slots = function(body, p, animate){
+  let row = body.querySelector('.slot-row');
+  if (!row){ body.innerHTML = '<div class="slot-row"></div>'; row = body.querySelector('.slot-row'); }
+  let slots = [...row.children];
+  if (slots.length !== p.items.length){
+    row.innerHTML = p.items.map(() => '<div class="slot"></div>').join('');
+    slots = [...row.children];
+  }
+  p.items.forEach((it, i) => {
+    const s = slots[i];
+    const wasFilled = s.classList.contains('filled');
+    const filled = it.text !== null && it.text !== undefined && it.text !== '';
+    s.textContent = filled ? it.text : '—';
+    s.className = 'slot' + (filled ? ' filled' : '') + (it.cls ? ' ' + it.cls : '') +
+                  (filled && !wasFilled && animate ? ' fresh' : '');
+  });
+};
+
+/* --- pills: scalar readouts (l, r, sum, best...) --- */
+RENDER.pills = function(body, p){
+  let box = body.querySelector('.pills');
+  if (!box){ body.innerHTML = '<div class="pills"></div>'; box = body.querySelector('.pills'); }
+  box.innerHTML = p.items.map(it =>
+    '<span class="pill ' + (it.cls || '') + '">' + esc(it.k) + ' = <b>' + esc(it.v) + '</b></span>').join('');
+};
+
+/* --- bars: a histogram, for height/price style problems --- */
+RENDER.bars = function(body, p){
+  let box = body.querySelector('.bars');
+  if (!box){ body.innerHTML = '<div class="bars"><div class="water"></div></div>'; box = body.querySelector('.bars'); }
+  const water = box.querySelector('.water');
+  let wraps = [...box.querySelectorAll('.bar-wrap')];
+  if (wraps.length !== p.items.length){
+    wraps.forEach(w => w.remove());
+    p.items.forEach(() => {
+      const w = document.createElement('div');
+      w.className = 'bar-wrap';
+      w.innerHTML = '<span class="cap"></span><div class="bar"></div><span class="foot"></span>';
+      box.appendChild(w);
+    });
+    wraps = [...box.querySelectorAll('.bar-wrap')];
+  }
+  const max = Math.max(1, ...p.items.map(i => Math.abs(i.v)));
+  p.items.forEach((it, i) => {
+    const w = wraps[i];
+    w.className = 'bar-wrap ' + (it.cls || '');
+    w.querySelector('.cap').textContent = it.v;
+    w.querySelector('.foot').textContent = it.foot !== undefined ? it.foot : i;
+    w.querySelector('.bar').style.height = Math.max(3, (Math.abs(it.v) / max) * 165) + 'px';
+  });
+  if (p.fill && wraps[p.fill.from] && wraps[p.fill.to]){
+    const a = wraps[p.fill.from], b = wraps[p.fill.to];
+    water.style.opacity = 1;
+    water.style.left = (a.offsetLeft + a.offsetWidth * 0.5) + 'px';
+    water.style.width = (b.offsetLeft + b.offsetWidth * 0.5 - a.offsetLeft - a.offsetWidth * 0.5) + 'px';
+    water.style.bottom = '26px';
+    water.style.height = Math.max(3, (p.fill.level / max) * 165) + 'px';
+  } else {
+    water.style.opacity = 0;
+  }
+};
+
+/* --- ranges: intervals on a shared timeline --- */
+RENDER.ranges = function(body, p){
+  let box = body.querySelector('.ranges');
+  if (!box){ body.innerHTML = '<div class="ranges"></div>'; box = body.querySelector('.ranges'); }
+  let lines = [...box.children];
+  if (lines.length !== p.items.length){
+    box.innerHTML = p.items.map(() => '<div class="range-line"><div class="range-bar"></div></div>').join('');
+    lines = [...box.children];
+  }
+  const lo = p.min, hi = Math.max(p.max, p.min + 1);
+  p.items.forEach((it, i) => {
+    const bar = lines[i].querySelector('.range-bar');
+    bar.className = 'range-bar ' + (it.cls || '');
+    bar.textContent = it.label;
+    bar.style.left = ((it.from - lo) / (hi - lo) * 100) + '%';
+    bar.style.width = 'max(72px, ' + ((it.to - it.from) / (hi - lo) * 100) + '%)';
+  });
+};
+
+/* --- note: a free-text panel --- */
+RENDER.note = function(body, p){
+  let n = body.querySelector('.note-text');
+  if (!n){ body.innerHTML = '<div class="note-text"></div>'; n = body.querySelector('.note-text'); }
+  n.innerHTML = p.html;
+};
+
+/* ==========================================================================
+   Structural renderers.
+
+   These exist because every panel above this line is a row of boxes. With only
+   those, a tree came out as "nodes grouped by depth" and a stack as a row of
+   chips - the animation was correct and the shape was a lie. The rule they all
+   follow: the PROBLEM object supplies data, the chassis does every bit of
+   layout arithmetic. A generated definition that had to compute its own x and y
+   would be a generated definition that silently drifts.
+   ========================================================================== */
+
+/* The density dial, clamped. A panel may ask to be drawn smaller so a big
+   structure fits one screen; it may not ask to be drawn illegibly. */
+const SCALE_MIN = 0.7;
+function pscale(p){
+  const v = Number(p && p.scale);
+  return Number.isFinite(v) ? Math.min(1, Math.max(SCALE_MIN, v)) : 1;
+}
+
+/* Rebuild a container's children only when the *identity* of what it holds
+   changes. Keeping elements between steps is what makes a node glide to its new
+   position instead of blinking there. */
+function keyed(el, key){
+  if (el.dataset.key === key) return false;
+  el.dataset.key = key;
+  el.innerHTML = '';
+  return true;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const mkSvg = (name) => document.createElementNS(SVG_NS, name);
+
+/* ---------------- shared tree layout ----------------
+   Used by both the tree panel and the heap panel, which is a tree with its
+   edges implied by array indices. Leaves take the next free column; a parent
+   centres over its children. Depth comes from the parent chain, so the caller
+   never states a depth and cannot state a wrong one. */
+function layoutTree(nodes, k){
+  const byId = new Map();
+  const kids = new Map();
+  const roots = [];
+  const work = nodes.map((n) => ({
+    id: String(n.id), v: n.v,
+    parent: (n.parent === null || n.parent === undefined) ? null : String(n.parent),
+    side: n.side || '', cls: n.cls || '', sub: n.sub, edgeCls: n.edgeCls || '',
+    nil: n.v === null || n.v === undefined,
+  }));
+  work.forEach((n) => { byId.set(n.id, n); kids.set(n.id, []); });
+  work.forEach((n) => {
+    if (n.parent !== null && kids.has(n.parent)) kids.get(n.parent).push(n.id);
+    else { n.parent = null; roots.push(n.id); }
+  });
+  // Left child first when sides are given, otherwise the order they arrived in.
+  const rank = (id) => (byId.get(id).side === 'L' ? 0 : byId.get(id).side === 'R' ? 2 : 1);
+  kids.forEach((list) => list.sort((a, b) => rank(a) - rank(b)));
+
+  const X = new Map(), D = new Map(), seen = new Set();
+  let col = 0;
+  const walk = (id, d) => {
+    if (seen.has(id)) return;          // malformed data must not hang the page
+    seen.add(id);
+    D.set(id, d);
+    const cs = kids.get(id) || [];
+    if (!cs.length){ X.set(id, col++); return; }
+    cs.forEach((c) => walk(c, d + 1));
+    const xs = cs.map((c) => X.get(c)).filter((x) => x !== undefined);
+    X.set(id, xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 : col++);
+  };
+  roots.forEach((r) => { walk(r, 0); col += 0.7; });
+  work.forEach((n) => { if (!seen.has(n.id)) { D.set(n.id, 0); X.set(n.id, col++); } });
+
+  const NODE = 54 * k, GAPX = 24 * k, ROWH = 82 * k, PAD = 34 * k;
+  const maxD = Math.max(0, ...work.map((n) => D.get(n.id) || 0));
+  const maxX = Math.max(0, ...work.map((n) => X.get(n.id) || 0));
+  work.forEach((n) => {
+    n.px = PAD + NODE / 2 + (X.get(n.id) || 0) * (NODE + GAPX);
+    n.py = PAD + NODE / 2 + (D.get(n.id) || 0) * ROWH;
+  });
+  return {
+    work, byId,
+    width: PAD * 2 + NODE + maxX * (NODE + GAPX),
+    height: PAD * 2 + NODE + maxD * ROWH,
+  };
+}
+
+/* Draw a laid-out tree into a .tree-stage. Edges are one SVG layer under
+   absolutely positioned node divs, so edges never paint over a value. */
+function drawTree(stage, nodes, p, k){
+  const L = layoutTree(nodes, k);
+  const links = p.links || [];
+  stage.style.width = L.width + 'px';
+  stage.style.height = L.height + 'px';
+
+  let svg = stage.querySelector('svg');
+  if (!svg){ svg = mkSvg('svg'); stage.insertBefore(svg, stage.firstChild); }
+  // Sized in pixels, NOT with a viewBox stretched to 100%. The nodes are
+  // positioned in pixels, so anything that scales the edge layer independently
+  // - which min-width:100% on the stage does the moment the tree is narrower
+  // than the panel - draws the edges somewhere the nodes are not.
+  svg.setAttribute('width', L.width);
+  svg.setAttribute('height', L.height);
+  svg.setAttribute('viewBox', '0 0 ' + L.width + ' ' + L.height);
+
+  const edges = L.work.filter((n) => n.parent !== null && L.byId.has(n.parent))
+    .map((n) => ({key: n.parent + '>' + n.id, a: L.byId.get(n.parent), b: n, cls: n.edgeCls, label: ''}))
+    .concat(links.filter((e) => L.byId.has(String(e.from)) && L.byId.has(String(e.to)))
+      .map((e) => ({key: 'x' + e.from + '>' + e.to, a: L.byId.get(String(e.from)), b: L.byId.get(String(e.to)),
+                    cls: e.cls || 'ghost', label: e.label || ''})));
+
+  if (keyed(svg, edges.map((e) => e.key).join('|'))){
+    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
+  }
+  edges.forEach((e, i) => {
+    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
+    line.setAttribute('class', 'edge ' + (e.cls || ''));
+    line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
+    line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
+    text.setAttribute('y', (e.a.py + e.b.py) / 2);
+    text.textContent = e.label || '';
+  });
+
+  const wrapKey = L.work.map((n) => n.id).join('|');
+  let holder = stage.querySelector('.tree-nodes');
+  if (!holder){
+    holder = document.createElement('div');
+    holder.className = 'tree-nodes';
+    stage.appendChild(holder);
+  }
+  if (keyed(holder, wrapKey)){
+    L.work.forEach(() => {
+      const d = document.createElement('div');
+      d.className = 'node';
+      d.innerHTML = '<span class="v"></span><span class="sub"></span>';
+      holder.appendChild(d);
+    });
+  }
+  L.work.forEach((n, i) => {
+    const el = holder.children[i];
+    el.className = 'node ' + (n.cls || '') + (n.nil ? ' nil' : '') + (p.square ? ' square' : '');
+    el.style.left = n.px + 'px';
+    el.style.top = n.py + 'px';
+    el.querySelector('.v').textContent = n.nil ? '∅' : String(n.v);
+    const sub = el.querySelector('.sub');
+    sub.textContent = n.sub || '';
+    sub.style.display = n.sub ? '' : 'none';
+  });
+
+  // Named markers - root, cur, lca - floating just above their node.
+  const tags = (p.tags || []).filter((t) => L.byId.has(String(t.id)));
+  let tagHolder = stage.querySelector('.tree-tags');
+  if (!tagHolder){
+    tagHolder = document.createElement('div');
+    tagHolder.className = 'tree-tags';
+    stage.appendChild(tagHolder);
+  }
+  if (keyed(tagHolder, tags.map((t) => t.name).join('|'))){
+    tags.forEach(() => tagHolder.appendChild(document.createElement('div')));
+  }
+  tags.forEach((t, i) => {
+    const el = tagHolder.children[i];
+    const n = L.byId.get(String(t.id));
+    el.className = 'node-tag ' + (t.cls || '');
+    el.textContent = t.name;
+    el.style.left = n.px + 'px';
+    el.style.top = (n.py - 38 * k) + 'px';
+  });
+}
+
+/* --- tree: a real tree, with edges --- */
+RENDER.tree = function(body, p){
+  const k = pscale(p);
+  let scroll = body.querySelector('.tree-scroll');
+  if (!scroll){
+    body.innerHTML = '<div class="tree-scroll"><div class="tree-stage"></div></div>';
+    scroll = body.querySelector('.tree-scroll');
+  }
+  const stage = scroll.querySelector('.tree-stage');
+  if (!p.nodes || !p.nodes.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty tree') + '</span>';
+    delete stage.dataset.built;
+    return;
+  }
+  if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+  drawTree(stage, p.nodes, p, k);
+};
+
+/* --- list: boxes joined by arrows, the way a linked list is drawn by hand --- */
+RENDER.list = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  let els = [...body.querySelectorAll('.list-row-wrap')];
+  if (els.length !== rows.length){
+    body.innerHTML = rows.map(() =>
+      '<div class="list-row-wrap"><div class="list-label"></div>' +
+      '<div class="list-scroll"><div class="list-row"><svg class="list-cycle"></svg></div></div></div>').join('');
+    els = [...body.querySelectorAll('.list-row-wrap')];
+  }
+  rows.forEach((r, ri) => {
+    const wrap = els[ri];
+    const label = wrap.querySelector('.list-label');
+    label.textContent = r.label || '';
+    label.style.display = r.label ? '' : 'none';
+    const row = wrap.querySelector('.list-row');
+    const svg = row.querySelector('.list-cycle');
+    const nodes = r.nodes || [];
+
+    // One cell per node, an arrow between each pair, and a terminator.
+    const key = nodes.map((n) => String(n.id !== undefined ? n.id : n.v)).join('|') + '#' + (r.tail || '');
+    let cells = [...row.querySelectorAll('.list-cell')];
+    if (row.dataset.key !== key){
+      row.dataset.key = key;
+      [...row.querySelectorAll('.list-cell,.list-arrow,.list-null,.chips-empty')].forEach((n) => n.remove());
+      nodes.forEach((n, i) => {
+        const c = document.createElement('div');
+        c.className = 'list-cell';
+        c.innerHTML = '<span class="v"></span><span class="sub"></span>';
+        row.appendChild(c);
+        if (i < nodes.length - 1 || r.tail){
+          const a = document.createElement('span');
+          a.className = 'list-arrow';
+          a.textContent = '→';
+          row.appendChild(a);
+        }
+      });
+      if (r.tail){
+        const t = document.createElement('span');
+        t.className = 'list-null';
+        t.textContent = r.tail === true ? '∅' : String(r.tail);
+        row.appendChild(t);
+      }
+      if (!nodes.length){
+        const e = document.createElement('span');
+        e.className = 'chips-empty';
+        e.textContent = r.empty || 'empty';
+        row.appendChild(e);
+      }
+      cells = [...row.querySelectorAll('.list-cell')];
+    }
+
+    nodes.forEach((n, i) => {
+      const c = cells[i];
+      c.className = 'list-cell ' + (n.cls || '') + (animate && n.fresh ? ' fresh' : '');
+      c.querySelector('.v').textContent = String(n.v);
+      const sub = c.querySelector('.sub');
+      sub.textContent = n.sub || '';
+      sub.style.display = n.sub ? '' : 'none';
+    });
+    // An arrow is a pointer. Reversal problems live or die on being able to see
+    // one go dashed or vanish, so arrows take their own classes.
+    const arrows = [...row.querySelectorAll('.list-arrow')];
+    arrows.forEach((a, i) => {
+      const spec = (r.arrows || [])[i];
+      const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
+      a.className = 'list-arrow ' + cls;
+      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
+    });
+
+    // Markers, placed against real measured geometry rather than guessed at.
+    const tags = (r.tags || []).filter((t) => t.idx === undefined || cells[t.idx]);
+    let marks = [...row.querySelectorAll('.list-tag')];
+    if (marks.length !== tags.length){
+      marks.forEach((m) => m.remove());
+      tags.forEach(() => {
+        const m = document.createElement('span');
+        m.className = 'list-tag';
+        row.appendChild(m);
+      });
+      marks = [...row.querySelectorAll('.list-tag')];
+    }
+    const seen = {};
+    tags.forEach((t, i) => {
+      const m = marks[i];
+      m.textContent = t.name;
+      const cell = cells[t.idx];
+      const below = !!t.below;
+      if (!cell || t.idx < 0 || t.idx === undefined){
+        m.className = 'list-tag ' + (t.cls || '') + (below ? ' below' : ' above');
+        return;
+      }
+      m.className = 'list-tag visible ' + (t.cls || '') + (below ? ' below' : ' above');
+      const bucket = (below ? 'b' : 'a') + t.idx;
+      const n = (seen[bucket] = (seen[bucket] || 0) + 1);
+      const nudge = n === 1 ? 0 : (n === 2 ? 18 * k : -18 * k);
+      m.style.left = (cell.offsetLeft + cell.offsetWidth / 2 + nudge) + 'px';
+    });
+
+    // The back-edge that makes a cycle a cycle.
+    const to = r.cycleTo;
+    const from = cells.length - 1;
+    if (to !== undefined && to !== null && cells[to] && cells[from]){
+      const a = cells[from], b = cells[to];
+      const ax = a.offsetLeft + a.offsetWidth / 2, bx = b.offsetLeft + b.offsetWidth / 2;
+      const y = a.offsetTop + a.offsetHeight;
+      const dip = y + 26 * k;
+      svg.style.display = '';
+      svg.setAttribute('viewBox', '0 0 ' + row.scrollWidth + ' ' + row.scrollHeight);
+      svg.setAttribute('width', row.scrollWidth);
+      svg.setAttribute('height', row.scrollHeight);
+      if (keyed(svg, 'cyc')) svg.appendChild(mkSvg('path'));
+      svg.firstChild.setAttribute('d',
+        'M ' + ax + ' ' + y + ' C ' + ax + ' ' + dip + ', ' + bx + ' ' + dip + ', ' + bx + ' ' + y);
+    } else {
+      svg.style.display = 'none';
+    }
+  });
+};
+
+/* --- stack / queue: a bucket with a floor and an open top --- */
+RENDER.stack = function(body, p, animate){
+  const buckets = p.buckets || [];
+  let box = body.querySelector('.buckets');
+  if (!box){ body.innerHTML = '<div class="buckets"></div>'; box = body.querySelector('.buckets'); }
+  let els = [...box.children];
+  if (els.length !== buckets.length){
+    box.innerHTML = buckets.map(() =>
+      '<div class="bucket"><span class="bucket-label"></span>' +
+      '<div class="bucket-box"><span class="bucket-empty"></span></div>' +
+      '<span class="bucket-foot"></span></div>').join('');
+    els = [...box.children];
+  }
+  buckets.forEach((b, bi) => {
+    const el = els[bi];
+    const queue = b.mode === 'queue';
+    el.className = 'bucket' + (queue ? ' queue' : '');
+    const label = el.querySelector('.bucket-label');
+    label.textContent = b.label || '';
+    label.style.display = b.label ? '' : 'none';
+    const foot = el.querySelector('.bucket-foot');
+    foot.textContent = b.foot || '';
+    foot.style.display = b.foot ? '' : 'none';
+
+    const inner = el.querySelector('.bucket-box');
+    const items = b.items || [];
+    let cells = [...inner.querySelectorAll('.cell')];
+    let top = inner.querySelector('.bucket-top');
+    if (cells.length !== items.length){
+      cells.forEach((c) => c.remove());
+      if (top){ top.remove(); top = null; }   // re-appended below, so it stays last
+      items.forEach(() => {
+        const c = document.createElement('div');
+        c.className = 'cell';
+        inner.appendChild(c);
+      });
+      cells = [...inner.querySelectorAll('.cell')];
+    }
+    // Outside the rebuild, not inside it: a bucket that starts empty and stays
+    // empty never enters that branch, and step -1 empties every bucket. Created
+    // in there, the marker did not exist on the first frame of every stack
+    // panel in the repo, and the whole page died on the first render.
+    if (!top){
+      top = document.createElement('span');
+      top.className = 'bucket-top';
+      inner.appendChild(top);          // last child: column-reverse puts it on top
+    }
+    items.forEach((it, i) => {
+      const c = cells[i];
+      c.className = 'cell ' + (it.cls || '') +
+                    (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
+      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
+    });
+    const empty = el.querySelector('.bucket-empty');
+    empty.textContent = b.empty || 'empty';
+    empty.style.display = items.length ? 'none' : '';
+    top.textContent = items.length ? (b.top || (queue ? '' : '← top')) : '';
+    top.style.display = top.textContent ? '' : 'none';
+  });
+};
+
+/* --- grid: a matrix, drawn as a matrix --- */
+RENDER.grid = function(body, p, animate){
+  const k = pscale(p);
+  const rows = p.rows || [];
+  const colLabels = p.colLabels, rowLabels = p.rowLabels;
+  let stage = body.querySelector('.grid-stage');
+  if (!stage){
+    body.innerHTML = '<div class="grid-scroll"><div class="grid-stage"><table class="grid-tbl"></table>' +
+                     '<div class="grid-box"></div></div></div>';
+    stage = body.querySelector('.grid-stage');
+  }
+  const tbl = stage.querySelector('.grid-tbl');
+  const width = Math.max(0, ...rows.map((r) => r.length));
+  const key = rows.length + 'x' + width + (colLabels ? '#c' : '') + (rowLabels ? '#r' : '');
+  if (keyed(tbl, key)){
+    let html = '';
+    if (colLabels){
+      html += '<tr>' + (rowLabels ? '<th></th>' : '') +
+              colLabels.slice(0, width).map((c) => '<th>' + esc(String(c)) + '</th>').join('') + '</tr>';
+    }
+    for (let r = 0; r < rows.length; r++){
+      html += '<tr>' + (rowLabels ? '<th>' + esc(String(rowLabels[r] !== undefined ? rowLabels[r] : r)) + '</th>' : '');
+      for (let c = 0; c < width; c++) html += '<td class="grid-cell"><span class="v"></span><span class="sub"></span></td>';
+      html += '</tr>';
+    }
+    tbl.innerHTML = html;
+  }
+  const cells = [...tbl.querySelectorAll('.grid-cell')];
+  const at = (r, c) => cells[r * width + c];
+  rows.forEach((row, r) => {
+    for (let c = 0; c < width; c++){
+      const el = at(r, c);
+      if (!el) continue;
+      const raw = row[c];
+      const it = (raw !== null && typeof raw === 'object') ? raw : {v: raw};
+      const missing = it.v === undefined || it.v === null;
+      el.className = 'grid-cell ' + (it.cls || '') + (missing ? ' ghost' : '') +
+                     (animate && it.fresh ? ' fresh' : '');
+      el.querySelector('.v').textContent = missing ? '' : String(it.v);
+      const sub = el.querySelector('.sub');
+      sub.textContent = it.sub || '';
+      sub.style.display = it.sub ? '' : 'none';
+    }
+  });
+
+  // A bracket round a sub-rectangle: the search space that is still alive.
+  const bx = stage.querySelector('.grid-box');
+  const b = p.box;
+  if (b && at(b.r0, b.c0) && at(b.r1, b.c1) && b.r0 <= b.r1 && b.c0 <= b.c1){
+    const a = at(b.r0, b.c0), z = at(b.r1, b.c1);
+    const pad = 5 * k;
+    bx.className = 'grid-box visible' + (b.dashed ? ' dashed' : '');
+    bx.style.left = (a.offsetLeft - pad) + 'px';
+    bx.style.top = (a.offsetTop - pad) + 'px';
+    bx.style.width = (z.offsetLeft + z.offsetWidth - a.offsetLeft + pad * 2) + 'px';
+    bx.style.height = (z.offsetTop + z.offsetHeight - a.offsetTop + pad * 2) + 'px';
+  } else {
+    bx.className = 'grid-box';
+  }
+};
+
+/* --- heap: the tree and the array that stores it, side by side ---
+   A heap is the one structure where both views are needed at once: the
+   sift path only makes sense as a tree, and the index arithmetic only
+   makes sense as an array. Showing one without the other is how a heap
+   animation ends up teaching nothing. */
+RENDER.heap = function(body, p, animate){
+  const k = pscale(p);
+  const items = (p.items || []).map((it) => (it !== null && typeof it === 'object' ? it : {v: it}));
+  let wrap = body.querySelector('.heap-wrap');
+  if (!wrap){
+    body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
+                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
+    wrap = body.querySelector('.heap-wrap');
+  }
+  const stage = wrap.querySelector('.tree-stage');
+  const cap = wrap.querySelector('.heap-caption');
+  const arr = wrap.querySelector('.heap-array');
+
+  if (!items.length){
+    stage.style.width = ''; stage.style.height = '';
+    stage.innerHTML = '<span class="chips-empty">' + esc(p.empty || 'empty heap') + '</span>';
+    delete stage.dataset.built;
+  } else {
+    if (!stage.dataset.built){ stage.innerHTML = ''; stage.dataset.built = '1'; }
+    const nodes = items.map((it, i) => ({
+      id: 'h' + i, v: it.v, parent: i ? 'h' + ((i - 1) >> 1) : null,
+      side: i % 2 ? 'L' : 'R', cls: it.cls || '', sub: it.sub, edgeCls: it.edgeCls || '',
+    }));
+    drawTree(stage, nodes, {
+      tags: (p.tags || []).map((t) => ({name: t.name, id: 'h' + t.idx, cls: t.cls})),
+      links: p.links,
+    }, k);
+  }
+
+  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
+  cap.style.display = p.showArray === false ? 'none' : '';
+
+  if (p.showArray === false){ arr.style.display = 'none'; return; }
+  arr.style.display = '';
+  let slots = [...arr.children];
+  if (slots.length !== items.length){
+    arr.innerHTML = items.map(() => '<div class="heap-slot"><span class="idx"></span><span class="v"></span></div>').join('');
+    slots = [...arr.children];
+  }
+  items.forEach((it, i) => {
+    const s = slots[i];
+    s.className = 'heap-slot ' + (it.cls || '') + (animate && it.fresh ? ' fresh' : '');
+    s.querySelector('.idx').textContent = i;
+    s.querySelector('.v').textContent = String(it.v);
+  });
+};
+
+/* ---------------- playback ---------------- */
+function render(animate){
+  if (animate === undefined) animate = true;
+  $('progressLabel').textContent = Math.max(stepIndex + 1, 0) + ' / ' + steps.length;
+  const codeLines = document.querySelectorAll('.code .line');
+  if (stepIndex < 0){
+    codeLines.forEach(l => l.classList.remove('active'));
+    applyLayers([]);
+    $('statusMsg').innerHTML = 'Press <kbd>Play</kbd> or step forward to begin.';
+    renderPanels(sol.idle ? sol.idle() : (steps[0] ? blankPanels(steps[0].panels) : []), false);
+    return;
+  }
+  const step = steps[stepIndex];
+  const active = step.lines || [];
+  codeLines.forEach(el => el.classList.toggle('active', active.indexOf(Number(el.dataset.line)) >= 0));
+  applyLayers(active);
+  $('statusMsg').innerHTML = step.msg;
+  renderPanels(step.panels, animate);
+}
+
+// step -1 shows the first step's shape with all highlighting stripped
+function blankPanels(panels){
+  return JSON.parse(JSON.stringify(panels)).map(p => {
+    if (p.t === 'tiles'){ p.items.forEach(i => { i.cls = ''; i.flash = false; }); p.bracket = null; p.ptrs = []; }
+    if (p.t === 'bars'){ p.items.forEach(i => { i.cls = ''; }); p.fill = null; }
+    if (p.t === 'ranges'){ p.items.forEach(i => { i.cls = 'ghost'; }); }
+    if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
+    if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
+    if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
+    // A structure is shown in its starting state, not emptied: the whole point
+    // of step -1 on a tree problem is seeing the tree you are about to walk.
+    if (p.t === 'tree'){ p.nodes.forEach(n => { n.cls = ''; n.edgeCls = ''; }); p.tags = []; p.links = []; }
+    if (p.t === 'list'){ p.rows.forEach(r => { (r.nodes || []).forEach(n => { n.cls = ''; n.fresh = false; }); r.tags = []; r.arrows = []; }); }
+    if (p.t === 'stack'){ p.buckets.forEach(b => { b.items = []; }); }
+    if (p.t === 'grid'){ p.rows.forEach(r => r.forEach(c => { if (c && typeof c === 'object'){ c.cls = ''; c.fresh = false; } })); p.box = null; }
+    if (p.t === 'heap'){ p.items = []; p.tags = []; }
+    return p;
+  });
+}
+
+function stepForward(){ if (stepIndex >= steps.length - 1){ pause(); return; } stepIndex++; render(); if (stepIndex >= steps.length - 1) pause(); }
+function stepBack(){ if (stepIndex <= -1) return; stepIndex--; render(); }
+function resetAll(){ pause(); stepIndex = -1; render(false); }
+function play(){ if (!steps.length) return; if (stepIndex >= steps.length - 1) stepIndex = -1; playing = true; $('playBtn').textContent = '❚❚'; tick(); }
+function pause(){ playing = false; $('playBtn').textContent = '▶'; if (timer) clearTimeout(timer); }
+/**
+ * Run a transport action, and if it throws, stop and SAY SO.
+ *
+ * Without this, an exception inside render() kills the setTimeout chain while
+ * `playing` stays true - so the button shows a pause icon, the step counter
+ * freezes, and nothing anywhere indicates that anything went wrong. A visualizer
+ * that has crashed then looks identical to one waiting for you to press play.
+ */
+function guard(fn){
+  try { fn(); return true; }
+  catch (err){
+    playing = false;
+    if (timer) clearTimeout(timer);
+    $('playBtn').textContent = '▶';
+    $('statusMsg').innerHTML = 'Playback stopped - this visualizer has a bug: <code>'
+      + esc(String((err && err.message) || err)) + '</code>';
+    return false;
+  }
+}
+
+function tick(){
+  if (!playing) return;
+  if (!guard(stepForward)) return;
+  if (stepIndex >= steps.length - 1){ pause(); return; }
+  const s = $('speedInput');
+  timer = setTimeout(tick, (Number(s.min) + Number(s.max)) - Number(s.value));
+}
+
+function rebuild(){
+  const parsed = PROBLEM.parse(readRaw());
+  if (!parsed.ok){
+    pause(); steps = []; stepIndex = -1;
+    host().innerHTML = '';
+    $('statusMsg').innerHTML = parsed.msg;
+    $('progressLabel').textContent = '0 / 0';
+    return;
+  }
+  if (parsed.normalized) writeBack(parsed.normalized);
+  steps = sol.simulate(parsed.value);
+  stepIndex = -1;
+  pause();
+  host().innerHTML = '';
+  requestAnimationFrame(() => { render(false); requestAnimationFrame(() => render(false)); });
+}
+
+$('playBtn').addEventListener('click', () => playing ? pause() : play());
+$('fwdBtn').addEventListener('click', () => { pause(); guard(stepForward); });
+$('backBtn').addEventListener('click', () => { pause(); guard(stepBack); });
+$('resetBtn').addEventListener('click', resetAll);
+$('codeToggle').addEventListener('click', () => {
+  showAll = !showAll;
+  const b = $('codeToggle');
+  b.textContent = showAll ? 'show one method' : 'show all';
+  b.setAttribute('aria-pressed', String(showAll));
+  applyLayers(lastActive);
+});
+// Re-lock on resize: the cap is a fraction of the viewport, so a window that
+// changed shape leaves the panel measured against a screen that is gone.
+addEventListener('resize', () => { if (sol && sol.__layers && sol.__layers.length){ lockHeight(); applyLayers(lastActive); } });
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, button')) return;
+  if (e.code === 'Space'){ e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); pause(); stepForward(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); pause(); stepBack(); }
+  else if (e.key === 'r' || e.key === 'R'){ resetAll(); }
+});
+window.addEventListener('resize', () => render(false));
+
+buildHeader();
+buildTabs();
+loadSolution();
+rebuild();
+})();
+</script>
+</body>
+</html>
