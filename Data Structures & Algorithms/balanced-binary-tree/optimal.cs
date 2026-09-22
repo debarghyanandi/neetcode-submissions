@@ -1,14 +1,13 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  post-order DFS returning height and balance together
-// -  [bottom-up-height-balance]
+// -  Post-order DFS with single-pass height computation
+// -  [recursive-balance-single-pass]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  single post-order traversal computes height and balance
-// -  simultaneously; recursion stack depth is O(n) worst case for a skewed
-// -  tree
+// -  Each node visited exactly once, height computed and returned alongside
+// -  balance status; worst-case call-stack depth is n for skewed trees.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -21,7 +20,8 @@ public class Solution
     // returns balanced (1 or 0) and height as 2 element int array
     private (bool balanced, int height) CheckBalance(TreeNode node)
     {
-        if (node == null) return (true, 0);
+        if (node == null)
+            return (true, 0);
         var left = CheckBalance(node.left);
         var right = CheckBalance(node.right);
         bool balanced = left.balanced && right.balanced && Math.Abs(left.height - right.height) <= 1;
@@ -32,70 +32,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Post-order DFS returning (height, balanced) together
+ PATTERN : Post-order DFS - return height and balance together
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  left     (balanced, height) result for node.left
+  right    (balanced, height) result for node.right
+  balanced true when both subtrees are balanced AND their heights differ by at most 1
+  height   1 + the taller of the two child heights
 WHY THIS PATTERN
-  Balance at a node needs the heights of both children, and height is itself a
-  post-order quantity. The naive split - a Height helper called from an
-  IsBalanced walker - recomputes the same subtree heights once per ancestor.
-  Folding both answers into one return value from CheckBalance means every node
-  is visited exactly once and its height is computed exactly once, from the
-  heights its children already handed up.
+  The question asks about every node at once: for each node the two subtree
+  heights must differ by at most 1. Height is a bottom-up fact - a node's height
+  depends on its children, not its parent - so post-order DFS is the natural
+  order. CheckBalance computes left and right first, then folds both answers
+  into one tuple, so each node learns its own height and its own balance verdict
+  in the same visit.
 BRUTE FORCE
-  bool IsBalanced(node) => node == null || (Abs(Height(node.left) -
-  Height(node.right)) <= 1 && IsBalanced(node.left) && IsBalanced(node.right)),
-  with a separate Height that walks the whole subtree. Correct, but Height(node)
-  re-walks everything under node, and it is called again at every descendant. On
-  a left-skewed chain of n nodes that is 1+2+...+n work, quadratic. The
-  information Height already found is thrown away between calls; the tuple
-  return is what keeps it.
+  The first version most people write is a Height(node) helper plus an
+  IsBalanced that, at every node, calls Height on both children and then
+  recurses. That recomputes heights over and over: O(n log n) on a balanced tree
+  and O(n^2) on a skewed one. It loses because height is discarded after each
+  check instead of being passed up.
 INVARIANT
-  CheckBalance(node) returns exactly two facts about the subtree rooted at node:
-  height is its true height, and balanced is true if and only if EVERY node
-  inside that subtree satisfies the height-difference condition - not just node
-  itself. The base case (true, 0) gives an empty subtree height 0, so a leaf
-  returns (true, 1) and its null children differ by 0. Because height is
-  returned unconditionally and correctly even when balanced is false, a parent
-  can never be misled about geometry by an unbalanced child.
-ALGORITHM
-  1. Null node returns (true, 0).
-  2. Recurse left, then right, capturing both tuples in left and right.
-  3. balanced = left.balanced && right.balanced && Math.Abs(left.height -
-  right.height) <= 1. All three conjuncts are required.
-  4. height = 1 + Math.Max(left.height, right.height), computed regardless of
-  balance.
-  5. IsBalanced returns only the .balanced field of the root's tuple; the root
-  height is discarded.
+  When CheckBalance(node) returns, height is the exact number of nodes on the
+  longest path from node down to a leaf, and balanced is true exactly when the
+  whole subtree rooted at node satisfies the rule. Both hold for the null base
+  case, (true, 0). The AND chain carries the verdict of every descendant upward
+  unchanged, so by induction the value at the root is the answer for the entire
+  tree.
 WATCH OUT
-  The two left.balanced && right.balanced conjuncts are the part people drop.
-  Without them you would only check the root: a tree whose left and right
-  subtrees both have height 3 passes the Math.Abs test at the root even if the
-  left subtree is internally a skewed chain. Balance is defined over all nodes,
-  and only the recursive conjunction carries that up.
-
-  The && short-circuits, but nothing is saved by it - both CheckBalance calls
-  have already run on the lines above. An early return after left when
-  !left.balanced would prune real work; it does not change the worst case, since
-  a fully balanced tree never triggers it.
-
-  The comment above CheckBalance is stale: it describes returning 1 or 0 in a
-  2-element int array. The method returns a named ValueTuple, so left.height and
-  left.balanced are the accessors, not left[0].
-FOLLOW-UP
-  The classic compression of this: return int alone, using -1 as a sentinel for
-  "unbalanced somewhere below", and propagate -1 upward on sight. Same
-  traversal, one less field, but it conflates a height with an error code - the
-  tuple here is the more honest version and is what you should be able to
-  defend.
-
-  The other likely probe is depth. This recurses to the height of the tree, so a
-  degenerate n-node chain puts n frames on the call stack and can overflow
-  before the algorithm's own cost matters. The answer is an explicit stack with
-  a post-order iterative traversal, carrying computed heights in a dictionary or
-  on the stack itself.
+  The comment says the method "returns balanced (1 or 0) and height as 2 element
+  int array" - it does not; it returns a (bool, int) tuple. That comment is
+  stale and would confuse a reader looking for int[] indexing. The real risk
+  here is depth: recursion is not cut short, so a long skewed tree can overflow
+  the call stack. Also note balanced is computed with && but left and right are
+  both already evaluated above, so no subtree is ever skipped - the
+  short-circuit saves no work.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you stop early once you find an unbalanced node?
+     Yes - return a sentinel height such as -1 the moment left.height or
+     right.height is -1 or the gap exceeds 1, and check for -1 at the top. The
+     asymptotic cost is the same, but it avoids walking the rest of a huge tree
+     after failure.
+  2. Deep skewed tree blows the stack. Fix it?
+     Convert to an explicit iterative post-order with a Stack<TreeNode> plus a
+     dictionary or a per-node height map, so depth costs heap memory instead of
+     stack frames. The code gets noticeably longer and you must track whether a
+     node's children have already been processed.
+  3. What if the rule loosened to "heights differ by at most k"?
+     Only the constant changes: Math.Abs(left.height - right.height) <= k.
+     Nothing about the traversal or the height computation needs to move.
+  4. How would you also return the first offending node, not just a bool?
+     Widen the tuple to (bool balanced, int height, TreeNode culprit) and set
+     culprit to node when the local check fails, preferring a child's culprit if
+     one already exists, so the deepest failure is reported.
+TRIGGER
+  When a tree question asks a property of every node that depends on subtree
+  size, height or sum, return that measurement upward with the verdict in one
+  post-order pass.
+C# NOTE
+  The named value tuple (bool balanced, int height) is a struct, so each call
+  returns by value with no heap allocation, and the field names make left.height
+  readable without an extra class - much cleaner than the int[] the comment
+  describes.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  Postorder DFS returning height and diameter as tuple
-// -  [postorder-height-diameter]
+// -  Post-order DFS height calculation   [dfs-postorder-height]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Single postorder traversal visits each node once; returns both values
-// -  as tuple rather than using mutable state.
+// -  Each node visited once; returns tuple instead of global variable; call
+// -  stack depth equals tree height (worst case n for skewed tree).
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -34,80 +33,90 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Post-order DFS returning (height, diameter) tuple
+ PATTERN : Post-order DFS returning (height, best) pair up the tree
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
+VARIABLES
+  left                 the (height, diameter) pair from the left subtree
+  right                the (height, diameter) pair from the right subtree
+  height               1 + the taller child's height, for this node
+  diameterThroughHere  edge count of the longest path whose top point is this node
+  diameter             best of the three candidates seen in this subtree
 WHY THIS PATTERN
-  The longest path in a tree bends at exactly one node: it goes down the left
-  side and down the right side of that node. So for every node you need
-  left.height + right.height, and the answer is the biggest such sum over all
-  nodes. One post-order pass (children first, then the node) gives every node
-  its two child heights for free, and DFS carries both the
-  height and the best diameter seen in that subtree back up in one return value.
+  The longest path in a tree has one highest node, and at that node the path
+  goes down into the left subtree and down into the right subtree. So for each
+  node you only need two numbers from each child: how deep it goes (height) and
+  the best answer already found inside it (diameter). A single post-order walk -
+  children first, then the parent - computes both, which is why DFS returns a
+  tuple instead of one value. The final answer is the diameter field of the
+  root's pair.
 BRUTE FORCE
-  The first thing most people write is a Height(node) helper, then a recursion
-  that visits every node and calls Height(node.left) + Height(node.right). That
-  re-walks each subtree once per ancestor, so it is O(n^2) on a skewed tree and
-  O(n log n) on a balanced one. It loses because the height information is
-  recomputed instead of being returned alongside the partial answer.
+  The first thing most people write is: for every node compute
+  diameterThroughHere by calling a separate Height(node) helper on each child,
+  and take the max over all nodes. That re-walks the same subtrees once per
+  ancestor, so it costs O(n^2) time on a skewed tree. This file kills the
+  repeated work by having the same recursion hand the height back up alongside
+  the running best.
 INVARIANT
-  Every call to DFS(node) returns the true height of that
-  subtree in edges-plus-one (null is 0, a leaf is 1) and the largest left.height
-  + right.height over all nodes inside that subtree. The node combines three
-  candidates: the path bending here (diameterThroughHere), the best in the left
-  subtree, and the best in the right subtree. Since the true longest path bends
-  at some single node, and every node is the "here" case in exactly one call,
-  the max at the root covers all of them.
-WHY DIAMETER MUST TRAVEL UP TOO
-  Returning only height is not enough, because the best path may live deep in
-  one subtree and never touch the root. That is why the tuple carries
-  left.diameter and right.diameter upward and the node takes the max of all
-  three. The alternative is a mutable field updated as a side effect during the
-  height recursion; this file keeps the method pure by folding that field into
-  the return value.
+  When DFS(node) returns, height is the number of nodes on the longest downward
+  path starting at node, and diameter is the edge count of the longest path that
+  lies entirely inside node's subtree. The three-way Math.Max is exhaustive: any
+  path in this subtree either passes through node (diameterThroughHere) or is
+  fully inside one child (left.diameter or right.diameter). Since both facts
+  hold for the children before the parent uses them, induction gives the correct
+  answer at the root.
+NODES VERSUS EDGES
+  The two numbers use different units on purpose. height counts nodes (a leaf
+  returns 1 because null returns 0), while the problem's diameter counts edges.
+  left.height + right.height happens to be exactly the edge count of the path
+  through this node, because the two +1s for the node's own two edges are
+  already baked into the children's node counts. A leaf gives 0 + 0 = 0, which
+  is right.
 WATCH OUT
-  The answer is counted in edges, not nodes: a single-node tree returns height 1
-  and diameter 0. If you change the null base case to return -1 for height,
-  diameterThroughHere must become left.height + right.height + 2, so the two
-  pieces are coupled. Recursion depth equals tree height, so a long chain of
-  nodes shaped like a linked list can overflow the call stack. Also note
-  DiameterOfBinaryTree throws away the height with the discard, so the height
-  value only matters inside the recursion.
+  The null case returns the tuple (0, 0), so an empty tree gives diameter 0 -
+  fine, but only because 0 is also a valid diameter, not because of any guard.
+  The recursion has no depth limit: a long chain of nodes makes the call stack
+  as deep as the tree, and a very skewed tree can throw StackOverflowException,
+  which you cannot catch in .NET. Also note the local int height shadows nothing
+  but is easy to confuse with left.height; if you ever mix them up and write 1 +
+  left.height + right.height you silently start counting nodes instead of edges.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What changes if the diameter is defined as the number of nodes on the path
-  instead of edges?
-     Use diameterThroughHere = left.height + right.height + 1 and keep
-     everything else the same; the height base case of 0 for null already counts
-     nodes.
-  2. Can you do this without recursion, for a very deep tree?
-     Do an explicit post-order traversal with a Stack<TreeNode> and a
-     Dictionary<TreeNode,int> (or a stack of frames) holding computed heights,
-     updating a running max when both children are done. Same O(n) time, but
-     heap memory replaces stack frames so depth no longer risks a stack
-     overflow.
-  3. How would you return the actual path, not just its length?
-     Store the deepest-descendant node along with each height, and remember the
-     bend node when a new max is found; then walk down from the bend to those
-     two descendants. That adds O(n) extra storage for parent or child pointers.
-  4. How would you extend this to an N-ary tree?
-     Compute the heights of all children, keep the largest two, and use their
-     sum as the path bending at that node. Finding the top two is O(k) per node
-     with two running variables, so the total stays linear.
+  1. Can you avoid returning a tuple?
+     Yes - keep a field or a ref int best on the Solution class, have DFS return
+     only the int height, and update best inside. Same work, one less allocation
+     per call, but the method is no longer pure and is not safe to call from two
+     threads on one instance.
+  2. How would you remove the recursion for a very deep tree?
+     Do an explicit post-order traversal with a Stack<TreeNode> plus a
+     Dictionary or a second stack holding each node's computed height, so the
+     heights of both children are ready before you pop the parent. It costs more
+     code and an explicit heap-allocated stack, but the depth limit becomes
+     memory rather than the thread stack.
+  3. What if each edge has a weight and you want the heaviest path?
+     Replace 1 + Math.Max(...) with weight + Math.Max(...) using the edge weight
+     into each child, and diameterThroughHere becomes leftWeighted +
+     rightWeighted. With negative weights you must also allow a child's
+     contribution to be clamped at 0, since skipping a branch can beat taking
+     it.
+  4. You also need the actual path, not just its length.
+     Store the node where the best diameter was achieved while taking the
+     three-way max, then from that node walk down the deepest child on each
+     side, which needs the heights kept per node or recomputed along those two
+     chains only.
 TRIGGER
-  When a tree question asks for the best path that may bend at any node and
-  never reaches the root, return a tuple of (what the parent needs, best answer
-  so far) from one post-order pass.
+  A tree question that asks for the longest or best path that may bend at some
+  node instead of starting at the root - return a per-node "reaching down" value
+  and a separate running best.
 C# NOTE
-  The named ValueTuple (int height, int diameter) is a struct, so each recursive
-  call returns it by value with no object allocation, and the named fields read
-  better than left.Item1; the discard in var (_, diameter) makes it clear the
-  root height is intentionally unused.
+  The value tuple (int height, int diameter) is a struct, so each DFS return is
+  stack-copied, not heap-allocated, and the named fields let you write
+  left.height instead of left.Item1. The deconstruction var (_, diameter) =
+  DFS(root) with the discard for height is the idiomatic way to drop the part
+  you do not need.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

@@ -650,296 +650,334 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Lowest Common Ancestor in a BST',
-  note: 'in a BST you never search for the split point - you walk to it',
+  title: 'Lowest Common Ancestor in Binary Search Tree',
+  note: 'in a BST every node splits the number line: everything left of it is smaller, everything right is larger - so the lowest common ancestor of p and q is simply the first node you meet on the way down that does not have both of them on the same side',
   inputs: [
-    {id:'t', label:'tree (level order)', value:'6,2,8,0,4,7,9,null,null,3,5', width:300},
+    {id:'t', label:'BST (level order)', value:'6,2,8,0,4,7,9,null,null,3,5', width:320},
     {id:'p', label:'p', value:'3', width:70},
     {id:'q', label:'q', value:'5', width:70}
   ],
   parse(raw){
     const vals = parseLevelOrder(raw.t, 31);
-    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 6,2,8,0,4,7,9,null,null,3,5'};
+    if (!vals) return {ok:false, msg:'Enter a level-order BST, e.g. 6,2,8,0,4,7,9,null,null,3,5'};
     const nodes = treeFromLevelOrder(vals);
-    if (nodes.length < 2) return {ok:false, msg:'Needs at least two nodes.'};
-    const seen = {};
-    for (const n of nodes){
-      if (seen[n.v]) return {ok:false, msg:'A BST here must have distinct node values.'};
-      seen[n.v] = true;
-    }
+    if (!nodes.length) return {ok:false, msg:'Needs at least a root node.'};
+    if (nodes.length > 15) return {ok:false, msg:'Keep it to 15 nodes or fewer so the whole run stays watchable.'};
+    const p = Number(String(raw.p).trim()), q = Number(String(raw.q).trim());
+    if (!Number.isFinite(p) || !Number.isFinite(q)) return {ok:false, msg:'p and q must each be a single number.'};
     const byId = {}, kid = {};
     nodes.forEach(n => { byId[n.id] = n; });
     nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
-    const order = [];
-    (function walk(id){
-      if (!id) return;
+    const okBst = (id, lo, hi) => {
+      if (!id) return true;
+      const v = byId[id].v;
+      if (v <= lo || v >= hi) return false;
       const k = kid[id] || {};
-      walk(k.L); order.push(byId[id].v); walk(k.R);
-    })('n0');
-    for (let i = 1; i < order.length; i++){
-      if (order[i] <= order[i - 1]) return {ok:false, msg:'Not a BST: everything left of a node must be smaller, everything right larger.'};
-    }
-    const pv = parseInts(raw.p, 1), qv = parseInts(raw.q, 1);
-    if (!pv || !qv) return {ok:false, msg:'p and q must each be a single number.'};
-    if (!seen[pv[0]]) return {ok:false, msg:'p = ' + pv[0] + ' is not a node in this tree.'};
-    if (!seen[qv[0]]) return {ok:false, msg:'q = ' + qv[0] + ' is not a node in this tree.'};
+      return okBst(k.L || null, lo, v) && okBst(k.R || null, v, hi);
+    };
+    if (!okBst('n0', -Infinity, Infinity)) return {ok:false, msg:'Those values are not a valid BST - every left descendant must be smaller than its ancestor and every right descendant larger.'};
+    const vs = nodes.map(n => n.v);
+    if (vs.indexOf(p) < 0 || vs.indexOf(q) < 0) return {ok:false, msg:'p and q must both be values that appear in the tree.'};
     return {
       ok:true,
-      value:{vals: vals, p: pv[0], q: qv[0]},
-      normalized:{t: vals.map(v => v === null ? 'null' : v).join(','), p: String(pv[0]), q: String(qv[0])}
+      value:{vals: vals, p: p, q: q},
+      normalized:{t: vals.map(v => v === null ? 'null' : v).join(','), p: String(p), q: String(q)}
     };
   },
   shuffle(){
-    const a = [];
-    let x = 1 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < 7; i++){ a.push(x); x += 1 + Math.floor(Math.random() * 3); }
-    const t = [a[3], a[1], a[5], a[0], a[2], a[4], a[6]];
-    let i = Math.floor(Math.random() * 7), j = Math.floor(Math.random() * 7);
-    while (j === i) j = Math.floor(Math.random() * 7);
-    return {t: t.join(','), p: String(a[i]), q: String(a[j])};
+    const pool = [];
+    for (let i = 0; i <= 20; i++) pool.push(i);
+    for (let i = pool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    const size = 6 + Math.floor(Math.random() * 4);
+    const keys = pool.slice(0, size).sort((a, b) => a - b);
+    const build = (arr) => {
+      if (!arr.length) return null;
+      const m = Math.floor(arr.length / 2);
+      return {v: arr[m], l: build(arr.slice(0, m)), r: build(arr.slice(m + 1))};
+    };
+    const root = build(keys);
+    const out = [], qq = [root];
+    while (qq.length){
+      const x = qq.shift();
+      if (!x){ out.push(null); continue; }
+      out.push(x.v); qq.push(x.l); qq.push(x.r);
+    }
+    while (out.length && out[out.length - 1] === null) out.pop();
+    let a = keys[Math.floor(Math.random() * keys.length)], b = a;
+    while (b === a) b = keys[Math.floor(Math.random() * keys.length)];
+    return {t: out.map(v => v === null ? 'null' : v).join(','), p: String(a), q: String(b)};
   },
   solutions: [
   {
-    label: 'Walk down until the values split',
-    badge: 'O(n) time · O(1) space · BST descent · optimal.cs',
-    blurb: 'The lowest common ancestor is the first node the two values <b>disagree</b> about. While both are larger than <code>node</code>, both live in the right subtree, so <code>node</code> cannot be the answer and the whole left side is gone; same story mirrored. The moment one is not larger and one is not smaller, the paths part here — that node is the LCA.',
+    label: 'Iterative descent from the root',
+    badge: 'O(n) time · O(1) space · BST traversal, iterative descent · optimal.cs',
+    blurb: 'Walk down from the root with a single pointer. If both p and q are larger than the current node they can only live in its right subtree, if both are smaller only in its left, so in either case the current node is not the meeting point and the pointer moves on. The first node that does not send them the same way - including a node that IS p or q - is the answer.',
+    shapeOverride: {skip: ['call-stack'], reason: 'this version replaces the recursion with a while loop and one reassigned pointer, so no frames are ever stacked - the O(1) space is exactly the point of it.'},
     legend: [
-      {cls:'hot', text:'node'},
-      {cls:'in-window', text:'p and q, the two targets'},
-      {cls:'dim', text:'subtree the ordering ruled out'},
-      {cls:'done', text:'already walked past'},
-      {cls:'good', text:'the LCA'}
-    ],
-    shapeOverride: {skip: ['call-stack'], reason: 'This version is a plain while loop over one pointer - there is no recursion and no stack to draw, which is exactly the space win over the recursive solution below.'},
-    code: [
-      'TreeNode node = root;',
-      '',
-      'while (node != null)',
-      '{',
-      '    if (p.val > node.val && q.val > node.val)',
-      '    {',
-      '        node = node.right;   // both targets are bigger',
-      '    }',
-      '    else if (p.val < node.val && q.val < node.val)',
-      '    {',
-      '        node = node.left;    // both targets are smaller',
-      '    }',
-      '    else',
-      '    {',
-      '        return node;         // the values split right here',
-      '    }',
-      '}',
-      'return null;'
-    ],
-    simulate(input){
-      const P = input.p, Q = input.q;
-      const nodes = treeFromLevelOrder(input.vals);
-      const byId = {}, kid = {};
-      nodes.forEach(n => { byId[n.id] = n; });
-      nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
-      const child = (id, s) => (kid[id] || {})[s] || null;
-      const find = (v) => { for (const n of nodes) if (n.v === v) return n.id; return null; };
-      const subtree = (id) => {
-        const out = [], st = id ? [id] : [];
-        while (st.length){
-          const c = st.pop(); out.push(c);
-          const k = kid[c] || {};
-          if (k.L) st.push(k.L);
-          if (k.R) st.push(k.R);
-        }
-        return out;
-      };
-      const pid = find(P), qid = find(Q);
-      const dim = {}, done = {};
-      let ansId = null, hops = 0;
-      const steps = [];
-
-      const panels = (curId, verdict) => [
-        pTree('BST', nodes.map(n => ({
-          id: n.id, v: n.v, parent: n.parent, side: n.side,
-          cls: n.id === ansId ? 'good'
-             : n.id === curId ? 'hot'
-             : dim[n.id] ? 'dim'
-             : (n.id === pid || n.id === qid) ? 'in-window'
-             : done[n.id] ? 'done' : ''
-        })), {
-          tags: (curId ? [{name:'node', id: curId, cls:'accent'}] : []).concat([
-            {name:'p', id: pid}, {name:'q', id: qid}
-          ]),
-          scale: 0.8
-        }),
-        pPills('state', [
-          {k:'node', v: curId ? byId[curId].v : 'null', cls:'hot'},
-          {k:'p.val', v: P},
-          {k:'q.val', v: Q},
-          {k:'this node says', v: verdict},
-          {k:'nodes visited', v: hops}
-        ])
-      ];
-
-      let cur = 'n0';
-      hops = 1;
-      steps.push({lines:[1], msg:'<code>node</code> starts at the root, because the root is the one node guaranteed to be an ancestor of both <b>' + P + '</b> and <b>' + Q + '</b>. Everything after this is a single pointer moving down — no queue, no recursion, no second traversal.', panels: panels(cur, 'not asked yet')});
-
-      while (true){
-        const v = byId[cur].v;
-        if (P > v && Q > v){
-          const gone = child(cur, 'L');
-          subtree(gone).forEach(id => dim[id] = true);
-          steps.push({lines:[3,5,7], msg:'Both <b>' + P + '</b> and <b>' + Q + '</b> are larger than <b>' + v + '</b>, so in a BST both must live in the right subtree. Neither the left subtree nor <b>' + v + '</b> itself can be an ancestor of either one, so half the tree is discarded in a single comparison and <code>node</code> steps right.', panels: panels(cur, 'both bigger, go right')});
-          done[cur] = true;
-          cur = child(cur, 'R');
-          hops++;
-        } else if (P < v && Q < v){
-          const gone = child(cur, 'R');
-          subtree(gone).forEach(id => dim[id] = true);
-          steps.push({lines:[3,9,11], msg:'Both targets are smaller than <b>' + v + '</b>, so both sit in the left subtree. The mirror of the last case: the right subtree and <b>' + v + '</b> are ruled out together, and <code>node</code> steps left.', panels: panels(cur, 'both smaller, go left')});
-          done[cur] = true;
-          cur = child(cur, 'L');
-          hops++;
-        } else {
-          ansId = cur;
-          const why = (P === v || Q === v)
-            ? 'one of the targets <em>is</em> this node, and a node is allowed to be its own ancestor'
-            : '<b>' + Math.min(P, Q) + '</b> is below it and <b>' + Math.max(P, Q) + '</b> is above it, so the two search paths part company here';
-          steps.push({lines:[3,13,15], msg:'At <b>' + v + '</b> the two values stop agreeing: ' + why + '. Every node further down holds only one of them, so this is the <b>lowest</b> node holding both. Return it immediately.', panels: panels(cur, 'they split here')});
-          break;
-        }
-      }
-
-      steps.push({lines:[15,18], msg:'Answer <b>' + byId[ansId].v + '</b>, found in ' + hops + ' node visit(s) — one pointer, no extra memory. The loop can only ever walk downward, so it is O(h): O(log n) on a balanced tree and O(n) on a degenerate one. Line 18 is unreachable for a real tree; it only fires if <code>root</code> was null to begin with.', panels: panels(null, 'done')});
-      return steps;
-    }
-  },
-  {
-    label: 'The same descent, written as recursion',
-    badge: 'O(n) time · O(n) space · recursive BST descent · suboptimal.cs',
-    blurb: 'Identical logic with the bounds named up front: <code>min</code> and <code>max</code> straddling <code>root.val</code> is the same test as “the values split here”. But each step is a <b>call</b>, so the path is held open on the call stack and the answer is copied back up through every frame. Same visits, O(h) stack instead of O(1), and <code>min</code>/<code>max</code> recomputed per frame.',
-    legend: [
-      {cls:'hot', text:'the frame running now'},
-      {cls:'done', text:'frames parked below, waiting'},
-      {cls:'in-window', text:'p and q, the two targets'},
-      {cls:'dim', text:'subtree never visited'},
-      {cls:'good', text:'the LCA'}
+      {cls:'hot', text:'node the pointer is on'},
+      {cls:'done', text:'already passed through'},
+      {cls:'dim', text:'subtree ruled out by the comparison'},
+      {cls:'good', text:'the answer'}
     ],
     code: [
-      'int min = Math.Min(p.val, q.val);   // recomputed every call',
-      'int max = Math.Max(p.val, q.val);',
-      '',
-      'if (max >= root.val && min <= root.val)',
-      '    return root;',
-      '',
-      'if (min > root.val)',
+      'public class Solution',
       '{',
-      '    return LowestCommonAncestor(root.right, p, q);',
-      '}',
-      'else',
-      '{',
-      '    return LowestCommonAncestor(root.left, p, q);',
+      '    public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q)',
+      '    {',
+      '        TreeNode node = root;',
+      '',
+      '        while (node != null)',
+      '        {',
+      '            if (p.val > node.val && q.val > node.val)',
+      '            {',
+      '                node = node.right;',
+      '            }',
+      '            else if (p.val < node.val && q.val < node.val)',
+      '            {',
+      '                node = node.left;',
+      '            }',
+      '            else',
+      '            {',
+      '                return node;',
+      '            }',
+      '        }',
+      '        return null;',
+      '    }',
       '}'
     ],
     simulate(input){
       const P = input.p, Q = input.q;
-      const lo = Math.min(P, Q), hi = Math.max(P, Q);
       const nodes = treeFromLevelOrder(input.vals);
       const byId = {}, kid = {};
       nodes.forEach(n => { byId[n.id] = n; });
       nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
       const child = (id, s) => (kid[id] || {})[s] || null;
-      const find = (v) => { for (const n of nodes) if (n.v === v) return n.id; return null; };
+      const pid = nodes.filter(n => n.v === P)[0].id;
+      const qid = nodes.filter(n => n.v === Q)[0].id;
       const subtree = (id) => {
-        const out = [], st = id ? [id] : [];
+        const out = [], st = [id];
         while (st.length){
-          const c = st.pop(); out.push(c);
-          const k = kid[c] || {};
-          if (k.L) st.push(k.L);
-          if (k.R) st.push(k.R);
+          const x = st.pop();
+          if (!x) continue;
+          out.push(x);
+          st.push(child(x, 'L')); st.push(child(x, 'R'));
         }
         return out;
       };
-      const pid = find(P), qid = find(Q);
-      const dim = {};
-      const frames = [];
-      let ansId = null, opened = 0;
-      const steps = [];
 
-      const panels = (curId, popId, freshId) => [
-        pTree('BST', nodes.map(n => ({
-          id: n.id, v: n.v, parent: n.parent, side: n.side,
-          cls: n.id === ansId ? 'good'
-             : n.id === curId ? 'hot'
-             : frames.some(f => f.id === n.id) ? 'done'
-             : dim[n.id] ? 'dim'
-             : (n.id === pid || n.id === qid) ? 'in-window' : ''
-        })), {
-          tags: (curId ? [{name:'root', id: curId, cls:'accent'}] : []).concat([
-            {name:'p', id: pid}, {name:'q', id: qid}
-          ]),
-          scale: 0.8
+      const seen = {}, dead = {};
+      const steps = [];
+      let hops = 0, ans = null;
+
+      const panels = (hot) => [
+        pTree('BST', nodes.map(n => {
+          let cls = '';
+          if (n.id === ans) cls = 'good';
+          else if (n.id === hot) cls = 'hot';
+          else if (dead[n.id]) cls = 'dim';
+          else if (seen[n.id]) cls = 'done';
+          return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
+                  sub: n.id === pid ? 'p' : (n.id === qid ? 'q' : '')};
+        }), {
+          tags: [{name:'p', id: pid}, {name:'q', id: qid}].concat(hot ? [{name:'node', id: hot, cls:'accent'}] : []),
+          scale: 0.75
+        }),
+        pPills('state', [
+          {k:'p', v: P},
+          {k:'q', v: Q},
+          {k:'node', v: hot ? byId[hot].v : 'null', cls:'hot'},
+          {k:'hops down', v: hops},
+          {k:'answer', v: ans === null ? 'pending' : byId[ans].v, cls: ans === null ? '' : 'good'}
+        ])
+      ];
+
+      steps.push({lines:[3,5,7], msg:'Line 5 parks a single pointer <code>node</code> on the root - that one reference is the whole working memory of this solution, which is why it costs O(1) space. The loop on line 7 keeps walking it down while it still points at a real node.', panels: panels('n0')});
+
+      let cur = 'n0';
+      while (cur){
+        const v = byId[cur].v;
+        if (P > v && Q > v){
+          const gone = subtree(child(cur, 'L'));
+          gone.forEach(id => { dead[id] = true; });
+          dead[cur] = false;
+          seen[cur] = true;
+          hops++;
+          const nxt = child(cur, 'R');
+          steps.push({lines:[9,10,11,12], msg:'Line 9 asks whether both keys sit above <b>' + v + '</b>: p=' + P + ' and q=' + Q + ' are both bigger, so in a BST neither of them can possibly be in the left subtree, and <b>' + v + '</b> itself is neither of them. Their meeting point must be strictly to the right, so line 11 moves the pointer to <b>' + (nxt ? byId[nxt].v : 'null') + '</b> and the whole left side is discarded unvisited.', panels: panels(nxt)});
+          cur = nxt;
+        } else if (P < v && Q < v){
+          const gone = subtree(child(cur, 'R'));
+          gone.forEach(id => { dead[id] = true; });
+          seen[cur] = true;
+          hops++;
+          const nxt = child(cur, 'L');
+          steps.push({lines:[9,13,14,15,16], msg:'The first test fails, so line 13 tries the mirror image: p=' + P + ' and q=' + Q + ' are both smaller than <b>' + v + '</b>, which puts both of them in the left subtree. Line 15 follows that edge to <b>' + (nxt ? byId[nxt].v : 'null') + '</b> and the entire right side is ruled out in one comparison - that is why the walk costs the height of the tree, not its size.', panels: panels(nxt)});
+          cur = nxt;
+        } else {
+          ans = cur;
+          let why;
+          if (v === P || v === Q){
+            why = 'this node <em>is</em> one of the two keys, so the other one is somewhere beneath it and an ancestor cannot get any lower.';
+          } else {
+            why = 'one key is smaller and the other larger, so they go down opposite sides from here - this is exactly where their paths part, and no node below can hold both.';
+          }
+          steps.push({lines:[9,13,17,18,19], msg:'Neither test passes at <b>' + v + '</b>, so control falls to the <code>else</code> on line 17: ' + why + ' Line 19 returns <b>' + v + '</b> straight out of the loop.', panels: panels(cur)});
+          break;
+        }
+      }
+
+      if (ans === null){
+        steps.push({lines:[7,22], msg:'The pointer walked off the bottom of the tree, so the loop condition on line 7 fails and line 22 returns <code>null</code>. That only happens when a key is not in the tree at all.', panels: panels(null)});
+      } else {
+        steps.push({lines:[3,19], msg:'Done in ' + hops + ' hop(s) plus the final test: the lowest common ancestor is <b>' + byId[ans].v + '</b>. Nothing was pushed, nothing was stored - the loop only ever overwrote one pointer, so this is O(h) time in the height and O(1) space, worst case O(n) time on a tree that is one long chain.', panels: panels(ans)});
+      }
+      return steps;
+    }
+  },
+  {
+    label: 'Recursive descent on min/max of the pair',
+    badge: 'O(n) time · O(n) space · BST traversal, recursive descent · suboptimal.cs',
+    blurb: 'Same decision, spelled as recursion: sort the pair into min and max once per call, and if the current node sits inside the closed range [min, max] it is the split point and is returned. Otherwise the whole range lies on one side and the call recurses into it - correct, but each level now costs a stack frame instead of a pointer move.',
+    legend: [
+      {cls:'hot', text:'node of the running call'},
+      {cls:'in-window', text:'caller parked, waiting on the return'},
+      {cls:'dim', text:'subtree never visited'},
+      {cls:'good', text:'the answer'}
+    ],
+    code: [
+      'public class Solution',
+      '{',
+      '    public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q)',
+      '    {',
+      '        //My solution',
+      '        int min = Math.Min(p.val, q.val);',
+      '        int max = Math.Max(p.val, q.val);',
+      '',
+      '        if (max >= root.val && min <= root.val)',
+      '            return root;',
+      '',
+      '        if (min > root.val)',
+      '        {',
+      '            return LowestCommonAncestor(root.right, p, q);',
+      '        }',
+      '        else',
+      '            return LowestCommonAncestor(root.left, p, q);',
+      '    }',
+      '}'
+    ],
+    simulate(input){
+      const P = input.p, Q = input.q;
+      const MIN = Math.min(P, Q), MAX = Math.max(P, Q);
+      const nodes = treeFromLevelOrder(input.vals);
+      const byId = {}, kid = {};
+      nodes.forEach(n => { byId[n.id] = n; });
+      nodes.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
+      const child = (id, s) => (kid[id] || {})[s] || null;
+      const pid = nodes.filter(n => n.v === P)[0].id;
+      const qid = nodes.filter(n => n.v === Q)[0].id;
+      const subtree = (id) => {
+        const out = [], st = [id];
+        while (st.length){
+          const x = st.pop();
+          if (!x) continue;
+          out.push(x);
+          st.push(child(x, 'L')); st.push(child(x, 'R'));
+        }
+        return out;
+      };
+
+      const frames = [], dead = {};
+      const steps = [];
+      let calls = 0, maxF = 0, ans = null;
+
+      const panels = (hot, freshId, popId) => [
+        pTree('BST', nodes.map(n => {
+          let cls = '';
+          if (n.id === ans) cls = 'good';
+          else if (n.id === hot) cls = 'hot';
+          else if (dead[n.id]) cls = 'dim';
+          else if (frames.some(f => f.id === n.id)) cls = 'in-window';
+          return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
+                  sub: n.id === pid ? 'p' : (n.id === qid ? 'q' : '')};
+        }), {
+          tags: [{name:'p', id: pid}, {name:'q', id: qid}].concat(hot ? [{name:'root', id: hot, cls:'accent'}] : []),
+          scale: 0.75
         }),
         pStack('call stack', [{
           label: 'LowestCommonAncestor(root, p, q)',
           mode: 'stack',
           items: frames.map((f, i) => ({
             text: 'root = ' + byId[f.id].v,
-            sub: 'min ' + lo + ', max ' + hi,
+            sub: 'min ' + MIN + ', max ' + MAX + (f.note ? ' | ' + f.note : ' | deciding'),
             cls: i === frames.length - 1 ? 'hot' : '',
             fresh: f.id === freshId,
             popped: f.id === popId && i === frames.length - 1
           })),
-          empty: 'all frames returned',
-          foot: 'first call',
+          empty: 'no frames open',
+          foot: 'caller',
           top: 'running now'
         }]),
         pPills('state', [
-          {k:'root.val', v: curId ? byId[curId].v : 'unwound', cls:'hot'},
-          {k:'min', v: lo},
-          {k:'max', v: hi},
+          {k:'min', v: MIN},
+          {k:'max', v: MAX},
           {k:'frames open', v: frames.length},
-          {k:'calls made', v: opened}
+          {k:'deepest stack', v: maxF},
+          {k:'calls made', v: calls},
+          {k:'answer', v: ans === null ? 'pending' : byId[ans].v, cls: ans === null ? '' : 'good'}
         ])
       ];
 
-      let cur = 'n0';
-      frames.push({id: cur, site: 5});
-      opened = 1;
-      steps.push({lines:[1,2], msg:'The first call opens with <code>root</code> = <b>' + byId[cur].v + '</b>. It sorts the two targets into <code>min</code> = <b>' + lo + '</b> and <code>max</code> = <b>' + hi + '</b> so the test below can be written once instead of twice — but note these two lines run again in <em>every</em> frame, recomputing the same two constants all the way down.', panels: panels(cur, null, cur)});
+      steps.push({lines:[3,5,6,7], msg:'Every call begins by sorting the pair: <code>min</code> = ' + MIN + ' and <code>max</code> = ' + MAX + '. These two numbers never change, yet lines 6 and 7 recompute them on every single level - harmless, but it is the small tell that this version was written per-call rather than once.', panels: panels(null, null, null)});
 
-      while (true){
+      let cur = 'n0';
+      while (cur){
         const v = byId[cur].v;
-        if (hi >= v && lo <= v){
-          ansId = cur;
-          steps.push({lines:[4,5], msg:'<code>max &gt;= root.val &amp;&amp; min &lt;= root.val</code>: <b>' + v + '</b> sits between the two targets, which is the split point — the same condition the loop version calls “they disagree here”. This frame returns <b>' + v + '</b> and pops.', panels: panels(cur, cur, null)});
+        frames.push({id: cur, note: ''});
+        calls++;
+        maxF = Math.max(maxF, frames.length);
+        const parked = frames.length > 1 ? ' Its caller, <b>' + byId[frames[frames.length - 2].id].v + '</b>, is parked mid-return waiting for whatever comes back.' : '';
+        steps.push({lines:[3,6,7,9], msg:'A frame opens with <code>root</code> = <b>' + v + '</b>. It recomputes min and max, then line 9 asks the one question that matters: does <b>' + v + '</b> lie inside the closed range [' + MIN + ', ' + MAX + ']?' + parked, panels: panels(cur, cur, null)});
+
+        if (MAX >= v && MIN <= v){
+          ans = cur;
+          frames[frames.length - 1].note = 'returns ' + v;
+          steps.push({lines:[9,10], msg:'Yes: ' + MAX + ' is at least ' + v + ' and ' + MIN + ' is at most ' + v + ', so one key is on the left and the other on the right - or <b>' + v + '</b> is itself one of them. Either way the paths to p and q separate here, so line 10 returns <b>' + v + '</b>. Note the range is closed on both sides, which is what lets a node that equals p or q count as its own ancestor.', panels: panels(cur, null, null)});
           break;
         }
-        if (lo > v){
-          frames[frames.length - 1].site = 9;
-          subtree(child(cur, 'L')).forEach(id => dim[id] = true);
-          steps.push({lines:[4,7,9], msg:'Both targets are above <b>' + v + '</b>, so the answer is somewhere right. The method calls itself on <code>root.right</code> — and because this is a <code>return</code> of the call, the frame has nothing left to do afterwards, yet C# still keeps it parked on the stack until the answer comes back.', panels: panels(cur, null, null)});
-          cur = child(cur, 'R');
+
+        if (MIN > v){
+          subtree(child(cur, 'L')).forEach(id => { dead[id] = true; });
+          const nxt = child(cur, 'R');
+          frames[frames.length - 1].note = 'awaiting right';
+          steps.push({lines:[9,12,13,14], msg:'No: line 9 failed because even the smaller key, ' + MIN + ', is above <b>' + v + '</b>. Both keys therefore live strictly in the right subtree, so line 14 recurses into <b>' + (nxt ? byId[nxt].v : 'null') + '</b> - and this frame stays open on the stack, doing nothing but waiting to hand the result back up. The left subtree is never touched.', panels: panels(nxt, null, null)});
+          cur = nxt;
         } else {
-          frames[frames.length - 1].site = 13;
-          subtree(child(cur, 'R')).forEach(id => dim[id] = true);
-          steps.push({lines:[4,7,11,13], msg:'<code>min</code> is not above <b>' + v + '</b> and the split test failed, so both targets must be below it: recurse on <code>root.left</code>. The right subtree is never touched.', panels: panels(cur, null, null)});
-          cur = child(cur, 'L');
+          subtree(child(cur, 'R')).forEach(id => { dead[id] = true; });
+          const nxt = child(cur, 'L');
+          frames[frames.length - 1].note = 'awaiting left';
+          steps.push({lines:[9,12,16,17], msg:'No, and line 12 is false too - the larger key, ' + MAX + ', is below <b>' + v + '</b>. So both keys are in the left subtree and the <code>else</code> on line 16 recurses into <b>' + (nxt ? byId[nxt].v : 'null') + '</b>, leaving this frame parked. The right subtree is ruled out wholesale.', panels: panels(nxt, null, null)});
+          cur = nxt;
         }
-        frames.push({id: cur, site: 5});
-        opened++;
-        steps.push({lines:[1,2], msg:'A fresh frame stacks on top with <code>root</code> = <b>' + byId[cur].v + '</b>, and lines 1-2 compute <code>min</code> = <b>' + lo + '</b> and <code>max</code> = <b>' + hi + '</b> all over again. The parent frame underneath is frozen mid-return, holding memory for no reason other than the shape of the code.', panels: panels(cur, null, cur)});
       }
 
-      frames.pop();
-      while (frames.length){
-        const f = frames[frames.length - 1];
-        steps.push({lines:[f.site], msg:'The value comes back to the frame with <code>root</code> = <b>' + byId[f.id].v + '</b>, which was parked on this line. It does <em>no</em> work with it — it just returns <b>' + byId[ansId].v + '</b> onward. This is the whole cost of the recursion: ' + frames.length + ' more frame(s) of copying an answer that was already final.', panels: panels(f.id, f.id, null)});
+      while (frames.length > 1){
+        const top = frames[frames.length - 1];
+        const under = frames[frames.length - 2];
+        const line = byId[under.id].v < MIN ? 14 : 17;
+        under.note = 'returns ' + byId[ans].v;
+        steps.push({lines:[line], msg:'The frame for <b>' + byId[top.id].v + '</b> is done, so it pops and its value lands as the result of the recursive call on line ' + line + ' inside <b>' + byId[under.id].v + '</b>. That caller does nothing with it - it just <code>return</code>s it unchanged, so the answer rides all the way back up the stack untouched.', panels: panels(top.id, null, top.id)});
         frames.pop();
       }
 
-      steps.push({lines:[1,2], msg:'Answer <b>' + byId[ansId].v + '</b> after ' + opened + ' call(s) — the exact same nodes the loop visited, so the time is identical. The difference is the stack that just drained: O(h) frames, which is O(n) on a degenerate tree and can overflow. Worth noting too, there is no <code>root == null</code> guard here, so a p or q that is not in the tree would run off the bottom and throw.', panels: panels(null, null, null)});
+      const depth = maxF;
+      steps.push({lines:[3,10], msg:'The root call hands back <b>' + byId[ans].v + '</b>. It made the same ' + calls + ' comparison(s) as the loop version and looked at the same nodes, but it held ' + depth + ' frame(s) open at once to do it - O(h) space that becomes O(n) on a degenerate chain, where the iterative version needs none.', panels: panels(null, null, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

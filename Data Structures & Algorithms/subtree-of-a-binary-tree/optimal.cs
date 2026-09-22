@@ -1,15 +1,12 @@
 // ##########################################################################
-// #  optimal.cs            O(m * n) time / O(n + m) space
-// #  DFS anchor scan + recursive tree equality check
-// #  [tree-compare-each-node]
+// #  optimal.cs            O(n * m) time / O(n + m) space
+// #  Recursive DFS tree comparison   [recursive-dfs-subtree-check]
 // #  the only solution in this folder
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  IsSubtree recurses over every node of root as a candidate anchor, and
-// #  IsSameTree does a full O(n) structural comparison at each anchor;
-// #  worst-case recursion depth stacks the root traversal depth with a
-// #  same-tree call depth.
+// #  Each of m nodes in root triggers IsSameTree comparison on n nodes of
+// #  subRoot; call stack accumulates height of both trees.
 // ##########################################################################
 
 public class Solution
@@ -42,85 +39,80 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS anchor walk + full tree-equality check at each node
+ PATTERN : Tree DFS - match whole subtree at every node
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
-WHY TWO RECURSIONS
-  IsSubtree and IsSameTree ask different questions and cannot be fused into one
-  traversal. IsSameTree(first, second) asks "does an exact copy of second start
-  right here, at first". IsSubtree asks "does any node in root anchor such a
-  copy". The reason they must stay separate: the moment IsSameTree hits a
-  mismatch it has to abandon that whole comparison, but the search itself is not
-  over - you must restart the comparison from a fresh anchor node. If you tried
-  to keep descending with a single function you would be matching subRoot's
-  children against nodes that are no longer aligned with subRoot's root.
+VARIABLES
+  root      current node of the big tree being tested as a match start
+  subRoot   the pattern tree; never changes during the search
+  first     node from the big tree in the pairwise identity walk
+  second    node from the pattern tree, walked in lockstep with first
+WHY THIS PATTERN
+  The question asks whether the pattern tree appears somewhere inside the big
+  tree as a complete subtree, and a subtree is identified by the node it hangs
+  from. So there are only as many candidate positions as there are nodes, and
+  each candidate is a yes/no full-equality test. IsSubtree walks every node of
+  root to pick candidates; IsSameTree does the strict shape-and-value comparison
+  of first against second. The "or" of root.left and root.right means one match
+  anywhere is enough.
+BRUTE FORCE
+  The first idea most people write is exactly this: try every node, compare
+  fully. There is no simpler correct version to fall back to, so the honest
+  brute force is the same shape with a wasteful comparison, for example
+  serializing the subtree at every node into a string and comparing strings,
+  which costs extra memory per node and still visits every pair. This file
+  avoids that by comparing nodes directly and stopping at the first mismatch.
 INVARIANT
-  IsSameTree(first, second) returns true only when the two trees agree in shape
-  and in value all the way down to their nulls. It is not a prefix or
-  containment test. That is the whole definition of "subtree" here: a node plus
-  ALL of its descendants, nothing extra hanging off the bottom. Look at the
-  structure of the check - the recursive case requires both children to agree
-  (&& of the two calls), and the only true-leaf is the first != null && second
-  != null branch bottoming out at the null/null case. There is no path to true
-  that ignores a remaining node on either side.
-
-  IsSubtree(root, subRoot) returns true iff some node inside root's subtree
-  satisfies that predicate against subRoot.
-WHY ROOT.LEFT IS SAFE
-  The else branch dereferences root without a null check, and that is
-  deliberate. Case analysis on reaching it:
-
-  1. root == null and subRoot != null - the first guard already returned false.
-  2. root == null and subRoot == null - IsSameTree(null, null) hits its first
-  line and returns true, so IsSubtree returned true.
-  3. root != null - the only case left.
-
-  So the first guard is load-bearing as a null-dereference shield, not just as a
-  logic case. Drop it and input (null, non-null) falls through IsSameTree (which
-  correctly returns false) straight into root.left and throws
-  NullReferenceException. Note this also covers the recursive calls: descending
-  into a null child with a non-null subRoot terminates at that same guard rather
-  than crashing.
+  When IsSubtree is called on a node, every ancestor of that node has already
+  failed its own IsSameTree test, so any match must lie in the current node or
+  below it. IsSameTree(first, second) returns true only when both trees end at
+  exactly the same places and every paired value is equal, so it can never
+  accept a pattern that is only a prefix of a branch. Since IsSubtree tests
+  every node once, if a match exists it is reached and reported.
+THE NULL GUARD IS LOAD-BEARING
+  The first if is what makes the recursion safe. If root is null and subRoot is
+  null, IsSameTree(null, null) returns true and the method returns before
+  touching root.left. If root is null and subRoot is not, the guard returns
+  false. Remove that guard and a null root reaches root.left and throws a
+  NullReferenceException.
 WATCH OUT
-  1. Finding a node whose val equals subRoot.val does not let you commit.
-  Duplicate values are the standard adversarial input: the first anchor with a
-  matching val may fail deep down, and you still have to search the rest. The
-  code handles this because a false from IsSameTree falls into the || over both
-  children rather than returning false.
-
-  2. The || short-circuits, so the entire left subtree is exhausted before
-  root.right is touched. Correct, but it means the anchor you find is the
-  leftmost one - do not reason about it as "the first in level order".
-
-  3. The serialize-and-substring shortcut is the classic wrong answer to this
-  problem. Preorder strings without explicit null markers and delimiters give
-  false positives: a tree printing as 12 matches inside one printing as 122, and
-  two structurally different trees can share a preorder sequence. If you go that
-  route the null sentinels are mandatory.
+  A null subRoot makes the method return true for any tree, including a null
+  root, because IsSameTree(null, null) is true. That may not be what the problem
+  wants, and it is worth stating your assumption out loud. Duplicate values are
+  handled correctly only because the code keeps searching with the "or" after a
+  failed IsSameTree, not because the search stops at the first equal value. The
+  else after a return is dead weight; it reads as if there were two branches
+  when there is only one path left.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do better than testing every node?
+     Serialize both trees with explicit null markers into strings, then run KMP
+     or Z-algorithm to look for the pattern string inside the tree string. That
+     drops the time to linear in the two sizes, but costs linear extra memory
+     for the two strings and needs careful separators so that values like 1 and
+     12 cannot blur together.
+  2. Remove the recursion.
+     Replace the outer walk with an explicit Stack<TreeNode> pushing left and
+     right, and make IsSameTree iterative with a stack of node pairs. Same work,
+     but the depth is bounded by heap memory instead of the call stack, which
+     matters for a long skewed chain.
+  3. Instead of yes/no, count how many nodes start a matching subtree.
+     Keep the same walk but replace the short-circuit "or" with a sum, so both
+     children are always explored and no match is skipped after the first one.
+  4. What if only the pattern's shape must match, values ignored?
+     Drop the first.val == second.val test from IsSameTree and keep the null
+     checks; the outer search is unchanged.
 TRIGGER
-  Reach for this shape when the question is structural containment of one tree
-  in another - "contains an exact copy of", "appears as a subtree". The tell is
-  that the target must match completely, not partially: that forces the separate
-  all-or-nothing equality helper. Contrast with problems that allow a partial
-  match (path-in-tree, same-prefix), which can be done in a single recursion.
-INTERVIEWER FOLLOW-UP
-  The expected push is "can you beat the product of the two sizes". Two
-  linear-time answers:
-
-  1. Serialize both trees in preorder with an explicit marker for every null and
-  a delimiter between values, then run KMP to find subRoot's string inside
-  root's string. The null markers are what make the serialization injective,
-  which is exactly what fixes the substring trap above.
-
-  2. Merkle hashing: post-order, give each node a hash derived from its value
-  and its two children's hashes, then compare against subRoot's hash. Mention
-  the caveat unprompted - this is correct only up to hash collisions, so you
-  either accept the probabilistic bound or verify a hit with IsSameTree, which
-  is the helper you already have.
+  When a problem asks whether one tree occurs inside another as a complete
+  subtree, pair a node-by-node search with a strict whole-tree equality check.
+C# NOTE
+  IsSameTree uses no instance state and is not part of the required API, so it
+  can be private static; leaving it public widens the class surface for no
+  reason. The explicit first != null && second != null test is doing the work
+  that ?. cannot do here, since you need both sides checked before reading .val.
 COMPLEXITY
-  Time  : O(m * n)
+  Time  : O(n * m)
   Space : O(n + m)
 ================================================================================
 */

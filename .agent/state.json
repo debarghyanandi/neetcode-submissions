@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T22:48:59.432Z",
+  "updatedAt": "2026-09-22T23:26:00.021Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -177,13 +177,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "581adeee02c4",
-          "renames": []
+          "version": 2,
+          "codePrint": "581adeee02c4"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning height and balance together\",\"approachKey\":\"bottom-up-height-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -196,8 +195,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "post-order DFS returning height and balance together",
-          "approachKey": "bottom-up-height-balance",
+          "algorithm": "Post-order DFS with single-pass height computation",
+          "approachKey": "recursive-balance-single-pass",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -206,9 +205,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -219,7 +220,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-12T10:52:34.486Z"
+        "builtAt": "2026-09-22T23:11:50.548Z"
       }
     },
     "binary-search": {
@@ -288,17 +289,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "f4e4e8e76ef5"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "dd102e06d6f4"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS computing height, tracking diameter via mutable field\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Postorder DFS returning height and diameter as tuple\",\"approachKey\":\"postorder-height-diameter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -316,8 +317,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Postorder DFS computing height, tracking diameter via mutable field",
-          "approachKey": "postorder-height-diameter",
+          "algorithm": "Post-order DFS height calculation",
+          "approachKey": "dfs-postorder-height",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -328,8 +329,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Postorder DFS returning height and diameter as tuple",
-          "approachKey": "postorder-height-diameter",
+          "algorithm": "Post-order DFS height calculation",
+          "approachKey": "dfs-postorder-height",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -338,9 +339,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -353,7 +357,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-16T07:48:53.465Z"
+        "builtAt": "2026-09-22T23:13:10.288Z"
       }
     },
     "buy-and-sell-crypto": {
@@ -1006,19 +1010,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "fc6a6c822bc6",
-          "renames": []
+          "version": 2,
+          "codePrint": "fc6a6c822bc6"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "e63c1520fd78",
-          "renames": []
+          "version": 2,
+          "codePrint": "e63c1520fd78"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS, depth = 1 + max(children)\",\"approachKey\":\"dfs-recursive-depth\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order traversal counting levels\",\"approachKey\":\"bfs-level-order-count\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1036,8 +1038,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive post-order DFS, depth = 1 + max(children)",
-          "approachKey": "dfs-recursive-depth",
+          "algorithm": "Recursive depth-first search",
+          "approachKey": "recursive-dfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1048,8 +1050,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "BFS level-order traversal counting levels",
-          "approachKey": "bfs-level-order-count",
+          "algorithm": "Iterative breadth-first search",
+          "approachKey": "iterative-bfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1058,9 +1060,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -1074,7 +1079,7 @@
           "call-stack",
           "queue"
         ],
-        "builtAt": "2026-09-13T11:47:37.694Z"
+        "builtAt": "2026-09-22T23:14:55.728Z"
       }
     },
     "duplicate-integer": {
@@ -1688,25 +1693,22 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "eb5f76e2a52e",
-          "renames": []
+          "version": 2,
+          "codePrint": "eb5f76e2a52e"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "f6f65284be4d",
-          "renames": []
+          "version": 2,
+          "codePrint": "f6f65284be4d"
         },
         "optimal-variant-2.cs": {
-          "version": 1,
-          "codePrint": "9b65703a785f",
-          "renames": []
+          "version": 2,
+          "codePrint": "9b65703a785f"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive post-order DFS, swap children\",\"approachKey\":\"recursive-dfs-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with queue, swap children\",\"approachKey\":\"bfs-queue-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, swap children\",\"approachKey\":\"iterative-dfs-stack-swap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS tree inversion\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS with queue\",\"approachKey\":\"iterative-bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1729,8 +1731,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive post-order DFS, swap children",
-          "approachKey": "recursive-dfs-swap",
+          "algorithm": "Recursive DFS tree inversion",
+          "approachKey": "recursive-dfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1741,8 +1743,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "iterative BFS with queue, swap children",
-          "approachKey": "bfs-queue-swap",
+          "algorithm": "Iterative BFS with queue",
+          "approachKey": "iterative-bfs-queue",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1753,8 +1755,8 @@
         "optimal-variant-2.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "iterative DFS with explicit stack, swap children",
-          "approachKey": "iterative-dfs-stack-swap",
+          "algorithm": "Iterative DFS with explicit stack",
+          "approachKey": "iterative-dfs-stack",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1763,9 +1765,13 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS tree inversion\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS with queue\",\"approachKey\":\"iterative-bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant-2.cs",
@@ -1782,7 +1788,7 @@
           "stack",
           "queue"
         ],
-        "builtAt": "2026-09-13T15:19:27.736Z"
+        "builtAt": "2026-09-22T23:17:39.362Z"
       }
     },
     "is-anagram": {
@@ -2074,13 +2080,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "d7fd1f9a1680",
-          "renames": []
+          "version": 2,
+          "codePrint": "d7fd1f9a1680"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive in-order DFS with early-stop sentinel\",\"approachKey\":\"inorder-traversal-early-stop\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(k)\",\"space\":\"O(n)\",\"algorithm\":\"In-order traversal with early termination\",\"approachKey\":\"bst-inorder-early-return\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2091,10 +2096,10 @@
       },
       "classification": {
         "optimal.cs": {
-          "time": "O(n)",
+          "time": "O(k)",
           "space": "O(n)",
-          "algorithm": "recursive in-order DFS with early-stop sentinel",
-          "approachKey": "inorder-traversal-early-stop",
+          "algorithm": "In-order traversal with early termination",
+          "approachKey": "bst-inorder-early-return",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -2103,9 +2108,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(k)\",\"space\":\"O(n)\",\"algorithm\":\"In-order traversal with early termination\",\"approachKey\":\"bst-inorder-early-return\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -2116,7 +2123,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-13T15:00:39.552Z"
+        "builtAt": "2026-09-22T23:19:03.126Z"
       }
     },
     "last-stone-weight": {
@@ -2950,18 +2957,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "6b934e271ac0"
         },
         "suboptimal.cs": {
-          "version": 1,
-          "codePrint": "5ba2247c9f92",
-          "renames": []
+          "version": 2,
+          "codePrint": "5ba2247c9f92"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive BST descent using ordering property\",\"approachKey\":\"bst-property-navigate\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"BST traversal, iterative descent\",\"approachKey\":\"bst-iterative\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BST traversal, recursive descent\",\"approachKey\":\"bst-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2979,8 +2985,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "iterative BST descent using ordering property",
-          "approachKey": "bst-property-navigate",
+          "algorithm": "BST traversal, iterative descent",
+          "approachKey": "bst-iterative",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -2990,8 +2996,8 @@
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive BST descent using ordering property",
-          "approachKey": "bst-property-navigate",
+          "algorithm": "BST traversal, recursive descent",
+          "approachKey": "bst-recursive",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3000,9 +3006,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"BST traversal, iterative descent\",\"approachKey\":\"bst-iterative\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BST traversal, recursive descent\",\"approachKey\":\"bst-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -3015,7 +3024,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-12T05:35:33.013Z"
+        "builtAt": "2026-09-22T23:20:54.924Z"
       }
     },
     "lru-cache": {
@@ -4086,25 +4095,22 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "06a6c0453e9e",
-          "renames": []
+          "version": 2,
+          "codePrint": "06a6c0453e9e"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "0801c6b09dbf",
-          "renames": []
+          "version": 2,
+          "codePrint": "0801c6b09dbf"
         },
         "optimal-variant-2.cs": {
-          "version": 1,
-          "codePrint": "689324c4e7fa",
-          "renames": []
+          "version": 2,
+          "codePrint": "689324c4e7fa"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive DFS, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative DFS with explicit stack, pairwise compare\",\"approachKey\":\"dfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"iterative BFS with two queues, level-by-level compare\",\"approachKey\":\"bfs-pairwise-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS traversal\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS level-order traversal\",\"approachKey\":\"iterative-bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4127,8 +4133,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "recursive DFS, pairwise compare",
-          "approachKey": "dfs-pairwise-compare",
+          "algorithm": "Recursive DFS traversal",
+          "approachKey": "recursive-dfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4139,8 +4145,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "iterative DFS with explicit stack, pairwise compare",
-          "approachKey": "dfs-pairwise-compare",
+          "algorithm": "Iterative DFS with explicit stack",
+          "approachKey": "iterative-dfs-stack",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4151,8 +4157,8 @@
         "optimal-variant-2.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "iterative BFS with two queues, level-by-level compare",
-          "approachKey": "bfs-pairwise-compare",
+          "algorithm": "Iterative BFS level-order traversal",
+          "approachKey": "iterative-bfs-level-order",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4161,9 +4167,13 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS traversal\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS level-order traversal\",\"approachKey\":\"iterative-bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant-2.cs",
@@ -4180,7 +4190,7 @@
           "queue",
           "stack"
         ],
-        "builtAt": "2026-09-13T08:05:36.939Z"
+        "builtAt": "2026-09-22T23:24:02.674Z"
       }
     },
     "search-2d-matrix": {
@@ -4419,13 +4429,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "67281e8f59a4",
-          "renames": []
+          "version": 2,
+          "codePrint": "67281e8f59a4"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(m * n)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS anchor scan + recursive tree equality check\",\"approachKey\":\"tree-compare-each-node\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(n * m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive DFS tree comparison\",\"approachKey\":\"recursive-dfs-subtree-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4436,10 +4445,10 @@
       },
       "classification": {
         "optimal.cs": {
-          "time": "O(m * n)",
+          "time": "O(n * m)",
           "space": "O(n + m)",
-          "algorithm": "DFS anchor scan + recursive tree equality check",
-          "approachKey": "tree-compare-each-node",
+          "algorithm": "Recursive DFS tree comparison",
+          "approachKey": "recursive-dfs-subtree-check",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4448,9 +4457,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(n * m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive DFS tree comparison\",\"approachKey\":\"recursive-dfs-subtree-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -4461,7 +4472,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-13T07:33:24.396Z"
+        "builtAt": "2026-09-22T23:25:58.636Z"
       }
     },
     "three-integer-sum": {
@@ -4694,17 +4705,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "327d55c799c7"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "2156d092b67a"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"post-order DFS returning subtree (min,max,valid)\",\"approachKey\":\"minmax-bottomup\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"pre-order DFS passing down valid (lower,upper) bounds\",\"approachKey\":\"bounds-topdown\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive post-order with min/max tuple\",\"approachKey\":\"tuple-minmax-sentinel\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive bounds checking validation\",\"approachKey\":\"recursive-bound-checking\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4722,8 +4733,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "post-order DFS returning subtree (min,max,valid)",
-          "approachKey": "minmax-bottomup",
+          "algorithm": "Recursive post-order with min/max tuple",
+          "approachKey": "tuple-minmax-sentinel",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4734,8 +4745,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "pre-order DFS passing down valid (lower,upper) bounds",
-          "approachKey": "bounds-topdown",
+          "algorithm": "Recursive bounds checking validation",
+          "approachKey": "recursive-bound-checking",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4744,7 +4755,10 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive post-order with min/max tuple\",\"approachKey\":\"tuple-minmax-sentinel\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive bounds checking validation\",\"approachKey\":\"recursive-bound-checking\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "visualizer": {
         "v": 1,
         "files": [

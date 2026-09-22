@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
-// -  optimal.cs            O(n) time / O(n) space
-// -  recursive in-order DFS with early-stop sentinel
-// -  [inorder-traversal-early-stop]
+// -  optimal.cs            O(k) time / O(n) space
+// -  In-order traversal with early termination   [bst-inorder-early-return]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  recurses left-root-right, propagating a found value up through return
-// -  values, but worst case (skewed tree or large k) still visits and
-// -  recurses through all n nodes
+// -  Early termination after visiting k nodes in sorted order; space is
+// -  recursion depth, O(n) worst case for unbalanced trees
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -37,68 +35,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : In-order DFS with a visit counter and -1 sentinel
+ PATTERN : Inorder DFS on a BST - stop at the kth visited node
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  visitedCount  how many nodes the inorder walk has already passed; shared instance field
+  left          result bubbled up from the left subtree, or -1 meaning "not found there yet"
 WHY THIS PATTERN
-  A BST's in-order walk (left, node, right) emits values in ascending order.
-  That turns "kth smallest" into "the kth node the walk touches" - no sorting,
-  no heap, no extra container. The whole solution is an in-order traversal that
-  happens to count as it goes, and stops talking the moment the count reaches k.
-ALGORITHM
-  1. A null subtree returns -1, meaning "the answer is not inside me."
-  2. Recurse left first. If the left call returned anything other than -1, the
-  answer was already found deeper; return it straight up without touching
-  visitedCount and without looking right.
-  3. Reaching this line means the entire left subtree was counted, so root is
-  the next node in ascending order: visitedCount++.
-  4. If visitedCount == k, root.val is the answer.
-  5. Otherwise recurse right and return whatever it reports.
+  The tree is a binary search tree, so an inorder walk (left, node, right)
+  visits values in sorted order. That turns "kth smallest" into "the kth node
+  the walk touches", so no sorting is needed. The code counts each node as it is
+  visited with visitedCount++ and returns root.val the moment visitedCount
+  equals k. Everything to the right of that node is never entered, which is why
+  the walk stops early.
+BRUTE FORCE
+  The first thing most people write is: walk the whole tree, push every value
+  into a List, sort it, and return list[k-1]. That is O(n) space and O(n log n)
+  time, and it ignores the BST property completely. Even collecting the full
+  inorder list without sorting still touches all n nodes when only the first k
+  matter.
 INVARIANT
-  At the instant visitedCount++ executes for a node, visitedCount equals that
-  node's 1-based rank among all values in the tree. It holds because the
-  in-order order is exactly ascending order, and a node is reached only after
-  every node that precedes it in that order has already run its own increment.
-  The single place the walk skips work is step 2, and that skip only happens
-  after the answer is already in hand - so no node is ever skipped before its
-  rank is needed. Hence visitedCount == k identifies the kth smallest and
-  nothing else can.
-THE -1 SENTINEL IS THE TRAP
-  -1 is doing two jobs: "not found" and "a node value." If the tree legitimately
-  contained -1 and that node were the answer, the parent's `left != -1` test
-  would read the correct answer as "not found," fall through, increment
-  visitedCount for itself, and keep walking right - silently wrong. This file is
-  only correct because the problem constrains values to 0 <= val <= 10^4. Say
-  that out loud if asked; do not defend -1 as a general design. A nullable int,
-  an out-parameter, or the iterative form removes the ambiguity entirely.
-THE MUTABLE FIELD IS THE OTHER TRAP
-  visitedCount is an instance field initialized once at construction, never
-  reset inside KthSmallest. A second call on the same Solution object resumes
-  from the previous count and returns garbage. It passes only because the judge
-  builds a fresh Solution per test case. In real code this method is not
-  reentrant and not thread-safe. Fixes: reset visitedCount at the public entry
-  point and recurse into a private helper, thread the counter as `ref int`, or
-  drop the field.
-INTERVIEWER FOLLOW-UP
-  Iterative version: push the left spine onto a Stack<TreeNode>, pop, decrement
-  k, and if k hits 0 return that node's val, else move to node.right and push
-  its left spine. No sentinel, no shared field, and the exit is immediate rather
-  than propagated up the call chain.
-
-  "What if the tree is modified often and kth smallest is queried often?" -
-  augment each node with the size of its subtree. Then each query descends once:
-  compare k against leftSize + 1 and go left, stop, or go right with k reduced
-  by leftSize + 1. Insert and delete adjust the counts along the path they
-  already walk.
+  At the moment any node executes visitedCount++, every value smaller than
+  root.val has already been visited, and visitedCount is exactly the rank of
+  root.val among all values seen so far, counting from 1. Because the walk is
+  strictly ordered, the first time visitedCount == k the current node holds the
+  kth smallest value. The left != -1 check makes that value travel back up the
+  call chain untouched instead of being overwritten by the right-subtree call.
+THE SENTINEL DOES TWO JOBS
+  The value -1 is used both for "this subtree is empty" and for "the answer is
+  not in this subtree". That is why one return statement covers root == null and
+  why the parent can test left != -1 as "we are done". It works only if -1 can
+  never be a real node value.
+WATCH OUT
+  If any node in the tree holds the value -1 and it is the answer, the parent
+  reads the returned -1 as "not found", keeps walking, and returns a wrong value
+  or -1. visitedCount is an instance field, not a parameter: calling KthSmallest
+  twice on the same Solution object starts the second call with a non-zero count
+  and gives a wrong answer. If k is larger than the number of nodes the method
+  returns -1 instead of signalling an error, which the caller cannot distinguish
+  from a real -1 value. Recursion depth follows the tree height, so a long
+  degenerate chain can overflow the call stack before the count ever reaches k.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The tree is modified often and kth smallest is asked many times. How does
+  the design change?
+     Store a subtree node count in every node. Then each query descends one
+     path: compare k with leftCount + 1 and go left or right, giving O(h) per
+     query instead of O(k), at the cost of updating counts on every insert and
+     delete.
+  2. What if you need the kth largest instead?
+     Mirror the traversal - recurse right first, then count the node, then
+     recurse left. The counting logic and stopping rule stay exactly the same.
+  3. What if the tree is an ordinary binary tree, not a BST?
+     Inorder order is no longer sorted, so the early stop is gone. Walk every
+     node and keep a max-heap of size k, or a min-heap of all values, giving O(n
+     log k) time.
 TRIGGER
-  Any phrasing about order statistics on a BST - kth smallest, kth largest, the
-  rank of a value, the median - should pull up in-order traversal before it
-  pulls up a heap or a sort. For kth largest, mirror the recursion: right, node,
-  left, and the same counter works unchanged.
+  A question asks for an element by rank or order position inside a BST - reach
+  for inorder traversal with a counter and an early return.
+C# NOTE
+  An IEnumerable<int> inorder generator using yield return would give the same
+  early stop through foreach with Take(k), keep the counter local to each call,
+  and remove the -1 sentinel entirely since the caller decides what an empty
+  sequence means.
 COMPLEXITY
-  Time  : O(n)
+  Time  : O(k)
   Space : O(n)
 ================================================================================
 */

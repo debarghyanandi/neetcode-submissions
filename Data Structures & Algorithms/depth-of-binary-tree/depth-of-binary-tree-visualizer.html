@@ -651,243 +651,327 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Maximum Depth of Binary Tree',
-  note: 'depth is 1 + the deeper child — recursion computes that definition, BFS just counts the levels it walks',
-  inputs: [{id:'t', label:'tree (level order, n = empty)', value:'3,9,20,n,n,15,7', width:300}],
+  note: 'depth is not measured, it is accumulated - every node adds one to whichever of its two subtrees is taller, and the count falls out of that single rule repeated everywhere',
+  inputs: [
+    {id:'root', label:'tree (level order)', value:'3,9,20,null,null,15,7', width:260}
+  ],
   parse(raw){
-    const parts = String(raw.t).split(',').map(s => s.trim()).filter(s => s.length);
-    if (!parts.length) return {ok:false, msg:'Enter a level-order tree, e.g. 3,9,20,n,n,15,7.'};
-    if (parts.length > 15) parts.length = 15;
-    const toks = [];
-    for (let i = 0; i < parts.length; i++){
-      const s = parts[i].toLowerCase();
-      if (s === 'n' || s === 'null' || s === '-' || s === '.' || s === '#'){ toks.push(null); continue; }
-      const v = Number(s);
-      if (!Number.isFinite(v)) return {ok:false, msg:'Use numbers, or n for an empty slot.'};
-      toks.push(v);
-    }
-    if (toks[0] === null) return {ok:false, msg:'The root cannot be empty.'};
-    for (let i = 1; i < toks.length; i++){
-      if (toks[i] !== null && toks[(i - 1) >> 1] === null){
-        return {ok:false, msg:'Slot ' + i + ' has a value but its parent slot is empty. This is a full level-order array, so the children of an empty slot must be empty too.'};
-      }
-    }
-    while (toks.length && toks[toks.length - 1] === null) toks.pop();
-    if (toks.filter(x => x !== null).length < 2) return {ok:false, msg:'Needs at least two nodes, otherwise the depth is 1 before anything happens.'};
-    return {ok:true, value:{t: toks}, normalized:{t: toks.map(x => x === null ? 'n' : x).join(',')}};
+    const a = parseLevelOrder(raw.root, 31);
+    if (!a) return {ok:false, msg:'Enter a level-order tree, e.g. 3,9,20,null,null,15,7'};
+    const nodes = treeFromLevelOrder(a);
+    if (!nodes.length) return {ok:false, msg:'The tree needs at least a root node.'};
+    if (nodes.length > 10) return {ok:false, msg:'Keep the tree to 10 nodes or fewer so the whole run stays watchable.'};
+    return {
+      ok:true,
+      value:{root: a},
+      normalized:{root: a.map(v => v === null ? 'null' : v).join(',')}
+    };
   },
   shuffle(){
-    const vals = randInts(7, 1, 20);
-    const toks = [vals[0]];
-    for (let i = 1; i < 7; i++){
-      const parent = toks[(i - 1) >> 1];
-      toks.push(parent !== null && parent !== undefined && Math.random() < 0.68 ? vals[i] : null);
-    }
-    if (toks.filter(x => x !== null).length < 3){ toks[1] = vals[1]; toks[2] = vals[2]; }
-    while (toks.length && toks[toks.length - 1] === null) toks.pop();
-    return {t: toks.map(x => x === null ? 'n' : x).join(',')};
+    const build = (d) => {
+      if (d > 3 || Math.random() < 0.3) return null;
+      return {v: 1 + Math.floor(Math.random() * 9), l: build(d + 1), r: build(d + 1)};
+    };
+    const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
+    const flat = (root) => {
+      const out = [], q = [root];
+      while (q.length){
+        const x = q.shift();
+        if (!x){ out.push(null); continue; }
+        out.push(x.v); q.push(x.l); q.push(x.r);
+      }
+      while (out.length && out[out.length - 1] === null) out.pop();
+      return out;
+    };
+    let root = null, n = 0;
+    while (n < 3 || n > 7){ root = build(1); n = count(root); }
+    return {root: flat(root).map(v => v === null ? 'null' : v).join(',')};
   },
   solutions: [
   {
-    label: 'Recursive post-order DFS, 1 + max(children)',
-    badge: 'O(n) time · O(n) space · recursion · optimal.cs',
-    blurb: 'The depth of a tree is one edge for the root plus the depth of its deeper subtree — a definition that is already an algorithm. A node cannot answer until both children have, so the calls run down to the empty slots, which return <b>0</b>, and the numbers add themselves up on the way back.',
+    label: 'Recursion: one plus the taller of the two subtrees',
+    badge: 'O(n) time · O(n) space · recursive DFS · optimal.cs',
+    blurb: 'The depth of a tree is one more than the depth of its deeper subtree, and an empty tree has depth zero. Those two sentences are the two lines of code. Nothing is counted on the way down - the answer is built on the way back up, each frame adding its own <code>+ 1</code> to the larger of the two numbers its children handed it.',
     legend: [
-      {cls:'hot', text:'the call running right now'},
-      {cls:'head', text:'frame parked, waiting on a child'},
-      {cls:'good', text:'depth computed and returned'},
-      {cls:'done', text:'empty slot that returned 0'},
-      {cls:'dim', text:'not reached yet'}
+      {cls:'hot', text:'the node this call owns'},
+      {cls:'in-window', text:'callers parked, waiting on a subtree'},
+      {cls:'good', text:'node that has already returned its depth'}
     ],
     code: [
       'public int MaxDepth(TreeNode root)',
       '{',
       '    if (root == null)',
       '        return 0;',
-      '',
       '    return Math.Max(MaxDepth(root.left), MaxDepth(root.right)) + 1;',
       '}'
     ],
     simulate(input){
-      const steps = [];
-      const nodes = input.t.map((v, i) => v === null ? null : {v: v, id: i, left: null, right: null});
-      nodes.forEach((nd, i) => { if (nd){ nd.left = nodes[2 * i + 1] || null; nd.right = nodes[2 * i + 2] || null; } });
-      const root = nodes[0];
-      const state = {}, sub = {}, emptyDone = {};
-      nodes.forEach(nd => { if (nd) state[nd.id] = 'dim'; });
-      const emptySlots = [];
-      nodes.forEach(nd => {
-        if (!nd) return;
-        if (!nd.left) emptySlots.push({slot: 2 * nd.id + 1, parent: nd.id, side: 'L'});
-        if (!nd.right) emptySlots.push({slot: 2 * nd.id + 2, parent: nd.id, side: 'R'});
+      const base = treeFromLevelOrder(input.root);
+      const info = {}, path = {};
+      base.forEach(n => {
+        info[n.id] = {id: n.id, v: n.v, left: null, right: null};
+        path[n.id] = n.parent === null ? '' : path[n.parent] + n.side;
       });
-      let hotEmpty = -1;
-      const treeView = () => {
-        const out = [];
-        nodes.forEach(nd => {
-          if (!nd) return;
+      base.forEach(n => {
+        if (n.parent === null) return;
+        if (n.side === 'L') info[n.parent].left = n.id;
+        else info[n.parent].right = n.id;
+      });
+      const rootId = base[0].id;
+
+      const spot = (pa) => pa === '' ? 'root' : 'root-' + pa.split('').join('-');
+      const show = (id) => id === null ? 'null' : String(info[id].v);
+
+      const depth = {}, frames = [], steps = [];
+      let calls = 0, maxF = 0, best = 0;
+
+      /* Empty slots are drawn because they are genuine arguments here: line 3
+         is reached with null once for every missing child, and each of those
+         calls returns the 0 that stops the counting. */
+      const layout = (cur) => {
+        const out = [], open = {};
+        frames.forEach(f => { if (f.id !== null) open[f.id] = true; });
+        const cls = (id) => id === cur ? 'hot' : (depth[id] !== undefined ? 'good' : (open[id] ? 'in-window' : ''));
+        const walk = (id, parent, side) => {
+          const n = info[id];
           out.push({
-            id: 'n' + nd.id, v: nd.v,
-            parent: nd.id ? 'n' + ((nd.id - 1) >> 1) : null,
-            side: nd.id % 2 ? 'L' : 'R',
-            cls: state[nd.id] || '', sub: sub[nd.id] || ''
+            id: id, v: n.v, parent: parent, side: side, cls: cls(id),
+            sub: depth[id] !== undefined ? 'returns ' + depth[id] : ''
           });
-        });
-        emptySlots.forEach(e => out.push({
-          id: 'e' + e.slot, v: null, parent: 'n' + e.parent, side: e.side,
-          cls: hotEmpty === e.slot ? 'hot' : (emptyDone[e.slot] ? 'done' : 'dim'),
-          sub: emptyDone[e.slot] ? 'returns 0' : ''
-        }));
-        return pTree('Tree (sub = the depth that call returned)', out, {scale: 0.82});
+          [['L', n.left], ['R', n.right]].forEach(pair => {
+            const s = pair[0], c = pair[1];
+            if (c === null) out.push({id: id + '_' + s, v: null, parent: id, side: s, cls: (id + '_' + s) === cur ? 'hot' : ''});
+            else walk(c, id, s);
+          });
+        };
+        walk(rootId, null, null);
+        return out;
       };
-      const frames = [];
-      let calls = 0, nullCalls = 0, best = 0, peak = 0;
-      const panels = () => [
-        treeView(),
-        pStack('Call stack (bottom → top)', [{
-          label: 'MaxDepth frames',
-          items: frames.map((f, i) => ({text: f.text, sub: f.sub, cls: i === frames.length - 1 ? 'hot' : 'head'})),
-          empty: 'no live frames'
-        }], {scale: 0.9}),
-        pPills('', [
-          {k:'live frames', v: frames.length},
+
+      const fsub = (f) => {
+        if (f.id === null) return spot(f.pa) + ' · null argument, returns 0';
+        if (f.phase === 1) return spot(f.pa) + ' · waiting on MaxDepth(root.left)';
+        if (f.phase === 2) return spot(f.pa) + ' · left gave ' + f.lv + ', waiting on right';
+        return spot(f.pa) + ' · left ' + f.lv + ', right ' + f.rv;
+      };
+
+      const panels = (cur, tags, freshPa, popPa) => [
+        pTree('tree, never modified', layout(cur), {tags: tags || [], scale: 0.72}),
+        pStack('call stack', [{
+          label: 'MaxDepth(root)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: show(f.id),
+            sub: fsub(f),
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.pa === freshPa,
+            popped: f.pa === popPa && i === frames.length - 1
+          })),
+          empty: 'no frames open',
+          foot: 'first call',
+          top: 'running now'
+        }]),
+        pPills('state', [
           {k:'calls made', v: calls},
-          {k:'zeros from empty slots', v: nullCalls},
-          {k:'deepest answer so far', v: best, cls:'good'}
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'largest depth settled', v: best}
         ])
       ];
-      steps.push({lines:[1], msg:'The depth of a tree is <b>1 + the depth of its deeper subtree</b>, and that recursive definition is the whole method. A node has no way to answer on its own, so every call pushes the question down until it hits an empty slot, and the real work happens on the way back up.', panels: panels()});
-      const walk = (node, slot, where) => {
+
+      steps.push({lines:[1], msg:'This function never walks a path and never keeps a running counter. It states a definition instead: the depth of a tree is one more than the depth of its deeper subtree, and the depth of nothing is zero. Each call owns one node, receives it under the name <code>root</code>, and is responsible for returning a single number. The dashed slots are real arguments - a missing child is handed to line 3 as <code>null</code> - and those calls are where the counting bottoms out.', panels: panels(null, [], null, null)});
+
+      const run = (id, slotId, pa) => {
         calls++;
-        if (!node){
-          nullCalls++;
-          frames.push({text: 'MaxDepth(null)', sub: where});
-          peak = Math.max(peak, frames.length);
-          hotEmpty = slot;
-          emptyDone[slot] = true;
-          steps.push({lines:[3,4], msg:'The <code>' + where + '</code> slot is empty, so <code>root == null</code> holds and the call returns <b>0</b> without recursing further. That zero is what makes the arithmetic start correctly: a leaf computes <code>Math.Max(0, 0) + 1 = 1</code>, so no separate leaf case is ever needed.', panels: panels()});
+        const at = spot(pa);
+
+        if (id === null){
+          frames.push({id: null, pa: pa, phase: 0});
+          maxF = Math.max(maxF, frames.length);
+          steps.push({lines:[3,4], msg:'The <b>' + at + '</b> slot is empty, so this call arrives with <code>root == null</code> and line 3 fires at once. Line 4 returns <b>0</b>: an empty tree contributes no levels. This is the base case that makes the whole thing terminate - every root-to-leaf path ends in two of these, and the numbers grow back upward from them.', panels: panels(slotId, [{name:'root', id: slotId, cls:'accent'}], pa, pa)});
           frames.pop();
-          hotEmpty = -1;
           return 0;
         }
-        frames.push({text: 'MaxDepth(' + node.v + ')', sub: 'needs left'});
-        peak = Math.max(peak, frames.length);
-        state[node.id] = 'hot';
-        steps.push({lines:[3,6], msg:'Node <b>' + node.v + '</b> (' + where + ') is real, so the base case is skipped. It still cannot return anything — <code>Math.Max</code> needs both child depths as arguments first. C# evaluates arguments left to right, so <code>MaxDepth(root.left)</code> runs next and this frame parks on the stack.', panels: panels()});
-        state[node.id] = 'head';
-        const l = walk(node.left, 2 * node.id + 1, 'left of ' + node.v);
-        frames[frames.length - 1].sub = 'left = ' + l + ', needs right';
-        const r = walk(node.right, 2 * node.id + 2, 'right of ' + node.v);
-        const d = Math.max(l, r) + 1;
-        state[node.id] = 'good';
-        sub[node.id] = 'depth ' + d;
+
+        frames.push({id: id, pa: pa, phase: 1});
+        maxF = Math.max(maxF, frames.length);
+        const n = info[id];
+
+        steps.push({lines:[3,5], msg:'<b>' + n.v + '</b> at <b>' + at + '</b> is a real node, so line 3 does not fire and line 5 runs. Before <code>Math.Max</code> can be called, both of its arguments must be evaluated, and C# evaluates them left to right - so <code>MaxDepth(root.left)</code> goes first and this frame parks until the entire left subtree has reported a number back. Nothing about the answer is known here yet.', panels: panels(id, [{name:'root', id: id, cls:'accent'}], pa, null)});
+
+        const dl = run(n.left, id + '_L', pa + 'L');
+        const f = frames[frames.length - 1];
+        f.phase = 2; f.lv = dl;
+        const leftTag = n.left === null ? id + '_L' : n.left;
+
+        steps.push({lines:[5], msg:'The left side is finished and came back as <b>' + dl + '</b>. That single number is everything this frame will ever learn about the left subtree - no list of paths, no node count, just its depth. Now the second argument is evaluated: <code>MaxDepth(root.right)</code> for <b>' + at + '</b>, and the frame parks again. The <b>' + dl + '</b> is held live on the stack the whole time the right side runs.', panels: panels(id, [{name:'left', id: leftTag, cls:'accent'}], null, null)});
+
+        const dr = run(n.right, id + '_R', pa + 'R');
+        frames[frames.length - 1].phase = 3;
+        frames[frames.length - 1].rv = dr;
+        const d = Math.max(dl, dr) + 1;
+        depth[id] = d;
         best = Math.max(best, d);
-        frames[frames.length - 1].sub = 'returns ' + d;
-        steps.push({lines:[6], msg:'Both children of <b>' + node.v + '</b> have answered: left gave <b>' + l + '</b>, right gave <b>' + r + '</b>. <code>Math.Max</code> keeps only the deeper side — the shallower branch cannot decide the depth of anything above it — and <code>+ 1</code> pays for the edge from <b>' + node.v + '</b> down into that branch, so this subtree is <b>' + d + '</b> deep. The frame pops and hands ' + d + ' back to its caller.', panels: panels()});
+
+        steps.push({lines:[5], msg:'Both arguments are in: left <b>' + dl + '</b>, right <b>' + dr + '</b>. <code>Math.Max</code> keeps <b>' + Math.max(dl, dr) + '</b> - the shorter side is discarded outright, because depth is about the longest path and the other branch cannot beat it - and <code>+ 1</code> counts <b>' + n.v + '</b> itself, giving <b>' + d + '</b>. That number is returned to the caller and <b>' + at + '</b> is never visited again.', panels: panels(id, [], null, pa)});
+
         frames.pop();
         return d;
       };
-      const ans = walk(root, 0, 'the root');
-      steps.push({lines:[6], msg:'The root frame returned <b>' + ans + '</b>, which is the answer. There were <b>' + calls + '</b> calls in total — one per node plus <b>' + nullCalls + '</b> for the empty child slots, which is still O(n). The stack never held more than <b>' + peak + '</b> frames at once: the extra space is the height of the tree, O(n) in the worst case of a single chain.', panels: panels()});
+
+      const ans = run(rootId, null, '');
+
+      steps.push({lines:[5], msg:'The outermost call returns <b>' + ans + '</b>, the depth of the whole tree. It took ' + calls + ' call(s) - one per node plus one per empty slot - and each did a constant amount of work, which is the O(n). The stack peaked at ' + maxF + ' frame(s), and that peak is exactly the answer: the recursion is only ever as deep as the tree it is measuring. A long thin tree therefore costs one frame per node, which is the O(n) space.', panels: panels(null, [], null, null)});
       return steps;
     }
   },
   {
-    label: 'BFS level order, count the levels',
-    badge: 'O(n) time · O(n) space · queue · optimal-variant.cs',
-    blurb: 'Depth is just the number of levels, so nothing needs to be computed per node — only counted. Snapshot <code>levelSize</code> before the inner loop and it consumes exactly the nodes of the current level, while their children queue up behind for the next pass. One <code>level++</code> per drained level.',
+    label: 'A queue: drain one whole level per outer pass',
+    badge: 'O(n) time · O(n) space · iterative BFS · optimal-variant.cs',
+    blurb: 'If you remove the nodes a level at a time, the number of levels you removed is the depth. <code>levelSize</code> is the trick that makes that possible: snapshotting the queue count before the inner loop freezes the current level, so the children enqueued during the pass belong to the next one and are not eaten by it.',
     legend: [
-      {cls:'hot', text:'node dequeued this step'},
-      {cls:'head', text:'waiting in the queue'},
-      {cls:'good', text:'processed, level recorded'},
-      {cls:'dim', text:'not discovered yet'}
+      {cls:'hot', text:'the node being dequeued now'},
+      {cls:'in-window', text:'sitting in the queue'},
+      {cls:'good', text:'already dequeued and counted'}
     ],
     code: [
-      'Queue<TreeNode> queue = new Queue<TreeNode>();',
-      'if (root != null)',
+      'public int MaxDepth(TreeNode root)',
       '{',
-      '    queue.Enqueue(root);',
-      '}',
-      '',
-      'int level = 0;',
-      'while (queue.Count > 0)',
-      '{',
-      '    int levelSize = queue.Count;',
-      '    for (int i = 0; i < levelSize; i++)',
+      '    Queue<TreeNode> queue = new Queue<TreeNode>();',
+      '    if (root != null)',
       '    {',
-      '        TreeNode node = queue.Dequeue();',
-      '        if (node.left != null)',
-      '        {',
-      '            queue.Enqueue(node.left);',
-      '        }',
-      '        if (node.right != null)',
-      '        {',
-      '            queue.Enqueue(node.right);',
-      '        }',
+      '        queue.Enqueue(root);',
       '    }',
-      '    level++;',
-      '}',
-      'return level;'
+      '',
+      '    int level = 0;',
+      '    while (queue.Count > 0)',
+      '    {',
+      '        int levelSize = queue.Count;',
+      '        for (int i = 0; i < levelSize; i++)',
+      '        {',
+      '            TreeNode node = queue.Dequeue();',
+      '            if (node.left != null)',
+      '            {',
+      '                queue.Enqueue(node.left);',
+      '            }',
+      '            if (node.right != null)',
+      '            {',
+      '                queue.Enqueue(node.right);',
+      '            }',
+      '        }',
+      '        level++;',
+      '    }',
+      '    return level;',
+      '}'
     ],
     simulate(input){
-      const steps = [];
-      const nodes = input.t.map((v, i) => v === null ? null : {v: v, id: i, left: null, right: null});
-      nodes.forEach((nd, i) => { if (nd){ nd.left = nodes[2 * i + 1] || null; nd.right = nodes[2 * i + 2] || null; } });
-      const root = nodes[0];
-      const state = {}, sub = {};
-      nodes.forEach(nd => { if (nd) state[nd.id] = 'dim'; });
-      const treeView = () => pTree('Tree (sub = the level this node came off on)', nodes.filter(Boolean).map(nd => ({
-        id: 'n' + nd.id, v: nd.v,
-        parent: nd.id ? 'n' + ((nd.id - 1) >> 1) : null,
-        side: nd.id % 2 ? 'L' : 'R',
-        cls: state[nd.id] || '', sub: sub[nd.id] || ''
-      })), {scale: 0.9});
-      const queue = [];
-      let level = 0, done = 0, peak = 0, cur = '–', size = '–';
-      const panels = () => [
-        treeView(),
-        pStack('Queue (front on the left)', [{
-          label: 'front → back',
+      const base = treeFromLevelOrder(input.root);
+      const info = {}, path = {};
+      base.forEach(n => {
+        info[n.id] = {id: n.id, v: n.v, left: null, right: null};
+        path[n.id] = n.parent === null ? '' : path[n.parent] + n.side;
+      });
+      base.forEach(n => {
+        if (n.parent === null) return;
+        if (n.side === 'L') info[n.parent].left = n.id;
+        else info[n.parent].right = n.id;
+      });
+      const rootId = base[0].id;
+
+      const spot = (pa) => pa === '' ? 'root' : 'root-' + pa.split('').join('-');
+      const show = (id) => String(info[id].v);
+
+      const steps = [], inQ = {}, seenLevel = {};
+      const q = [rootId];
+      inQ[rootId] = true;
+      let level = 0, levelSize = 0, i = 0, popped = 0, maxQ = 1, started = false;
+
+      const layout = (cur) => {
+        const out = [];
+        const cls = (id) => id === cur ? 'hot' : (seenLevel[id] !== undefined ? 'good' : (inQ[id] ? 'in-window' : ''));
+        const walk = (id, parent, side) => {
+          const n = info[id];
+          out.push({
+            id: id, v: n.v, parent: parent, side: side, cls: cls(id),
+            sub: seenLevel[id] !== undefined ? 'level ' + seenLevel[id] : ''
+          });
+          [['L', n.left], ['R', n.right]].forEach(pair => {
+            const s = pair[0], c = pair[1];
+            if (c === null) out.push({id: id + '_' + s, v: null, parent: id, side: s, cls: ''});
+            else walk(c, id, s);
+          });
+        };
+        walk(rootId, null, null);
+        return out;
+      };
+
+      const panels = (cur, fresh, taking) => [
+        pTree('tree, read only', layout(cur), {
+          tags: cur ? [{name:'node', id: cur, cls:'accent'}] : [],
+          scale: 0.72
+        }),
+        pStack('frontier', [{
+          label: 'Queue<TreeNode>',
           mode: 'queue',
-          items: queue.map((q, i) => ({text: String(q.node.v), sub: 'lvl ' + q.lvl, cls: i === 0 ? 'head' : ''})),
-          empty: 'queue drained'
-        }], {scale: 0.9}),
-        pPills('', [
-          {k:'dequeued', v: cur, cls:'hot'},
-          {k:'levelSize', v: size},
-          {k:'queue count', v: queue.length},
-          {k:'nodes done', v: done},
-          {k:'level', v: level, cls:'good'}
+          items: q.map((id, k) => ({
+            text: show(id),
+            sub: spot(path[id]),
+            cls: (taking && k === 0) ? 'hot' : '',
+            fresh: (fresh || {})[id] === true,
+            popped: taking && k === 0
+          })),
+          empty: 'drained, the loop is over',
+          foot: 'front, next out',
+          top: 'back, newest'
+        }]),
+        pPills('state', [
+          {k:'level', v: level},
+          {k:'levelSize', v: started ? levelSize : 'unset'},
+          {k:'i', v: started ? i : 'unset'},
+          {k:'queued now', v: q.length},
+          {k:'widest frontier', v: maxQ}
         ])
       ];
-      queue.push({node: root, lvl: 1});
-      state[root.id] = 'head';
-      peak = 1;
-      steps.push({lines:[1,2,4,7], msg:'BFS never asks how deep a node is — it walks the tree a level at a time and counts the levels. The root is enqueued only if it exists, and that guard is also the empty-tree answer: with nothing in the queue the loop body never runs and <code>level</code> stays <b>0</b>.', panels: panels()});
-      while (queue.length){
-        const levelSize = queue.length;
-        size = levelSize;
-        const rowVals = queue.map(q => q.node.v).join(', ');
-        steps.push({lines:[8,10], msg:'<code>levelSize</code> is frozen at <b>' + levelSize + '</b> <em>before</em> the inner loop starts, and that snapshot is the whole trick. Everything sitting in the queue right now (' + rowVals + ') is exactly level <b>' + (level + 1) + '</b>; children enqueued during the loop land behind them, so the counter cannot bleed into the next level.', panels: panels()});
-        for (let i = 0; i < levelSize; i++){
-          const item = queue.shift();
-          const node = item.node;
-          cur = node.v;
-          done++;
-          state[node.id] = 'hot';
-          const kids = [];
-          if (node.left){ queue.push({node: node.left, lvl: item.lvl + 1}); state[node.left.id] = 'head'; kids.push(node.left.v); }
-          if (node.right){ queue.push({node: node.right, lvl: item.lvl + 1}); state[node.right.id] = 'head'; kids.push(node.right.v); }
-          peak = Math.max(peak, queue.length);
-          state[node.id] = 'good';
-          sub[node.id] = 'lvl ' + item.lvl;
-          steps.push({lines:[13,14,16,19,21], msg:'Dequeued <b>' + node.v + '</b> from the front (' + (i + 1) + ' of ' + levelSize + ' on this level) and pushed ' + (kids.length ? 'its real children <b>' + kids.join('</b>, <b>') + '</b>' : 'nothing — it is a leaf') + ' to the back. The null checks are not an optimisation: a null in the queue would crash the very next <code>node.left</code>. No depth is recorded for the node itself — its only job is to hand the next level forward.', panels: panels()});
+
+      steps.push({lines:[3,4,6,9], msg:'No recursion and no arithmetic on subtrees here - this version just counts how many times it can strip a whole level off the tree. Line 3 makes the queue, line 4 guards against an empty tree (a null root is never enqueued, so the loop below never starts and <b>0</b> comes straight back), and line 9 sets the counter that will become the answer. The queue starts holding one item: the root, which is level 1 all by itself.', panels: panels(null, {}, false)});
+
+      while (q.length > 0){
+        levelSize = q.length;
+        i = 0;
+        started = true;
+        steps.push({lines:[10,12,13], msg:'The queue is not empty, so another level exists. Line 12 is the heart of this method: it snapshots <code>queue.Count</code> as <b>' + levelSize + '</b> <em>before</em> anything is dequeued. The nodes in the queue right now are exactly one complete level, and freezing that number means the children enqueued during the coming pass are left for the next outer iteration instead of being swallowed by this one. Without the snapshot the for loop would chase a growing count and never find a level boundary.', panels: panels(null, {}, false)});
+
+        for (let k = 0; k < levelSize; k++){
+          const id = q[0];
+          const n = info[id];
+          i = k;
+          steps.push({lines:[13,15], msg:'Pass <b>' + (k + 1) + '</b> of <b>' + levelSize + '</b>: line 15 takes from the <em>front</em> of the queue, which is <b>' + show(id) + '</b> at <b>' + spot(path[id]) + '</b>. FIFO order is what keeps levels intact - everything enqueued earlier, meaning everything shallower, comes out first. The node\'s value is never used; only its existence and its children matter to a depth count.', panels: panels(id, {}, true)});
+
+          q.shift(); delete inQ[id]; popped++;
+          seenLevel[id] = level + 1;
+
+          const fresh = {};
+          if (n.left !== null){ q.push(n.left); inQ[n.left] = true; fresh[n.left] = true; }
+          if (n.right !== null){ q.push(n.right); inQ[n.right] = true; fresh[n.right] = true; }
+          maxQ = Math.max(maxQ, q.length);
+
+          let msg;
+          if (n.left === null && n.right === null){
+            msg = 'Lines 16 and 20 both find an empty slot, so nothing joins the back of the queue. <b>' + show(id) + '</b> is a leaf: it belongs to this level and produces no next one. Leaves are the only reason the queue ever shrinks, and if every node in this level is a leaf the queue empties and the loop ends here.';
+          } else if (n.left !== null && n.right !== null){
+            msg = 'Both children exist, so both are enqueued - <b>' + show(n.left) + '</b> then <b>' + show(n.right) + '</b> - at the <em>back</em>, behind whatever is still left of the current level. They cannot be reached by this for loop, which is already committed to running exactly ' + levelSize + ' time(s). They are next level\'s work, which is the same as saying the tree is at least one level deeper than the count says so far.';
+          } else {
+            msg = 'Only one child exists, so exactly one <code>if</code> fires and one node joins the back. Filtering nulls before enqueueing rather than after dequeueing is why line 15 can dereference <code>node</code> with no null check: everything in this queue is a real node, and every item in it is one more node the level count has to account for.';
+          }
+          steps.push({lines:[16,18,20,22], msg: msg, panels: panels(id, fresh, false)});
         }
+
         level++;
-        cur = '–';
-        size = '–';
-        steps.push({lines:[22,23], msg:'The inner loop consumed all <b>' + levelSize + '</b> nodes it was told to, so one complete level has been cleared and <code>level</code> becomes <b>' + level + '</b>. The queue now holds precisely the next level' + (queue.length ? ' (' + queue.map(q => q.node.v).join(', ') + '), so the outer loop goes round again.' : ' — which is empty, so the outer loop is about to end.'), panels: panels()});
+        steps.push({lines:[13,25], msg:'The for loop has run its ' + levelSize + ' iteration(s) and stops - <code>i</code> has reached <code>levelSize</code> - which means one entire level has been removed from the queue. Line 25 records that with <code>level++</code>, now <b>' + level + '</b>. Whatever is in the queue at this instant is precisely the next level down, so the outer loop can start over on identical terms. ' + (q.length ? 'There are still ' + q.length + ' node(s) waiting, so the tree goes deeper.' : 'The queue is empty, so there is no deeper level and the while test is about to fail.'), panels: panels(null, {}, false)});
       }
-      steps.push({lines:[25], msg:'The queue drained, meaning the last level had no children below it, so the answer is <b>' + level + '</b> levels. Every node was enqueued once and dequeued once → O(n) time. The queue peaked at <b>' + peak + '</b> nodes, the width of the widest level, which for a full tree is about n/2 → O(n) space; unlike the recursion, nothing is spent on call frames.', panels: panels()});
+
+      started = false;
+      steps.push({lines:[10,27], msg:'Line 10 finds the queue empty and the loop ends. ' + popped + ' node(s) were dequeued exactly once each, giving the same O(n) as the recursive version, and line 27 returns <b>' + level + '</b> - the number of complete levels that were stripped off, which is the depth. The space profile differs though: the queue peaked at ' + maxQ + ' item(s), the <em>widest</em> level, where the recursion paid for the <em>deepest</em> path. On a long thin tree this version is cheap; on a bushy one the recursion is.', panels: panels(null, {}, false)});
       return steps;
     }
   }]

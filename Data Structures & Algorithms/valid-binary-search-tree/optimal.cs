@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  post-order DFS returning subtree (min,max,valid)   [minmax-bottomup]
+// #  Recursive post-order with min/max tuple   [tuple-minmax-sentinel]
 // #  ties with optimal-variant.cs on O(n) time / O(n) space
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  each node visited once, combining child min/max tuples bottom-up;
-// #  recursion depth O(n) worst case for skewed tree
+// #  Each node visited once; call stack depth is tree height (O(n) worst
+// #  case for skewed tree).
 // ##########################################################################
 
 // Sentinel values are safe only because Node.val is restricted to [-1000000000, 1000000000];
@@ -48,81 +48,85 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Post-order DFS returning (min, max, found) upward
+ PATTERN : Post-order DFS - each subtree returns (min, max, valid)
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
-CORE IDEA
-  Validity of a BST is a global property, so each recursive call reports back
-  everything the parent could possibly need: the smallest value in the subtree,
-  the largest value, and whether that subtree is itself a BST. The parent then
-  tests root.val against left.max and right.min - the extremes of entire
-  subtrees, not the values of its immediate children. IsValidBST itself is a
-  thin wrapper that calls IsValidBSTWithMinMax(root) and throws away min and
-  max, keeping only result.found.
+VARIABLES
+  result   the tuple from the root call; only .found is used
+  left     (min, max, found) summary of the entire left subtree
+  right    same summary for the right subtree
+  min      smallest value in this subtree, reported to the parent
+  max      largest value in this subtree, reported to the parent
+  found    true if this subtree is itself a valid BST
+WHY THIS PATTERN
+  The BST rule is not about a node and its two children; it is about a node and
+  every value in its two subtrees. So the check at root needs one number from
+  each side: the biggest thing on the left and the smallest thing on the right.
+  A post-order walk gives exactly that, because children finish before the
+  parent runs, and left.max and right.min arrive already computed. The boolean
+  found rides along in the same tuple so one traversal answers both questions.
+BRUTE FORCE
+  The first thing most people write is: at every node, walk the whole left
+  subtree and confirm every value is smaller, then walk the whole right subtree
+  and confirm every value is larger, then recurse. That is correct but costs O(n
+  * h) - near O(n^2) on a skewed tree - because each node is visited once per
+  ancestor. This file pays for each subtree scan only once by summarizing it
+  into two integers.
 INVARIANT
-  When found is true, min is the minimum value over the whole subtree and max is
-  the maximum, and every ancestor may rely on those two numbers alone. When
-  found is false, min and max are meaningless - the code returns the placeholder
-  (0, 0, false) - and the invariant holds anyway because the parent checks
-  !left.found / !right.found first and returns false without ever reading those
-  fields. The garbage never propagates upward.
-WHY THE SENTINELS WORK
-  The null case returns (int.MaxValue, int.MinValue, true), which looks
-  backwards but is exactly the identity element for the two operations performed
-  on it. In the comparisons it is neutral: a null left child gives left.max =
-  int.MinValue, which is below every legal node value, so left.max >= root.val
-  is false; a null right child gives right.min = int.MaxValue, so right.min <=
-  root.val is false. In the propagation it is also neutral:
-  Math.Min(int.MaxValue, root.val) is root.val and Math.Max(int.MinValue,
-  root.val) is root.val. An empty subtree therefore contributes nothing without
-  needing a single extra branch.
-THE TRAP IT AVOIDS
-  The classic wrong answer compares root.val only with root.left.val and
-  root.right.val. Take root 5, left child 4, and 4's right child 6. Every
-  parent-child pair is locally ordered, yet 6 sits in the left subtree of 5, so
-  it is not a BST. Here the call on node 4 returns (4, 6, true), and at the root
-  left.max = 6 >= 5 fires and returns false. Note also that both comparisons are
-  strict rejections (>= and <=), so duplicates are invalid: root 5 with a left
-  child 5 returns (5, 5, true) from the leaf and then 5 >= 5 rejects it.
-ASYMMETRIC PROPAGATION
-  min is Math.Min(left.min, root.val) and max is Math.Max(right.max, root.val) -
-  min never consults the right subtree and max never consults the left. That is
-  sound only because it runs after both checks have passed: at that point every
-  value in the right subtree exceeds root.val, so it cannot be the subtree
-  minimum, and every value in the left subtree is below root.val, so it cannot
-  be the maximum. Move either line above the validity checks and the reasoning
-  collapses.
+  Whenever IsValidBSTWithMinMax returns found = true, min and max are the true
+  smallest and largest values in that whole subtree, and that subtree is already
+  a valid BST. Given that, the parent's two tests left.max >= root.val and
+  right.min <= root.val are equivalent to comparing root.val against every
+  single descendant. By induction from the null leaves upward, a true at the
+  root means the whole tree passed.
+SENTINELS FOR THE NULL CHILD
+  A null child returns (int.MaxValue, int.MinValue, true) - the min and max are
+  deliberately swapped. This makes left.max = int.MinValue lose the >= test and
+  right.min = int.MaxValue lose the <= test, so a missing child never blocks the
+  parent. It also makes Math.Min(left.min, root.val) and Math.Max(right.max,
+  root.val) collapse to root.val on that side. Because of this, the explicit
+  leaf branch that returns (root.val, root.val, true) is redundant; deleting it
+  gives the same answer through the null path.
 WATCH OUT
-  The sentinel trick is only correct while node values stay strictly inside
-  (int.MinValue, int.MaxValue). A node holding int.MinValue with a null left
-  child and a non-null right child compares left.max >= root.val as int.MinValue
-  >= int.MinValue, which is true, and the whole tree is wrongly rejected.
-  Symmetrically, int.MaxValue with a left child but no right child trips
-  right.min <= root.val. The leaf shortcut accidentally hides half of this - a
-  bare leaf holding int.MinValue returns before the comparison - which makes the
-  bug harder to find, not less real. The header comment is the mitigation: it
-  holds because the constraint caps values at +/- 1000000000.
-DEAD WEIGHT
-  The leaf branch is redundant, not load-bearing. Delete it and a leaf falls
-  through the general path: both children return the sentinels, both checks fail
-  to fire, and min and max both collapse to root.val - the same (root.val,
-  root.val, true). It is worth keeping only as the accidental guard described
-  above, and worth knowing it is not correctness-critical.
-FOLLOW-UPS
-  Two standard alternatives sidestep the sentinel fragility entirely. Top-down
-  bound passing carries (low, high) down the tree using long or nullable bounds,
-  where an absent bound is null rather than a magic int. In-order traversal
-  walks the tree and checks that the sequence is strictly increasing against a
-  single prev variable. Both also allow a genuine early exit, which this version
-  does not have: left and right are always both fully computed before any check
-  runs, so a violation buried in the left subtree still pays for a complete walk
-  of the right subtree.
+  The failure return is (0, 0, false), and 0 is a lie about min and max. It is
+  safe only because both checks are written as !left.found || ... - the short
+  circuit means the garbage 0 is never compared. If someone reorders those
+  conditions or hoists the min/max comparison first, a false subtree reporting 0
+  can be accepted. Also note >= and <= reject equal values, so a duplicate key
+  anywhere in the tree fails, which is what this problem wants but is easy to
+  break by accident. Finally the recursion is as deep as the tree, so a long
+  one-sided chain can overflow the stack.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it without returning tuples up the tree?
+     Yes - pass bounds down instead: helper(node, low, high) checks low <
+     node.val < high and recurses with tightened bounds. Same time, but you need
+     long or nullable bounds at the root instead of the sentinel trick used
+     here.
+  2. Remove the recursion entirely.
+     Do an in-order traversal with an explicit Stack<TreeNode> and keep a single
+     prev variable; the tree is a BST exactly when the in-order sequence is
+     strictly increasing. Extra space drops to the stack height and there is no
+     call-stack overflow risk.
+  3. Can space go below O(h)?
+     Morris in-order threading gives O(1) extra space by temporarily rewiring
+     right pointers to the in-order successor and restoring them. It mutates the
+     tree during the walk, which is unacceptable if other threads read it.
+  4. The tree is huge and lives on disk in chunks.
+     Keep the same post-order summary, but return only (min, max, found) per
+     chunk so a child chunk can be evicted from memory once its three values are
+     known - the summary is what makes the algorithm streamable.
+TRIGGER
+  Reach for this when a node's validity depends on every value in its subtrees,
+  and a small fixed summary from each child is enough to decide it.
+C# NOTE
+  (int min, int max, bool found) is a named ValueTuple, which is a struct, so
+  each of the n recursive returns copies three fields on the stack with no heap
+  object per node. The named fields also keep left.max and right.min readable,
+  which Item1/Item2 would not.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

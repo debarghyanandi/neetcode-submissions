@@ -651,31 +651,21 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Kth Smallest Integer in BST',
-  note: 'in-order on a BST is sorted order, so the kth node reached is the kth smallest - and the answer climbs straight home the moment it is found',
+  note: 'an in-order walk of a BST reads its values in sorted order, so the k-th value it touches is the answer - which means the walk can stop the instant the counter hits k, and this version carries that decision home by returning the found value and treating -1 as "nothing found yet"',
   inputs: [
-    {id:'t', label:'BST (level order)', value:'5,3,7,2,4', width:280},
-    {id:'k', label:'k', value:'3', width:70}
+    {id:'t', label:'BST (level order)', value:'5,3,8,2,4', width:300},
+    {id:'k', label:'k', value:'3', width:80}
   ],
   parse(raw){
     const vals = parseLevelOrder(raw.t, 31);
-    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 5,3,7,2,4'};
+    if (!vals) return {ok:false, msg:'Enter a level-order BST, e.g. 5,3,8,2,4'};
     const nodes = treeFromLevelOrder(vals);
     if (!nodes.length) return {ok:false, msg:'Needs at least a root node.'};
-    if (nodes.length > 12) return {ok:false, msg:'Keep it to 12 nodes or fewer so the whole run stays watchable.'};
-    if (nodes.some(n => n.v === -1)) return {ok:false, msg:'This code uses -1 as its not-found sentinel, so a node holding -1 would be read as an answer. Pick other values.'};
-    const kidm = {};
-    nodes.forEach(n => { if (n.parent){ (kidm[n.parent] = kidm[n.parent] || {})[n.side] = n; } });
-    const seqv = [];
-    (function ino(n){
-      if (!n) return;
-      const c = kidm[n.id] || {};
-      ino(c.L); seqv.push(n.v); ino(c.R);
-    })(nodes[0]);
-    for (let i = 1; i < seqv.length; i++){
-      if (seqv[i] <= seqv[i - 1]) return {ok:false, msg:'That is not a search tree - its in-order walk reads ' + seqv.join(', ') + ', which is not increasing. This code only finds the kth smallest when in-order order is sorted order.'};
-    }
+    if (nodes.length > 9) return {ok:false, msg:'Keep it to 9 nodes or fewer so the whole run stays watchable.'};
     const k = Number(String(raw.k).trim());
-    if (!Number.isInteger(k) || k < 1 || k > seqv.length) return {ok:false, msg:'k must be a whole number between 1 and ' + seqv.length + ', the number of nodes.'};
+    if (!Number.isFinite(k) || k !== Math.floor(k) || k < 1 || k > nodes.length){
+      return {ok:false, msg:'k must be a whole number between 1 and ' + nodes.length + ' (the node count).'};
+    }
     return {
       ok:true,
       value:{vals: vals, k: k},
@@ -683,26 +673,20 @@ const PROBLEM = {
     };
   },
   shuffle(){
-    const insert = (node, x) => {
-      if (!node) return {v: x, l: null, r: null};
-      if (x < node.v) node.l = insert(node.l, x); else node.r = insert(node.r, x);
-      return node;
-    };
-    const depth = (x) => x ? 1 + Math.max(depth(x.l), depth(x.r)) : 0;
-    let root = null, n = 0;
-    for (let tries = 0; tries < 40; tries++){
-      n = 4 + Math.floor(Math.random() * 4);
-      const pool = [];
-      let v = 1 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < n; i++){ pool.push(v); v += 1 + Math.floor(Math.random() * 3); }
-      for (let i = pool.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
-      }
-      root = null;
-      pool.forEach(x => { root = insert(root, x); });
-      if (depth(root) <= 4) break;
+    const pool = [];
+    for (let i = 1; i <= 24; i++) pool.push(i);
+    for (let i = pool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
     }
+    const n = 4 + Math.floor(Math.random() * 4);
+    const sorted = pool.slice(0, n).sort((a, b) => a - b);
+    const build = (lo, hi) => {
+      if (lo > hi) return null;
+      const mid = (lo + hi) >> 1;
+      return {v: sorted[mid], l: build(lo, mid - 1), r: build(mid + 1, hi)};
+    };
+    const root = build(0, sorted.length - 1);
     const out = [], q = [root];
     while (q.length){
       const x = q.shift();
@@ -710,51 +694,50 @@ const PROBLEM = {
       out.push(x.v); q.push(x.l); q.push(x.r);
     }
     while (out.length && out[out.length - 1] === null) out.pop();
-    return {t: out.map(x => x === null ? 'null' : x).join(','), k: String(1 + Math.floor(Math.random() * n))};
+    return {t: out.map(v => v === null ? 'null' : v).join(','), k: String(1 + Math.floor(Math.random() * n))};
   },
   solutions: [
   {
-    label: 'In-order DFS, counting with a shared field',
-    badge: 'O(n) time · O(n) space · in-order DFS with a -1 sentinel · optimal.cs',
-    blurb: 'An in-order walk of a BST reads the values in sorted order, so the kth node it reaches is the answer. The counter is a <em>field</em>, not a parameter, so every frame shares one number. <code>-1</code> means "nothing found down here yet": the instant a left subtree hands back anything else, each caller passes it straight up and never enters its right subtree.',
+    label: 'In-order recursion with a visit counter and early return',
+    badge: 'O(k) time · O(n) space · in-order DFS, stops at the k-th node · optimal.cs',
+    blurb: 'A BST read left-node-right comes out sorted, so a shared counter bumped once per node makes the k-th bump the answer. The find is sent home as a real value while -1 means "still searching", so every caller on the way up sees a non -1 left result and returns it straight away - nothing to the right of the k-th node is ever touched.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'callers parked on the path'},
-      {cls:'done', text:'counted - already passed in sorted order'},
-      {cls:'good', text:'the kth smallest'},
-      {cls:'dim', text:'never visited: the early stop skipped it'}
+      {cls:'in-window', text:'callers parked, waiting on this return'},
+      {cls:'done', text:'counted by visitedCount'},
+      {cls:'good', text:'the k-th smallest'}
     ],
     code: [
-      '// a field, not a parameter: one counter shared by every frame',
-      'private int visitedCount = 0;',
-      '',
-      'public int KthSmallest(TreeNode root, int k)',
+      'public class Solution',
       '{',
-      '    if (root == null)',
-      '        return -1;',
+      '    private int visitedCount = 0;',
       '',
-      '    int left = KthSmallest(root.left, k);',
-      '    if (left != -1)',
-      '        return left;',
-      '',
-      '    visitedCount++;',
-      '',
-      '    if (visitedCount == k)',
+      '    public int KthSmallest(TreeNode root, int k)',
       '    {',
-      '        return root.val;',
-      '    }',
+      '        if (root == null)',
+      '            return -1;',
       '',
-      '    return KthSmallest(root.right, k);',
+      '        int left = KthSmallest(root.left, k);',
+      '        if (left != -1)',
+      '            return left;',
+      '',
+      '        visitedCount++;',
+      '',
+      '        if (visitedCount == k)',
+      '        {',
+      '            return root.val;',
+      '        }',
+      '',
+      '        return KthSmallest(root.right, k);',
+      '    }',
       '}'
     ],
     simulate(input){
-      const k = input.k;
+      const K = input.k;
       const base = treeFromLevelOrder(input.vals);
       const info = {}, kid = {};
       base.forEach(n => { info[n.id] = n; });
       base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
-      /* The code recurses into missing children too - line 6 is a real call that
-         really returns -1 - so the empty slots are drawn as dashed nodes. */
       const nodes = base.slice();
       let seq = 0;
       base.forEach(n => {
@@ -770,53 +753,43 @@ const PROBLEM = {
       const child = (id, s) => (kid[id] || {})[s] || null;
       const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
 
-      const frames = [], visitNo = {}, visitedIds = [], entered = {};
-      let visitedCount = 0, answerId = null, calls = 0, maxF = 0, rootLine = 0;
-      const steps = [];
+      const frames = [], steps = [], order = {}, counted = [];
+      let visitedCount = 0, calls = 0, maxF = 0, answer = null, answerId = null;
 
-      const frameSub = (f) => {
-        const n = info[f.id];
-        if (n.v === null) return 'empty subtree, returns -1';
-        if (f.left === undefined) return 'waiting on left subtree';
-        if (f.left !== -1) return 'left returned ' + f.left + ', passing it up';
-        if (f.myCount) return 'visit ' + f.myCount + ' of k = ' + k + ', waiting on right';
-        return 'left gave -1, about to count itself';
-      };
       const caller = () => {
         if (frames.length < 2) return null;
         const p = frames[frames.length - 2];
-        return {v: shown(p.id), line: p.left === undefined ? 9 : 20};
+        return {v: shown(p.id), line: p.left === undefined ? 10 : 21};
       };
       const parkedNote = () => {
         const c = caller();
-        return c ? ' Its caller, <b>' + c.v + '</b>, is frozen on line ' + c.line + ' until this call returns.' : '';
+        return c ? ' Its caller, <b>' + c.v + '</b>, is parked on line ' + c.line + ' waiting for this return value.' : '';
       };
 
       const panels = (curId, popId, freshId) => [
-        pTree('tree', nodes.map(n => {
+        pTree('BST', nodes.map(n => {
           let cls = '';
           if (n.id === curId) cls = 'hot';
           else if (n.v === null) cls = '';
           else if (n.id === answerId) cls = 'good';
+          else if (order[n.id]) cls = 'done';
           else if (frames.some(f => f.id === n.id)) cls = 'in-window';
-          else if (visitNo[n.id]) cls = 'done';
-          else if (answerId && !entered[n.id]) cls = 'dim';
-          let sub = '';
-          if (n.v !== null){
-            if (visitNo[n.id]) sub = 'visit ' + visitNo[n.id];
-            else if (answerId && !entered[n.id]) sub = 'skipped';
-          }
-          return {id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls, sub: sub};
+          return {
+            id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
+            sub: n.id === answerId ? 'k-th' : (order[n.id] ? 'visit ' + order[n.id] : '')
+          };
         }), {
-          tags: curId ? [{name:'root', id: curId, cls:'accent'}] : [],
-          scale: 0.7
+          tags: curId ? [{name:'node', id: curId, cls:'accent'}] : [],
+          scale: 0.78
         }),
         pStack('call stack', [{
           label: 'KthSmallest(root, k)',
           mode: 'stack',
           items: frames.map((f, i) => ({
             text: 'root = ' + shown(f.id),
-            sub: frameSub(f),
+            sub: info[f.id].v === null
+              ? 'null, returns -1 at once'
+              : (f.left === undefined ? 'left call running, line 10' : 'left = ' + f.left + ', now on line ' + (f.left !== -1 ? 12 : 14)),
             cls: i === frames.length - 1 ? 'hot' : '',
             fresh: f.id === freshId,
             popped: f.id === popId && i === frames.length - 1
@@ -825,83 +798,72 @@ const PROBLEM = {
           foot: 'caller',
           top: 'running now'
         }]),
-        pSlots('nodes counted, in sorted order (need k = ' + k + ')',
-          Array.from({length: k}, (_, i) => {
-            const id = visitedIds[i];
-            return {
-              text: id === undefined ? '' : String(info[id].v),
-              cls: id === undefined ? '' : (i === k - 1 ? 'good' : 'done')
-            };
-          })),
+        pSlots('values counted, smallest first', Array.from({length: K}, (_, i) => ({
+          text: counted[i] === undefined ? '' : String(counted[i]),
+          cls: i === K - 1 && counted[i] !== undefined ? 'good' : (counted[i] !== undefined ? 'done' : '')
+        }))),
         pPills('state', [
+          {k:'k', v: K},
           {k:'visitedCount', v: visitedCount, cls:'hot'},
-          {k:'k', v: k},
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
           {k:'calls made', v: calls},
-          {k:'answer', v: answerId ? String(info[answerId].v) : 'pending',
-           cls: answerId ? 'good' : ''}
+          {k:'answer', v: answer === null ? 'pending' : String(answer), cls: answer === null ? '' : 'good'}
         ])
       ];
 
-      const out = (id, val, line) => {
-        if (id === 'n0') rootLine = line;
-        frames.pop();
-        return val;
-      };
-
-      steps.push({lines:[1,2,4], msg:'A BST read in-order - left subtree, then the node, then the right subtree - comes out in increasing order, so the <b>' + k + 'th</b> node that walk reaches is the ' + k + 'th smallest. The only thing the recursion needs on top of that is a count, and line 2 keeps it in a <em>field</em>: one counter that every frame increments, rather than a number that would reset on each call. The other half of the design is <code>-1</code>, which line 7 uses to mean "no answer in here" - that is what lets a real answer be told apart from a miss on the way up. The dashed slots below are genuine calls: the code recurses into missing children too.', panels: panels(null, null, null)});
+      steps.push({lines:[3,5,7], msg:'<code>visitedCount</code> on line 3 is a field, not a parameter: one counter shared by every call, so the whole recursion agrees on how many nodes have been passed. The method returns an <code>int</code>, so it needs a value that means "not found down here" - line 8 picks <b>-1</b> for that. The dashed slots below are real calls too; the code recurses into missing children.', panels: panels(null, null, null)});
 
       const walk = (id) => {
-        frames.push({id: id, left: undefined, myCount: 0});
+        frames.push({id: id, left: undefined});
         calls++;
         maxF = Math.max(maxF, frames.length);
-        const f = frames[frames.length - 1];
 
         if (info[id].v === null){
           const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[6,7], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>root</code> arrives as <code>null</code>. Line 6 catches it and returns <code>-1</code> at once - the sentinel for "the answer is not down here". Crucially it does <em>not</em> touch <code>visitedCount</code>: an empty subtree holds no nodes, so there is nothing to count.' + parkedNote(), panels: panels(id, id, id)});
-          return out(id, -1, 7);
+          steps.push({lines:[7,8], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>root</code> arrives <code>null</code>. There is nothing to count here, so line 8 hands back the sentinel <b>-1</b> and the counter is untouched.' + parkedNote(), panels: panels(id, id, id)});
+          frames.pop();
+          return -1;
         }
 
-        entered[id] = true;
-        const v = info[id].v;
-        steps.push({lines:[6,9], msg:'A frame opens for <b>' + v + '</b>. It is not null, so it falls to line 9 and immediately calls itself on its left child. It has to: in a BST every value under the left child is smaller than ' + v + ', so ' + v + ' cannot possibly be the ' + k + 'th smallest until all of those have been counted first. The node is the <em>last</em> thing in its own subtree to be counted.' + parkedNote(), panels: panels(id, null, id)});
+        const v = shown(id);
+        steps.push({lines:[5,7,10], msg:'A frame opens for <b>' + v + '</b>. In a BST everything in its left subtree is smaller than it, so <b>' + v + '</b> must not be counted until that whole subtree has been counted first. The frame parks on line 10 and recurses left.' + parkedNote(), panels: panels(id, null, id)});
 
+        const f = frames[frames.length - 1];
         const L = walk(child(id, 'L'));
         f.left = L;
 
         if (L !== -1){
-          steps.push({lines:[10,11], msg:'Line 9 handed back <b>' + L + '</b>, and that is not <code>-1</code>, so line 10 knows the ' + k + 'th smallest was already found somewhere below-left. Line 11 passes it up untouched - no increment, no comparison, and line 20 is never reached, so the whole right subtree of <b>' + v + '</b> is never entered. That is the early stop: once found, the answer only climbs.', panels: panels(id, id, null)});
-          return out(id, L, 11);
+          steps.push({lines:[10,11,12], msg:'The left call came back with <b>' + L + '</b>, not -1, which can only mean the k-th smallest was already found somewhere below-left. Line 12 returns it unchanged: <b>' + v + '</b> never increments the counter and never looks right, because everything to its right is larger than an answer that is already settled.', panels: panels(id, id, null)});
+          frames.pop();
+          return L;
         }
 
         visitedCount++;
-        visitNo[id] = visitedCount;
-        f.myCount = visitedCount;
-        visitedIds.push(id);
+        order[id] = visitedCount;
+        counted.push(info[id].v);
 
-        if (visitedCount === k){
+        if (visitedCount === K){
+          answer = info[id].v;
           answerId = id;
-          steps.push({lines:[13,15,17], msg:'The left subtree gave <code>-1</code>, so everything smaller than <b>' + v + '</b> has been counted and none of it was the answer. Line 13 counts this node - it is next in sorted order - and <code>visitedCount</code> reaches <b>' + visitedCount + '</b>, which equals <code>k</code>. So <b>' + v + '</b> is the ' + k + 'th smallest, and line 17 returns it. Nothing below or to the right of here will ever be looked at.', panels: panels(id, id, null)});
-          return out(id, v, 17);
+          steps.push({lines:[11,14,16,18], msg:'Left returned -1, so nothing smaller is still owed and it is <b>' + v + '</b>’s turn: line 14 makes <code>visitedCount</code> <b>' + visitedCount + '</b>. That equals k, so <b>' + v + '</b> is exactly the k-th smallest value in the tree and line 18 returns it. Line 21 is never reached - the right subtree holds only larger values and is left untouched.', panels: panels(id, id, null)});
+          frames.pop();
+          return info[id].v;
         }
 
-        steps.push({lines:[13,15,20], msg:'The left subtree gave <code>-1</code>: every value smaller than <b>' + v + '</b> has now been counted, and none was the answer. Line 13 counts this node as visit <b>' + visitedCount + '</b> - the shared field is why that number survived the calls below. ' + visitedCount + ' is not ' + k + ', so line 20 walks on to the right child, where the next-larger values live.', panels: panels(id, null, null)});
+        steps.push({lines:[11,14,16,21], msg:'Left returned -1, so line 14 counts <b>' + v + '</b> itself: <code>visitedCount</code> is now <b>' + visitedCount + '</b>, still short of k = ' + K + '. The next values in sorted order all live in the right subtree, so line 21 tail-calls into it and will pass whatever it finds straight up.', panels: panels(id, null, null)});
 
         const R = walk(child(id, 'R'));
-
-        if (R !== -1){
-          steps.push({lines:[20], msg:'The right subtree came back with <b>' + R + '</b>, so line 20 returns it unchanged. <b>' + v + '</b> does no work of its own here - it is just a relay for an answer found among the values larger than it.', panels: panels(id, id, null)});
-        } else {
-          steps.push({lines:[20], msg:'The right subtree returned <code>-1</code> too, so line 20 hands <code>-1</code> up. <b>' + v + '</b> was counted (visit ' + visitNo[id] + ') but it was not the ' + k + 'th, and nothing in its subtree was either - the sentinel tells its caller only "keep looking", while <code>visitedCount</code> quietly keeps the ' + visitedCount + ' nodes counted so far.', panels: panels(id, id, null)});
-        }
-        return out(id, R, 20);
+        steps.push({lines:[21], msg: R === -1
+          ? 'The right call returned <b>-1</b> as well, so nothing under <b>' + v + '</b> was the k-th node. That -1 goes up unchanged, telling the parent to carry on counting.'
+          : 'The right call returned <b>' + R + '</b>, the k-th smallest. Line 21 passes it up untouched - every caller above will see a non -1 and bail out at line 12.',
+          panels: panels(id, id, null)});
+        frames.pop();
+        return R;
       };
 
-      const ans = walk('n0');
-
-      steps.push({lines:[rootLine], msg:'Line ' + rootLine + ' returns <b>' + ans + '</b> from the root: the ' + k + 'th smallest value. It took ' + calls + ' call(s) and counted ' + visitedCount + ' node(s) - the walk stops the moment the count hits k, so it touches O(k) nodes here and O(n) in the worst case, where k = n. The stack peaked at ' + maxF + ' frame(s), which is the height of the tree; a BST built from sorted input is one long chain, and that is the O(n) space. Two things to notice about the shortcuts taken here: <code>-1</code> doubles as both "empty" and "not found", so a tree containing -1 would break it, and because <code>visitedCount</code> is an instance field it is never reset - calling <code>KthSmallest</code> twice on the same <code>Solution</code> object would carry the old count into the second run.', panels: panels(null, null, null)});
+      const out = walk('n0');
+      steps.push({lines:[5,10,12], msg:'The root’s call returns <b>' + out + '</b>: the ' + K + (K === 1 ? 'st' : K === 2 ? 'nd' : K === 3 ? 'rd' : 'th') + ' smallest value in the BST. It took ' + calls + ' call(s) and the stack peaked at ' + maxF + ' frame(s) - the O(n) space of the deepest path. The work is O(k) plus that descent, since every node larger than the answer was skipped the moment a non -1 came back. The one catch: -1 doubles as both a real value and "not found", so a tree containing -1 would confuse this code.', panels: panels(null, null, null)});
       return steps;
     }
   }]

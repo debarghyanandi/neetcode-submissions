@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  iterative BST descent using ordering property
-// -  [bst-property-navigate]
+// -  BST traversal, iterative descent   [bst-iterative]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  walks down one path using node.val comparisons, stopping at the
-// -  split/hit node, worst-case depth n on a skewed tree but no extra
-// -  memory
+// -  Traverses down the BST by comparing target values with current node;
+// -  worst case height is O(n) for skewed tree.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -36,61 +34,70 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : BST descent - first split point is the LCA
+ PATTERN : BST Descent - walk down to the split point
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  node     the current node on the walk down; the candidate ancestor
 WHY THIS PATTERN
-  The ordering is information the generic LCA algorithm throws away. Everything
-  in node.left is below node.val and everything in node.right is above it, so
-  one comparison of p.val and q.val against node.val already says which subtree
-  can still hold both nodes. That turns a search into a walk: one node per
-  level, no branching, no backtracking, which is why a single node pointer is
-  the entire state.
+  The tree is a binary search tree, so every node's value splits its subtrees:
+  smaller on the left, larger on the right. That means you never need to search
+  both sides. If p.val and q.val are both bigger than node.val, both targets
+  live in node.right; if both are smaller, both live in node.left; otherwise
+  node itself separates them and is the answer. One walk from root to that split
+  point is enough.
+BRUTE FORCE
+  Ignore the ordering and treat it as a plain binary tree: recurse into both
+  children, return the node where one target is found on the left and the other
+  on the right. That is O(n) time and O(h) stack space, and it visits nodes that
+  the BST rule already rules out. Another common first try is to collect the
+  root-to-p and root-to-q paths in two lists and compare them, which costs extra
+  memory for the paths.
 INVARIANT
-  At the top of every iteration, the subtree rooted at node contains both p and
-  q. True initially since node = root. Preserved because node only moves right
-  when p.val and q.val both exceed node.val (both nodes must then live in the
-  right subtree) and only moves left when both are below. node strictly descends
-  each pass and the invariant guarantees the chosen child is non-null, so the
-  loop cannot spin.
-WHY THE SPLIT NODE IS THE ANSWER
-  The else branch fires exactly when p and q disagree on a direction: p.val <=
-  node.val <= q.val, or the mirror. By the invariant node is a common ancestor.
-  Neither child can be one, because whichever child you descend into excludes
-  the other node. So node is the lowest such node, and it is unique - there is
-  exactly one place where the two search paths diverge.
-WHY NO EQUALITY CHECK IS NEEDED
-  The else also absorbs the case p.val == node.val (or q.val == node.val):
-  neither strict comparison holds, so it returns node. That is correct, since
-  this problem counts a node as a descendant of itself - when node is p, p is
-  the LCA. An explicit guard like 'if node == p or node == q return node' would
-  be dead weight, and interviewers often expect you to justify leaving it out
-  rather than add it.
+  At the top of every loop pass, both p and q are inside the subtree rooted at
+  node. The BST comparison only moves node to the child that still contains
+  both, so the invariant holds after the move. When neither branch takes both,
+  node lies between p and q (or equals one of them), so no node deeper down can
+  contain both - node is the lowest common ancestor.
 WATCH OUT
-  Comparisons are on .val, not reference identity, so the code assumes BST
-  values are distinct. It also assumes p and q are both actually in the tree; if
-  one were missing the descent could run off a leaf, which is the only way to
-  reach the final return null - unreachable under the stated guarantees, present
-  only to satisfy the compiler. Note the code never assumes p.val < q.val: the
-  two mirrored conditions handle either order.
+  The final return null is only reached if root is null or if p or q is not
+  actually in the tree; the code never checks membership, so a missing target
+  silently returns a wrong node or null instead of reporting the problem. It
+  dereferences p.val and q.val before testing them, so a null p or q throws a
+  NullReferenceException. The whole method is wrong on a tree that is not a
+  valid BST, and it also breaks if the tree holds duplicate values, since the
+  decision is made on values alone. If p and q are the same node, it correctly
+  returns that node - the "otherwise" branch catches the equal case.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Write it recursively.
+     Same three-way test, but return LowestCommonAncestor(root.right, p, q) or
+     the left child instead of reassigning node. It reads the same but adds O(h)
+     call stack, which the loop avoids.
+  2. What if the tree is a general binary tree with no ordering?
+     You must search both subtrees. Recurse left and right; if both sides return
+     non-null, the current node is the answer, else pass up whichever side is
+     non-null. That is O(n) time and O(h) stack.
+  3. What if p or q may not be present in the tree?
+     Keep this walk to find the candidate, then run two more O(h) searches from
+     that candidate to confirm both values exist below it. Still O(h), just
+     three passes instead of one.
+  4. What if the nodes carry parent pointers?
+     Walk up from p and q instead of down from root. Lift the deeper one to the
+     same depth, then step both up together until they meet - no root access
+     needed.
 TRIGGER
-  Lowest or first common ancestor asked over a search tree, or any phrasing of
-  'where do two search paths diverge'. The tell is that you can compare a target
-  against the current node and rule out a whole subtree - the moment that holds,
-  prefer the iterative descent over any traversal that visits both children.
-FOLLOW-UP
-  Plain binary tree with no ordering: post-order recursion that returns a found
-  node upward, and the first node receiving a non-null result from both sides is
-  the LCA. Nodes with parent pointers: walk both upward and intersect the
-  chains. Asked to handle p or q possibly absent: this loop cannot detect it,
-  since it never confirms it reached either node - you need a separate existence
-  search for each before trusting the result.
+  The problem says "binary search tree" and asks about a relationship between
+  two nodes - use the ordering to pick one branch per step instead of searching
+  both.
+C# NOTE
+  The comparisons use p.val and q.val, not reference equality (p == node), so p
+  and q only need to carry the right integer values, not be the exact TreeNode
+  objects stored in the tree; switching to == would compare references and
+  quietly change the contract.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

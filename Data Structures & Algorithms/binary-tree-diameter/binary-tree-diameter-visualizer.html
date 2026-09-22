@@ -651,16 +651,16 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Binary Tree Diameter',
-  note: 'the diameter is an edge-count between two nodes, and every such path crosses exactly one node as its highest point - so each node only has to know how tall its own two subtrees are',
+  note: 'the diameter is the longest path between any two nodes, counted in edges - and every such path bends at exactly one node, its highest point, where it goes down one side and back up the other. So the only question at each node is "how long is the path that turns here?", which is left height + right height, and the answer is the biggest of those over all nodes',
   inputs: [
-    {id:'t', label:'tree (level order)', value:'1,2,3,4,5', width:320}
+    {id:'t', label:'tree (level order)', value:'1,2,3,4,5', width:340}
   ],
   parse(raw){
     const vals = parseLevelOrder(raw.t, 31);
     if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 1,2,3,4,5'};
     const nodes = treeFromLevelOrder(vals);
     if (!nodes.length) return {ok:false, msg:'Needs at least a root node.'};
-    if (nodes.length > 15) return {ok:false, msg:'Keep it to 15 nodes or fewer so the whole run stays watchable.'};
+    if (nodes.length > 10) return {ok:false, msg:'Keep it to 10 nodes or fewer so the whole run stays watchable.'};
     return {
       ok:true,
       value:{vals: vals},
@@ -669,12 +669,12 @@ const PROBLEM = {
   },
   shuffle(){
     const build = (d) => {
-      if (d > 4 || Math.random() < 0.3) return null;
+      if (d > 4 || Math.random() < 0.38) return null;
       return {v: 1 + Math.floor(Math.random() * 9), l: build(d + 1), r: build(d + 1)};
     };
     const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
     let root = null, n = 0;
-    while (n < 3 || n > 9){ root = build(1); n = count(root); }
+    while (n < 3 || n > 7){ root = build(1); n = count(root); }
     const out = [], q = [root];
     while (q.length){
       const x = q.shift();
@@ -686,23 +686,24 @@ const PROBLEM = {
   },
   solutions: [
   {
-    label: 'Post-order height, diameter kept in a shared field',
-    badge: 'O(n) time · O(n) space · post-order DFS + mutable field · optimal.cs',
-    blurb: 'Height and diameter share one walk. Height(node) returns its own height, but on the way it also compares left+right against a shared field, diameter, keeping the largest sum seen anywhere in the tree. Every node checks in once, so the widest path turns up without a second pass.',
+    label: 'Post-order DFS, diameter kept in a field',
+    badge: 'O(n) time · O(n) space · post-order DFS, one pass · optimal.cs',
+    blurb: 'Height is the one fact a parent needs from a child, so one post-order walk measures every node once. While the walk is there, left + right is the length of the path that bends at that node - the recursion keeps the running best in the field res and returns only the height, so the two jobs never interfere.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'callers parked, waiting on this height'},
-      {cls:'good', text:'subtree settled: height known'}
+      {cls:'in-window', text:'callers parked, waiting on a height'},
+      {cls:'good', text:'height settled and returned'},
+      {cls:'accent', text:'node the best path currently bends at'}
     ],
     code: [
       'public class Solution',
       '{',
-      '    public int diameter = 0;',
+      '    public int res = 0;',
       '',
       '    public int DiameterOfBinaryTree(TreeNode root)',
       '    {',
       '        Height(root);',
-      '        return diameter;',
+      '        return res;',
       '    }',
       '',
       '    private int Height(TreeNode root)',
@@ -713,7 +714,7 @@ const PROBLEM = {
       '        int left = Height(root.left);',
       '        int right = Height(root.right);',
       '',
-      '        diameter = Math.Max(diameter, left + right);',
+      '        res = Math.Max(res, left + right);',
       '',
       '        return 1 + Math.Max(left, right);',
       '    }',
@@ -738,9 +739,10 @@ const PROBLEM = {
       });
       const child = (id, s) => (kid[id] || {})[s] || null;
 
-      const res = {}, frames = [], steps = [];
-      let calls = 0, maxF = 0, diameter = 0;
+      const H = {}, thru = {}, frames = [], steps = [];
+      let res = 0, calls = 0, maxF = 0, bestId = null;
       const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
+      const fmt = (x) => x === null ? 'waiting' : ('height ' + x);
       const caller = () => {
         if (frames.length < 2) return null;
         const p = frames[frames.length - 2];
@@ -748,33 +750,32 @@ const PROBLEM = {
       };
       const parkedNote = () => {
         const c = caller();
-        return c ? ' Its caller, <b>' + c.v + '</b>, is paused on line ' + c.line + ' waiting for this height.' : '';
+        return c ? ' Its caller, <b>' + c.v + '</b>, is paused on line ' + c.line + ' holding nothing but an unfinished assignment.' : '';
       };
 
       const panels = (curId, popId, freshId) => [
         pTree('tree', nodes.map(n => {
-          const r = res[n.id];
           let cls = '';
           if (n.id === curId) cls = 'hot';
           else if (n.v === null) cls = '';
-          else if (r !== undefined) cls = 'good';
+          else if (H[n.id] !== undefined) cls = 'good';
           else if (frames.some(f => f.id === n.id)) cls = 'in-window';
           return {
             id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
-            sub: (n.v !== null && r !== undefined) ? ('h ' + r) : ''
+            sub: (n.v !== null && H[n.id] !== undefined) ? ('h ' + H[n.id] + ', thru ' + thru[n.id]) : ''
           };
         }), {
-          tags: curId ? [{name:'node', id: curId, cls:'accent'}] : [],
+          tags: bestId ? [{name:'bend', id: bestId, cls:'accent'}] : [],
           scale: 0.75
         }),
         pStack('call stack', [{
-          label: 'Height(node)',
+          label: 'Height(root)',
           mode: 'stack',
           items: frames.map((f, i) => ({
-            text: 'node = ' + shown(f.id),
+            text: 'root = ' + shown(f.id),
             sub: info[f.id].v === null
               ? 'empty, returns 0 at once'
-              : 'left ' + (f.left === null ? 'waiting' : f.left) + ' | right ' + (f.right === null ? 'waiting' : f.right),
+              : 'left ' + fmt(f.left) + ' | right ' + fmt(f.right),
             cls: i === frames.length - 1 ? 'hot' : '',
             fresh: f.id === freshId,
             popped: f.id === popId && i === frames.length - 1
@@ -784,15 +785,16 @@ const PROBLEM = {
           top: 'running now'
         }]),
         pPills('state', [
-          {k:'running', v: curId ? shown(curId) : (res['n0'] !== undefined ? 'done' : 'not started'), cls:'hot'},
+          {k:'running', v: curId ? shown(curId) : (H['n0'] !== undefined ? 'done' : 'not started'), cls:'hot'},
+          {k:'res (best so far)', v: res, cls:'good'},
+          {k:'bends at', v: bestId ? shown(bestId) : 'nothing yet'},
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
-          {k:'calls made', v: calls},
-          {k:'diameter', v: diameter, cls:'good'}
+          {k:'calls made', v: calls}
         ])
       ];
 
-      steps.push({lines:[3,7], msg:'A field, <code>diameter</code>, starts at <b>0</b> and lives outside the recursion - every call to <code>Height</code> can read and write it. <code>DiameterOfBinaryTree</code> just kicks off <code>Height(root)</code> and, once that finishes, reads whatever the field ended up holding. The dashed empty slots below are real calls too: the code recurses into missing children.', panels: panels(null, null, null)});
+      steps.push({lines:[3,5,7], msg:'<code>res</code> is a field on the object, not a local: it starts at 0 and survives every call, which is how one walk can compare paths that bend at nodes far apart in the tree. <code>DiameterOfBinaryTree</code> throws away what <code>Height(root)</code> returns - the height of the whole tree is not the answer - and reads <code>res</code> afterwards. The dashed empty slots below are real calls too.', panels: panels(null, null, null)});
 
       const walk = (id) => {
         frames.push({id: id, left: null, right: null});
@@ -801,14 +803,14 @@ const PROBLEM = {
 
         if (info[id].v === null){
           const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[13,14], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>root</code> arrives <code>null</code>. Line 14 answers at once: an empty subtree has height <b>0</b>, and it never touches <code>diameter</code> - an empty subtree cannot be part of any path.' + parkedNote(), panels: panels(id, id, id)});
-          res[id] = 0;
+          steps.push({lines:[13,14], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>root</code> arrives <code>null</code>. Line 14 returns <b>0</b> and stops there - it never touches <code>res</code>, because a missing subtree offers no path to bend anywhere.' + parkedNote(), panels: panels(id, id, id)});
+          H[id] = 0; thru[id] = 0;
           frames.pop();
           return 0;
         }
 
         const v = shown(id);
-        steps.push({lines:[11,13,16], msg:'A frame opens for <b>' + v + '</b>. Its own height depends on both children, so it falls past the null check and parks on line 16, calling <code>Height</code> on its left child first.' + parkedNote(), panels: panels(id, null, id)});
+        steps.push({lines:[11,13,16], msg:'A frame opens for <b>' + v + '</b>. It cannot know its own height, nor the length of the path bending at it, until both sides report, so it falls past the null check and parks on line 16 calling <code>Height</code> on its left child.' + parkedNote(), panels: panels(id, null, id)});
 
         const f = frames[frames.length - 1];
         const L = walk(child(id, 'L'));
@@ -816,17 +818,14 @@ const PROBLEM = {
         const R = walk(child(id, 'R'));
         f.right = R;
 
-        const sum = L + R;
-        const before = diameter;
-        diameter = Math.max(diameter, sum);
+        const t = L + R;
+        thru[id] = t;
+        const beat = t > res;
+        if (beat){ res = t; bestId = id; }
         const h = 1 + Math.max(L, R);
-        res[id] = h;
+        H[id] = h;
 
-        const updated = diameter > before;
-        const why = updated
-          ? 'the path through <b>' + v + '</b> - ' + L + ' step(s) down its left side and ' + R + ' down its right - spans <b>' + sum + '</b> edges, wider than the ' + before + ' on record, so <code>diameter</code> jumps to <b>' + diameter + '</b>.'
-          : 'the path through <b>' + v + '</b> spans ' + sum + ' edges (' + L + ' left, ' + R + ' right), no wider than the ' + diameter + ' already on record, so <code>diameter</code> stays put.';
-        steps.push({lines:[16,17,19,21], msg:'Both children have reported back: left height <b>' + L + '</b>, right height <b>' + R + '</b>. On line 19 ' + why + ' Line 21 then hands <b>' + h + '</b> = 1 + max(' + L + ', ' + R + ') upward as this node’s own height - <code>diameter</code> is never returned, only touched in passing.', panels: panels(id, id, null)});
+        steps.push({lines:[16,17,19,21], msg:'Both children are back: left height ' + L + ', right height ' + R + '. Line 19 asks what the longest path <em>through</em> <b>' + v + '</b> is - go down the left ' + L + ' edge(s), come back up and down the right ' + R + ', so ' + L + ' + ' + R + ' = <b>' + t + '</b> edges. ' + (beat ? 'That beats the old <code>res</code>, so the best-known diameter is now <b>' + t + '</b>, bending at <b>' + v + '</b>.' : 'That does not beat <code>res</code> = <b>' + res + '</b>, so the field is left alone.') + ' Line 21 then returns <b>' + h + '</b> - only one side can be used by the parent, so it sends up 1 + max(' + L + ', ' + R + '), not the sum.', panels: panels(id, id, null)});
 
         frames.pop();
         return h;
@@ -834,18 +833,19 @@ const PROBLEM = {
 
       walk('n0');
 
-      steps.push({lines:[7,8], msg:'<code>Height(root)</code> has finished, and <code>diameter</code> now holds the widest path found anywhere in the tree: <b>' + diameter + '</b>. That is what gets returned. It took ' + calls + ' call(s) total - one per node plus one per empty slot, so O(n) - and the stack peaked at ' + maxF + ' frame(s), the O(n) space cost of a long thin tree.', panels: panels(null, null, null)});
+      steps.push({lines:[7,8], msg:'The stack is empty and the root has returned its height, which line 7 discards. Line 8 reads the field: the diameter is <b>' + res + '</b> edge(s)' + (bestId ? ', the path that bends at <b>' + shown(bestId) + '</b>' : '') + '. Every node was visited once and did O(1) work on top of its children, so ' + calls + ' call(s) in total - O(n) - and the stack peaked at ' + maxF + ' frame(s), the O(n) space a deep tree costs.', panels: panels(null, null, null)});
       return steps;
     }
   },
   {
-    label: 'Post-order returning (height, diameter) as a tuple',
-    badge: 'O(n) time · O(n) space · post-order DFS, no shared state · optimal-variant.cs',
-    blurb: 'Same walk, no field to mutate: each call returns a pair, (height, diameter). A node builds its own pair purely from its children’s pairs - its diameter is the larger of the path crossing through itself (left.height + right.height) or whichever child already found something wider.',
+    label: 'Post-order DFS returning (height, diameter)',
+    badge: 'O(n) time · O(n) space · post-order DFS, one pass · optimal-variant.cs',
+    blurb: 'The same walk with no shared field: each call returns a pair, so the best diameter travels up the stack as a value instead of sitting in mutable state. A node takes the larger of its two children’s diameters and the path bending at itself, and passes that winner up alongside its height.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'callers parked, waiting on this pair'},
-      {cls:'good', text:'subtree settled: height and diameter known'}
+      {cls:'in-window', text:'callers parked, waiting on a pair'},
+      {cls:'good', text:'subtree settled, pair returned'},
+      {cls:'accent', text:'node whose pair is the running answer'}
     ],
     code: [
       'public class Solution',
@@ -891,10 +891,10 @@ const PROBLEM = {
       });
       const child = (id, s) => (kid[id] || {})[s] || null;
 
-      const res = {}, frames = [], steps = [];
-      let calls = 0, maxF = 0;
+      const R = {}, frames = [], steps = [];
+      let calls = 0, maxF = 0, bestId = null, best = 0;
       const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
-      const fmt = (r) => r ? ('h ' + r.h + ', d ' + r.d) : 'waiting';
+      const fmt = (p) => p ? ('h ' + p.h + ', d ' + p.d) : 'waiting';
       const caller = () => {
         if (frames.length < 2) return null;
         const p = frames[frames.length - 2];
@@ -907,7 +907,7 @@ const PROBLEM = {
 
       const panels = (curId, popId, freshId) => [
         pTree('tree', nodes.map(n => {
-          const r = res[n.id];
+          const r = R[n.id];
           let cls = '';
           if (n.id === curId) cls = 'hot';
           else if (n.v === null) cls = '';
@@ -918,7 +918,7 @@ const PROBLEM = {
             sub: (n.v !== null && r) ? ('h ' + r.h + ', d ' + r.d) : ''
           };
         }), {
-          tags: curId ? [{name:'node', id: curId, cls:'accent'}] : [],
+          tags: bestId ? [{name:'best d', id: bestId, cls:'accent'}] : [],
           scale: 0.75
         }),
         pStack('call stack', [{
@@ -938,15 +938,16 @@ const PROBLEM = {
           top: 'running now'
         }]),
         pPills('state', [
-          {k:'running', v: curId ? shown(curId) : (res['n0'] ? 'done' : 'not started'), cls:'hot'},
+          {k:'running', v: curId ? shown(curId) : (R['n0'] ? 'done' : 'not started'), cls:'hot'},
+          {k:'best diameter seen', v: best, cls:'good'},
+          {k:'carried up from', v: bestId ? shown(bestId) : 'nothing yet'},
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
-          {k:'calls made', v: calls},
-          {k:'diameter (root)', v: res['n0'] ? res['n0'].d : 'pending', cls: res['n0'] ? 'good' : ''}
+          {k:'calls made', v: calls}
         ])
       ];
 
-      steps.push({lines:[3,5], msg:'No field this time - every call to <code>DFS</code> returns its answer as a pair, <code>(height, diameter)</code>, and the caller decides what to do with it. The root call’s pair is deconstructed on line 5; only the diameter half survives to be returned. The dashed empty slots below are real calls too: the code recurses into missing children.', panels: panels(null, null, null)});
+      steps.push({lines:[3,5,6], msg:'No field this time - nothing outside the recursion remembers anything. <code>DFS</code> returns a pair, and line 5 deconstructs it with <code>_</code> for the height, which the caller does not care about, keeping only <code>diameter</code>. Every node must therefore hand its parent both numbers: the height its parent needs, and the best diameter found anywhere beneath it.', panels: panels(null, null, null)});
 
       const walk = (id) => {
         frames.push({id: id, left: null, right: null});
@@ -955,43 +956,40 @@ const PROBLEM = {
 
         if (info[id].v === null){
           const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[11,12], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>node</code> arrives <code>null</code>. Line 12 answers at once with the pair <b>(0, 0)</b>: an empty subtree has no height and contributes no path.' + parkedNote(), panels: panels(id, id, id)});
-          res[id] = {h: 0, d: 0};
+          steps.push({lines:[11,12], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> is missing, so <code>node</code> is <code>null</code> and line 12 answers <b>(0, 0)</b> at once: an empty subtree has height 0 and contains no path at all, so its diameter is 0 too.' + parkedNote(), panels: panels(id, id, id)});
+          R[id] = {h: 0, d: 0};
           frames.pop();
-          return res[id];
+          return R[id];
         }
 
         const v = shown(id);
-        steps.push({lines:[9,11,14], msg:'A frame opens for <b>' + v + '</b>. It cannot build its own pair until both children hand theirs back, so it parks on line 14, calling itself on the left child first.' + parkedNote(), panels: panels(id, null, id)});
+        steps.push({lines:[9,11,14], msg:'A frame opens for <b>' + v + '</b>. Both numbers it owes its parent depend on both children, so it parks on line 14 and recurses left first.' + parkedNote(), panels: panels(id, null, id)});
 
         const f = frames[frames.length - 1];
         const L = walk(child(id, 'L'));
         f.left = L;
-        const R = walk(child(id, 'R'));
-        f.right = R;
+        const Rr = walk(child(id, 'R'));
+        f.right = Rr;
 
-        const height = 1 + Math.max(L.h, R.h);
-        const through = L.h + R.h;
-        const d = Math.max(through, Math.max(L.d, R.d));
-        res[id] = {h: height, d: d};
+        const h = 1 + Math.max(L.h, Rr.h);
+        const t = L.h + Rr.h;
+        const d = Math.max(t, Math.max(L.d, Rr.d));
+        R[id] = {h: h, d: d};
+        if (d > best || bestId === null){ best = d; bestId = id; }
 
-        let why;
-        if (through >= L.d && through >= R.d){
-          why = 'the path crossing through <b>' + v + '</b> itself spans ' + through + ' edges (' + L.h + ' left, ' + R.h + ' right), which beats whatever either child already found (' + L.d + ' and ' + R.d + '), so <b>' + v + '</b> reports diameter <b>' + d + '</b>.';
-        } else {
-          const winner = L.d >= R.d ? 'left' : 'right';
-          why = 'a path already found deeper in the ' + winner + ' subtree (<b>' + Math.max(L.d, R.d) + '</b>) beats the ' + through + ' edges that cross through <b>' + v + '</b> itself, so that wider record is simply carried upward as diameter <b>' + d + '</b>.';
-        }
-        steps.push({lines:[14,15,17,18,19,21], msg:'Both children are back: left ' + fmt(L) + ', right ' + fmt(R) + '. Here ' + why + ' Its own height is 1 + max(' + L.h + ', ' + R.h + ') = <b>' + height + '</b>, and line 21 sends the pair (<b>' + height + '</b>, <b>' + d + '</b>) up - nothing about this subtree is ever recomputed.', panels: panels(id, id, null)});
+        const winner = d === t
+          ? 'the path bending here wins'
+          : (d === L.d ? 'the left subtree already held a longer path' : 'the right subtree already held a longer path');
+        steps.push({lines:[14,15,17,18,19,21], msg:'Both pairs are back: left (' + fmt(L) + '), right (' + fmt(Rr) + '). Line 17 makes the height <b>' + h + '</b> from the taller side only. Line 18 measures the path that turns at <b>' + v + '</b>: ' + L.h + ' + ' + Rr.h + ' = <b>' + t + '</b>. Line 19 takes the best of three candidates - that one and each child’s best - and ' + winner + ', so <b>' + v + '</b> returns (<b>' + h + '</b>, <b>' + d + '</b>). The diameter is never lost: it rides up the stack inside every pair.', panels: panels(id, id, null)});
 
         frames.pop();
-        return res[id];
+        return R[id];
       };
 
       walk('n0');
 
-      const root = res['n0'];
-      steps.push({lines:[5,6], msg:'The root’s pair reaches line 5, where <code>diameter</code> is pulled out and the height is thrown away. <code>DiameterOfBinaryTree</code> returns <b>' + root.d + '</b>. It took ' + calls + ' call(s) total - one per node plus one per empty slot, so O(n) - and the stack peaked at ' + maxF + ' frame(s), the O(n) space cost of a long thin tree.', panels: panels(null, null, null)});
+      const root = R['n0'];
+      steps.push({lines:[5,6], msg:'The root’s pair (' + fmt(root) + ') reaches line 5; the height is bound to <code>_</code> and dropped, and line 6 returns the diameter <b>' + root.d + '</b>. Same walk, same ' + calls + ' call(s) and same peak of ' + maxF + ' frame(s) as the field version - the only difference is that the answer lived in return values instead of shared state.', panels: panels(null, null, null)});
       return steps;
     }
   }]

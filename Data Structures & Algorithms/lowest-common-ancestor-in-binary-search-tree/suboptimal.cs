@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n) time / O(n) space
-// #  recursive BST descent using ordering property
-// #  [bst-property-navigate]
+// #  BST traversal, recursive descent   [bst-recursive]
 // #  ranks below optimal.cs (O(n) time / O(1) space)
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  same single-direction descent as optimal.cs but via tail recursion, so
-// #  a skewed tree grows the call stack to depth n
+// #  Recursively traverses BST using the same property; call stack depth
+// #  equals tree height, O(n) worst case for skewed tree.
 // ##########################################################################
 
 public class Solution
@@ -32,71 +31,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BST Descent - stop at the first node that splits the pair
+ PATTERN : BST Descent - walk down while both targets stay on one side
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Suboptimal
 ================================================================================
-CORE IDEA
-  In a BST everything in root.left is below root.val and everything in
-  root.right is above it. So p and q sit on opposite sides of a node exactly
-  when that node's value lies between them, and the highest such node is the
-  answer. After the first two lines the code never compares p to q again - it
-  only ever compares the pair's bounds, min and max, against root.val. Walk down
-  while both bounds fall on the same side; stop the moment they straddle.
-WHY MIN AND MAX
-  Normalizing p.val and q.val into min and max erases a case split. Without it
-  you would handle p.val < root.val < q.val and q.val < root.val < p.val
-  separately. With it, the single test min <= root.val <= max covers both
-  orders, and it also covers root being p or q itself: if root.val equals min,
-  then min <= root.val holds and max >= root.val holds too (max is at least
-  min), so the node returns itself. That matches the standard definition in
-  which a node counts as its own descendant.
+VARIABLES
+  min      the smaller of p.val and q.val
+  max      the larger of p.val and q.val
+WHY THIS PATTERN
+  The tree is a binary search tree, so every node splits its values into a
+  smaller-left / larger-right range. That means you never have to search both
+  subtrees: compare root.val against the pair (min, max) and you know which
+  single side holds both targets. The first node whose value lands between min
+  and max is the split point, and that node is the lowest common ancestor.
+BETTER APPROACH
+  The better version here is the same comparison written as a loop: while (root
+  != null) move root to root.left or root.right, and return root when min <=
+  root.val <= max. That uses O(1) extra space, while this file pays for a call
+  stack frame at every level, which on a skewed BST is one frame per node. It
+  also recomputes Math.Min and Math.Max of p.val and q.val at every single level
+  instead of once before the walk.
 INVARIANT
-  On entry to any call, both p and q live somewhere in root's subtree. True at
-  the top by the problem's guarantee, and preserved by each step: the right
-  branch is taken only when min > root.val, which puts both values strictly
-  above root, and by BST ordering every such value in this subtree is in
-  root.right. The else branch is reached only when max < root.val - min >
-  root.val was consumed by the first if, and the guard above already rejected
-  max >= root.val combined with min <= root.val - so both values are strictly
-  below and live in root.left. This invariant is the reason there is no null
-  check on root: the recursion cannot step into an empty child while two real
-  nodes are still supposed to be inside it.
-WHY THIS LOSES
-  The descent never backtracks, and the value returned by the recursive call is
-  passed straight up untouched. That makes it a loop in disguise. Hoist min and
-  max out, then: while true, if min > root.val set root = root.right; else if
-  max < root.val set root = root.left; else return root. Identical comparisons,
-  identical path, but nothing is stacked and the extra space becomes constant.
-  As written, each level costs a frame, and on a degenerate BST - values
-  inserted in sorted order, every node with a single child - the depth is the
-  node count, not log n. Recomputing Math.Min and Math.Max at every level is the
-  tell that state is being rebuilt on the way down instead of carried.
-TRAPS
-  1. The bounds are inclusive on both sides on purpose. Tightening max >=
-  root.val to max > root.val breaks the case where root is q (or p) and the code
-  descends past the answer into a subtree that holds only one of them.
-  2. Ordering of the two ifs is load-bearing. The first branch tests min >
-  root.val, not min >= root.val, because equality was already consumed by the
-  guard that returns root. Reorder the tests and the equality case falls through
-  into a wrong turn.
-  3. There is no recovery from a wrong turn - no second child is ever examined.
-  Correctness rests entirely on the BST property actually holding on the input:
-  a violated ordering, or a duplicate value placed on the unexpected side, sends
-  the descent into a subtree that does not contain both nodes, and the invariant
-  above breaks with it.
-FOLLOW-UP TO EXPECT
-  "Now it is not a BST." Ordering gives you nothing and this collapses; you
-  switch to the general post-order LCA - recurse into both children, return root
-  if both sides came back non-null, otherwise return whichever side did - and
-  you pay a full traversal because you have to look at every node.
-
-  "What if p or q might not be in the tree?" This descent would return a node
-  that straddles two values it never confirmed exist. The fix is to search for
-  each value and verify it before (or while) descending, which is why the
-  guarantee that both nodes are present is worth stating out loud when you
-  present this.
+  At every call, the current root is an ancestor of both p and q (true for the
+  original root by assumption, and preserved by each step). If min > root.val,
+  both targets are strictly greater than root.val, so by the BST ordering both
+  must live in root.right, and recursing there keeps the invariant. The first
+  time neither side holds both - that is min <= root.val <= max - the recursion
+  stops, and since it is the deepest node still satisfying the invariant, it is
+  the lowest common ancestor.
+WATCH OUT
+  There is no null check on root. If p or q is not actually in the tree, the
+  descent runs off a leaf and the next call throws a NullReferenceException on
+  root.val. The same happens if root is null on entry. The code also assumes p
+  and q are non-null before the first Math.Min, so a null target crashes on the
+  very first line rather than returning anything. It relies on distinct values
+  too: with duplicate values in the BST, min <= root.val <= max can match a
+  wrong node higher up.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What changes if it is a plain binary tree, not a BST?
+     The value comparison is useless, so you recurse into both children and
+     return root when both sides come back non-null, one side's result
+     otherwise. That becomes O(n) time because every node must be visited.
+  2. How do you return null when p or q is not present?
+     Do the descent to find the split node, then run two separate searches from
+     it to confirm both p.val and q.val exist below; return null if either
+     search fails. Cost stays proportional to the height, just with a constant
+     factor of about three walks.
+  3. What if each node has a parent pointer instead?
+     Walk up from p collecting nodes into a HashSet, then walk up from q and
+     return the first node already in the set. That is O(h) time and O(h) space,
+     and it needs no BST property at all.
+  4. How would you extend it to the LCA of k nodes in a BST?
+     Replace p.val and q.val with the minimum and maximum over the whole list,
+     computed once, then run the identical descent - the split logic does not
+     care how many targets sit inside the range.
+TRIGGER
+  The input is a binary search tree and the question is about a relationship
+  between two nodes - use the ordering to pick one child instead of searching
+  both.
+C# NOTE
+  Every branch of this method returns the recursive call directly with nothing
+  after it, so it converts to a while (true) loop by just reassigning root - a
+  mechanical rewrite that drops the stack frames. Also hoist the Math.Min and
+  Math.Max pair out of the recursion by adding a private helper that takes min
+  and max as int parameters.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

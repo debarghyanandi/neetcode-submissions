@@ -651,16 +651,16 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Balanced Binary Tree',
-  note: 'every node hands its parent one pair - a height and a verdict - so no height is ever measured twice',
+  note: 'a tree is balanced when every node’s two subtrees differ in height by at most 1 - so the single fact each node needs from below is a height, and the only extra thing it has to carry up is whether anything underneath already failed',
   inputs: [
-    {id:'t', label:'tree (level order)', value:'1,2,3,4,null,null,null,5,6', width:320}
+    {id:'t', label:'tree (level order)', value:'1,2,3,4,null,null,null,5', width:340}
   ],
   parse(raw){
     const vals = parseLevelOrder(raw.t, 31);
-    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 1,2,3,4,null,null,null,5,6'};
+    if (!vals) return {ok:false, msg:'Enter a level-order tree, e.g. 1,2,3,4,null,null,null,5'};
     const nodes = treeFromLevelOrder(vals);
     if (!nodes.length) return {ok:false, msg:'Needs at least a root node.'};
-    if (nodes.length > 15) return {ok:false, msg:'Keep it to 15 nodes or fewer so the whole run stays watchable.'};
+    if (nodes.length > 12) return {ok:false, msg:'Keep it to 12 nodes or fewer so the whole run stays watchable.'};
     return {
       ok:true,
       value:{vals: vals},
@@ -669,12 +669,12 @@ const PROBLEM = {
   },
   shuffle(){
     const build = (d) => {
-      if (d > 4 || Math.random() < 0.3) return null;
+      if (d > 4 || Math.random() < 0.35) return null;
       return {v: 1 + Math.floor(Math.random() * 9), l: build(d + 1), r: build(d + 1)};
     };
     const count = (x) => x ? 1 + count(x.l) + count(x.r) : 0;
     let root = null, n = 0;
-    while (n < 3 || n > 9){ root = build(1); n = count(root); }
+    while (n < 3 || n > 8){ root = build(1); n = count(root); }
     const out = [], q = [root];
     while (q.length){
       const x = q.shift();
@@ -686,33 +686,34 @@ const PROBLEM = {
   },
   solutions: [
   {
-    label: 'Post-order: return height and balance together',
-    badge: 'O(n) time · O(n) space · post-order DFS · optimal.cs',
-    blurb: 'Balance and height are the same walk, so compute them in one. A node asks each child for a single pair <code>(balanced, height)</code> and needs nothing else: it is balanced when both children are and their heights differ by at most 1, and its own height is <code>1 + max</code> of theirs. Each node speaks exactly once, so no height is ever re-measured.',
+    label: 'Post-order DFS returning (balanced, height)',
+    badge: 'O(n) time · O(n) space · post-order DFS, one pass · optimal.cs',
+    blurb: 'Each call hands its parent a pair: whether its own subtree is balanced, and how tall it is. A node is balanced only when both children are balanced and their heights differ by at most 1, so one post-order walk settles every node exactly once - no node ever recomputes a height a child already measured.',
     legend: [
       {cls:'hot', text:'the call running now'},
-      {cls:'in-window', text:'callers parked, waiting on this path'},
-      {cls:'good', text:'subtree settled: balanced, height known'},
-      {cls:'dim', text:'subtree came back unbalanced'}
+      {cls:'in-window', text:'callers parked, waiting on this pair'},
+      {cls:'good', text:'subtree settled: balanced'},
+      {cls:'dim', text:'subtree settled: not balanced'}
     ],
     code: [
-      'public bool IsBalanced(TreeNode root)',
+      'public class Solution',
       '{',
-      '    return CheckBalance(root).balanced;',
-      '}',
+      '    public bool IsBalanced(TreeNode root)',
+      '    {',
+      '        return CheckBalance(root).balanced;',
+      '    }',
       '',
-      '// one call returns both answers: balanced, and height',
-      'private (bool balanced, int height) CheckBalance(TreeNode node)',
-      '{',
-      '    if (node == null) return (true, 0);',
-      '',
-      '    var left  = CheckBalance(node.left);',
-      '    var right = CheckBalance(node.right);',
-      '',
-      '    bool balanced = left.balanced && right.balanced',
-      '                    && Math.Abs(left.height - right.height) <= 1;',
-      '    int height = 1 + Math.Max(left.height, right.height);',
-      '    return (balanced, height);',
+      '    // returns balanced (1 or 0) and height as 2 element int array',
+      '    private (bool balanced, int height) CheckBalance(TreeNode node)',
+      '    {',
+      '        if (node == null)',
+      '            return (true, 0);',
+      '        var left = CheckBalance(node.left);',
+      '        var right = CheckBalance(node.right);',
+      '        bool balanced = left.balanced && right.balanced && Math.Abs(left.height - right.height) <= 1;',
+      '        int height = 1 + Math.Max(left.height, right.height);',
+      '        return (balanced, height);',
+      '    }',
       '}'
     ],
     simulate(input){
@@ -720,8 +721,6 @@ const PROBLEM = {
       const info = {}, kid = {};
       base.forEach(n => { info[n.id] = n; });
       base.forEach(n => { if (n.parent){ (kid[n.parent] = kid[n.parent] || {})[n.side] = n.id; } });
-      /* The code really does call itself on missing children, so draw them:
-         a node with v null renders as a dashed empty slot. */
       const nodes = base.slice();
       let seq = 0;
       base.forEach(n => {
@@ -739,15 +738,15 @@ const PROBLEM = {
       const res = {}, frames = [], steps = [];
       let calls = 0, maxF = 0;
       const shown = (id) => info[id].v === null ? 'null' : String(info[id].v);
-      const fmt = (r) => r ? ((r.b ? 'balanced' : 'unbalanced') + ', h ' + r.h) : 'waiting';
+      const fmt = (r) => r ? ('h ' + r.h + ', ' + (r.b ? 'balanced' : 'not balanced')) : 'waiting';
       const caller = () => {
         if (frames.length < 2) return null;
         const p = frames[frames.length - 2];
-        return {v: shown(p.id), line: p.left === null ? 11 : 12};
+        return {v: shown(p.id), line: p.left === null ? 13 : 14};
       };
       const parkedNote = () => {
         const c = caller();
-        return c ? ' Its caller, <b>' + c.v + '</b>, is frozen on line ' + c.line + ' until this pair comes back.' : '';
+        return c ? ' Its caller, <b>' + c.v + '</b>, is paused on line ' + c.line + ' waiting for this pair.' : '';
       };
 
       const panels = (curId, popId, freshId) => [
@@ -760,7 +759,7 @@ const PROBLEM = {
           else if (frames.some(f => f.id === n.id)) cls = 'in-window';
           return {
             id: n.id, v: n.v, parent: n.parent, side: n.side, cls: cls,
-            sub: (n.v !== null && r) ? (r.b ? 'h ' + r.h : 'h ' + r.h + ', unbal') : ''
+            sub: (n.v !== null && r) ? ('h ' + r.h + (r.b ? '' : ', bad')) : ''
           };
         }), {
           tags: curId ? [{name:'node', id: curId, cls:'accent'}] : [],
@@ -772,7 +771,7 @@ const PROBLEM = {
           items: frames.map((f, i) => ({
             text: 'node = ' + shown(f.id),
             sub: info[f.id].v === null
-              ? 'empty, answers at once'
+              ? 'empty, returns (true, 0) at once'
               : 'left ' + fmt(f.left) + ' | right ' + fmt(f.right),
             cls: i === frames.length - 1 ? 'hot' : '',
             fresh: f.id === freshId,
@@ -787,12 +786,11 @@ const PROBLEM = {
           {k:'frames open', v: frames.length},
           {k:'deepest stack', v: maxF},
           {k:'calls made', v: calls},
-          {k:'IsBalanced', v: res['n0'] ? (res['n0'].b ? 'true' : 'false') : 'pending',
-           cls: res['n0'] ? (res['n0'].b ? 'good' : 'dim') : ''}
+          {k:'answer', v: res['n0'] ? (res['n0'].b ? 'true' : 'false') : 'pending', cls: res['n0'] ? (res['n0'].b ? 'good' : 'dim') : ''}
         ])
       ];
 
-      steps.push({lines:[1,3], msg:'<code>IsBalanced</code> does exactly one thing: it calls <code>CheckBalance(root)</code> and reads <code>.balanced</code> off the pair that comes back. The height rides along in the same return value, which is the whole design - a node needs its children’s heights to judge itself, so the recursion carries both facts at once instead of running a separate height scan per node. The dashed empty slots below are real calls: the code recurses into missing children too.', panels: panels(null, null, null)});
+      steps.push({lines:[3,5], msg:'<code>IsBalanced</code> does nothing itself: it calls <code>CheckBalance(root)</code> and keeps only the <code>balanced</code> half of the pair that comes back. The <code>height</code> half exists purely so each node can compare its two sides. The dashed empty slots below are real calls too - the code recurses into missing children.', panels: panels(null, null, null)});
 
       const walk = (id) => {
         frames.push({id: id, left: null, right: null});
@@ -801,14 +799,14 @@ const PROBLEM = {
 
         if (info[id].v === null){
           const side = info[id].side === 'L' ? 'left' : 'right';
-          steps.push({lines:[9], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>node</code> arrives as <code>null</code>. Line 9 answers without looking at anything: an empty tree is balanced, and its height is <b>0</b>. Every height in this run is built up out of these zeros.' + parkedNote(), panels: panels(id, id, id)});
+          steps.push({lines:[11,12], msg:'The ' + side + ' child of <b>' + shown(info[id].parent) + '</b> does not exist, so <code>node</code> arrives <code>null</code>. Line 12 answers immediately with <b>(true, 0)</b>: an empty subtree is trivially balanced and has height 0.' + parkedNote(), panels: panels(id, id, id)});
           res[id] = {b: true, h: 0};
           frames.pop();
           return res[id];
         }
 
         const v = shown(id);
-        steps.push({lines:[7,9,11], msg:'A frame opens for <b>' + v + '</b>. It cannot decide anything yet - judging this subtree needs both children’s heights - so it falls past the null check and parks on line 11, calling itself on the left child. That is what post-order means here: the parent is the last one in its subtree to speak.' + parkedNote(), panels: panels(id, null, id)});
+        steps.push({lines:[9,11,13], msg:'A frame opens for <b>' + v + '</b>. It cannot judge itself until it knows how tall both sides are, so it falls past the null check and parks on line 13, calling <code>CheckBalance</code> on its left child first.' + parkedNote(), panels: panels(id, null, id)});
 
         const f = frames[frames.length - 1];
         const L = walk(child(id, 'L'));
@@ -816,23 +814,21 @@ const PROBLEM = {
         const R = walk(child(id, 'R'));
         f.right = R;
 
-        const b = L.b && R.b && Math.abs(L.h - R.h) <= 1;
+        const gap = Math.abs(L.h - R.h);
+        const b = L.b && R.b && gap <= 1;
         const h = 1 + Math.max(L.h, R.h);
         res[id] = {b: b, h: h};
 
-        const diff = Math.abs(L.h - R.h);
-        let why, lines;
+        let why;
         if (!L.b || !R.b){
-          lines = [14,16,17];
-          why = 'the ' + (!L.b ? 'left' : 'right') + ' subtree already came back <b>unbalanced</b>, and <code>&amp;&amp;</code> short-circuits - the height comparison on line 15 is never evaluated. One failing node anywhere is enough, and the <code>false</code> now rides up untouched to the root.';
-        } else if (diff > 1){
-          lines = [14,15,16,17];
-          why = 'each subtree is balanced on its own, but their heights differ by <b>' + diff + '</b> (' + L.h + ' against ' + R.h + '), which breaks <code>Math.Abs(...) &lt;= 1</code>. <b>' + v + '</b> is the node where the tree tips over.';
+          const bad = !L.b ? 'left' : 'right';
+          why = 'the ' + bad + ' subtree already came back <em>not balanced</em>, and line 15 short-circuits on that first <code>&&</code> - once a failure exists anywhere below, <b>' + v + '</b> is unbalanced too, whatever the heights say.';
+        } else if (gap <= 1){
+          why = 'both children reported balanced and their heights differ by ' + gap + ', which is within the allowed 1, so <b>' + v + '</b> is balanced.';
         } else {
-          lines = [14,15,16,17];
-          why = 'both subtrees are balanced and their heights differ by ' + diff + ', inside the allowance of 1, so this subtree is balanced too.';
+          why = 'both children are balanced on their own, but their heights are ' + L.h + ' and ' + R.h + ' - a gap of ' + gap + ', more than the 1 allowed - so <b>' + v + '</b> is the node where balance breaks.';
         }
-        steps.push({lines: lines, msg:'Both children have answered, so <b>' + v + '</b> can finally speak: left reports height <b>' + L.h + '</b>, right reports <b>' + R.h + '</b>. Here ' + why + ' Its own height is 1 + max(' + L.h + ', ' + R.h + ') = <b>' + h + '</b>, and line 17 hands (<b>' + (b ? 'true' : 'false') + '</b>, <b>' + h + '</b>) up as a single value. The frame pops - nothing about this subtree will ever be recomputed.', panels: panels(id, id, null)});
+        steps.push({lines:[13,14,15,16,17], msg:'Both children are back: left ' + fmt(L) + ', right ' + fmt(R) + '. Here ' + why + ' Line 16 measures its own height as 1 + max(' + L.h + ', ' + R.h + ') = <b>' + h + '</b> regardless, because the parent still needs a real height to compare against, and line 17 sends the pair (<b>' + (b ? 'true' : 'false') + '</b>, <b>' + h + '</b>) up.', panels: panels(id, id, null)});
 
         frames.pop();
         return res[id];
@@ -841,11 +837,11 @@ const PROBLEM = {
       walk('n0');
 
       const root = res['n0'];
-      steps.push({lines:[3], msg:'The root’s pair reaches line 3, which throws the height away and returns <b>' + (root.b ? 'true' : 'false') + '</b>. It took ' + calls + ' call(s) - one per node plus one per empty slot, so O(n) - and each did constant work, because the height it needed was already sitting in the pair from below. The stack peaked at ' + maxF + ' frame(s): that is the O(n) space, the height of the tree, which on a long thin tree is every node at once.', panels: panels(null, null, null)});
+      steps.push({lines:[5,6], msg:'The root’s pair reaches line 5, where <code>.balanced</code> is picked off and its height discarded: the answer is <b>' + (root.b ? 'true' : 'false') + '</b>. ' + (root.b ? 'No node anywhere had sides more than 1 apart.' : 'A failure found somewhere below was carried up unchanged by every caller above it.') + ' It took ' + calls + ' call(s) - one per node plus one per empty slot, so O(n) - and the stack peaked at ' + maxF + ' frame(s), the O(n) space cost of a long thin tree.', panels: panels(null, null, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant-2.cs  O(n) time / O(n) space
-// -  iterative DFS with explicit stack, swap children
-// -  [iterative-dfs-stack-swap]
+// -  Iterative DFS with explicit stack   [iterative-dfs-stack]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (from submission-2)
+// -  Reference solution - not one you solved yourself
 // -
-// -  explicit stack mimics recursion depth, worst-case O(n) for a skewed
-// -  tree but only O(h) for balanced trees
+// -  Manual stack replaces recursion; visits each node once, stack size
+// -  worst case O(n) on skewed tree.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -38,76 +37,85 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Iterative DFS - explicit stack, swap children at pop
+ PATTERN : Iterative DFS with an explicit stack - swap children per node
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-2.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
+VARIABLES
+  stack       nodes seen but not yet swapped; drives the depth-first order
+  node        the node currently being processed, popped from stack
+  leftChild   saved copy of node.left before the swap overwrites it
 WHY THIS PATTERN
-  The mirror of a tree is defined purely locally: at every node, exchange the
-  two child pointers. Nothing compares one node against another, and no node's
-  result depends on a neighbour's, so any traversal that reaches every node
-  exactly once is enough. That freedom is what lets the recursion be replaced by
-  a hand-rolled Stack<TreeNode>: the depth of the walk now lives in a
-  heap-allocated container instead of in call frames, so a long root-to-leaf
-  chain costs stack objects rather than nested invocations.
-ALGORITHM
-  1. root == null returns null - an empty tree is its own mirror and nothing is
-  ever pushed.
-  2. Push root, then loop while stack.Count > 0.
-  3. Pop into node. Save node.left into leftChild, set node.left = node.right,
-  set node.right = leftChild.
-  4. Push node.left if non-null, then node.right if non-null (these fields are
-  read after the swap).
-  5. Return root - the same object that came in, now mutated.
+  Mirroring a tree is a purely local edit: for every node, exchange its two
+  child pointers, and the whole tree comes out mirrored. Nothing a node does
+  depends on any other node, so the only real requirement is "visit every node
+  exactly once" - any traversal order works, and a stack-driven DFS is the
+  cheapest one to write without recursion. The loop pops node, swaps through
+  leftChild, and pushes whatever children exist so they get the same treatment.
+BRUTE FORCE
+  The first version most people write is recursive: swap root.left and
+  root.right, then call yourself on both children. It visits the same nodes and
+  does the same work, so it ties on time, but the depth of the call stack is the
+  height of the tree and a long skewed tree can throw StackOverflowException - a
+  limit you cannot catch or raise from inside the method. This file moves that
+  same stack onto the heap, where growth is bounded by memory instead of by the
+  thread stack size.
 INVARIANT
-  At the top of every iteration: each node still on the stack has not yet had
-  its children exchanged, and each node already popped has had them exchanged
-  exactly once.
-
-  The counting argument for correctness: there are only two push sites, root
-  before the loop and the two child pushes at the moment a parent is popped.
-  Every non-root node has exactly one parent, so it is pushed exactly once,
-  therefore popped exactly once, therefore swapped exactly once. n nodes, n
-  swaps, one per node - which is the definition of the mirror. Termination
-  follows from the same fact: pushes are bounded by n, so the loop runs exactly
-  n times.
-WHY SWAPPING BEFORE PUSHING IS SAFE
-  After the three assignment lines, node.left holds the old right child. The
-  pushes therefore enqueue the old right subtree first and the old left second -
-  the reverse of what pushing before the swap would do. It does not matter: the
-  set of children pushed is identical either way, only their visit order flips,
-  and visit order is irrelevant because swapping at node A writes only A's two
-  fields and never touches a pointer inside A's subtrees. Operations at distinct
-  nodes commute, so preorder, postorder, or level order all produce the same
-  final tree.
+  Every node that is reachable from root is pushed exactly once and popped
+  exactly once, and at the moment it is popped its two child pointers are
+  exchanged. The push of node.left and node.right happens after the swap, but
+  both non-null children are pushed, so the set of scheduled nodes is the same
+  set either way - no subtree is lost. When stack.Count hits 0 there is no node
+  left unswapped, and "every node's children exchanged" is the definition of the
+  mirror tree.
+STACK PEAK IS TIED TO HEIGHT
+  Each pop removes one node and pushes at most two, so the stack grows by at
+  most one entry per level of descent. The peak size is therefore proportional
+  to the height of the tree, not to the node count - a balanced tree keeps only
+  about log n entries alive. The worst case, a tree that is one long chain, is
+  the case where height equals node count.
 WATCH OUT
-  - leftChild is not cosmetic. Writing node.left = node.right; node.right =
-  node.left leaves both fields pointing at the old right child and silently
-  drops the entire left subtree. The temp is the whole correctness of the swap.
-  - The null tests guard the pushes, not the pop, so node is guaranteed non-null
-  inside the loop body. If you push unconditionally instead, you must add a null
-  check right after Pop, and every leaf then contributes two null pushes.
-  - This mutates in place and returns the original reference. Any caller holding
-  a pointer to an interior node sees that subtree mirrored underneath it too;
-  nothing is copied.
-  - Peak stack size is bounded by the depth of the current path plus one (each
-  iteration removes one node and adds at most two). That is about log n for a
-  balanced tree; it only reaches order n on a spine where nearly every node also
-  carries a second child, such as a caterpillar shape.
-INTERVIEW FOLLOW-UP
-  - "Make it BFS." Swap Stack<TreeNode> for Queue<TreeNode> and change Push/Pop
-  to Enqueue/Dequeue - nothing else moves, because of the commutativity above.
-  The trade is which shape hurts you: the queue peaks at the widest level, this
-  stack peaks at the deepest path.
-  - "Why not just recurse?" The recursive form is three lines but spends one
-  call frame per level, which is the exact cost this version moves off the call
-  stack.
-  - "Invert without mutating the input." Preorder still works here: allocate a
-  copy of root, push pairs of (source, copy), and for each pair set copy.left
-  from source.right and copy.right from source.left, pushing the matching pairs.
-  No postorder or old-to-new map is needed as long as the parent copy exists
-  before its children are processed.
+  This mutates the caller's tree in place; the returned reference is the same
+  object as root, so any other variable pointing at that tree now sees the
+  mirrored version. The null checks read node.left and node.right after the
+  swap, so node.left at that point is the original right subtree - harmless here
+  because both sides are pushed, but if you ever edit this loop to push only one
+  side (a search, a path walk) the post-swap ordering becomes a silent bug.
+  There is no visited set, so a malformed structure where two parents share a
+  child, or any cycle, makes this loop run forever or swap a node twice. The
+  early return for a null root returns null rather than throwing, which is the
+  expected contract - do not "simplify" it away.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Could you use a Queue instead of a Stack?
+     Yes, and the code is otherwise identical - the swap is order-independent.
+     It becomes BFS, and peak memory becomes the widest level of the tree
+     instead of the height, which is worse for a balanced tree and better for a
+     deep skinny one.
+  2. The caller needs the original tree kept intact. What changes?
+     Build a new tree instead of editing: create a new node per original node
+     with the children crossed over. Time is the same, but you allocate one new
+     node per input node and the traversal has to carry parent-plus-side
+     information (or go recursive) so each new node can be attached.
+  3. Same problem on a tree where a node holds a list of children, not exactly
+  two?
+     Replace the two-pointer swap with reversing the child list, then push every
+     child. The stack loop and the visit-once argument are unchanged.
+  4. How would you instead check whether a tree is already a mirror of itself?
+     Push pairs of nodes rather than single nodes: start with (root.left,
+     root.right), and for each pair compare values and push (a.left, b.right)
+     and (a.right, b.left). You stop early and return false on the first
+     mismatch, so you may touch far fewer nodes than a full inversion.
+TRIGGER
+  The task is a local rewrite that must be applied once to every node, with no
+  ordering or accumulation between nodes - reach for a plain stack traversal and
+  do the edit at pop time.
+C# NOTE
+  leftChild can be dropped entirely with the tuple assignment (node.left,
+  node.right) = (node.right, node.left), which the language evaluates right-hand
+  side first and so needs no temp. Stack<TreeNode> here starts with a
+  default-size array and doubles as it grows; since you do not know the height
+  up front there is no sensible capacity to pass to the constructor.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

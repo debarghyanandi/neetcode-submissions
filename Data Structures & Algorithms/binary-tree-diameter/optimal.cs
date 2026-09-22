@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Postorder DFS computing height, tracking diameter via mutable field
-// -  [postorder-height-diameter]
+// -  Post-order DFS height calculation   [dfs-postorder-height]
 // -  ties with optimal-variant.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Single postorder traversal visits each node once; recursion stack
-// -  depth is O(n) worst-case for skewed tree.
+// -  Each node visited once during recursive descent; call stack depth
+// -  equals tree height (worst case n for skewed tree).
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -34,82 +33,76 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Post-order DFS - return height, track best at each node
+ PATTERN : Post-order DFS - height return, diameter tracked in a field
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  res      best diameter seen so far, in edges
+  left     height of root.left subtree
+  right    height of root.right subtree
 WHY THIS PATTERN
-  The diameter is the longest path between any two nodes, and every such path
-  has one highest node where it turns. So the answer is the max over all nodes
-  of left height plus right height. A post-order walk gives exactly that:
-  Height(root) computes the children's values first, so at each node left and
-  right are already known and the candidate left + right can be scored before
-  returning upward.
+  The longest path between any two nodes must bend at exactly one node - its
+  highest point. So the problem becomes: for every node, what is the longest
+  path that passes through it? That value is left + right, the two deepest
+  downward paths. One post-order walk computes the height of each node and, at
+  the same visit, offers left + right as a candidate for res.
 BRUTE FORCE
-  The first version most people write is a recursive DiameterOfBinaryTree that,
-  for each node, calls a separate Height helper on both children and adds them,
-  then recurses on both children. That recomputes heights over and over: O(n^2)
-  on a skewed tree, O(n log n) when balanced. This file fixes it by having one
-  traversal both return the height and update diameter, so each node is visited
-  once.
+  The first version most people write calls a separate Height function from
+  inside a recursion over every node: for each node compute height(left) +
+  height(right) and take the max. That re-walks every subtree once per ancestor,
+  so it costs O(n^2) on a skewed tree. This file fixes it by returning the
+  height upward and updating res on the way, so each node is visited once.
 INVARIANT
-  Height(node) returns the number of nodes on the longest downward path from
-  node, which is 1 + max(left, right), and 0 for null. At the moment
-  Height(node) is about to return, diameter holds the largest left + right seen
-  over every node already finished, including node itself. Since left + right at
-  a node is exactly the edge count of the longest path that turns at that node,
-  after Height(root) finishes diameter is the maximum over all nodes, which is
-  the answer.
-NODES UP, EDGES OUT
-  Two different units live in the same function. The return value counts nodes
-  (a leaf returns 1), but diameter is measured in edges. left + right works
-  because the two node counts are also the number of edges going down each side
-  from the current node. If you switch Height to return edge counts (-1 for
-  null), the diameter line stays left + right but the return now builds on a -1
-  base, and an off-by-one creeps in easily.
+  When Height(node) returns, two things hold: the return value is the number of
+  nodes on the longest downward path from node, and res is the maximum of left +
+  right over every node already visited, including node itself. Since the true
+  diameter bends at some node and that node is visited exactly once, res ends up
+  holding it. The order matters - res is updated after both child calls return,
+  so left and right are final values.
+EDGES VERSUS NODES
+  Height returns a node count (a leaf returns 1), but res stores left + right,
+  which is an edge count. For a leaf, left and right are both 0, so res stays 0
+  - correct, since a single node has diameter 0. The mix works because adding
+  the two child heights counts exactly the edges on both sides of the bend node.
 WATCH OUT
-  diameter is a public instance field that is never reset inside
-  DiameterOfBinaryTree. Call the same Solution object twice with a second tree
-  and the old, possibly larger, value leaks into the new answer. Set diameter =
-  0 at the top of DiameterOfBinaryTree, or keep it local and pass it by ref.
-  Also, recursion depth equals tree height, so a long skewed chain can overflow
-  the call stack; note that root == null is handled correctly, since Height
-  returns 0 without touching diameter.
+  res is a public instance field initialized to 0, not a local. If the same
+  Solution object is reused for a second tree, res keeps the old value and the
+  answer can only grow - the judge builds a new object per test, but that is
+  luck, not design. Reset res at the top of DiameterOfBinaryTree or pass it by
+  ref. Also, the recursion depth equals the tree height, so a long chain of
+  nodes can throw StackOverflowException, which .NET cannot catch.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do this without recursion?
-     Yes: do an iterative post-order with an explicit Stack<TreeNode> plus a
-     Dictionary<TreeNode,int> (or a stack of node-and-height pairs) so a node is
-     scored only after both children have heights. Same O(n) time, but the code
-     is longer and you pay for the dictionary instead of the call stack.
-  2. How would you return the actual path, not just its length?
-     Have Height also return the deepest node on its best downward side, and
-     remember the turning node whenever diameter improves; then walk down from
-     that node on both sides picking the taller child. It costs one extra value
-     per return but keeps a single pass.
-  3. What changes if you want the maximum path sum of node values instead of the
-  length?
-     Replace height with best downward sum, clamp negatives to zero at each
-     child with Math.Max(0, Height(child)), and score root.val + left + right.
-     The structure is identical; only the combine step and the base value
-     change.
-  4. How would you handle an N-ary tree instead of a binary one?
-     Compute the heights of all children, keep the two largest, and score their
-     sum; the return is still 1 + the largest. That is O(children) per node with
-     two running maxima, so still O(n) overall.
+  1. Remove the mutable field - how?
+     Have Height return a pair, for example a (int height, int diameter) tuple,
+     and combine children in the caller. Pure function, no shared state, but
+     more allocation-free struct plumbing and slightly noisier code.
+  2. Return the actual path, not just its length.
+     Store the bend node when res improves, then walk down from it on each side
+     always choosing the deeper child. Costs one extra downward walk, still
+     linear.
+  3. The tree is too deep for recursion - rewrite it iteratively.
+     Do an explicit-stack post-order traversal, or reverse-topological order,
+     keeping a dictionary or field of computed heights per node. Same O(n) time,
+     but you now pay for the stack and the height map explicitly instead of
+     using the call stack.
+  4. Each edge has a weight and you want the heaviest path.
+     Height returns the max weighted downward distance, and the candidate
+     becomes left + right where each side already includes its edge weight. Same
+     shape; only negative weights would force extra care.
 TRIGGER
-  A tree question asking for a best path that may bend at some node and need not
-  pass through the root - compute one value per node bottom-up and score the
-  combination on the way back.
+  A tree question asking for a best value over all nodes where each node's
+  answer needs facts from both subtrees - return one thing upward, record
+  another in a field.
 C# NOTE
-  Using a public mutable field for diameter works but is fragile across calls; a
-  cleaner C# form is a local variable in DiameterOfBinaryTree captured by a
-  local function, or having Height return a (int height, int diameter) value
-  tuple so nothing outlives one call.
+  Math.Max is used twice per node on ints and reads clearly; the alternative res
+  = left + right > res ? left + right : res buys nothing here. The public int
+  res field is the only piece of state - making it private and resetting it in
+  DiameterOfBinaryTree would match normal C# style without changing the
+  algorithm.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
