@@ -651,137 +651,133 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Merge Intervals',
-  note: 'sort by start, and the only block that can still grow is the last one',
-  inputs: [{id:'iv', label:'intervals (start,end pairs)', value:'8,10; 1,4; 2,3; 15,18; 9,12', width:320}],
+  note: 'sort by start, then the only interval you can ever collide with is the last one you kept',
+  inputs: [{id:'iv', label:'intervals (from,to,from,to,...)', value:'1,3, 2,6, 8,10, 15,18, 4,5', width:320}],
   parse(raw){
-    const parts = String(raw.iv).split(/[;\n]/).map(s => s.trim()).filter(s => s.length);
-    if (!parts.length) return {ok:false, msg:'Enter intervals as start,end pairs separated by semicolons, e.g. 1,4; 8,10.'};
+    const n = parseInts(raw.iv, 16);
+    if (!n) return {ok:false, msg:'Enter comma-separated numbers: from,to,from,to,...'};
+    if (n.length % 2) return {ok:false, msg:'Needs an even count — every interval is a pair.'};
+    if (n.length < 2) return {ok:false, msg:'Needs at least one interval.'};
     const iv = [];
-    for (const part of parts){
-      const nums = parseInts(part);
-      if (!nums || nums.length !== 2) return {ok:false, msg:'Each interval needs exactly two numbers, like 8,10 — got "' + part + '".'};
-      if (nums[0] > nums[1]) return {ok:false, msg:'An interval cannot end before it starts: "' + part + '".'};
-      iv.push([nums[0], nums[1]]);
+    for (let k = 0; k < n.length; k += 2){
+      if (n[k] > n[k+1]) return {ok:false, msg:'Each pair must have from <= to (got ' + n[k] + ',' + n[k+1] + ').'};
+      iv.push([n[k], n[k+1]]);
     }
-    const capped = iv.slice(0, 6);
-    return {ok:true, value:{iv: capped}, normalized:{iv: capped.map(p => p[0] + ',' + p[1]).join('; ')}};
+    return {ok:true, value:{iv}, normalized:{iv: iv.map(p => p[0] + ',' + p[1]).join(', ')}};
   },
   shuffle(){
-    const n = 4 + Math.floor(Math.random() * 2);
     const out = [];
-    for (let i = 0; i < n; i++){
-      const s = Math.floor(Math.random() * 15);
-      out.push(s + ',' + (s + 1 + Math.floor(Math.random() * 5)));
+    for (let k = 0; k < 4 + Math.floor(Math.random()*2); k++){
+      const a = Math.floor(Math.random()*16);
+      out.push(a, a + Math.floor(Math.random()*5));
     }
-    return {iv: out.join('; ')};
+    return {iv: out.join(',')};
   },
   solutions: [
   {
-    label: 'Sort by start, then sweep once',
-    badge: 'O(n log n) time · O(log n) space · sort + sweep · optimal.cs',
-    blurb: 'Once the intervals are sorted by start, anything that can still overlap the block being built is the <b>very next</b> one you look at — so only the last block in the output is ever live. If the next start is ≤ that block’s end they fuse, and the new end is <code>Math.Max</code> of the two, because a fully contained interval must not shrink it. Otherwise the block is final and a new one opens.',
+    label: 'Sort by start, merge in one pass',
+    badge: 'O(n log n) time · O(log n) space · sort + greedy · optimal.cs',
+    blurb: 'Once the intervals are sorted by start, every interval that could overlap the block being built arrives <b>immediately next</b> — nothing later can reach back behind it. So one pass suffices: either the new start is inside the last kept block (stretch its end) or it is past it (the block is final, open a new one).',
     legend: [
       {cls:'hot', text:'intervals[i] — the interval being placed'},
-      {cls:'good', text:'merged blocks (only the last can still grow)'},
-      {cls:'done', text:'already absorbed'},
+      {cls:'in-window', text:'lastMerged — the block still open'},
+      {cls:'good', text:'sealed merged block'},
       {cls:'dim', text:'not reached yet'}
     ],
     code: [
-      '// Sorting by START is what makes a single pass sufficient.',
-      'Array.Sort(intervals, (a, b) => a[0].CompareTo(b[0]));',
-      '',
-      'var merged = new List<int[]>();',
-      'merged.Add(new int[] { intervals[0][0], intervals[0][1] });',
-      '',
-      'for (int i = 1; i < intervals.Length; i++)',
+      'public int[][] Merge(int[][] intervals)',
       '{',
-      '    int currentStart = intervals[i][0];',
-      '    int currentEnd = intervals[i][1];',
+      '    // Sorting by START is what makes a single pass sufficient: any',
+      '    // interval that can overlap the one being built must come next.',
+      '    Array.Sort(intervals, (a, b) => a[0].CompareTo(b[0]));',
       '',
-      '    int[] lastMerged = merged[merged.Count - 1];',
+      '    var merged = new List<int[]>();',
       '',
-      '    if (currentStart <= lastMerged[1])',
+      '    // Copy rather than reference, so the caller\'s array is never mutated.',
+      '    merged.Add(new int[] { intervals[0][0], intervals[0][1] });',
+      '',
+      '    for (int i = 1; i < intervals.Length; i++)',
       '    {',
-      '        // Overlap: absorb it by stretching the end.',
-      '        lastMerged[1] = Math.Max(lastMerged[1], currentEnd);',
-      '    }',
-      '    else',
-      '    {',
-      '        // Gap: the previous block is final, start a new one.',
-      '        merged.Add(new int[] { currentStart, currentEnd });',
-      '    }',
-      '}',
+      '        int currentStart = intervals[i][0];',
+      '        int currentEnd = intervals[i][1];',
       '',
-      'return merged.ToArray();'
+      '        int[] lastMerged = merged[merged.Count - 1];',
+      '',
+      '        if (currentStart <= lastMerged[1])',
+      '        {',
+      '            // Overlap: absorb it by stretching the end.',
+      '            // Math.Max matters - the current interval may be fully',
+      '            // CONTAINED, e.g. [1,10] then [2,3] must stay [1,10].',
+      '            lastMerged[1] = Math.Max(lastMerged[1], currentEnd);',
+      '        }',
+      '        else',
+      '        {',
+      '            // Gap: the previous block is final, start a new one.',
+      '            merged.Add(new int[] { currentStart, currentEnd });',
+      '        }',
+      '    }',
+      '',
+      '    return merged.ToArray();',
+      '}'
     ],
     simulate(input){
-      const orig = input.iv.map(p => [p[0], p[1]]);
-      const iv = input.iv.map(p => [p[0], p[1]]).sort((a, b) => a[0] - b[0]);
-      const lo = Math.min.apply(null, orig.map(p => p[0]));
-      const hi = Math.max.apply(null, orig.map(p => p[1]));
+      const orig = input.iv.map(p => p.slice());
+      const iv = orig.map(p => p.slice()).sort((a, b) => a[0] - b[0]);
+      const lo = Math.min.apply(null, iv.map(x => x[0]));
+      const hi = Math.max.apply(null, iv.map(x => x[1]));
       const merged = [];
       const steps = [];
+      const fmt = (p) => p[0] + '-' + p[1];
 
-      const cellCls = (k, cur) => cur < 0 ? '' : (k === cur ? 'hot' : (k < cur ? 'done' : 'dim'));
-
-      const tiles = (list, title, cur) => pTiles(title, list.map(p => p[0] + ',' + p[1]),
-        (k) => ({cls: cellCls(k, cur)}),
-        cur >= 0 ? {ptrs: [{name:'i', idx: cur}]} : {});
-
-      const timeline = (list, title, cur) => pRanges(title, list.map((p, k) => ({
-        from: p[0], to: p[1], label: p[0] + '–' + p[1], cls: cellCls(k, cur)
-      })), lo, hi);
-
-      const outPanel = () => pRanges('merged — the answer being built', merged.map((p, k) => ({
-        from: p[0], to: p[1], label: p[0] + '–' + p[1],
-        cls: k === merged.length - 1 ? 'hot' : 'good'
-      })), lo, hi);
-
-      const pills = (cur) => pPills('', [
-        {k:'i', v: cur >= 0 ? cur : '–', cls:'hot'},
-        {k:'currentStart', v: cur >= 0 ? iv[cur][0] : '–'},
-        {k:'currentEnd', v: cur >= 0 ? iv[cur][1] : '–'},
-        {k:'lastMerged end', v: merged.length ? merged[merged.length - 1][1] : '–', cls:'good'},
-        {k:'blocks', v: merged.length}
-      ]);
-
-      const panels = (cur, sorted) => {
-        const list = sorted ? iv : orig;
-        const p = [
-          tiles(list, sorted ? 'intervals, sorted by start' : 'intervals, as given', cur),
-          timeline(list, 'the same intervals on one timeline', cur)
+      const panels = (i, sorted) => {
+        const rows = sorted ? iv : orig;
+        const tiles = pTiles('intervals array' + (sorted ? ', sorted by start' : ', as given'),
+          rows.map(fmt),
+          (k) => ({cls: !sorted ? '' : k === i ? 'hot' : k < i ? 'done' : 'dim'}),
+          i >= 0 && sorted ? {ptrs: [{name:'i', idx: i}]} : {});
+        const out = [
+          tiles,
+          pRanges('on a timeline', rows.map((x, k) => ({
+            from: x[0], to: x[1], label: fmt(x),
+            cls: !sorted ? '' : k === i ? 'hot' : k < i ? 'done' : 'dim'
+          })), lo, hi),
+          pRanges('merged (output being built)', merged.map((x, k) => ({
+            from: x[0], to: x[1], label: fmt(x),
+            cls: k === merged.length - 1 ? 'in-window' : 'good'
+          })), lo, hi),
+          pPills('state', [
+            {k:'i', v: i >= 0 ? i : '–'},
+            {k:'currentStart', v: i >= 1 ? iv[i][0] : '–', cls:'hot'},
+            {k:'currentEnd', v: i >= 1 ? iv[i][1] : '–', cls:'hot'},
+            {k:'lastMerged', v: merged.length ? fmt(merged[merged.length-1]) : '–', cls:'accent'},
+            {k:'blocks kept', v: merged.length, cls:'good'}
+          ])
         ];
-        if (merged.length) p.push(outPanel());
-        p.push(pills(cur));
-        return p;
+        return out;
       };
 
-      steps.push({lines:[1,2], msg:'As given, overlapping intervals can sit anywhere in the array — <b>' + orig[0][0] + ',' + orig[0][1] + '</b> and its partner may be pages apart. Comparing every pair to find that out is <code>O(n²)</code>. Sorting first is the whole trick.', panels: panels(-1, false)});
-
-      steps.push({lines:[2], msg:'Sorted by start. Now a guarantee holds: once you are building a block ending at <code>e</code>, <em>every</em> interval that could overlap it starts at or before <code>e</code>, and all of those come <b>next</b> in the array. Nothing behind you can ever reopen a finished block.', panels: panels(-1, true)});
+      steps.push({lines:[3,4,5], msg:'Given order <code>' + orig.map(fmt).join('</code>, <code>') + '</code> → sorted by start <code>' + iv.map(fmt).join('</code>, <code>') + '</code>. This is the whole trick: after sorting, any interval overlapping the block I am building must appear <b>next</b>, because a later interval starts even further right and can never reach back behind it.', panels: panels(-1, false)});
 
       merged.push([iv[0][0], iv[0][1]]);
-      steps.push({lines:[4,5], msg:'The earliest-starting interval <b>' + iv[0][0] + ',' + iv[0][1] + '</b> seeds the output — nothing can extend it leftwards. It is copied into a <b>new</b> array rather than pushed by reference, because the next lines stretch <code>lastMerged[1]</code> in place and the caller’s input must not change under them.', panels: panels(0, true)});
+      steps.push({lines:[7,9,10], msg:'The first interval <code>' + fmt(iv[0]) + '</code> has the smallest start, so nothing can ever extend it leftwards — it is safe to open it as the first block. It is copied into a fresh <code>int[]</code> because the loop <b>writes</b> to <code>lastMerged[1]</code>; referencing the caller\'s row would quietly mutate their input.', panels: panels(0, true)});
 
       for (let i = 1; i < iv.length; i++){
-        const s = iv[i][0], e = iv[i][1];
+        const cs = iv[i][0], ce = iv[i][1];
         const last = merged[merged.length - 1];
-        steps.push({lines:[9,10,12], msg:'Take <b>' + s + ',' + e + '</b>. The only candidate to merge with is <code>lastMerged</code> = <b>' + last[0] + ',' + last[1] + '</b>, the final block in the list. Earlier blocks end before it and start before ' + s + ', so this interval cannot reach back to them.', panels: panels(i, true)});
-
-        if (s <= last[1]){
-          const contained = e <= last[1];
-          last[1] = Math.max(last[1], e);
-          steps.push({lines:[14,17], msg:'<b>' + s + '</b> ≤ <b>' + last[1] + '</b>… the two touch, so they are one block. ' + (contained
-              ? 'This interval is fully <b>contained</b> — <code>Math.Max</code> keeps the end at <b>' + last[1] + '</b>. Assigning <code>currentEnd</code> blindly here would shrink the block and silently lose coverage.'
-              : 'The end stretches to <b>' + last[1] + '</b>. The start is untouched: sorting guarantees ' + last[0] + ' is already the earliest of the pair.') + ' The block stays live — the next interval may extend it again.', panels: panels(i, true)});
+        steps.push({lines:[14,15,17], msg:'Interval <code>' + fmt(iv[i]) + '</code>. Only <code>lastMerged = ' + fmt(last) + '</code> is worth comparing against — every earlier block ends before it starts, and sorted order guarantees nothing still to come can touch them.', panels: panels(i, true)});
+        if (cs <= last[1]){
+          const contained = ce <= last[1];
+          const before = fmt(last);
+          last[1] = Math.max(last[1], ce);
+          steps.push({lines:[19,24], msg:'<code>currentStart ' + cs + ' &lt;= lastMerged end ' + last[1] + '</code> before the write, so they touch: absorb it. ' + (contained
+              ? 'Here <code>' + fmt(iv[i]) + '</code> is fully <b>contained</b> in <code>' + before + '</code>, so <code>Math.Max</code> keeps the end at <b>' + last[1] + '</b> — a plain assignment would have shrunk the block.'
+              : 'The end stretches to <code>Math.Max(' + before.split('-')[1] + ', ' + ce + ') = ' + last[1] + '</code>, giving <code>' + fmt(last) + '</code>.') + ' No new block: the count of blocks only grows on a gap.', panels: panels(i, true)});
         } else {
-          steps.push({lines:[14,19,22], msg:'<b>' + s + '</b> > <b>' + last[1] + '</b>, a real gap. Because starts only increase from here, <em>no</em> remaining interval can start at or before ' + last[1] + ' either — so <b>' + last[0] + ',' + last[1] + '</b> is finished for good and gets to keep its place in the output. Open a fresh block at ' + s + ',' + e + '.', panels: panels(i, true)});
-          merged.push([s, e]);
-          steps.push({lines:[22], msg:'<code>merged</code> now ends with <b>' + s + ',' + e + '</b>, and that is the block subsequent intervals will be tested against.', panels: panels(i, true)});
+          steps.push({lines:[19,26,29], msg:'<code>currentStart ' + cs + '</code> is past <code>lastMerged end ' + last[1] + '</code> — a real gap. Since starts only increase from here, <b>nothing left in the array can ever fill it</b>, so <code>' + fmt(last) + '</code> is final and <code>' + fmt(iv[i]) + '</code> opens the next block.', panels: (function(){ merged.push([cs, ce]); return panels(i, true); })()});
         }
       }
 
-      steps.push({lines:[26], msg:'Done: <b>' + merged.map(p => p[0] + ',' + p[1]).join('</b> · <b>') + '</b>. One sort plus one sweep — the <code>O(n log n)</code> sort dominates, the sweep is <code>O(n)</code>, and the only extra space is the sort’s <code>O(log n)</code> stack, since the output is the answer itself.', panels: panels(-1, true)});
+      steps.push({lines:[33], msg:'Done: <code>' + merged.map(fmt).join('</code>, <code>') + '</code>. One sort plus one linear sweep — the <b>O(log n)</b> space is just the sort\'s recursion, since the merge itself only ever holds a pointer to the last block.', panels: panels(-1, true)});
       return steps;
     }
   }]

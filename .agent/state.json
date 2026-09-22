@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T18:28:56.356Z",
+  "updatedAt": "2026-09-22T20:39:20.608Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3299,14 +3299,14 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort by start, sweep and merge\",\"approachKey\":\"sort-sweep-merge-intervals\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort and greedy merge\",\"approachKey\":\"sort-and-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n log n)",
           "space": "O(log n)",
-          "algorithm": "sort by start, sweep and merge",
-          "approachKey": "sort-sweep-merge-intervals",
+          "algorithm": "sort and greedy merge",
+          "approachKey": "sort-and-merge",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3315,16 +3315,17 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort and greedy merge\",\"approachKey\":\"sort-and-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "ffd9e2faee07",
-          "renames": []
+          "version": 2,
+          "codePrint": "ffd9e2faee07"
         }
       },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -3335,7 +3336,7 @@
           "array",
           "interval"
         ],
-        "builtAt": "2026-09-13T03:04:11.994Z"
+        "builtAt": "2026-09-22T20:39:20.606Z"
       }
     },
     "merge-two-sorted-linked-lists": {
