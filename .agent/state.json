@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T05:11:41.240Z",
+  "updatedAt": "2026-09-22T05:12:41.770Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -548,17 +548,6 @@
         ],
         "builtAt": "2026-09-12T16:33:50.199Z"
       }
-    },
-    "coin-change": {
-      "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
-      ],
-      "knownFingerprints": {},
-      "fingerprints": {}
     },
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
