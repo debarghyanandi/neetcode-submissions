@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  hash map complement lookup, one pass   [hashmap-complement]
+// -  Hash map complement lookup   [hashmap-complement]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  single pass storing seen value->index in a dictionary, checking for
-// -  the complement before inserting the current value gives O(n) time with
-// -  O(n) auxiliary space for the map
+// -  Single pass through array with O(1) dictionary lookups and insertions;
+// -  stores seen values to find complements.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -36,57 +35,78 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Map Complement Lookup - check before insert
+ PATTERN : Hash Map Lookup - store seen values, search for complement
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  valueToIndex      value already passed -> the index where it sat
+  complement        target - nums[index], the partner this element needs
+  complementIndex   index stored earlier for that partner
 WHY THIS PATTERN
-  The nested-loop version asks, for every index, "does some other position hold
-  target - nums[index]?" That is a pure membership question over values already
-  seen, and a Dictionary answers it without rescanning. The only extra thing
-  needed beyond membership is the position, which is why valueToIndex stores
-  value -> index rather than being a HashSet.
-WHY ONE PASS SUFFICES
-  The usual doubt on re-reading: the loop only ever looks backward, so how does
-  it find a pair whose partner comes later? Take any valid pair (i, j) with i <
-  j. When index reaches j, nums[i] was already written into valueToIndex on
-  iteration i, and complement = target - nums[j] equals nums[i], so TryGetValue
-  hits. Every pair is discovered exactly once, at its larger index. Looking
-  forward would be redundant work.
+  The problem asks for two positions whose values add to target, and addition is
+  fully determined by one side: once you fix nums[index], the partner you need
+  is exactly complement. So the question turns from "search all pairs" into
+  "have I seen this one number before?", which a hash map answers in constant
+  time. valueToIndex carries every earlier value along with where it was, so the
+  moment complement is found the pair of indices is ready.
+BRUTE FORCE
+  Two nested loops: for every index, scan every later index and test whether the
+  two values sum to target. That is correct and needs no extra memory, but it
+  costs O(n^2) time because it re-scans the prefix for each element. The map
+  replaces that inner scan with one lookup.
 INVARIANT
-  At the top of each iteration, valueToIndex holds one entry per distinct value
-  in nums[0 .. index-1], each mapped to a position where that value actually
-  occurs. Nothing from index or beyond is ever in the map at the moment of the
-  lookup - that is the whole reason the returned pair has two distinct
-  positions.
-ORDER OF THE WRITE
-  The insert sits after the TryGetValue on purpose. Flip the two lines and the
-  self-pairing case breaks: with nums = [3, 4] and target = 6, index 0 would
-  write 3 -> 0, then find complement 3 in the map and return [0, 0], using one
-  element twice. Placing the write last makes the current element structurally
-  unreachable to its own lookup, so no explicit complementIndex != index guard
-  is needed.
-DUPLICATES AND OVERWRITES
-  valueToIndex[nums[index]] = index overwrites the stored position when a value
-  repeats, keeping only the most recent index. That is safe: any stored index
-  for a value v is as good as any other, since a later lookup for v only needs
-  some position holding v. nums = [3, 3], target 6 still works - index 0 records
-  3 -> 0, index 1 finds it and returns [0, 1] before the overwrite ever matters.
-RETURN CONTRACT
-  Indices come back as [complementIndex, index], always ascending, because
-  complementIndex was written on an earlier iteration. The fallthrough returns
-  Array.Empty<int>() rather than null, so a caller can check Length without a
-  null test; under the standard "exactly one solution" guarantee that line is
-  unreachable, but it keeps the method total if the guarantee is dropped.
-FOLLOW-UPS TO EXPECT
-  1. Sorted input: two pointers from both ends beat this on space, since no map
-  is needed. 2. Return all pairs, not the first: the early return has to go, and
-  valueToIndex must map value -> list of indices, since a repeated value can
-  complete several pairs. 3. Return values instead of indices: the map collapses
-  to a HashSet, and duplicate results need explicit dedup. 4. Why TryGetValue
-  instead of ContainsKey then indexer: one probe that also hands back
-  complementIndex, versus two probes for the same key.
+  Before the body of iteration index runs, valueToIndex holds exactly the values
+  at positions 0..index-1 mapped to an index where each occurs. So a hit on
+  complement is always a strictly earlier position, never the current one, and
+  the returned pair is two distinct indices. If no answer exists among pairs
+  ending at index, the loop adds nums[index] and moves on, so every pair (a, b)
+  with a < b is tested exactly once at the step b.
+ORDER OF CHECK AND INSERT
+  The check happens before the insert, and this is what makes target = 2 *
+  nums[index] safe. If you inserted first, nums[index] would find itself as its
+  own complement and return a pair like [3, 3]. The comment in the code says
+  this, and the code matches it.
+WATCH OUT
+  Writing valueToIndex[nums[index]] = index overwrites the stored index when the
+  same value appears twice, so the map keeps the latest position, not the first.
+  That is harmless here because the check runs before the write, but it means
+  the returned pair is not always the earliest possible pair of indices - if the
+  problem demanded the lexicographically smallest answer you would need TryAdd
+  instead. The no-solution path returns Array.Empty<int>(), an empty array, not
+  null; a caller that does result[0] without a length check will throw
+  IndexOutOfRangeException. Also note the sum target - nums[index] can overflow
+  int if target and nums values sit near int.MinValue or int.MaxValue.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if the array is sorted and you must use O(1) extra space?
+     Use two pointers, one at each end; move left in when the sum is too small,
+     right in when too large. That is O(n) time with no map, but it only works
+     because sorting lets you discard half the search space, and sorting an
+     unsorted input first costs O(n log n).
+  2. Return all distinct pairs that sum to target, not just one.
+     Do not return on a hit; instead record the pair and keep going, and make
+     valueToIndex map a value to a list of indices so repeated values are all
+     reachable. Output size can become quadratic, so the time bound is no longer
+     O(n).
+  3. The array does not fit in memory and arrives as a stream.
+     The same single pass works as long as the map fits, since only past values
+     are needed - but the map grows to the number of distinct values seen, which
+     is the real memory limit. If that does not fit, you would shard values by
+     hash across machines or files so each shard holds a value and its
+     complement together.
+  4. Three numbers that sum to target instead of two.
+     Fix one index in an outer loop and run this exact map scan on the rest,
+     giving O(n^2) time; or sort and use the two-pointer sweep inside one loop
+     for O(n^2) time with O(1) extra space beyond the sort.
+TRIGGER
+  You are asked for a pair of elements satisfying a relation where one element
+  fully determines the other.
+C# NOTE
+  TryGetValue with the out parameter does one hash lookup and hands back
+  complementIndex in the same call, where ContainsKey followed by the indexer
+  would hash twice; declaring out int complementIndex inline keeps the variable
+  scoped to the branch that uses it.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

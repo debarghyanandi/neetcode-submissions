@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">10</span> / 66</b></div>
-      <div class="bar"><span id="bar" style="width:15.2%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">14</span> / 66</b></div>
+      <div class="bar"><span id="bar" style="width:21.2%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -152,7 +152,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Arrays &amp; Hashing">
   <div class="group-head">
     <h2>Arrays &amp; Hashing</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>8</b> at standard</span>
+    <span class="group-count"><b class="gdone">2</b> / <b>8</b> at standard</span>
   </div>
   <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
   <ul>
@@ -226,14 +226,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
       </span>
     </li>
-    <li data-hay="two integer sum two-integer-sum arrays &amp; hashing hash map complement lookup - check before insert  needs rebuilt" data-status="rebuild">
+    <li data-hay="two integer sum two-integer-sum arrays &amp; hashing hash map lookup - store seen values, search for complement array hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/two-integer-sum" target="_blank" rel="noopener noreferrer">Two Integer Sum</a>
-        <span class="why">Hash Map Complement Lookup - check before insert</span>
+        <span class="why">Hash Map Lookup - store seen values, search for complement</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/two-integer-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/two-integer-sum/two-integer-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>
@@ -832,28 +832,28 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="1-D DP">
   <div class="group-head">
     <h2>1-D DP</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>4</b> at standard</span>
+    <span class="group-count"><b class="gdone">4</b> / <b>4</b> at standard</span>
   </div>
   <p class="group-note">A row of subproblem answers, each built from the ones before it.</p>
   <ul>
-    <li data-hay="climbing stairs climbing-stairs 1-d dp bottom-up dp on fibonacci - two rolling variables array dp-table needs rebuilt" data-status="rebuild">
+    <li data-hay="climbing stairs climbing-stairs 1-d dp bottom-up dp - fibonacci with two rolling variables array dp-table current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/climbing-stairs" target="_blank" rel="noopener noreferrer">Climbing Stairs</a>
-        <span class="why">Bottom-up DP on Fibonacci - two rolling variables</span>
+        <span class="why">Bottom-up DP - Fibonacci with two rolling variables</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/climbing-stairs/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/climbing-stairs/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/climbing-stairs/climbing-stairs-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="house robber house-robber 1-d dp linear dp with rolling variables - two-state house robber array dp-table needs rebuilt" data-status="rebuild">
+    <li data-hay="house robber house-robber 1-d dp linear dp, rolling variables - pick vs skip array dp-table current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/house-robber" target="_blank" rel="noopener noreferrer">House Robber</a>
-        <span class="why">Linear DP with rolling variables - two-state house robber</span>
+        <span class="why">Linear DP, rolling variables - pick vs skip</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/house-robber/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/house-robber/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/house-robber/house-robber-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="house robber ii house-robber-ii 1-d dp house robber ii - two linear dp runs on a broken circle array current" data-status="current">
@@ -866,14 +866,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="maximum subarray maximum-subarray 1-d dp kadane - drop a negative running sum, keep the best array dp-table needs rebuilt" data-status="rebuild">
+    <li data-hay="maximum subarray maximum-subarray 1-d dp kadane's algorithm - drop a negative running sum array dp-table current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
-        <span class="why">Kadane - drop a negative running sum, keep the best</span>
+        <span class="why">Kadane's Algorithm - drop a negative running sum</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/maximum-subarray/maximum-subarray-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>

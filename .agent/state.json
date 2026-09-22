@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T20:39:20.608Z",
+  "updatedAt": "2026-09-22T20:59:42.352Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -422,17 +422,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "13325f5d4769"
         },
         "suboptimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "8ff770dbe692"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic Programming Space-Optimized\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic Programming Tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -450,8 +450,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Dynamic Programming Space-Optimized",
-          "approachKey": "dp-space-optimized",
+          "algorithm": "Space-optimized Fibonacci iteration",
+          "approachKey": "fibonacci-space-optimized",
           "correct": true,
           "bruteForce": false,
           "structures": []
@@ -459,8 +459,8 @@
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Dynamic Programming Tabulation",
-          "approachKey": "dp-tabulation",
+          "algorithm": "Dynamic programming tabulation",
+          "approachKey": "fibonacci-dp",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -469,9 +469,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -484,7 +487,7 @@
           "array",
           "dp-table"
         ],
-        "builtAt": "2026-09-17T17:46:42.240Z"
+        "builtAt": "2026-09-22T20:57:03.311Z"
       }
     },
     "clone-graph": {
@@ -1454,17 +1457,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "34219e23d560"
         },
         "suboptimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "befda3bfc2de"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized linear DP, rolling variables\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Linear DP with full DP table\",\"approachKey\":\"house-robber-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1482,8 +1485,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Space-optimized linear DP, rolling variables",
-          "approachKey": "house-robber-dp",
+          "algorithm": "Dynamic programming space optimization",
+          "approachKey": "dp-space-optimized",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1493,8 +1496,8 @@
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Linear DP with full DP table",
-          "approachKey": "house-robber-dp",
+          "algorithm": "Dynamic programming tabulation",
+          "approachKey": "dp-tabulation",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1503,9 +1506,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -1518,7 +1524,7 @@
           "array",
           "dp-table"
         ],
-        "builtAt": "2026-09-18T07:48:44.658Z"
+        "builtAt": "2026-09-22T20:58:10.801Z"
       }
     },
     "house-robber-ii": {
@@ -3215,15 +3221,15 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, rolling max\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's recurrence materialized into a DP array\",\"approachKey\":\"kadane-max-subarray\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, space-optimized\",\"approachKey\":\"kadane-constant-space\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's algorithm with explicit DP table\",\"approachKey\":\"kadane-explicit-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "Kadane's algorithm, rolling max",
-          "approachKey": "kadane-max-subarray",
+          "algorithm": "Kadane's algorithm, space-optimized",
+          "approachKey": "kadane-constant-space",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3233,8 +3239,8 @@
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Kadane's recurrence materialized into a DP array",
-          "approachKey": "kadane-max-subarray",
+          "algorithm": "Kadane's algorithm with explicit DP table",
+          "approachKey": "kadane-explicit-dp",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -3243,21 +3249,22 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, space-optimized\",\"approachKey\":\"kadane-constant-space\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's algorithm with explicit DP table\",\"approachKey\":\"kadane-explicit-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "66de7d2dfc7c",
-          "renames": []
+          "version": 2,
+          "codePrint": "66de7d2dfc7c"
         },
         "suboptimal.cs": {
-          "version": 1,
-          "codePrint": "c1ca1d30ac1a",
-          "renames": []
+          "version": 2,
+          "codePrint": "c1ca1d30ac1a"
         }
       },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -3270,7 +3277,7 @@
           "array",
           "dp-table"
         ],
-        "builtAt": "2026-09-13T02:56:29.901Z"
+        "builtAt": "2026-09-22T20:59:06.922Z"
       }
     },
     "merge-intervals": {
@@ -4572,19 +4579,45 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map complement lookup, one pass\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a33cc8cf19c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map complement lookup\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash map complement lookup, one pass",
+          "algorithm": "Hash map complement lookup",
           "approachKey": "hashmap-complement",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "hash-map"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a33cc8cf19c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map complement lookup\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2a33cc8cf19c"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2a33cc8cf19c"
+        },
+        "structures": [
+          "array",
+          "hash-map"
+        ],
+        "builtAt": "2026-09-22T20:59:42.350Z"
+      }
     },
     "two-integer-sum-ii": {
       "topic": "Data Structures & Algorithms",

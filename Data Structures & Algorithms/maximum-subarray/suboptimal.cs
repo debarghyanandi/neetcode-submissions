@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  Kadane's recurrence materialized into a DP array
-// -  [kadane-max-subarray]
+// -  Kadane's algorithm with explicit DP table   [kadane-explicit-dp]
 // -  ranks below optimal.cs (O(n) time / O(1) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  same best-ending-at-i recurrence as Kadane but stores every
-// -  intermediate value in an array before scanning for the max
+// -  DP table stores best subarray sum ending at each position; trade space
+// -  for clarity.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -37,79 +36,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Kadane DP - best subarray ending at each index
+ PATTERN : Kadane / DP over subarray end index
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  bestEndingAt   bestEndingAt[i] = largest sum of a subarray that ends exactly at index i
+  maxSum         running best over all end positions seen so far
 WHY THIS PATTERN
-  The unknown is a subarray, which has two free endpoints - enumerating both is
-  quadratic. Pin the right endpoint instead: every candidate subarray ends at
-  exactly one index, so the n(n+1)/2 candidates partition into n classes keyed
-  by end index. Solve each class, then take the best of the n class winners. The
-  whole method rests on that class for i being derivable from the class for i-1
-  in constant work.
+  The problem asks for the best contiguous block, and every block ends at
+  exactly one index. So if you can answer "best block ending at i" for every i,
+  the answer is the biggest of those. That subproblem has a one-line recurrence:
+  bestEndingAt[i] is either nums[i] alone or nums[i] glued onto
+  bestEndingAt[i-1], which is why one left-to-right pass is enough.
+BETTER APPROACH
+  The better version is the same recurrence with no array: keep one int current
+  = nums[0] and one int maxSum, and inside the loop do current =
+  Math.Max(nums[i], nums[i] + current) then maxSum = Math.Max(maxSum, current).
+  That is O(1) extra space and one pass. This file loses because it materialises
+  a whole int[] copy of nums it never needs again, and then walks it a second
+  time in the foreach to take the maximum - the max could have been folded into
+  the first loop.
 INVARIANT
-  After the loop body runs for i, bestEndingAt[i] is the maximum sum over all
-  subarrays whose last element is nums[i] - not the best overall, which is why
-  the final fold is needed at all.
-
-  The clone establishes the base: every slot starts at nums[i], the one-element
-  subarray [i]. bestEndingAt[0] is therefore already correct and the loop
-  deliberately starts at i = 1 and never revisits it.
-RECURRENCE ARGUMENT
-  A best subarray ending at i is either exactly [i], or has length at least two.
-  In the second case, deleting nums[i] leaves a subarray ending at i-1, and the
-  total is maximized precisely when that remainder is the best subarray ending
-  at i-1. So Math.Max(nums[i], nums[i] + bestEndingAt[i - 1]) covers both cases
-  with no gap - the optimal substructure is that a suffix of an optimal run
-  ending at i is an optimal run ending at i-1. Read the same line as a decision:
-  extend the previous run only when bestEndingAt[i - 1] is positive, otherwise
-  the carried prefix is dead weight and you restart.
-
-  Worth noticing that Clone makes the read of nums[i] identical to the
-  not-yet-overwritten bestEndingAt[i], so this is really an in-place rewrite of
-  the copy.
-WHY THIS LOSES
-  bestEndingAt[i] is consumed by exactly one reader: iteration i+1. Nothing ever
-  looks further back, and the closing foreach only needs a running max. So the
-  entire array collapses to a single int, and maxSum can be updated inside the
-  same loop - that is textbook Kadane at O(1) extra space in one pass over nums.
-
-  This version instead touches n elements three times (Clone, forward loop,
-  foreach) and allocates an array the size of the input. The correctness
-  argument above is word-for-word the same either way; only the storage differs.
-  Keeping the table is a choice you should be able to justify, and there is
-  exactly one justification:
-WHAT THE TABLE BUYS
-  Reconstruction. If the follow-up is "return the subarray, not the sum," the
-  array answers it: find the argmax index i, then walk j backward while
-  bestEndingAt[j] != nums[j], which is the signature of an extend step; the
-  first j where they are equal is the restart, hence the start of the run. (When
-  bestEndingAt[j - 1] is exactly 0 the two branches tie and the reported start
-  is ambiguous - harmless, since the sum is the same.) The O(1)-space version
-  has to carry an explicit start pointer and reset it on every restart branch.
+  After iteration i of the first loop, bestEndingAt[i] holds the true maximum
+  sum over all subarrays whose last element is nums[i]. It holds because such a
+  subarray is either just nums[i], or nums[i] plus a subarray ending at i-1, and
+  the best of those is already stored in bestEndingAt[i-1]. Since every
+  non-empty subarray ends somewhere, the maximum over the whole bestEndingAt
+  array is the global answer.
+ALL-NEGATIVE INPUT
+  Seeding bestEndingAt with a copy of nums, and starting maxSum at
+  bestEndingAt[0] rather than 0, is what makes the all-negative case correct.
+  The recurrence can never drop below nums[i] itself, so for [-3,-1,-7] it
+  returns -1, not 0. A version that starts maxSum at 0 would silently return the
+  empty subarray.
 WATCH OUT
-  1. maxSum is seeded from bestEndingAt[0], not 0. Seeding 0 is the classic bug:
-  on an all-negative input like [-3, -1, -2] it returns 0, but the empty
-  subarray is not a legal answer and the correct result is -1. This code is safe
-  because the seed is a real element.
-
-  2. nums.Length == 0 throws IndexOutOfRangeException at bestEndingAt[0] before
-  the foreach ever runs. LeetCode 53 guarantees at least one element so no guard
-  is written, but name the assumption if asked.
-
-  3. int is wide enough here: 1e5 elements bounded by 1e4 in magnitude caps any
-  sum at 1e9, under int.MaxValue. Loosen either bound and the accumulator has to
-  be long.
+  An empty nums throws IndexOutOfRangeException at maxSum = bestEndingAt[0],
+  because the loop and the foreach are both safely skipped but that line is not
+  guarded. The sum nums[i] + bestEndingAt[i - 1] is int arithmetic and will wrap
+  around silently if the running sum overflows int; it is not checked. Also note
+  nums.Clone() returns object, so the (int[]) cast is required - drop it and the
+  file does not compile.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return the start and end indices of the best subarray, not just the sum.
+     Track a start pointer: when you choose nums[i] over nums[i] + previous, set
+     curStart = i; when maxSum improves, record bestStart = curStart and bestEnd
+     = i. Same time, a few more variables.
+  2. What if the array is circular, so the subarray may wrap around the end?
+     Answer is max(normal Kadane, totalSum - minimum subarray sum), computed
+     with a second Kadane run on the minimum. Special case: if every number is
+     negative the wrap formula gives 0, so fall back to the normal Kadane
+     result.
+  3. Many queries asking for the best subarray inside a given range [l, r].
+     Kadane per query is too slow; build a segment tree where each node stores
+     total sum, best prefix, best suffix and best inner sum, and merge those
+     four values. Build is O(n), each query O(log n).
+  4. The array does not fit in memory and arrives as a stream.
+     The O(1)-space variant already handles it - you only ever need the previous
+     value and the running maximum, so nothing has to be stored.
 TRIGGER
-  Contiguous plus an objective that decomposes when you fix the right endpoint.
-  Direct hits: maximum product subarray (carry both the best and the worst
-  ending at i, since a negative flips them), maximum sum circular subarray
-  (total minus the minimum subarray, with the all-negative case special-cased),
-  best time to buy and sell stock (Kadane over consecutive price deltas). If the
-  problem says subsequence rather than subarray, this recurrence does not apply
-  - the deleted element no longer has to be nums[i].
+  The problem asks for the best contiguous run in a sequence and you can define
+  the answer "ending exactly at index i" from the answer at i-1.
+C# NOTE
+  (int[])nums.Clone() does a full array allocation and copy just to seed the DP;
+  if you keep the array form, int[] bestEndingAt = new int[nums.Length] with
+  bestEndingAt[0] = nums[0] is clearer, since every other slot is overwritten by
+  the loop anyway. The final foreach could also be written as bestEndingAt.Max()
+  with System.Linq, but that adds an enumerator over the array for no gain here.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

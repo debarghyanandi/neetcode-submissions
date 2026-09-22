@@ -651,162 +651,164 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Climbing Stairs',
-  note: 'the number of ways to reach a step is just the sum of the two steps you could have jumped from',
-  inputs: [{id:'n', label:'n (number of stairs)', value:'8', width:140}],
+  note: 'the number of ways to stand on a step is the sum of the two ways of arriving at it',
+  inputs: [{id:'n', label:'n (steps)', value:'8', width:120}],
   parse(raw){
-    const v = parseInts(raw.n, 1);
-    if (!v) return {ok:false, msg:'Enter a single whole number.'};
-    const n = v[0];
-    if (!Number.isInteger(n)) return {ok:false, msg:'n must be a whole number.'};
+    const s = String(raw.n).trim();
+    if (!s.length) return {ok:false, msg:'Enter a number of steps.'};
+    const n = Number(s);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) return {ok:false, msg:'n must be a whole number.'};
     if (n < 1) return {ok:false, msg:'n must be at least 1.'};
-    if (n > 14) return {ok:false, msg:'Keep n at 14 or below so the run stays watchable.'};
+    if (n > 20) return {ok:false, msg:'Keep n at 20 or below so the run stays watchable.'};
     return {ok:true, value:{n}, normalized:{n: String(n)}};
   },
-  shuffle(){ return {n: String(5 + Math.floor(Math.random()*6))}; },
+  shuffle(){ return {n: String(5 + Math.floor(Math.random()*8))}; },
   solutions: [
   {
-    label: 'Two rolling variables',
-    badge: 'O(n) time · O(1) space · bottom-up DP · optimal.cs',
-    blurb: 'The last move onto step <b>i</b> was either a 1-step from <b>i−1</b> or a 2-step from <b>i−2</b>, and those two sets of routes never overlap — so <code>ways[i] = ways[i−1] + ways[i−2]</code>. Line 10 never reads anything older than two steps back, so the whole table collapses into two ints that shuffle forward once per stair.',
+    label: 'Two rolling numbers',
+    badge: 'O(n) time · O(1) space · Fibonacci iteration · optimal.cs',
+    blurb: 'The last move onto step <b>i</b> was either a single step from <b>i−1</b> or a double from <b>i−2</b>, and those two families of paths never overlap, so <code>ways(i) = ways(i−1) + ways(i−2)</code>. Nothing older than two steps back is ever read again, so the whole table collapses into two ints that shuffle forward.',
     legend: [
       {cls:'hot', text:'step i being computed'},
-      {cls:'in-window', text:'the two values still held'},
+      {cls:'in-window', text:'prev1 / prev2 — the two live values'},
       {cls:'dim', text:'computed, then forgotten'},
       {cls:'ghost', text:'not reached yet'}
     ],
     code: [
-      'if (n <= 2)',
-      '    return n;',
-      '',
-      'int prev2 = 1;',
-      'int prev1 = 2;',
-      'int current = 0;',
-      '',
-      'for (int i = 3; i <= n; i++)',
+      'public int ClimbStairs(int n)',
       '{',
-      '    current = prev1 + prev2;',
-      '    prev2 = prev1;',
-      '    prev1 = current;',
-      '}',
+      '    if (n <= 2)',
+      '        return n;',
       '',
-      'return prev1;'
+      '    int prev2 = 1;',
+      '    int prev1 = 2;',
+      '    int curr = 0;',
+      '',
+      '    for (int i = 3; i <= n; i++)',
+      '    {',
+      '        curr = prev1 + prev2;',
+      '        prev2 = prev1;',
+      '        prev1 = curr;',
+      '    }',
+      '',
+      '    return prev1;',
+      '}'
     ],
     simulate(input){
       const n = input.n, steps = [];
-      const known = new Array(n + 1).fill(null);
-      const panels = (i, two, one, cur) => {
-        const vals = [];
-        for (let k = 1; k <= n; k++) vals.push(known[k] === null ? '?' : known[k]);
-        const ptrs = [];
-        if (i >= 1 && i <= n) ptrs.push({name:'i', idx: i - 1, cls:'accent'});
-        return [
-          pTiles('ways to reach step 1 .. ' + n, vals, (idx) => {
-            const k = idx + 1;
-            if (k === i) return {cls:'hot'};
-            if (i > 0 && (k === i - 1 || k === i - 2)) return {cls:'in-window'};
-            return {cls: known[k] === null ? 'ghost' : 'dim'};
-          }, {ptrs: ptrs, scale: n > 10 ? 0.85 : 1}),
-          pPills('rolling state', [
-            {k:'i', v: i > 0 ? i : '–', cls:'accent'},
-            {k:'prev2', v: two === null ? '–' : two},
-            {k:'prev1', v: one === null ? '–' : one},
-            {k:'current', v: cur === null ? '–' : cur, cls:'hot'}
-          ])
-        ];
-      };
+      const vals = new Array(n + 1).fill(null);
+      let prev2 = null, prev1 = null, curr = null, i = 0;
+      const panels = () => [
+        pTiles('ways to reach step 1..' + n, Array.from({length:n}, (_, k) => {
+          const step = k + 1;
+          return vals[step] === null ? '?' : vals[step];
+        }), (k) => {
+          const step = k + 1;
+          if (step === i) return {cls:'hot'};
+          if (step === i - 1 || step === i - 2) return {cls:'in-window'};
+          if (vals[step] === null) return {cls:'ghost'};
+          return {cls:'dim'};
+        }, {ptrs: i >= 3 && i <= n ? [{name:'i', idx: i - 1, cls:'accent'}] : []}),
+        pPills('state', [
+          {k:'n', v: n},
+          {k:'i', v: i >= 3 ? i : '-'},
+          {k:'prev2', v: prev2 === null ? '-' : prev2},
+          {k:'prev1', v: prev1 === null ? '-' : prev1, cls:'accent'},
+          {k:'curr', v: curr === null ? '-' : curr, cls:'hot'}
+        ])
+      ];
       if (n <= 2){
-        known[1] = 1; if (n >= 2) known[2] = 2;
-        steps.push({lines:[1,2], msg:'With <b>n = ' + n + '</b> the base case fires immediately. One stair has exactly one route, two stairs have exactly two (1+1, or one 2-step), and those happen to equal <b>n</b> itself — which is the only reason this shortcut is written as <code>return n</code>. No loop runs.', panels: panels(n, null, null, null)});
+        vals[1] = 1; if (n === 2) vals[2] = 2;
+        steps.push({lines:[3,4], msg:'With <code>n &lt;= 2</code> there is nothing to build up: one step has exactly <b>1</b> path and two steps have exactly <b>2</b> (1+1 or 2). The answer happens to equal <b>' + n + '</b> itself, which is why the guard can just <code>return n</code>.', panels: panels()});
         return steps;
       }
-      steps.push({lines:[1], msg:'<b>n = ' + n + '</b> is greater than 2, so the guard does not fire. It exists because the recurrence needs two earlier answers to add, and steps 1 and 2 have no such pair behind them — they must be handed over as facts.', panels: panels(0, null, null, null)});
-      known[1] = 1; known[2] = 2;
-      let two = 1, one = 2, cur = 0;
-      steps.push({lines:[4,5,6], msg:'Seed the two facts: <code>prev2</code> = ways to reach step <b>1</b> = <b>1</b>, <code>prev1</code> = ways to reach step <b>2</b> = <b>2</b>. Read the names relative to the step about to be computed — when <code>i</code> is 3, those are steps 1 and 2. <code>current</code> is just a scratch slot.', panels: panels(0, two, one, cur)});
-      for (let i = 3; i <= n; i++){
-        cur = one + two;
-        known[i] = cur;
-        steps.push({lines:[8,10], msg:'Step <b>' + i + '</b>: every route ending here arrives either as a 1-step from step ' + (i-1) + ' (<b>' + one + '</b> routes) or as a 2-step from step ' + (i-2) + ' (<b>' + two + '</b> routes). No route can be counted twice, because its <em>final</em> move is one or the other. So <code>current = ' + one + ' + ' + two + ' = <b>' + cur + '</b></code>.', panels: panels(i, two, one, cur)});
-        two = one; one = cur;
-        steps.push({lines:[11,12], msg:'Shuffle the window forward one stair: step ' + (i-2) + ' can now be dropped <b>permanently</b> — nothing after step ' + i + ' will ever look that far back. <code>prev2</code> becomes ' + two + ' (step ' + (i-1) + ') and <code>prev1</code> becomes ' + one + ' (step ' + i + ').', panels: panels(i, two, one, cur)});
+      steps.push({lines:[3,4], msg:'<code>n = ' + n + '</code> is above 2, so the shortcut does not fire. It still matters: the loop below needs two already-correct values to start from, and the guard is what guarantees they exist.', panels: panels()});
+      prev2 = 1; prev1 = 2; curr = 0; vals[1] = 1; vals[2] = 2;
+      steps.push({lines:[6,7,8], msg:'Seed the recurrence with the two base cases: <code>prev2 = ways(1) = 1</code> and <code>prev1 = ways(2) = 2</code>. These are counted by hand, not derived — every later value is built on them.', panels: panels()});
+      for (i = 3; i <= n; i++){
+        const a = prev1, b = prev2;
+        curr = prev1 + prev2;
+        vals[i] = curr;
+        prev2 = prev1;
+        prev1 = curr;
+        steps.push({lines:[12,13,14], msg:'Step <b>' + i + '</b>: every path here ends with a single step from ' + (i-1) + ' (<b>' + a + '</b> ways) or a double from ' + (i-2) + ' (<b>' + b + '</b> ways). No path is counted twice because the final move differs, so <code>curr = ' + a + ' + ' + b + ' = ' + curr + '</code>. Then the pair slides forward: ' + (i-2) + ' is dropped for good, since step ' + (i+1) + ' only ever looks back two.', panels: panels()});
       }
-      steps.push({lines:[15], msg:'The loop ended with <code>i = ' + n + '</code> just computed, so <code>prev1</code> holds the answer for step <b>' + n + '</b>: <b>' + one + '</b> distinct ways. Note this is the Fibonacci sequence arriving on its own — it falls out of the two-move rule, it was not assumed.', panels: panels(n, two, one, cur)});
+      i = 0;
+      steps.push({lines:[17], msg:'The loop ended after computing step ' + n + ', and the slide left that value in <code>prev1</code> — so <b>' + prev1 + '</b> is the answer. The full table was never stored: two ints carried the whole recurrence.', panels: panels()});
       return steps;
     }
   },
   {
     label: 'Fill a dp table',
     badge: 'O(n) time · O(n) space · tabulation · suboptimal.cs',
-    blurb: 'The same recurrence, but every answer is kept. <code>dp[i]</code> is written once, left to right, each cell reading only the two cells immediately behind it — so by the time the loop reaches <b>i</b>, both operands are already final. The array is honest about the subproblem structure; it just pays O(n) memory to store history nothing later reads.',
+    blurb: 'The same recurrence, written out in full: <code>dp[i]</code> is the number of ways to stand on step <b>i</b>, filled left to right from the two base cases so each read of <code>dp[i-1]</code> and <code>dp[i-2]</code> is already final. Correct and easy to read, but it keeps <b>n</b> numbers when only the last two are ever consulted.',
     legend: [
       {cls:'hot', text:'dp[i] being written'},
-      {cls:'in-window', text:'the two cells being added'},
-      {cls:'good', text:'already settled'},
-      {cls:'ghost', text:'still zero'}
+      {cls:'in-window', text:'dp[i-1] and dp[i-2] being read'},
+      {cls:'good', text:'settled entries'},
+      {cls:'ghost', text:'still zero / unused'}
     ],
     code: [
-      'if (n <= 2)',
+      'public int ClimbStairs(int n)',
       '{',
-      '    return n;',
-      '}',
+      '    if (n <= 2)',
+      '    {',
+      '        return n;',
+      '    }',
       '',
-      'int[] dp = new int[n + 1];',
-      'dp[1] = 1;',
-      'dp[2] = 2;',
+      '    int[] dp = new int[n + 1];',
+      '    dp[1] = 1;',
+      '    dp[2] = 2;',
       '',
-      'for (int i = 3; i <= n; i++)',
-      '{',
-      '    dp[i] = dp[i - 1] + dp[i - 2];',
-      '}',
+      '    for (int i = 3; i <= n; i++)',
+      '    {',
+      '        dp[i] = dp[i - 1] + dp[i - 2];',
+      '    }',
       '',
-      'return dp[n];'
+      '    return dp[n];',
+      '}'
     ],
     simulate(input){
       const n = input.n, steps = [];
-      let dp = null, filled = 0;
-      const panels = (i, writing) => {
-        const vals = dp ? dp.slice() : [];
-        const ptrs = [];
-        if (i >= 3){
-          ptrs.push({name:'i-2', idx: i - 2});
-          ptrs.push({name:'i-1', idx: i - 1});
-          ptrs.push({name:'i', idx: i, cls:'accent'});
-        }
+      let dp = null, i = 0, written = 0;
+      const panels = () => {
         const out = [];
         if (dp){
-          out.push(pTiles('dp (index 0 .. ' + n + ')', vals, (k) => {
-            if (k === i && writing) return {cls:'hot', fresh:true};
+          out.push(pTiles('dp[0..' + n + ']', dp, (k) => {
+            if (k === i) return {cls:'hot'};
             if (i >= 3 && (k === i - 1 || k === i - 2)) return {cls:'in-window'};
-            if (k >= 1 && k <= filled) return {cls:'good'};
-            return {cls:'ghost'};
-          }, {ptrs: ptrs, scale: n > 10 ? 0.8 : 0.95}));
+            if (k === 0 || k > written) return {cls:'ghost'};
+            return {cls:'good'};
+          }, {ptrs: (i >= 3 && i <= n) ? [
+            {name:'i-2', idx: i - 2},
+            {name:'i-1', idx: i - 1},
+            {name:'i', idx: i, cls:'accent'}
+          ] : [], scale: n > 12 ? 0.8 : 1}));
         }
         out.push(pPills('state', [
           {k:'n', v: n},
-          {k:'i', v: i >= 3 ? i : '–', cls:'accent'},
-          {k:'dp[i-1]', v: i >= 3 ? dp[i-1] : '–'},
-          {k:'dp[i-2]', v: i >= 3 ? dp[i-2] : '–'},
-          {k:'dp[i]', v: (i >= 3 && writing) ? dp[i] : '–', cls:'hot'}
+          {k:'i', v: i >= 3 ? i : '-'},
+          {k:'dp length', v: dp ? dp.length : '-'},
+          {k:'answer', v: dp && written >= n ? dp[n] : '-', cls:'good'}
         ]));
         return out;
       };
       if (n <= 2){
-        dp = new Array(n + 1).fill(0);
-        steps.push({lines:[1,3], msg:'<b>n = ' + n + '</b> hits the guard, so no table is ever allocated. Steps 1 and 2 have fewer than two predecessors to add, so they cannot be derived — they are the seeds, and for these two the count happens to equal <b>n</b>.', panels: [pPills('state', [{k:'n', v: n}, {k:'returns', v: n, cls:'good'}])]});
+        steps.push({lines:[3,5], msg:'For <code>n &lt;= 2</code> the answer is <b>' + n + '</b> directly. The guard is not just an optimisation here — the table below writes <code>dp[2]</code> unconditionally, which would run off the end of an array of size ' + (n+1) + '.', panels: panels()});
         return steps;
       }
-      steps.push({lines:[1], msg:'<b>n = ' + n + '</b> is above 2, so execution falls through the guard and into the table build. The guard also protects line 8: writing <code>dp[2]</code> into an array of length <code>n + 1</code> would be out of range if <code>n</code> were 1.', panels: [pPills('state', [{k:'n', v: n}, {k:'i', v:'–'}, {k:'dp[i-1]', v:'–'}, {k:'dp[i-2]', v:'–'}, {k:'dp[i]', v:'–'}])]});
+      steps.push({lines:[3,5], msg:'<code>n = ' + n + '</code> is larger than 2, so we fall through to the table. The guard also protects the two unconditional base-case writes that come next.', panels: panels()});
       dp = new Array(n + 1).fill(0);
-      steps.push({lines:[6], msg:'Allocate <code>n + 1 = ' + (n+1) + '</code> ints so the index <em>is</em> the step number — slot 0 is deliberately unused padding, which removes every off-by-one from the arithmetic below. C# zero-fills the array.', panels: panels(0, false)});
-      dp[1] = 1; dp[2] = 2; filled = 2;
-      steps.push({lines:[7,8], msg:'Plant the two base cases. Step <b>1</b>: one route (a single 1-step). Step <b>2</b>: two routes (1+1, or one 2-step). Everything else in the table will be produced by addition alone.', panels: panels(0, false)});
-      for (let i = 3; i <= n; i++){
-        steps.push({lines:[10,12], msg:'<code>i = ' + i + '</code>: both operands lie strictly to the left and were written on earlier passes, so they are already final — that is the whole reason a left-to-right sweep works without recursion. <code>dp[' + i + '] = ' + dp[i-1] + ' + ' + dp[i-2] + '</code>.', panels: panels(i, false)});
+      steps.push({lines:[8], msg:'Allocate <code>n + 1 = ' + (n+1) + '</code> ints so the index <em>is</em> the step number — <code>dp[i]</code> means “ways to reach step i”. Slot <b>0</b> is left as a deliberate spacer so no arithmetic is needed to translate indices. Everything starts at 0.', panels: panels()});
+      dp[1] = 1; dp[2] = 2; written = 2;
+      steps.push({lines:[9,10], msg:'Write the two base cases: one step has <b>1</b> path, two steps have <b>2</b> (1+1 or 2). They cannot come from the recurrence because it would read <code>dp[0]</code> and <code>dp[-1]</code>, so they are counted directly.', panels: panels()});
+      for (i = 3; i <= n; i++){
         dp[i] = dp[i-1] + dp[i-2];
-        filled = i;
-        steps.push({lines:[12], msg:'Cell <b>' + i + '</b> is now <b>' + dp[i] + '</b> and is never touched again. Compare with the optimal version: cells to the left of <code>i - 2</code> are dead weight from here on, which is exactly the O(n) memory being wasted.', panels: panels(i, true)});
+        written = i;
+        steps.push({lines:[14], msg:'<code>dp[' + i + '] = dp[' + (i-1) + '] + dp[' + (i-2) + '] = ' + dp[i-1] + ' + ' + dp[i-2] + ' = ' + dp[i] + '</code>. Because the loop moves left to right, both cells it reads were finished on earlier passes — that ordering is the whole reason tabulation needs no recursion. Note that everything left of <code>dp[' + (i-2) + ']</code> is now dead weight.', panels: panels()});
       }
-      steps.push({lines:[15], msg:'The table is complete; return <code>dp[' + n + '] = <b>' + dp[n] + '</b></code>. Same answer and same running time as the two-variable version — only the memory differs, and the table can be read as a proof: every cell equals the sum of the two before it.', panels: panels(0, false)});
+      i = 0;
+      steps.push({lines:[17], msg:'The table is full, so <code>dp[' + n + '] = ' + dp[n] + '</code> is the answer. Identical arithmetic to the rolling-pair version — the only difference is that this one paid <b>O(n)</b> memory to keep values it never looked at again.', panels: panels()});
       return steps;
     }
   }]

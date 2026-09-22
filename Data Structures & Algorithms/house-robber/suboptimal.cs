@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  Linear DP with full DP table   [house-robber-dp]
+// -  Dynamic programming tabulation   [dp-tabulation]
 // -  ranks below optimal.cs (O(n) time / O(1) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Entire DP table retained in memory; only last two entries are ever
-// -  consulted again.
+// -  Fills a 1-D DP table in a single pass, storing the maximum value
+// -  robbed at each house index.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -37,76 +37,70 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Linear DP - max sum with no two adjacent picks
+ PATTERN : 1-D DP - House Robber, no two adjacent picks
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  n        number of houses, nums.Length
+  dp       dp[i] = best loot robbing only houses 0..i
+  pick     rob house i: nums[i] + dp[i-2]
+  notPick  skip house i: dp[i-1]
 WHY THIS PATTERN
-  The problem says you cannot rob two houses next to each other, so the decision
-  at house i depends only on whether you took house i-1. That is a
-  one-dimensional state: dp[i] is the best total using only houses 0..i.
-  Each step is a two-way choice, pick = nums[i] + dp[i-2] or
-  notPick = dp[i-1], and the larger one wins. There is no need to
-  remember which houses were picked, only the best total, so a single array over
-  i is enough.
+  The problem asks for the maximum sum of a subset of nums where no two chosen
+  indices are adjacent. That single "cannot take the neighbour" rule means the
+  choice at house i only depends on what was already decided at i-1 and i-2, not
+  on the whole history. So one linear scan filling dp works: at each i you
+  compare pick against notPick and keep the larger. The answer is dp[n-1], the
+  best over the whole street.
 BETTER APPROACH
-  The better version keeps the same recurrence but drops the array. dp[i]
-  only ever reads i-1 and i-2, so two int variables (say prev and prevPrev)
-  carry all the state and the answer comes out in O(1) extra space. This file
-  allocates a full int[n + 1] and never looks back further than two
-  slots, so the whole array is dead weight after each step. Same time, more
-  memory - that is the only gap.
+  The better version keeps only two numbers instead of the whole dp array, since
+  the loop reads nothing older than dp[i-2]. Two rolling ints (say prev1 =
+  dp[i-1], prev2 = dp[i-2]), shifted each step, give the same answer in constant
+  extra space. This file loses on memory only: it allocates an int array of size
+  n+1 to store values it never looks at again, and one slot, dp[n], is never
+  even written or read.
 INVARIANT
-  After the loop body for index i, dp[i] holds the maximum money
-  obtainable from houses 0..i with no two adjacent houses chosen. The base cases
-  set this up: dp[0] = nums[0] is forced, and dp[1] =
-  Math.Max(nums[0], nums[1]) because the two are adjacent and only one can be
-  taken. The step is correct because any valid plan ending at or before i either
-  takes house i, and then cannot touch i-1, leaving the best of 0..i-2, or skips
-  it, leaving the best of 0..i-1. So dp[n - 1] is the answer for
-  the whole street.
+  After the iteration for index i, dp[i] holds the best total obtainable using
+  only houses 0..i, with the adjacency rule respected. This holds at the start
+  because dp[0] = nums[0] and dp[1] = Math.Max(nums[0], nums[1]) are the correct
+  answers for those prefixes. Each step preserves it: any valid plan for 0..i
+  either uses house i, and then cannot use i-1, giving nums[i] + dp[i-2], or
+  does not, giving dp[i-1]; taking the max covers both cases. So dp[n-1] is the
+  best over all houses.
 WATCH OUT
-  An empty array crashes: n == 1 is checked, but n == 0 falls
-  through to dp[0] = nums[0] and throws IndexOutOfRangeException. The
-  array is sized n + 1 while the loop only writes up to n - 1,
-  so the last slot is allocated and never used - harmless, but it hides the fact
-  that the real size needed is n. The comment writes the recurrence as
-  f(indx) + f(indx - 2), but f is used for two different things there: the first
-  term is nums[i], the second is dp[i-2]; read it carefully or it looks
-  self-referential. The 0 + in notPick is pure noise and can be dropped.
+  An empty array breaks this: with n == 0 the n == 1 guard does not fire, dp
+  becomes new int[1], and dp[0] = nums[0] throws IndexOutOfRangeException. The
+  comment block describes the recurrence as calls f(indx - 1) and f(indx - 2),
+  which suggests recursion, but the code is a bottom-up loop with no function
+  calls - read it as notation, not as what runs. The 0 + in notPick adds nothing
+  and can be deleted. Also note the array is sized n + 1 while the loop stops at
+  n - 1, so the extra slot is dead weight and returning dp[n] instead of dp[n-1]
+  would silently give 0.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Rewrite it with O(1) extra space.
-     Keep two ints, prevPrev = nums[0] and prev = Math.Max(nums[0], nums[1]),
-     then loop cur = Math.Max(nums[i] + prevPrev, prev), shift prevPrev = prev,
-     prev = cur, and return prev. Same arithmetic, no allocation; you lose the
-     ability to inspect intermediate bests afterwards.
-  2. What if the houses are in a circle, so house 0 and the last house are
-  neighbours?
-     Run this same routine twice, once on nums[0..n-2] and once on nums[1..n-1],
-     and take the larger result; the circle is broken by forcing one of the two
-     endpoints out. Handle n == 1 separately since both slices would be empty.
-  3. The interviewer wants the actual list of robbed houses, not just the total.
-     Then the array is worth keeping - walk backwards from n - 1 and at
-     each i check whether dp[i] equals dp[i-1]; if not, house i
-     was taken, so record it and jump to i-2. This is exactly where the
-     O(1)-space version cannot follow you.
-  4. Could you write this top-down instead?
-     A recursive helper with a memo array gives the same values, but recursion
-     depth grows with the number of houses and risks a stack overflow on a long
-     street, so the bottom-up loop here is the safer shape.
+  1. The houses are in a circle, so the first and last are neighbours. What
+  changes?
+     Run the same linear scan twice, once on nums[0..n-2] and once on
+     nums[1..n-1], and take the max of the two results; the two runs exclude the
+     conflicting pair. Handle n == 1 separately as here.
+  2. Return the actual houses robbed, not just the total.
+     Keep the dp array, which this file already has, then walk backwards from i
+     = n-1: if dp[i] == dp[i-1] the house was skipped, move to i-1; otherwise
+     record i and move to i-2. That is why the full array is sometimes worth
+     keeping.
+  3. What if you must leave two houses between picks instead of one?
+     The recurrence becomes dp[i] = Math.Max(nums[i] + dp[i-3], dp[i-1]), so you
+     need three rolling variables and three base cases instead of two.
 TRIGGER
-  A line of items where choosing one forbids its immediate neighbour and you
-  want the best total - think i-1 versus i-2.
+  A linear sequence where choosing an element forbids its immediate neighbour
+  and you want the best total.
 C# NOTE
-  Math.Max on two ints is the right call here, but note new int[n + 1]
-  zero-initialises every slot before the loop overwrites them; if you keep the
-  array at all, size it n so the allocation matches what you actually
-  index.
+  Math.Max on two ints is the right call here, but note new int[n + 1] is
+  zero-initialised by the runtime, so the untouched dp[n] silently reads as 0
+  rather than as an error - a good reason to size the array exactly n.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

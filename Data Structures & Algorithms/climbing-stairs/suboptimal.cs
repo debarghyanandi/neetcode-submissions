@@ -1,12 +1,11 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  Dynamic Programming Tabulation   [dp-tabulation]
+// -  Dynamic programming tabulation   [fibonacci-dp]
 // -  ranks below optimal.cs (O(n) time / O(1) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Builds and fills a DP array bottom-up with Fibonacci recurrence
-// -  relation
+// -  Each position computed once using previously stored values in array.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -31,74 +30,69 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Bottom-up DP - Fibonacci recurrence on a 1-D table
+ PATTERN : Bottom-up DP (Fibonacci recurrence) over a full table
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  dp    dp[i] = number of distinct ways to reach step i from the ground
 WHY THIS PATTERN
-  The problem asks for the number of distinct ways to reach step n when each
-  move is 1 or 2 steps. The last move into step i is either a 1-step from i-1 or
-  a 2-step from i-2, and those two sets of paths never overlap, so dp[i]
-  = dp[i-1] + dp[i-2]. Counting plus a recurrence that depends
-  only on smaller values is the signature of bottom-up dynamic programming: fill
-  dp from 3 upward and read dp[n].
+  The last move onto step i is either a 1-step from i-1 or a 2-step from i-2,
+  and those two sets of paths never overlap. So the count for i is exactly the
+  sum of the counts for i-1 and i-2, which is a recurrence with overlapping
+  subproblems - the definition of dynamic programming. Filling dp from 3 upward
+  means both dp[i-1] and dp[i-2] are already final when dp[i] is written, so no
+  recursion and no memo lookups are needed.
 BETTER APPROACH
-  The better version keeps the same loop but drops the array: hold two ints,
-  prev = 1 and curr = 2, and in each iteration set next = prev + curr, prev =
-  curr, curr = next, then return curr. That is O(1) space instead of an int[n +
-  1] that is allocated, zeroed, and then read only at the last index. This file
-  loses only on memory - the time is identical - so the array is pure waste for
-  every i below n - 1.
+  The better version keeps only two numbers, say prev1 = dp[i-1] and prev2 =
+  dp[i-2], and rolls them forward inside the same loop. It returns the same
+  value with the same number of additions but uses constant extra space instead
+  of an n+1 array. This file loses because every dp[i] below the last one is
+  read twice and then never needed again, yet all of them stay alive until the
+  method returns.
 INVARIANT
-  After the iteration for index i, dp[i] holds the exact count of
-  distinct 1/2-step sequences that end on step i. The base cases seed this truth
-  for i = 1 and i = 2, and the loop only ever reads i-1 and i-2, which the
-  previous iterations already finished. Because every path into i must arrive by
-  a final 1-step or a final 2-step and never both, the sum is a complete,
-  non-overlapping split, so the invariant carries to n.
+  Before each iteration with index i, every entry dp[1..i-1] already holds the
+  true number of ways to reach that step. The base cases dp[1] = 1 and dp[2] = 2
+  are true by inspection, and the assignment dp[i] = dp[i-1] + dp[i-2] only
+  reads indices strictly below i, so the invariant is preserved. When the loop
+  ends, i has passed n, so dp[n] is final and correct.
 WATCH OUT
-  The early return "return n" is doing double duty: for n = 1 and n = 2 it is
-  the real answer, but for n = 0 it returns 0 and for negative n it returns the
-  negative number itself. Many versions of this problem treat n = 0 as 1 way
-  (the empty path), so check the expected value for 0 before reusing this. The
-  guard is also load-bearing for safety, not just speed: without it, n = 1 would
-  make the array length 2 and the write to dp[2] would throw
-  IndexOutOfRangeException. Finally, the values are Fibonacci numbers and grow
-  fast - dp[46] is 2971215073, past int.MaxValue, so the addition
-  silently overflows to a negative number for n >= 46.
+  The early return for n <= 2 is load-bearing, not just a shortcut: without it,
+  n = 1 would allocate an array of length 2 and then dp[2] = 2 would throw
+  IndexOutOfRangeException. A negative n makes new int[n + 1] throw
+  OverflowException before any logic runs. dp[0] is never assigned, so it stays
+  0 and is silently unused - if you ever start the loop at 2 instead of 3 you
+  get the wrong answer, because the correct base is dp[0] = 1, not 0. The values
+  are Fibonacci numbers, so int overflows silently once n grows past the mid-40s
+  and the result becomes negative garbage.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. The input n is huge and you need the count modulo 1e9+7. What changes?
-     Take the modulus on every addition, dp[i] = (dp[i-1] +
-     dp[i-2]) % MOD, which also removes the overflow problem. If n is so
-     large that an O(n) loop is too slow, switch to 2x2 matrix power or fast
-     doubling for O(log n) time.
-  2. Steps of 1, 2 or 3 are allowed. What changes?
-     The recurrence becomes dp[i] = dp[i-1] + dp[i-2] +
-     dp[i-3], with three base cases and the loop starting at i = 4. The
-     rolling-variable version then needs three variables instead of two.
-  3. Some steps are broken and cannot be stepped on. What changes?
-     Keep the array - you now need a per-index flag, so write dp[i] = 0
-     when step i is broken and otherwise apply the same sum. This is a case
-     where the O(n) table is justified, since the answer depends on positional
-     data, not just the last two counts.
-  4. An interviewer asks for the recursive form instead. What is the cost?
-     Plain recursion on n-1 and n-2 is exponential; adding a memo array makes it
-     O(n) time but adds O(n) recursion stack depth, which can overflow the stack
-     for large n. The loop here avoids that entirely.
+  1. Reduce the space to O(1).
+     Replace the array with two ints seeded to 1 and 2, then in the loop compute
+     cur = a + b, a = b, b = cur, and return b. Same time, no allocation; you
+     lose the ability to query any intermediate step afterwards.
+  2. What if a step can be 1, 2, or 3 stairs?
+     The recurrence becomes dp[i] = dp[i-1] + dp[i-2] + dp[i-3] with three base
+     cases; for an arbitrary set of allowed step sizes you sum dp[i - s] over
+     every s in the set, which costs O(n * |set|) time.
+  3. n is huge, say a billion, with the answer modulo 1e9+7.
+     Use 2x2 matrix exponentiation or fast doubling on the Fibonacci recurrence
+     for O(log n) time; the loop here would do a billion additions and the array
+     would not fit comfortably in memory.
+  4. Now each step has a cost and you want the cheapest way up.
+     Same table shape, but dp[i] = cost[i] + Min(dp[i-1], dp[i-2]) instead of a
+     sum - the transition switches from counting to minimising while the scan
+     order stays identical.
 TRIGGER
-  Count the number of ways to reach a state, where each state is reached from a
-  fixed, small set of earlier states - write the recurrence and fill it
-  bottom-up.
+  The answer at position i depends only on a fixed number of earlier positions,
+  and you are counting disjoint ways to arrive rather than searching paths.
 C# NOTE
-  "new int[n + 1]" zero-initializes the whole block, which is why index 0 is
-  never assigned yet never wrong; if you keep the array, that free zeroing is
-  the only thing it buys you. The two-int rolling version needs no allocation at
-  all and so puts no pressure on the garbage collector.
+  new int[n + 1] is zero-initialised by the runtime, which is why dp[0] can be
+  skipped without a compile error - but it also means the whole array is
+  heap-allocated and touched by the GC for a result that only ever needs two
+  ints on the stack.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

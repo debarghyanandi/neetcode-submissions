@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Kadane's algorithm, rolling max   [kadane-max-subarray]
+// -  Kadane's algorithm, space-optimized   [kadane-constant-space]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  single pass keeping a running sum reset to 0 when negative, tracking
-// -  the max with O(1) extra state
+// -  Single pass tracks running sum and resets when negative; updates
+// -  maximum in one pass.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -33,82 +33,81 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Kadane - drop a negative running sum, keep the best
+ PATTERN : Kadane's Algorithm - drop a negative running sum
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  maxSum      best subarray sum seen so far over the whole array
+  currentSum  best sum of a subarray that ends at the element just added
 WHY THIS PATTERN
-  The subarray must be contiguous, so at every index there is exactly one
-  decision: extend the subarray that ended at the previous index, or start a new
-  one here. One decision bit means one number of carried state (currentSum), and
-  the whole search collapses into a single pass. The moment a problem says
-  "contiguous" and asks for a max/min over all such ranges, look for this shape
-  before reaching for anything fancier.
+  The problem asks for the largest sum over contiguous elements, so every
+  candidate subarray is fixed by its right end. That lets you scan once and keep
+  only one number per right end: currentSum, the best sum ending here. The
+  recurrence is local - the best subarray ending at this element is either this
+  element alone or this element glued to the best one ending just before it - so
+  no array of past states is needed, only maxSum as the running answer.
 BRUTE FORCE
-  Fix each start i, walk j forward keeping a running total, record the best:
-  O(n^2). Recomputing each sum from scratch makes it O(n^3).
-
-  The prefix-sum reframing is worth remembering because it links this to a whole
-  family: with P[k] = sum of the first k elements, the answer is max over j > i
-  of P[j] - P[i], so you sweep j and keep the smallest prefix seen so far. That
-  is the same algorithm as this file wearing different clothes - "smallest
-  prefix so far" and "reset currentSum when it goes negative" are the same
-  quantity. It is also literally the best-time-to-buy-and-sell-stock sweep.
+  The first thing most people write is two nested loops: for every start index,
+  extend the end index and keep a running total, taking the max. That is O(n^2)
+  time and correct, but it recomputes the same prefix sums again and again.
+  Kadane's keeps the single fact those loops rediscover - that a negative prefix
+  is never worth carrying - and collapses the inner loop away.
 INVARIANT
-  Write best(i) for the largest sum of a subarray ending exactly at index i.
-
-  After the line currentSum += number executes on the iteration for index i,
-  currentSum == best(i). After the Math.Max line, maxSum == the best over all
-  subarrays ending at any index <= i. The return is that statement at i = n-1.
-
-  Note what the declaration comment on currentSum does and does not claim: it
-  describes the post-add state. At declaration time the 0 is not a subarray sum
-  at all, it is a stand-in for the empty prefix, which is why nothing reads it
-  before the first += runs.
-WHY DROPPING THE PREFIX IS SAFE
-  The recurrence is best(i) = nums[i] + max(best(i-1), 0), and the clamp is a
-  direct encoding of that max.
-
-  The argument for the max: a subarray ending at i either is nums[i] alone or is
-  some subarray ending at i-1 with nums[i] appended. If best(i-1) < 0, then
-  every subarray ending at i-1 has negative sum, so appending any of them to
-  nums[i] gives strictly less than nums[i] - no optimal subarray ending at i can
-  contain index i-1, and discarding the whole running total loses nothing.
-
-  The part people skip: discarding also cannot lose a global candidate, because
-  maxSum already absorbed best(i-1) on the previous iteration, before the clamp
-  had a chance to zero it. Every best(i) is compared into maxSum exactly once,
-  in the iteration that computes it.
+  After the body runs for element number, currentSum equals the maximum sum of
+  any subarray whose last element is number, and maxSum equals the maximum over
+  all subarrays that end at or before it. The reset `if (currentSum < 0)
+  currentSum = 0;` preserves the first half: if the best sum ending before this
+  element was negative, starting fresh at this element beats extending. Since
+  every subarray has exactly one last element, and maxSum is updated at every
+  element, the final maxSum has seen every candidate.
+WHY MAXSUM STARTS AT NUMS[0] AND NOT 0
+  Initialising maxSum to 0 would silently allow the empty subarray and return 0
+  for input like [-3, -1, -5], where the true answer is -1. Seeding with nums[0]
+  guarantees the answer is the sum of at least one real element. The reset only
+  zeroes currentSum, never maxSum, so an all-negative array still ends with the
+  largest single element: each iteration sets currentSum to that element alone,
+  and maxSum keeps the biggest.
 WATCH OUT
-  maxSum is seeded with nums[0], not 0, and that is the entire correctness story
-  for all-negative input. Seed it with 0 and [-3,-1,-2] returns 0 - the sum of
-  the empty subarray, which the problem does not allow - instead of -1.
-  currentSum can safely start at 0 because the clamp-then-add pair rebuilds it
-  into a real value before any comparison happens.
-
-  Reading nums[0] means an empty array throws IndexOutOfRangeException; the
-  problem guarantees length >= 1, so this is a deliberate precondition, not an
-  oversight. Say so if asked rather than adding a guard reflexively.
-
-  nums[0] is touched twice - once as the seed, once on the first iteration -
-  which is harmless only because Math.Max is idempotent.
-FOLLOW-UPS AN INTERVIEWER WILL ASK
-  1. Return the indices, not the sum. Keep a candidate start: when the clamp
-  fires on index i, the next subarray begins at i. Commit start and i into the
-  answer pair only when maxSum actually improves - not when currentSum improves.
-
-  2. Circular array. Answer is max(Kadane(nums), total - MinKadane(nums)), with
-  the special case that when every element is negative the wraparound branch
-  corresponds to removing everything, so return the plain Kadane result.
-
-  3. "Any other approach?" Divide and conquer: best in left half, best in right
-  half, best crossing the midpoint, O(n log n). It is strictly worse here but is
-  the expected answer to that prompt.
-
-  4. Maximum product subarray. The clamp trick does not transfer - a negative
-  factor swaps largest and smallest, so you must carry both a running max and a
-  running min.
+  The first line reads nums[0] with no guard, so an empty array throws
+  IndexOutOfRangeException and a null nums throws NullReferenceException.
+  currentSum and maxSum are int, so a long array of large values can overflow
+  and wrap to a negative sum without any error - a long accumulator would be the
+  safe change. The reset sits before the add, which is what makes the invariant
+  hold at the top of each step; moving it after `currentSum += number` still
+  works only because maxSum is taken before the reset, so do not reorder these
+  three lines casually.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return the start and end indices of the best subarray, not just the sum.
+     Track a candidate start that is set to the current index whenever
+     currentSum is reset to 0, and copy it plus the current index into
+     bestStart/bestEnd only when maxSum is updated. That needs the index, so the
+     foreach becomes a plain for loop.
+  2. What if the array is circular, so a subarray may wrap from the end to the
+  front?
+     Run this scan twice - once for the maximum sum, once for the minimum sum -
+     and compare maxSum against totalSum - minSum. Special case: if every
+     element is negative, minSum equals the total and the wrap answer is an
+     empty subarray, so return maxSum.
+  3. The array does not fit in memory and arrives as a stream.
+     This code already works unchanged, because it keeps only two ints and
+     touches each element once; you just need the first element to seed maxSum
+     before the loop starts.
+  4. What changes for maximum product of a contiguous subarray?
+     A single running value is not enough, because a negative times a negative
+     can become the largest product. You carry both the running max and the
+     running min ending here and swap them when the element is negative.
+TRIGGER
+  A question asks for the best contiguous run in a one-dimensional array and the
+  quantity is additive, so each element only needs to know the best run ending
+  at its neighbour.
+C# NOTE
+  Math.Max(int, int) is a plain non-generic overload here, so there is no
+  comparer or boxing involved; the idiomatic hardening is a guard such as `if
+  (nums is null or { Length: 0 }) throw new ArgumentException(nameof(nums));`
+  before the nums[0] read, using C# pattern matching instead of two separate if
+  statements.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)
