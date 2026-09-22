@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">14</span> / 66</b></div>
-      <div class="bar"><span id="bar" style="width:21.2%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">20</span> / 66</b></div>
+      <div class="bar"><span id="bar" style="width:30.3%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -762,68 +762,68 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Graphs">
   <div class="group-head">
     <h2>Graphs</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>6</b> at standard</span>
+    <span class="group-count"><b class="gdone">6</b> / <b>6</b> at standard</span>
   </div>
   <p class="group-note">Nodes and edges — the traversal is the same, the bookkeeping is the problem.</p>
   <ul>
-    <li data-hay="clone graph clone-graph graphs dfs + hash map memo - register the clone before recursing graph hash-map call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="clone graph clone-graph graphs dfs with visited-map - clone graph node by node hash-map call-stack graph current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/clone-graph" target="_blank" rel="noopener noreferrer">Clone Graph</a>
-        <span class="why">DFS + hash map memo - register the clone before recursing</span>
+        <span class="why">DFS with visited-map - clone graph node by node</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n + m) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/clone-graph/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/clone-graph/clone-graph-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="count number of islands count-number-of-islands graphs grid flood fill - count dfs launches, not cells matrix call-stack queue needs rebuilt" data-status="rebuild">
+    <li data-hay="count number of islands count-number-of-islands graphs grid dfs flood fill - count connected components matrix call-stack queue current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/count-number-of-islands" target="_blank" rel="noopener noreferrer">Count Number Of Islands</a>
-        <span class="why">Grid flood fill - count DFS launches, not cells</span>
+        <span class="why">Grid DFS flood fill - count connected components</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-number-of-islands/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-number-of-islands/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/count-number-of-islands/count-number-of-islands-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="course schedule course-schedule graphs topological sort - kahn's bfs over indegrees array graph queue call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="course schedule course-schedule graphs topological sort (kahn's bfs) - cycle detection by count array queue call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/course-schedule" target="_blank" rel="noopener noreferrer">Course Schedule</a>
-        <span class="why">Topological Sort - Kahn's BFS over indegrees</span>
+        <span class="why">Topological Sort (Kahn's BFS) - cycle detection by count</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n + m) &middot; O(n + m)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/course-schedule/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/course-schedule/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/course-schedule/course-schedule-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="course schedule ii course-schedule-ii graphs topological sort - kahn's bfs on indeg array queue graph needs rebuilt" data-status="rebuild">
+    <li data-hay="course schedule ii course-schedule-ii graphs topological sort - kahn's bfs on in-degrees array queue graph current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/course-schedule-ii" target="_blank" rel="noopener noreferrer">Course Schedule Ii</a>
-        <span class="why">Topological Sort - Kahn's BFS on inDeg</span>
+        <span class="why">Topological Sort - Kahn's BFS on in-degrees</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n + m) &middot; O(n + m)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/course-schedule-ii/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/course-schedule-ii/course-schedule-ii-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="max area of island max-area-of-island graphs grid dfs flood fill - size of each connected region array matrix call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="max area of island max-area-of-island graphs grid dfs flood fill - largest connected component matrix call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/max-area-of-island" target="_blank" rel="noopener noreferrer">Max Area Of Island</a>
-        <span class="why">Grid DFS Flood Fill - size of each connected region</span>
+        <span class="why">Grid DFS flood fill - largest connected component</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/max-area-of-island/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/max-area-of-island/max-area-of-island-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="rotting fruit rotting-fruit graphs multi-source bfs on a grid - time carried per node array matrix queue needs rebuilt" data-status="rebuild">
+    <li data-hay="rotting fruit rotting-fruit graphs multi-source bfs on a grid - time stored per cell matrix queue array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/rotting-fruit" target="_blank" rel="noopener noreferrer">Rotting Fruit</a>
-        <span class="why">Multi-source BFS on a grid - time carried per node</span>
+        <span class="why">Multi-source BFS on a grid - time stored per cell</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/rotting-fruit/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/rotting-fruit/rotting-fruit-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>

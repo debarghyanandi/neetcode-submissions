@@ -651,65 +651,60 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Course Schedule',
-  note: 'a course can only be crossed off once nothing it still owes is outstanding, so both solutions boil down to noticing exactly that moment - one counts owed edges down to zero, the other catches a course that is still its own ancestor on the call stack',
+  note: 'both versions ask the same question of the same graph - is there a directed cycle among the prerequisites - but from opposite ends: Kahn peels off the courses that have nothing left blocking them and checks that every course eventually gets peeled, while the DFS walks forward and checks that it never steps onto a node that is already on the path it is standing on',
   inputs: [
-    {id:'n', label:'numCourses', value:'5', width:70},
-    {id:'pre', label:'prerequisites (course,prereq; ...)', value:'1,0; 2,0; 3,1; 3,2; 4,3', width:340}
+    {id:'n', label:'numCourses', value:'4', width:90},
+    {id:'edges', label:'prerequisites as course-prereq pairs', value:'1-0,2-0,3-1', width:260}
   ],
   parse(raw){
     const n = Number(String(raw.n).trim());
-    if (!Number.isInteger(n) || n < 1 || n > 8) return {ok:false, msg:'numCourses should be a whole number from 1 to 8 so the graph stays easy to watch.'};
-    const txt = String(raw.pre).trim();
-    const pairs = [];
-    if (txt.length && !/^(none|empty|-)$/i.test(txt)){
-      const parts = txt.split(';').map(s => s.trim()).filter(s => s.length);
-      for (const p of parts){
-        const nums = p.split(',').map(s => s.trim()).filter(s => s.length).map(Number);
-        if (nums.length !== 2 || nums.some(x => !Number.isInteger(x) || x < 0 || x >= n)){
-          return {ok:false, msg:'Each prerequisite is "course,prereq" with both numbers between 0 and ' + (n - 1) + '.'};
-        }
-        pairs.push([nums[0], nums[1]]);
-      }
+    if (!Number.isInteger(n) || n < 2 || n > 6) return {ok:false, msg:'numCourses must be a whole number from 2 to 6 so the whole run stays watchable.'};
+    const parts = String(raw.edges).split(',').map(s => s.trim()).filter(s => s.length);
+    if (!parts.length) return {ok:false, msg:'Give at least one prerequisite pair, e.g. 1-0 meaning "course 1 needs course 0".'};
+    if (parts.length > 6) return {ok:false, msg:'Keep it to 6 pairs or fewer - each edge costs several steps in both versions.'};
+    const edges = [];
+    for (const p of parts){
+      const m = /^(\d+)-(\d+)$/.exec(p);
+      if (!m) return {ok:false, msg:'Each pair looks like course-prereq, e.g. 1-0. Got: ' + p};
+      const a = Number(m[1]), b = Number(m[2]);
+      if (a >= n || b >= n) return {ok:false, msg:'Course ids must be below numCourses (' + n + '). Got: ' + p};
+      edges.push([a, b]);
     }
-    if (pairs.length > 12) return {ok:false, msg:'Keep it to 12 prerequisite pairs or fewer so the whole run stays watchable.'};
-    return {
-      ok:true,
-      value:{n:n, pairs:pairs},
-      normalized:{n:String(n), pre: pairs.map(p => p[0] + ',' + p[1]).join('; ')}
-    };
+    return {ok:true, value:{n: n, edges: edges}, normalized:{n: String(n), edges: edges.map(e => e[0] + '-' + e[1]).join(',')}};
   },
   shuffle(){
-    const n = 3 + Math.floor(Math.random() * 4);
-    const order = Array.from({length:n}, (_, i) => i);
-    for (let i = n - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
-    const pairs = [];
-    for (let idx = 1; idx < n; idx++){
-      if (Math.random() < 0.7){
-        const j = Math.floor(Math.random() * idx);
-        pairs.push([order[idx], order[j]]);
+    const n = 4;
+    for (let tries = 0; tries < 200; tries++){
+      const seen = {}, edges = [];
+      const k = 3 + Math.floor(Math.random() * 2);
+      for (let e = 0; e < k; e++){
+        const a = Math.floor(Math.random() * n), b = Math.floor(Math.random() * n);
+        if (a === b) continue;
+        const key = a + '-' + b;
+        if (seen[key]) continue;
+        seen[key] = 1;
+        edges.push(key);
       }
+      if (edges.length >= 3) return {n: String(n), edges: edges.join(',')};
     }
-    if (Math.random() < 0.35 && n >= 2){
-      const a = Math.floor(Math.random() * n);
-      let b = Math.floor(Math.random() * n);
-      if (b === a) b = (b + 1) % n;
-      pairs.push([a, b]);
-    }
-    return {n:String(n), pre: pairs.map(p => p[0] + ',' + p[1]).join('; ')};
+    return {n:'4', edges:'1-0,2-0,3-1'};
   },
   solutions: [
   {
-    label: 'Kahn’s algorithm - BFS topological sort with an in-degree array',
-    badge: 'O(n + m) time · O(n + m) space · Kahn topological BFS · optimal.cs',
-    blurb: 'Every edge prereq -> course adds one to course’s in-degree. A course only becomes safe to schedule once that count hits zero, so the queue always holds exactly the courses ready right now; dequeuing one drops its neighbours’ counts, and any that reach zero join the back. A course stuck on a cycle never reaches zero, so the final tally falls short of numCourses.',
+    label: 'BFS Kahn topological sort',
+    badge: 'O(n + m) time · O(n + m) space · Kahn\'s algorithm, BFS topological sort · optimal.cs',
+    blurb: 'A course can be taken the moment nothing is still blocking it - that is <code>inDeg == 0</code>. Taking it removes it as a blocker, so its neighbours\' in-degrees drop, and any that hit zero join the queue. A course trapped in a cycle is always blocked by another member of that cycle, so it never reaches zero and never gets counted; <code>topoCnt == numCourses</code> is exactly "no cycle".',
+    shapeOverride: {skip: ['call-stack'], reason: 'nothing recurses here - the frontier of courses that are ready lives explicitly in the queue, so there are no frames to draw.'},
     legend: [
-      {cls:'hot', text:'the course or edge the algorithm is touching this instant'},
-      {cls:'good', text:'in-degree just dropped to zero, freshly queued'},
-      {cls:'done', text:'course dequeued - fully processed'}
+      {cls:'hot', text:'the node just dequeued, or the neighbour being decremented'},
+      {cls:'in-window', text:'sitting in the queue - in-degree is already 0'},
+      {cls:'good', text:'counted into topoCnt'},
+      {cls:'dim', text:'still blocked - in-degree above 0'}
     ],
     code: [
       'public bool CanFinish(int numCourses, int[][] prerequisites)',
       '{',
+      '    //build the adjacency list',
       '    List<int>[] adj = new List<int>[numCourses];',
       '    for (int i = 0; i < numCourses; i++)',
       '    {',
@@ -718,6 +713,7 @@ const PROBLEM = {
       '',
       '    int[] inDeg = new int[numCourses];',
       '',
+      '    //build the graph + indegree',
       '    foreach (int[] pair in prerequisites)',
       '    {',
       '        int course = pair[0];',
@@ -726,27 +722,29 @@ const PROBLEM = {
       '        inDeg[course]++;',
       '    }',
       '',
-      '    Queue<int> queue = new Queue<int>();',
+      '    Queue<int> q = new Queue<int>();',
+      '    //insert all the nodes whose indegree is 0;',
       '    for (int i = 0; i < numCourses; i++)',
       '    {',
       '        if (inDeg[i] == 0)',
       '        {',
-      '            queue.Enqueue(i);',
+      '            q.Enqueue(i);',
       '        }',
       '    }',
       '',
       '    int topoCnt = 0;',
       '',
-      '    while (queue.Count > 0)',
+      '    while (q.Count > 0)',
       '    {',
-      '        int current = queue.Dequeue();',
+      '        int node = q.Dequeue();',
       '        topoCnt++;',
       '',
-      '        foreach (int neighbor in adj[current])',
+      '        //remove this node from its neightbours indegree',
+      '        foreach (int nei in adj[node])',
       '        {',
-      '            inDeg[neighbor]--;',
-      '            if (inDeg[neighbor] == 0)',
-      '                queue.Enqueue(neighbor);',
+      '            inDeg[nei]--;',
+      '            if (inDeg[nei] == 0)',
+      '                q.Enqueue(nei);',
       '        }',
       '    }',
       '',
@@ -754,126 +752,130 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const n = input.n, pairs = input.pairs;
-      const label = (i) => 'course ' + i;
-      const adj = Array.from({length:n}, () => []);
+      const n = input.n, edges = input.edges;
+      const adj = Array.from({length: n}, () => []);
       const inDeg = new Array(n).fill(0);
-      const processed = new Array(n).fill(false);
-      const queuedFlag = new Array(n).fill(false);
-      let queueArr = [];
-      let topoCnt = 0;
-      let builtCount = 0;
+      const done = new Array(n).fill(false);
       const steps = [];
+      let q = [], topoCnt = 0, scanI = null, cur = null, pushes = 0, pops = 0, maxQ = 0;
 
-      const panels = (o) => {
-        o = o || {};
-        return [
-          pChips('adjacency list - prereq unlocks course', adj.map((row, i) => ({
-            left: label(i),
-            right: processed[i] ? 'processed' : (queuedFlag[i] ? 'queued' : ''),
-            items: row.map((c, k) => ({
-              text: String(c),
-              cls: (o.edge && o.edge.from === i && o.edge.k === k) ? 'hot' : '',
-              fresh: !!(o.edge && o.edge.from === i && o.edge.k === k && o.edgeFresh)
-            })),
-            empty: 'nothing unlocked yet'
-          }))),
-          pTiles('in-degree - prerequisites still owed', inDeg, (i, v) => ({
-            cls: i === o.hotIdx ? 'hot' : (processed[i] ? 'done' : (v === 0 && queuedFlag[i] ? 'good' : ''))
+      const panels = (hot, nei, popFront, fresh, ptrs) => [
+        pChips('adjacency list - adj[prereq] holds every course that prereq unlocks', adj.map((list, i) => ({
+          left: 'adj[' + i + ']',
+          items: list.map(v => ({text: String(v), cls: (hot === i ? 'hot' : (nei === v && hot === i ? 'hot' : '')), fresh: fresh === 'e' + i + '-' + v})),
+          empty: 'unlocks nothing'
+        }))),
+        pTiles('inDeg - how many prerequisites each course is still waiting on', inDeg, (i) => {
+          let cls = '';
+          if (i === nei) cls = 'hot';
+          else if (i === hot) cls = 'hot';
+          else if (done[i]) cls = 'good';
+          else if (q.indexOf(i) >= 0) cls = 'in-window';
+          else if (inDeg[i] > 0) cls = 'dim';
+          return {cls: cls, fresh: fresh === 'd' + i};
+        }, ptrs ? {ptrs: ptrs} : undefined),
+        pStack('queue of ready courses - front on the left', [{
+          label: 'q',
+          mode: 'queue',
+          items: q.map((v, k) => ({
+            text: String(v),
+            sub: k === 0 ? 'front' : '',
+            cls: k === 0 ? 'hot' : '',
+            fresh: fresh === 'q' + v,
+            popped: popFront && k === 0
           })),
-          pStack('BFS queue', [{
-            label: 'queue',
-            mode: 'queue',
-            items: queueArr.map((c) => ({ text: label(c), fresh: c === o.freshEnqueue })),
-            empty: 'empty',
-            foot: 'Kahn’s algorithm'
-          }]),
-          pPills('state', [
-            {k:'topoCnt', v: topoCnt},
-            {k:'numCourses', v: n},
-            {k:'queue size', v: queueArr.length},
-            {k:'edges wired', v: builtCount + ' of ' + pairs.length}
-          ])
-        ];
-      };
+          empty: 'empty - nothing is ready',
+          top: 'front - dequeued next',
+          foot: 'back'
+        }]),
+        pPills('state', [
+          {k:'numCourses', v: n},
+          {k:'dequeued', v: cur === null ? '-' : cur},
+          {k:'topoCnt', v: topoCnt, cls:'good'},
+          {k:'queue size', v: q.length},
+          {k:'enqueues', v: pushes},
+          {k:'dequeues', v: pops},
+          {k:'peak queue', v: maxQ}
+        ])
+      ];
 
-      steps.push({lines:[1,3,9,19], msg:'CanFinish treats each prerequisite pair [course, prereq] as a directed edge prereq → course, then asks whether every course can be lined up so every edge points forward. Kahn’s algorithm builds one edge list (adj), one count of unmet prerequisites per course (inDeg), and a queue that always holds the courses ready to schedule right now.', panels: panels({})});
+      steps.push({lines:[4,5,7,10], msg:'Two parallel arrays of length <b>' + n + '</b> are set up. <code>adj</code> gets an empty <code>List&lt;int&gt;</code> per course - C# only allocates the array of references, so each slot must be filled by hand or it stays null. <code>inDeg</code> is zero-filled by the runtime, which is already the right starting value: nobody has been declared a prerequisite of anybody yet.', panels: panels(null, null, false, null, null)});
 
-      steps.push({lines:[3,4,6,7], msg:'Lines 3-7 give every course its own empty List&lt;int&gt; in adj. adj[i] will end up holding every course that lists i as a prerequisite - the edges leaving i.', panels: panels({})});
-
-      steps.push({lines:[9], msg:'Line 9 adds inDeg, one integer per course, all starting at 0. It will count how many prerequisites each course is still waiting on.', panels: panels({})});
-
-      for (let k = 0; k < pairs.length; k++){
-        const course = pairs[k][0], prereq = pairs[k][1];
+      for (const pair of edges){
+        const course = pair[0], prereq = pair[1];
         adj[prereq].push(course);
         inDeg[course]++;
-        builtCount++;
-        steps.push({lines:[13,14,15,16], msg:'Prerequisite pair (' + course + ', ' + prereq + ') means <b>' + label(prereq) + '</b> must be finished before <b>' + label(course) + '</b>. Line 15 records that edge, adj[' + prereq + '].Add(' + course + '), and line 16 raises inDeg[' + course + '] to ' + inDeg[course] + '.', panels: panels({edge:{from:prereq, k: adj[prereq].length - 1}, edgeFresh:true, hotIdx: course})});
+        steps.push({lines:[13,15,16,17,18], msg:'Pair <code>[' + course + ', ' + prereq + ']</code> reads as "course <b>' + course + '</b> needs <b>' + prereq + '</b> first". The edge is stored pointing <em>forwards in time</em>: <code>adj[' + prereq + '].Add(' + course + ')</code>, because finishing ' + prereq + ' is what releases ' + course + '. The same fact is also counted from the other side - <code>inDeg[' + course + ']</code> rises to <b>' + inDeg[course] + '</b>, the number of things still blocking it.', panels: panels(prereq, course, false, 'e' + prereq + '-' + course, null)});
       }
-
-      steps.push({lines:[19], msg:'Line 19 opens an empty queue. Every course whose in-degree is already 0 - nothing left to wait on - is a valid place to start the order, and this queue carries that frontier forward.', panels: panels({})});
 
       for (let i = 0; i < n; i++){
+        scanI = i;
         if (inDeg[i] === 0){
-          queueArr.push(i);
-          queuedFlag[i] = true;
-          steps.push({lines:[22,24], msg:'<b>' + label(i) + '</b> owes nothing - inDeg[' + i + '] is 0 - so line 22’s check passes and line 24 enqueues it.', panels: panels({hotIdx:i, freshEnqueue:i})});
+          q.push(i);
+          pushes++;
+          maxQ = Math.max(maxQ, q.length);
+          steps.push({lines:[23,25,27], msg:'<code>inDeg[' + i + ']</code> is 0, so course <b>' + i + '</b> appears on nobody\'s right-hand side - it has no prerequisites at all and can be taken immediately. It is enqueued as a seed. If this whole loop found nothing, the queue would start empty, the <code>while</code> would never run, and <code>topoCnt</code> would stay 0 - which is the signature of a graph that is one big cycle.', panels: panels(null, null, false, 'q' + i, [{name:'i', idx:i}])});
         } else {
-          steps.push({lines:[22], msg:'<b>' + label(i) + '</b> still owes ' + inDeg[i] + ' prerequisite(s), so line 22’s check fails and it stays out of the queue for now.', panels: panels({hotIdx:i})});
+          steps.push({lines:[23,25], msg:'<code>inDeg[' + i + ']</code> is <b>' + inDeg[i] + '</b>, so course <b>' + i + '</b> is still blocked and cannot be a starting point. It is not enqueued now; it will only join the queue later, if and when the last of its prerequisites is removed.', panels: panels(null, null, false, null, [{name:'i', idx:i}])});
         }
       }
+      scanI = null;
 
-      steps.push({lines:[28], msg:'Line 28 starts topoCnt at 0. Every successful dequeue below raises it by one, and it can only reach numCourses if the whole graph gets processed with no course left stranded.', panels: panels({})});
-
-      while (queueArr.length > 0){
-        const current = queueArr.shift();
-        processed[current] = true;
+      while (q.length){
+        const node = q.shift();
+        cur = node;
+        pops++;
         topoCnt++;
-        steps.push({lines:[32,33], msg:'Line 32 dequeues <b>' + label(current) + '</b> - the queue only ever holds courses with nothing left outstanding - and line 33 raises topoCnt to ' + topoCnt + '.', panels: panels({hotIdx:current})});
+        done[node] = true;
+        steps.push({lines:[33,35,36], msg:'The queue is not empty, so some course is ready. <code>Dequeue</code> takes the front, course <b>' + node + '</b>: every prerequisite it had has already been taken, so it can be scheduled here. <code>topoCnt++</code> makes it <b>' + topoCnt + '</b> - the count of courses that have earned a place in a valid ordering.', panels: panels(node, null, false, null, null)});
 
-        if (adj[current].length === 0){
-          steps.push({lines:[35], msg:'<b>' + label(current) + '</b> unlocks nothing, so line 35’s foreach finds an empty list and moves straight on to the next dequeue.', panels: panels({hotIdx:current})});
-        } else {
-          for (let k = 0; k < adj[current].length; k++){
-            const neighbor = adj[current][k];
-            inDeg[neighbor]--;
-            const enq = inDeg[neighbor] === 0;
-            if (enq){ queueArr.push(neighbor); queuedFlag[neighbor] = true; }
-            steps.push({lines: enq ? [37,38,39] : [37,38], msg:'Line 37 drops inDeg[' + neighbor + '] to ' + inDeg[neighbor] + ' now that ' + label(current) + ' is done. ' + (enq ? 'That was its last unmet prerequisite, so line 39 enqueues <b>' + label(neighbor) + '</b>.' : '<b>' + label(neighbor) + '</b> still owes ' + inDeg[neighbor] + ' more, so it waits.'), panels: panels({edge:{from:current, k:k}, hotIdx:neighbor, freshEnqueue: enq ? neighbor : undefined})});
+        for (const nei of adj[node]){
+          inDeg[nei]--;
+          if (inDeg[nei] === 0){
+            q.push(nei);
+            pushes++;
+            maxQ = Math.max(maxQ, q.length);
+            steps.push({lines:[39,41,42,43], msg:'Course <b>' + node + '</b> unlocks <b>' + nei + '</b>, so <code>inDeg[' + nei + ']--</code> drops it to <b>0</b>. Zero means the last thing blocking ' + nei + ' has just been taken, so it is enqueued. A node is enqueued exactly once - only one decrement can bring a counter to zero - which is why the whole loop is linear in the edges.', panels: panels(node, nei, false, 'q' + nei, null)});
+          } else {
+            steps.push({lines:[39,41,42], msg:'Course <b>' + node + '</b> unlocks <b>' + nei + '</b>, so <code>inDeg[' + nei + ']--</code> takes it to <b>' + inDeg[nei] + '</b>. Still above zero: ' + nei + ' has other prerequisites outstanding, so it stays out of the queue. Whichever of those finishes last will be the one that enqueues it.', panels: panels(node, nei, false, 'd' + nei, null)});
           }
         }
       }
 
-      steps.push({lines:[43], msg:'The queue is empty, so the while loop ends. Line 43 compares topoCnt (' + topoCnt + ') to numCourses (' + n + '): ' + (topoCnt === n ? 'they match - every course eventually shed all its prerequisites, so a valid order exists and CanFinish returns <b>true</b>.' : 'topoCnt falls short - the uncounted courses never reached in-degree 0, which only happens inside a cycle - so CanFinish returns <b>false</b>.'), panels: panels({})});
-
+      cur = null;
+      const ok = topoCnt === n;
+      steps.push({lines:[33,47], msg:'The queue has drained, so no course is ready any more. <code>topoCnt</code> = <b>' + topoCnt + '</b> against <code>numCourses</code> = <b>' + n + '</b>, so <code>' + (ok ? 'true' : 'false') + '</code> is returned. ' + (ok ? 'Every course was peeled off, so a full ordering exists and the graph is acyclic.' : 'The <b>' + (n - topoCnt) + '</b> course(s) never counted are stuck: each is still waiting on another course that is itself waiting, which can only happen inside a directed cycle, so the schedule is impossible.') + ' Across the run there were ' + pushes + ' enqueue(s) and ' + pops + ' dequeue(s).', panels: panels(null, null, false, null, null)});
       return steps;
     }
   },
   {
-    label: 'DFS cycle detection with a live path marker',
-    badge: 'O(n + m) time · O(n + m) space · DFS cycle detection · optimal-variant.cs',
-    blurb: 'A cycle is nothing more than a neighbour that is still an ancestor of the node being explored, so pathVisited marks exactly the courses on today’s active branch and clears them again on the way back out. visited separately remembers which courses were already proven safe, so nothing is ever walked twice.',
+    label: 'DFS cycle detection with path tracking',
+    badge: 'O(n + m) time · O(n + m) space · DFS cycle detection, path-visit tracking · optimal-variant.cs',
+    blurb: 'Two flags, not one. <code>pathVisited</code> marks the nodes on the chain of frames currently open; meeting one of those again means the walk came back to where it stands, which is a cycle. <code>visited</code> marks nodes already finished and proven clean, so they are skipped rather than re-explored - that is what keeps the whole thing linear.',
+    shapeOverride: {skip: ['queue'], reason: 'this version never builds a queue - the frontier rides the call stack instead, so the bucket drawn here is the recursion itself.'},
     legend: [
-      {cls:'hot', text:'the frame running now, and the neighbour it is checking'},
-      {cls:'in-window', text:'callers parked lower on the stack, waiting on this call'},
-      {cls:'good', text:'pathVisited true - this course is on the active branch'},
-      {cls:'done', text:'visited true, pathVisited false - fully explored, proven safe'}
+      {cls:'hot', text:'the node the top frame is standing on'},
+      {cls:'in-window', text:'the neighbour currently being tested'},
+      {cls:'good', text:'true - flag is set'},
+      {cls:'dim', text:'false - flag is clear'}
     ],
     code: [
       'public bool CanFinish(int numCourses, int[][] prerequisites)',
       '{',
+      '    //Dfs Directed cycle graph detection',
       '    List<int>[] adj = new List<int>[numCourses];',
-      '    for (int i = 0; i < numCourses; i++) adj[i] = new List<int>();',
+      '    for (int i = 0; i < numCourses; i++)',
+      '        adj[i] = new List<int>();',
       '',
       '    foreach (var pair in prerequisites)',
       '    {',
       '        int course = pair[0];',
       '        int prereq = pair[1];',
-      '        adj[prereq].Add(course);',
+      '        adj[prereq].Add(course); // prereq must be done before course',
       '    }',
       '',
-      '    bool[] visited = new bool[numCourses];',
-      '    bool[] pathVisited = new bool[numCourses];',
+      '    bool[] visited = new bool[numCourses];     // fully explored, safe forever',
+      "    bool[] pathVisited = new bool[numCourses]; // currently on this DFS's active path",
       '',
       '    for (int i = 0; i < numCourses; i++)',
       '    {',
@@ -886,155 +888,152 @@ const PROBLEM = {
       '    return true;',
       '}',
       '',
-      'private bool HasCycle(int current, List<int>[] adj, bool[] visited, bool[] pathVisited)',
+      'private bool HasCycle(int node, List<int>[] adj, bool[] visited, bool[] pathVisited)',
       '{',
-      '    visited[current] = true;',
-      '    pathVisited[current] = true;',
+      '    visited[node] = true;',
+      "    pathVisited[node] = true; // stepping onto this node's path",
       '',
-      '    foreach (int neighbor in adj[current])',
+      '    foreach (int nei in adj[node])',
       '    {',
-      '        if (pathVisited[neighbor])',
-      '            return true;',
+      '        if (pathVisited[nei])',
+      "            return true; // neighbor is still on OUR current path — that's a cycle",
       '',
-      '        if (!visited[neighbor])',
+      '        if (!visited[nei])',
       '        {',
-      '            if (HasCycle(neighbor, adj, visited, pathVisited))',
+      '            if (HasCycle(nei, adj, visited, pathVisited))',
       '                return true;',
       '        }',
+      '        // if visited[neighbor] is true and pathVisited[neighbor] is false,',
+      '        // it was fully explored elsewhere and proven cycle-free — safe to skip',
       '    }',
       '',
-      '    pathVisited[current] = false;',
+      "    pathVisited[node] = false; // stepping OFF this node's path before returning",
       '    return false;',
       '}'
     ],
     simulate(input){
-      const n = input.n, pairs = input.pairs;
-      const label = (i) => 'course ' + i;
-      const adj = Array.from({length:n}, () => []);
+      const n = input.n, edges = input.edges;
+      const adj = Array.from({length: n}, () => []);
       const visited = new Array(n).fill(false);
       const pathVisited = new Array(n).fill(false);
       const frames = [];
       const steps = [];
-      let uid = 0, maxF = 0, builtCount = 0;
+      let calls = 0, maxD = 0, scanI = null, answer = null;
 
-      const panels = (o) => {
-        o = o || {};
-        return [
-          pChips('adjacency list - prereq unlocks course', adj.map((row, i) => ({
-            left: label(i),
-            right: pathVisited[i] ? 'on path' : (visited[i] ? 'explored' : ''),
-            items: row.map((c, k) => ({
-              text: String(c),
-              cls: (o.edge && o.edge.from === i && o.edge.k === k) ? 'hot' : '',
-              fresh: !!(o.edge && o.edge.from === i && o.edge.k === k && o.edgeFresh)
-            })),
-            empty: 'nothing unlocked yet'
-          }))),
-          pTiles('visited - fully explored at least once', visited.map(v => v ? 'T' : 'F'), (i) => ({
-            cls: i === o.hotIdx ? 'hot' : (visited[i] ? 'done' : '')
+      const panels = (hot, nei, popTop, fresh, ptrs) => [
+        pChips('adjacency list - adj[prereq] holds every course that prereq unlocks', adj.map((list, i) => ({
+          left: 'adj[' + i + ']',
+          items: list.map(v => ({text: String(v), cls: (hot === i && nei === v) ? 'in-window' : '', fresh: fresh === 'e' + i + '-' + v})),
+          empty: 'unlocks nothing'
+        }))),
+        pTiles('visited - fully explored, never entered again', visited.map(b => b ? 'T' : 'F'), (i) => {
+          let cls = b_cls(i);
+          return {cls: cls, fresh: fresh === 'v' + i};
+        }, ptrs ? {ptrs: ptrs} : undefined),
+        pTiles('pathVisited - the nodes on the chain of open frames', pathVisited.map(b => b ? 'T' : 'F'), (i) => {
+          let cls = '';
+          if (i === hot) cls = 'hot';
+          else if (i === nei) cls = 'in-window';
+          else if (pathVisited[i]) cls = 'good';
+          else cls = 'dim';
+          return {cls: cls, fresh: fresh === 'p' + i};
+        }),
+        pStack('call stack', [{
+          label: 'HasCycle(node)',
+          mode: 'stack',
+          items: frames.map((f, k) => ({
+            text: 'HasCycle(' + f.node + ')',
+            sub: f.note,
+            cls: k === frames.length - 1 ? 'hot' : '',
+            fresh: fresh === 'frame',
+            popped: popTop && k === frames.length - 1
           })),
-          pTiles('pathVisited - on the active branch', pathVisited.map(v => v ? 'T' : 'F'), (i) => ({
-            cls: i === o.hotIdx ? 'hot' : (pathVisited[i] ? 'good' : '')
-          })),
-          pStack('call stack', [{
-            label: 'HasCycle(current, ...)',
-            mode: 'stack',
-            items: frames.map((f, idx) => ({
-              text: 'HasCycle(' + f.id + ')',
-              sub: f.k < 0 ? 'just entered - marking visited and pathVisited'
-                 : f.k >= adj[f.id].length ? 'all neighbours checked - stepping off the path'
-                 : 'checking neighbour ' + adj[f.id][f.k] + ' (' + (f.k + 1) + ' of ' + adj[f.id].length + ')',
-              cls: idx === frames.length - 1 ? 'hot' : 'in-window',
-              fresh: f.uid === o.freshFrame,
-              popped: f.uid === o.popFrame
-            })),
-            empty: 'no frames open',
-            foot: 'CanFinish',
-            top: 'running now'
-          }]),
-          pPills('state', [
-            {k:'exploring', v: frames.length ? label(frames[frames.length - 1].id) : (o.done ? 'finished' : 'not started'), cls:'hot'},
-            {k:'deepest stack', v: maxF},
-            {k:'edges wired', v: builtCount + ' of ' + pairs.length}
-          ])
-        ];
-      };
+          empty: 'no frames - HasCycle is not running',
+          top: 'running now',
+          foot: 'CanFinish'
+        }]),
+        pPills('state', [
+          {k:'numCourses', v: n},
+          {k:'scan at', v: scanI === null ? '-' : scanI},
+          {k:'HasCycle calls', v: calls},
+          {k:'frames open', v: frames.length},
+          {k:'deepest', v: maxD},
+          {k:'answer', v: answer === null ? 'pending' : String(answer), cls: answer === null ? '' : 'good'}
+        ])
+      ];
 
-      steps.push({lines:[1,3,13,14,27], msg:'This variant hunts for a cycle directly with a DFS: pathVisited marks every course still on the branch currently being explored, and if a neighbour is found already sitting there, that back-edge is the cycle - no order can ever satisfy it.', panels: panels({})});
-
-      steps.push({lines:[3,4], msg:'Line 3 allocates adj, and line 4’s one-line loop fills each slot with an empty List&lt;int&gt; - the same prereq → course edge list the BFS version uses.', panels: panels({})});
-
-      for (let k = 0; k < pairs.length; k++){
-        const course = pairs[k][0], prereq = pairs[k][1];
-        adj[prereq].push(course);
-        builtCount++;
-        steps.push({lines:[8,9,10], msg:'Pair (' + course + ', ' + prereq + ') is recorded as an edge: adj[' + prereq + '].Add(' + course + ') - <b>' + label(prereq) + '</b> must come before <b>' + label(course) + '</b>.', panels: panels({edge:{from:prereq, k: adj[prereq].length - 1}, edgeFresh:true})});
+      function b_cls(i){
+        if (i === null) return '';
+        return visited[i] ? 'good' : 'dim';
       }
 
-      steps.push({lines:[13,14], msg:'Lines 13-14 add two boolean arrays. visited means “fully explored at least once” and never gets reset. pathVisited means the narrower “on the branch being walked right now” and gets cleared the moment that branch backs out.', panels: panels({})});
+      steps.push({lines:[4,5,6,15,16], msg:'Three arrays of length <b>' + n + '</b>. <code>adj</code> is filled with empty lists. <code>visited</code> and <code>pathVisited</code> are both all false, and the distinction between them is the entire algorithm: <code>visited</code> says "this node has been finished at some point", <code>pathVisited</code> says "this node is on the route I am standing on right now".', panels: panels(null, null, false, null, null)});
 
-      const walk = (node) => {
-        const f = {id: node, k: -1, uid: ++uid};
-        frames.push(f);
-        maxF = Math.max(maxF, frames.length);
+      for (const pair of edges){
+        const course = pair[0], prereq = pair[1];
+        adj[prereq].push(course);
+        steps.push({lines:[8,10,11,12], msg:'Pair <code>[' + course + ', ' + prereq + ']</code> means <b>' + prereq + '</b> must be done before <b>' + course + '</b>, so the edge is stored as <code>adj[' + prereq + '].Add(' + course + ')</code> - it points the way the schedule flows. Unlike the Kahn version there is no in-degree counter here; the direction of the edges is all this version needs.', panels: panels(prereq, course, false, 'e' + prereq + '-' + course, null)});
+      }
+
+      const hasCycle = (node, lead) => {
+        frames.push({node: node, note:'just entered'});
+        calls++;
+        maxD = Math.max(maxD, frames.length);
+        const f = frames[frames.length - 1];
         visited[node] = true;
         pathVisited[node] = true;
-        steps.push({lines:[29,30], msg:'A frame opens for <b>' + label(node) + '</b>. Line 29 marks visited[' + node + '] true for good, and line 30 marks pathVisited[' + node + '] true - it is now on the branch currently being explored.', panels: panels({hotIdx:node, freshFrame:f.uid})});
+        steps.push({lines:[29,31,32], msg: lead + ' <b>HasCycle(' + node + ')</b> opens a frame and immediately sets both flags. <code>visited</code> is permanent; <code>pathVisited</code> is a footprint that will be wiped on the way out, so at any moment the true entries of <code>pathVisited</code> are exactly the nodes named in the frames below.', panels: panels(node, null, false, 'p' + node, null)});
 
-        let cycle = false;
-        if (adj[node].length === 0){
-          steps.push({lines:[32], msg:'<b>' + label(node) + '</b> unlocks nothing, so line 32’s foreach finds an empty list - nothing here can close a cycle.', panels: panels({hotIdx:node})});
-        }
-        for (let k = 0; k < adj[node].length && !cycle; k++){
-          const nb = adj[node][k];
-          f.k = k;
-          steps.push({lines:[34], msg:'Checking neighbour <b>' + label(nb) + '</b> of ' + label(node) + ': is pathVisited[' + nb + '] true? ' + (pathVisited[nb] ? 'It is - ' + label(nb) + ' is an ancestor of ' + label(node) + ' on this very branch.' : 'It is not, so this is not a back-edge onto the current path.'), panels: panels({edge:{from:node, k:k}, hotIdx:nb})});
-          if (pathVisited[nb]){
-            cycle = true;
-            steps.push({lines:[34,35], msg:'<b>' + label(nb) + '</b> is still on the active call chain, so line 35 returns <b>true</b> right here - the back-edge from ' + label(node) + ' to ' + label(nb) + ' is the cycle.', panels: panels({edge:{from:node, k:k}, hotIdx:nb})});
-            break;
+        for (const nei of adj[node]){
+          f.note = 'testing ' + nei;
+          if (pathVisited[nei]){
+            steps.push({lines:[34,36,37], msg:'Neighbour <b>' + nei + '</b> of node ' + node + ' has <code>pathVisited</code> true - it is one of the nodes in the open frames below, so following this edge walks straight back onto the route already being travelled. That is a directed cycle: ' + nei + ' must come before ' + node + ' and, by the chain of frames, ' + node + ' must come before ' + nei + '. <code>true</code> is returned at once.', panels: panels(node, nei, true, null, null)});
+            frames.pop();
+            return true;
           }
-          if (!visited[nb]){
-            steps.push({lines:[37,39], msg:'<b>' + label(nb) + '</b> has never been explored (visited[' + nb + '] is false), so line 39 calls HasCycle(' + nb + ') and this frame waits on it.', panels: panels({edge:{from:node, k:k}, hotIdx:nb})});
-            const child = walk(nb);
-            if (child){
-              cycle = true;
-              steps.push({lines:[39,40], msg:'HasCycle(' + nb + ') came back <b>true</b>, so line 40 returns true from HasCycle(' + node + ') too - the cycle keeps propagating straight up the stack.', panels: panels({hotIdx:node})});
-              break;
-            }
-          } else {
-            steps.push({lines:[37], msg:'<b>' + label(nb) + '</b> was already fully explored elsewhere (visited[' + nb + '] is true) and is not on the current path, so line 37’s check fails - it is proven safe and is not walked again.', panels: panels({edge:{from:node, k:k}, hotIdx:nb})});
+          if (visited[nei]){
+            steps.push({lines:[34,39,44,45], msg:'Neighbour <b>' + nei + '</b> is <code>visited</code> but <em>not</em> <code>pathVisited</code>: some earlier call finished exploring everything reachable from it and returned false, which proved that whole region cycle-free. Re-walking it could not find anything new, so the <code>if (!visited[nei])</code> guard skips it. This is what keeps each edge to one look and the run to O(n + m).', panels: panels(node, nei, false, null, null)});
+            continue;
           }
+          f.note = 'waiting on ' + nei;
+          hasCycleResult = hasCycle(nei, 'Neighbour <b>' + nei + '</b> is neither on the current path nor finished, so line 41 recurses into it.');
+          if (hasCycleResult){
+            steps.push({lines:[41,42], msg:'The recursive call on <b>' + nei + '</b> came back true, so a cycle exists somewhere below. <code>HasCycle(' + node + ')</code> returns true straight away - note it does <em>not</em> reach line 48, so <code>pathVisited</code> is never cleared on the way out. That is harmless: the answer is already decided and every frame is about to unwind.', panels: panels(node, nei, true, null, null)});
+            frames.pop();
+            return true;
+          }
+          f.note = 'back from ' + nei;
         }
 
-        if (!cycle){
-          pathVisited[node] = false;
-          steps.push({lines:[44,45], msg: label(node) + ' has no more neighbours to check, so line 44 clears pathVisited[' + node + '] - it steps off the branch on the way out - and line 45 returns <b>false</b>.', panels: panels({hotIdx:node, popFrame:f.uid})});
-        } else {
-          steps.push({lines:[35,40], msg: label(node) + ' unwinds with the cycle still true. Because the return happens from inside the neighbour loop, line 44 never runs on this branch, so pathVisited[' + node + '] is left exactly as it was.', panels: panels({hotIdx:node, popFrame:f.uid})});
-        }
+        pathVisited[node] = false;
+        steps.push({lines:[46,48,49], msg:'Every neighbour of <b>' + node + '</b> has been examined and none led to a cycle, so the frame is leaving. <code>pathVisited[' + node + '] = false</code> steps off the path - essential, because a later branch may legitimately reach ' + node + ' again by a different route without that being a cycle. <code>visited</code> stays true, so that later branch will skip it instead of re-exploring.', panels: panels(node, null, true, 'p' + node, null)});
         frames.pop();
-        return cycle;
+        return false;
       };
+      let hasCycleResult = false;
 
-      let cycleFound = false;
-      for (let i = 0; i < n && !cycleFound; i++){
+      let bailed = false;
+      for (let i = 0; i < n && !bailed; i++){
+        scanI = i;
         if (visited[i]){
-          steps.push({lines:[18], msg:'<b>' + label(i) + '</b> is already visited from an earlier call, so line 18’s check is false and the outer loop moves on without walking it again.', panels: panels({hotIdx:i})});
+          steps.push({lines:[18,20], msg:'Scan reaches course <b>' + i + '</b>, but <code>visited[' + i + ']</code> is already true - an earlier DFS reached it and finished it. Starting again would repeat work and could not discover a cycle the first walk missed, so it is skipped.', panels: panels(null, null, false, null, [{name:'i', idx:i}])});
           continue;
         }
-        steps.push({lines:[18,20], msg:'<b>' + label(i) + '</b> has not been visited yet, so line 20 starts a fresh DFS from it.', panels: panels({hotIdx:i})});
-        const found = walk(i);
-        if (found){
-          cycleFound = true;
-          steps.push({lines:[20,21], msg:'HasCycle(' + i + ') returned true, so line 21 returns <b>false</b> immediately - a cycle anywhere means the whole set of courses can never be finished.', panels: panels({})});
+        steps.push({lines:[18,20,22], msg:'Scan reaches course <b>' + i + '</b> and it is unvisited. The graph need not be connected, so the outer loop has to try every node as a root; otherwise a cycle sitting in a component that nothing points into from the rest would go unseen. <code>HasCycle(' + i + ', ...)</code> is launched.', panels: panels(null, null, false, null, [{name:'i', idx:i}])});
+        if (hasCycle(i, 'Line 22 in the scan started this walk.')){
+          answer = false;
+          bailed = true;
+          steps.push({lines:[22,23], msg:'<code>HasCycle</code> returned true, so <code>CanFinish</code> returns <code>false</code> on line 23 without looking at the remaining courses. One cycle anywhere is enough to make the whole schedule impossible, so there is nothing left worth checking.', panels: panels(null, null, false, null, null)});
+        } else {
+          steps.push({lines:[22,24], msg:'<code>HasCycle(' + i + ')</code> returned false: the entire region reachable from course ' + i + ' has been explored and every one of those nodes is now marked <code>visited</code> with <code>pathVisited</code> cleared again. The scan moves on.', panels: panels(null, null, false, null, [{name:'i', idx:i}])});
         }
       }
 
-      if (!cycleFound){
-        steps.push({lines:[24], msg:'Every course was explored without ever finding a back-edge onto its own active branch, so line 24 returns <b>true</b>: the prerequisite graph is a DAG and some valid order exists.', panels: panels({done:true})});
+      scanI = null;
+      if (!bailed){
+        answer = true;
+        steps.push({lines:[26], msg:'The scan finished without any call reporting a cycle, so every course is reachable-from-nothing-that-loops and <code>true</code> is returned. <code>HasCycle</code> ran ' + calls + ' time(s) - once per course, never more, because of the <code>visited</code> mark - and the stack peaked at ' + maxD + ' frame(s), which is the O(n) space in the worst case of one long chain.', panels: panels(null, null, false, null, null)});
       }
-
       return steps;
     }
   }]

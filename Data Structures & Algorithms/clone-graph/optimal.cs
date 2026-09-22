@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(n) space
-// -  DFS with hash map memoization of cloned nodes   [dfs-hashmap-clone]
+// -  DFS with memoization   [dfs-memoization-clone]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Recursive DFS visits each node once and each edge once, using a
-// -  Dictionary to map originals to clones and avoid recloning
+// -  Each node and edge is visited exactly once; memoization prevents
+// -  reprocessing via the dictionary.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -36,85 +36,71 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : DFS + hash map memo - register the clone before recursing
+ PATTERN : DFS with visited-map - clone graph node by node
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  map     map[original node] = its clone; also serves as the visited set
+  copy    the new Node holding node.val, filled with cloned neighbors
 WHY THIS PATTERN
-  A graph clone is not a tree copy: the same neighbor can be reached from
-  several places, and edges can cycle back. Plain recursion over node.neighbors
-  would either never terminate or would produce a fresh copy of a node each time
-  it is reached, giving you a tree-shaped blowup instead of the same graph. The
-  fix is one memo table, visited, keyed by the ORIGINAL node and holding the
-  clone. That single table solves both problems at once, which is why no
-  separate seen-set appears anywhere in the file.
-THE ONE INVARIANT
-  visited[node] = copy executes BEFORE the foreach over node.neighbors, not
-  after it.
-
-  That ordering is the whole algorithm. When the recursion walks an edge that
-  leads back to a node already on the call stack, the ContainsKey guard at the
-  top of Dfs fires and hands back the partially built copy - a Node whose val is
-  set but whose neighbors list is still being filled. That is fine: the caller
-  only needs the reference, and by the time the outermost call returns, every
-  list has been completed by its owning frame.
-
-  Move visited[node] = copy to just before the return and the two-node cycle 1
-  <-> 2 recurses forever.
-WHY A MAP AND NOT A SET
-  An interviewer will ask why a HashSet<Node> is not enough. A set answers "have
-  I been here", but on revisit you still need the specific clone object to
-  append to copy.neighbors. Dictionary<Node, Node> answers "have I been here"
-  and "which copy is yours" in one lookup, and it is what preserves object
-  identity: two different originals that share a neighbor produce two clone
-  lists pointing at the SAME clone instance, exactly mirroring the input.
-CORRECTNESS ARGUMENT
-  1. Every node is copied at most once: the only call to new Node(...) is
-  immediately followed by the map write, and no later call to Dfs on that same
-  node can get past ContainsKey.
-  2. Every reachable node is copied at least once: Dfs is invoked on the entry
-  node and then on every element of every neighbors list of a copied node, so
-  the recursion covers the reachable set.
-  3. Every edge is reproduced: the foreach body appends one element to
-  copy.neighbors for each element of node.neighbors, in order, so the adjacency
-  list of the copy is a positionally faithful image of the original.
-  4. No original object leaks into the result: the only Node handed back is
-  either null, a map value (itself created by new Node), or the freshly made
-  copy.
-WHAT THE CODE ASSUMES
-  copy.neighbors.Add(...) is called without ever allocating a list, so it
-  depends on the Node constructor initializing neighbors to an empty list. If
-  you rewrite this from scratch with your own Node class, that is the line that
-  will NullReference on you.
-
-  The Dictionary uses Node's default equality, which for a class without an
-  Equals/GetHashCode override is reference equality. That is the behavior you
-  want here - it is identity, not value, that distinguishes graph nodes - and it
-  means the solution does not rely on the problem's promise that val is unique.
+  The problem gives a connected undirected graph with cycles and asks for a deep
+  copy. A plain traversal would loop forever on a cycle, and a plain copy would
+  duplicate the same node twice when two neighbors point at it. Putting copy
+  into map before the neighbor loop makes map do both jobs: it marks node as
+  seen, and it hands back the one clone that every other edge must reuse.
+BRUTE FORCE
+  The first idea is usually two passes: walk the graph once to collect all nodes
+  and make a bare clone for each, then walk again to wire the neighbor lists.
+  That is also O(n + m) but needs two traversals and its own visited set in
+  each. This single DFS does the same work in one pass, so the two-pass version
+  only loses on code size and clarity, not on order of growth.
+INVARIANT
+  At every entry to Dfs, map holds a clone for each node already visited, and
+  any node in map has had its own neighbors either fully wired or is an ancestor
+  currently being wired. Because copy is inserted into map on the line before
+  the foreach, a cycle that comes back to node finds it in map and returns the
+  same object instead of recursing again. So each original node is created
+  exactly once and each edge is appended exactly once, which makes the clone
+  structurally identical.
 WATCH OUT
-  The null check lives inside Dfs, not in CloneGraph, so it covers both an
-  empty-graph input and any null appearing inside a neighbors list. CloneGraph
-  itself is a one-line trampoline that exists only to allocate visited.
-
-  ContainsKey followed by visited[node] hashes the same key twice;
-  TryGetValue(node, out var existing) does it in one probe. Behaviorally
-  identical, worth saying out loud if asked to tighten the code.
-
-  Recursion depth grows with the longest simple path, so a many-node chain can
-  overflow the stack. The standard rewrite is BFS: create the clone of the entry
-  node, seed visited and a Queue<Node>, then for each dequeued original, create
-  clones of any unseen neighbors and append their clones to the dequeued node's
-  copy. Same work, same table, explicit queue instead of the call stack.
+  The recursion depth follows the longest DFS path, so a long chain graph can
+  overflow the stack. The code assumes node.neighbors is never null and that the
+  Node constructor gives copy an empty, non-null neighbors list; if a Node(int)
+  constructor left neighbors null, copy.neighbors.Add throws. map uses the
+  default reference equality of Node, which is what we want here - if Node ever
+  got a custom Equals or GetHashCode based on val, two different nodes with the
+  same val would collide and the clone would be wrong. The node == null check
+  returns null for an empty graph, which is correct, but it also silently
+  returns null for a null neighbor entry instead of failing loudly.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How would you remove recursion?
+     Use an explicit Stack or Queue of original nodes. Create and map the clone
+     when you first push a node, then on pop iterate its neighbors: map the
+     unseen ones, push them, and append map[n] to the clone's neighbor list.
+     Same time, same map, but stack depth is now heap memory you control.
+  2. The graph is disconnected - does this still work?
+     No. This starts from one node and only reaches its component. You would
+     need the full node list and a loop calling Dfs on each unmapped node,
+     returning a list of clone roots instead of one.
+  3. The nodes carry extra mutable payload, like a list of tags?
+     map still handles identity, but each field must be copied by value, not by
+     reference - new Node(node.val) copies the int fine, while a shared List
+     would leave the clone aliased to the original.
+  4. How do you verify the clone is right?
+     Traverse both graphs in lockstep with a pair map; check vals match,
+     neighbor counts match, and that no clone node is reference-equal to any
+     original node.
 TRIGGER
-  Reach for this shape whenever you must rebuild a pointer-linked structure that
-  may contain cycles or sharing: copy a linked list with random pointers,
-  deep-copy an object graph, memoized traversal of a state graph. The signature
-  is always map-from-old-to-new plus register-before-you-recurse.
+  A traversal where the same node can be reached by several paths and you must
+  return one object per original - map the node to its result before you
+  recurse.
+C# NOTE
+  ContainsKey followed by map[node] hashes node twice; TryGetValue(node, out var
+  existing) does it in one lookup and is the usual C# idiom here.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n)

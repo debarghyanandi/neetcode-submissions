@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(n + m) space
-// -  Kahn's algorithm, topological sort BFS   [kahn-bfs-topo-sort]
+// -  Kahn's algorithm, BFS topological sort   [kahn-bfs-topological]
 // -  ties with optimal-variant.cs on O(n + m) time / O(n + m) space
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Each course and prerequisite edge processed exactly once; queue stores
-// -  at most all courses with in-degree zero.
+// -  Each node and edge processed exactly once: O(numCourses) nodes +
+// -  O(prerequisites) edges via queue.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -62,82 +62,83 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Topological Sort - Kahn's BFS over indegrees
+ PATTERN : Topological Sort (Kahn's BFS) - cycle detection by count
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  adj       adj[prereq] = list of courses that unlock after prereq
+  inDeg     inDeg[c] = number of prerequisites of c still unfinished
+  q         courses whose prerequisites are all done, ready to take
+  topoCnt   how many courses have been removed from the graph so far
 WHY THIS PATTERN
-  The question "can every course be finished" is the same as "is this directed
-  graph free of cycles". Kahn's algorithm answers that without extra
-  bookkeeping: inDeg[course] counts how many prerequisites are still unfinished,
-  and a course can be taken the moment that count hits 0. If topoCnt reaches
-  numCourses, every node was reachable that way, so no cycle exists.
+  The problem says pair [course, prereq] means prereq must come before course,
+  so the input is a directed graph and the question "can I finish all courses"
+  is really "is this graph free of cycles". Kahn's algorithm peels off nodes
+  that have no remaining prerequisite, which is exactly what "a course you can
+  take right now" means. Any course stuck in a cycle never reaches inDeg 0, so
+  it is never enqueued. Comparing topoCnt to numCourses turns cycle detection
+  into one integer compare.
 BRUTE FORCE
-  The first thing most people write is the same removal idea done naively: scan
-  all numCourses nodes for one with indegree 0, remove it, repeat. That rescan
-  costs O(V) per removal, giving O(V*E), while the queue here hands you the next
-  ready node in O(1). The other common first try is running a fresh DFS from
-  every node to look for a path back to itself, which repeats the same work
-  numCourses times.
+  The first thing most people write is DFS from every course, carrying the
+  current path in a visited set, and returning false if the walk re-enters a
+  node already on the path. Without a second "fully explored" marker that is O(V
+  * (n + m)) because the same subtree is re-walked from every start. It is not
+  wrong, just repeated work; Kahn's touches each edge exactly once instead.
 INVARIANT
-  At every point in the loop, inDeg[v] equals the number of prerequisites of v
-  that have not yet been dequeued, and the queue holds exactly the nodes whose
-  count just reached 0 but which have not been processed. So a node is enqueued
-  at most once, and only after all of its prerequisites were counted out. When
-  the queue drains, any node still holding inDeg > 0 sits on a cycle or depends
-  on one, so topoCnt < numCourses and the answer is false.
-COUNT, NOT A LIST
-  The code never stores the order, only topoCnt. That is enough because the
-  question is yes/no. The follow-up problem, Course Schedule II, is the same
-  loop with an int[] order and a write index in place of topoCnt, returning an
-  empty array when the count falls short.
-DUPLICATE AND SELF EDGES
-  A repeated pair like [1,0] twice adds the edge twice and raises inDeg[1]
-  twice, and the loop decrements it twice, so the result stays correct without
-  deduplicating. A self loop [0,0] sets inDeg[0] to 1 with no other way to lower
-  it, so node 0 never enters the queue and the method correctly returns false.
+  At every point in the while loop, inDeg[x] is the number of prerequisites of x
+  that have not yet been dequeued, and q holds exactly the not-yet-processed
+  courses whose count has hit zero. So a course is enqueued only after all its
+  prerequisites left the queue, which means the dequeue order is a valid course
+  order. When the queue empties, topoCnt counts every course that could ever
+  reach zero; if some course remains, it sits in or behind a cycle, and topoCnt
+  < numCourses.
+EDGE DIRECTION
+  adj[prereq].Add(course) points from the requirement to the thing it unlocks,
+  and inDeg counts on the course side. Flipping this - building
+  adj[course].Add(prereq) while still incrementing inDeg[course] - compiles,
+  runs, and silently answers the reversed problem. The pair is unpacked into
+  named locals course and prereq first, which is the cheap defense against
+  getting pair[0] and pair[1] backwards.
 WATCH OUT
-  The edge direction here is prereq -> course: adj[prereq].Add(course) with
-  inDeg[course]++. Swapping the two consistently still gives the right
-  true/false, because a reversed graph has a cycle exactly when the original
-  does, so that bug hides in this problem and only shows up when you are asked
-  to return the actual order. There is no null or length guard on prerequisites
-  or on pair, so a malformed row would throw. If numCourses is 0, topoCnt is 0
-  and the method returns true, which is the sensible answer but worth saying out
-  loud rather than discovering by accident.
+  The comment says "Bfs Kanhs algo" but the traversal order does not matter
+  here; a Stack would give the same true/false answer, so do not claim the BFS
+  layering is doing work it is not. Duplicate pairs in prerequisites are counted
+  twice in inDeg and appear twice in adj, which still balances out and stays
+  correct, but a self-loop [a, a] makes inDeg[a] = 1 with no other path to
+  decrement it, correctly returning false. The code never validates that course
+  and prereq are inside [0, numCourses), so a bad pair throws
+  IndexOutOfRangeException rather than returning false. Also note the method
+  reports only yes or no; the valid order is computed and then thrown away.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return a valid order of courses instead of a boolean.
-     Push each dequeued node into an int[] of length numCourses and return it
-     when topoCnt == numCourses, otherwise return an empty array. Same cost; you
-     only pay numCourses extra ints for the output.
-  2. Write it with DFS instead of BFS.
-     Use a three-state array (unvisited, on the current path, done) and report a
-     cycle when you re-enter a node that is on the current path. Same
-     complexity, but recursion can overflow the stack on a long prerequisite
-     chain unless you push an explicit Stack<int>.
-  3. What if the graph is dense, close to numCourses squared edges?
-     Adjacency lists still cost O(n + m), but memory grows with m; a
-     bool[numCourses, numCourses] matrix has fixed size yet forces an
-     O(numCourses) scan per dequeue, so the lists stay better unless you need
-     O(1) edge lookups.
-  4. How would you report which courses are stuck in the cycle?
-     After the loop, every i with inDeg[i] > 0 is either on a cycle or
-     downstream of one, so collect those. To name the cycle itself you need a
-     DFS that keeps the current path stack and slices it when it revisits a node
-     on that path.
+  1. Return the actual course order instead of a bool.
+     Append node to a List<int> (or an int[] of size numCourses indexed by
+     topoCnt) inside the while loop, then return it when topoCnt == numCourses
+     and an empty array otherwise. Same time cost, one more array of size n.
+  2. Print which courses are stuck in the cycle.
+     After the loop, scan inDeg and report every index still greater than 0 -
+     those are exactly the courses never released. It costs one extra O(n) pass
+     and no extra memory.
+  3. numCourses is huge and most courses have no prerequisites.
+     List<int>[] allocates n empty List objects up front even for isolated
+     nodes. Switch to a CSR layout: one int[] of edge targets plus an int[] of
+     start offsets built from a counting pass, so the memory is two flat arrays
+     sized n and m.
+  4. Prerequisites arrive one at a time and you must answer after each.
+     Kahn's from scratch per query is O(q * (n + m)). For incremental edge
+     additions, keep the current topological order and only repair the affected
+     window, or detect a cycle by checking reachability from the new edge's head
+     back to its tail.
 TRIGGER
-  When a problem asks whether a set of "must come before" rules can all be
-  satisfied, or asks for a valid order, count indegrees and drain a queue.
+  "A must come before B" pairs plus a question about whether everything can be
+  scheduled, or in what order.
 C# NOTE
-  Because course ids are exactly 0..numCourses-1, List<int>[] indexed directly
-  beats Dictionary<int, List<int>> here - no hashing and no missing-key checks -
-  and the separate loop that fills every adj[i] with a new List<int> is
-  required, since a fresh reference array holds nulls, not empty lists.
+  Queue<int> of a value type avoids boxing and Dequeue is O(1), which is the
+  right pick over List<int> with RemoveAt(0); the int[] inDeg also starts
+  zero-filled by the CLR, so no explicit init loop is needed.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n + m)

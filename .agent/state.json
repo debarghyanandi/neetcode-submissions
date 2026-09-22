@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T20:59:42.352Z",
+  "updatedAt": "2026-09-22T22:08:29.439Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -506,12 +506,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "449bab0fc1fb"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with hash map memoization of cloned nodes\",\"approachKey\":\"dfs-hashmap-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -524,20 +524,22 @@
         "optimal.cs": {
           "time": "O(n + m)",
           "space": "O(n)",
-          "algorithm": "DFS with hash map memoization of cloned nodes",
-          "approachKey": "dfs-hashmap-clone",
+          "algorithm": "DFS with memoization",
+          "approachKey": "dfs-memoization-clone",
           "correct": true,
           "bruteForce": false,
           "structures": [
-            "graph",
             "hash-map",
-            "call-stack"
+            "call-stack",
+            "graph"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -545,11 +547,11 @@
           "optimal.cs": "449bab0fc1fb"
         },
         "structures": [
-          "graph",
           "hash-map",
-          "call-stack"
+          "call-stack",
+          "graph"
         ],
-        "builtAt": "2026-09-12T16:33:50.199Z"
+        "builtAt": "2026-09-22T21:58:10.569Z"
       }
     },
     "coin-change": {
@@ -694,17 +696,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "0970729b3771"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "4a347bbf6332"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"recursive DFS flood fill\",\"approachKey\":\"dfs-recursive-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"BFS flood fill with queue\",\"approachKey\":\"bfs-queue-flood-fill\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -722,8 +724,8 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "recursive DFS flood fill",
-          "approachKey": "dfs-recursive-flood-fill",
+          "algorithm": "Recursive DFS island search",
+          "approachKey": "dfs-grid-islands",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -734,8 +736,8 @@
         "optimal-variant.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "BFS flood fill with queue",
-          "approachKey": "bfs-queue-flood-fill",
+          "algorithm": "Iterative BFS island search",
+          "approachKey": "bfs-grid-islands",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -744,9 +746,12 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -760,7 +765,7 @@
           "call-stack",
           "queue"
         ],
-        "builtAt": "2026-09-12T12:06:44.191Z"
+        "builtAt": "2026-09-22T22:01:28.279Z"
       }
     },
     "course-schedule": {
@@ -782,17 +787,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "af387f4f21d8"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "9b82cd8f682a"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"kahn-bfs-topo-sort\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection with path tracking\",\"approachKey\":\"dfs-cycle-detect\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -810,33 +815,34 @@
         "optimal.cs": {
           "time": "O(n + m)",
           "space": "O(n + m)",
-          "algorithm": "Kahn's algorithm, topological sort BFS",
-          "approachKey": "kahn-bfs-topo-sort",
+          "algorithm": "Kahn's algorithm, BFS topological sort",
+          "approachKey": "kahn-bfs-topological",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "array",
-            "graph",
             "queue"
           ]
         },
         "optimal-variant.cs": {
           "time": "O(n + m)",
           "space": "O(n + m)",
-          "algorithm": "DFS cycle detection with path tracking",
-          "approachKey": "dfs-cycle-detect",
+          "algorithm": "DFS cycle detection, path-visit tracking",
+          "approachKey": "dfs-cycle-detection",
           "correct": true,
           "bruteForce": false,
           "structures": [
             "array",
-            "graph",
             "call-stack"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -847,11 +853,10 @@
         },
         "structures": [
           "array",
-          "graph",
           "queue",
           "call-stack"
         ],
-        "builtAt": "2026-09-16T06:48:49.573Z"
+        "builtAt": "2026-09-22T22:03:43.965Z"
       }
     },
     "course-schedule-ii": {
@@ -870,12 +875,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "d1b9b0a92692"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm topological sort BFS\",\"approachKey\":\"kahn-topological-sort\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -888,8 +893,8 @@
         "optimal.cs": {
           "time": "O(n + m)",
           "space": "O(n + m)",
-          "algorithm": "Kahn's algorithm topological sort BFS",
-          "approachKey": "kahn-topological-sort",
+          "algorithm": "Kahn's algorithm, topological sort BFS",
+          "approachKey": "topological-sort-kahn-bfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -899,9 +904,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -913,7 +920,7 @@
           "queue",
           "graph"
         ],
-        "builtAt": "2026-09-16T06:51:19.630Z"
+        "builtAt": "2026-09-22T22:04:57.647Z"
       }
     },
     "daily-temperatures": {
@@ -3080,12 +3087,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "29b21450bf63"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS flood fill with visited matrix\",\"approachKey\":\"dfs-flood-fill\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3098,20 +3105,21 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "DFS flood fill with visited matrix",
-          "approachKey": "dfs-flood-fill",
+          "algorithm": "DFS island traversal",
+          "approachKey": "dfs-island-area",
           "correct": true,
           "bruteForce": false,
           "structures": [
-            "array",
             "matrix",
             "call-stack"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -3119,11 +3127,10 @@
           "optimal.cs": "29b21450bf63"
         },
         "structures": [
-          "array",
           "matrix",
           "call-stack"
         ],
-        "builtAt": "2026-09-16T05:48:35.496Z"
+        "builtAt": "2026-09-22T22:06:55.359Z"
       }
     },
     "max-water-container": {
@@ -3998,12 +4005,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "80ee9c3253e1"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"80ee9c3253e1\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS level-by-level spread\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"80ee9c3253e1\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS with time tracking\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4016,20 +4023,22 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Multi-source BFS level-by-level spread",
+          "algorithm": "Multi-source BFS with time tracking",
           "approachKey": "multi-source-bfs",
           "correct": true,
           "bruteForce": false,
           "structures": [
-            "array",
             "matrix",
-            "queue"
+            "queue",
+            "array"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"80ee9c3253e1\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS with time tracking\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -4037,11 +4046,11 @@
           "optimal.cs": "80ee9c3253e1"
         },
         "structures": [
-          "array",
           "matrix",
-          "queue"
+          "queue",
+          "array"
         ],
-        "builtAt": "2026-09-16T06:53:58.491Z"
+        "builtAt": "2026-09-22T22:08:29.438Z"
       }
     },
     "same-binary-tree": {

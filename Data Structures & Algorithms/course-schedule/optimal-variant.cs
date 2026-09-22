@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n + m) time / O(n + m) space
-// -  DFS cycle detection with path tracking   [dfs-cycle-detect]
+// -  DFS cycle detection, path-visit tracking   [dfs-cycle-detection]
 // -  ties with optimal.cs on O(n + m) time / O(n + m) space
 // -
-// -  Reference solution - not one you solved yourself (from submission-3)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Each node visited once and each edge traversed once; recursion depth
-// -  is at most the number of courses; two boolean arrays track global
-// -  completion and active path state.
+// -  DFS visits each node and edge once; call stack depth bounded by
+// -  longest dependency chain.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -64,93 +63,83 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Graph cycle detection - DFS with recursion-stack marking
+ PATTERN : DFS Cycle Detection on a Directed Graph (3-color)
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-3.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
+VARIABLES
+  adj          adj[prereq] = list of courses that unlock once prereq is done
+  pair         one [course, prereq] entry from prerequisites
+  visited      visited[v] = v and everything reachable from v is fully explored
+  pathVisited  pathVisited[v] = v is on the DFS call stack right now
 WHY THIS PATTERN
-  "Can you finish all courses" is exactly "is this directed graph free of
-  cycles". Each pair becomes an edge adj[prereq] -> course, so a cycle means a
-  set of courses that each wait on the next forever. DFS with a second flag
-  array pathVisited finds a cycle the moment an edge points back to a node still
-  open on the current recursion path, so one pass over all nodes and edges
-  answers the question.
+  The problem gives pairs "course needs prereq", which is exactly a directed
+  edge, and asks whether every course can be finished. That is possible if and
+  only if the graph has no directed cycle, because a cycle means each course in
+  it waits on another one in the same cycle. The DFS walks forward along adj and
+  asks one question: did I come back to a node I am still standing on?
+  pathVisited answers that; visited keeps the walk from repeating work already
+  proven safe.
 BRUTE FORCE
-  The first thing most people write is: for every course i, run a fresh DFS or
-  BFS from i and see if you can walk back to i. That is correct but costs O(n *
-  (n + m)) because the whole graph is re-explored numCourses times, and it
-  throws away the fact that a node proven cycle-free stays cycle-free. The
-  visited array here keeps that fact, which is the whole saving.
+  The first thing most people write is: for each course, run a fresh DFS or BFS
+  and see if it can reach itself. That is one traversal per node, so O(n * (n +
+  m)) time, and it re-walks the same subgraphs over and over. This file keeps
+  the global visited array across all starts, so every edge is followed once.
 INVARIANT
-  At any moment inside HasCycle, pathVisited is true for exactly the nodes on
-  the current recursion stack - the chain from the starting node down to
-  current. visited is true for every node whose DFS has already begun; once
-  HasCycle returns false for a node, that node and everything reachable from it
-  is proven cycle-free. So seeing pathVisited[neighbor] true means the edge
-  current -> neighbor closes a loop back onto the live chain, which is a real
-  cycle; and if the outer loop finishes with no such edge, no cycle exists
-  anywhere.
-WHY SKIPPING A VISITED NODE IS SAFE
-  The usual version of this uses three states (white/gray/black). Here two
-  booleans do the same job: visited true with pathVisited false is the black
-  state. Such a node was fully explored and returned false earlier, so it cannot
-  reach a cycle; re-walking it would only repeat work. That is the comment at
-  the bottom of the foreach, and it is what turns the repeated-search version
-  into a single linear pass.
-RESETTING PATHVISITED ON THE WAY OUT
-  The line pathVisited[current] = false just before returning false is the easy
-  line to forget. Without it, pathVisited would grow into a copy of visited, and
-  a diamond shape such as 0->1, 0->2, 1->3, 2->3 would report a cycle that is
-  not there. The reset is skipped on the early return true paths, but that is
-  harmless since the answer is already decided and the outer loop returns false
-  at once.
+  When HasCycle(node) is running, pathVisited is true for exactly the nodes on
+  the current chain of calls from the loop's start node down to node. So
+  pathVisited[nei] being true means nei is an ancestor of node, and the edge
+  node -> nei closes a real cycle. When HasCycle returns false, node is marked
+  visited and cleared from pathVisited, meaning everything reachable from node
+  was searched and contained no cycle, so any later DFS may skip it safely.
+THE TWO ARRAYS DO DIFFERENT JOBS
+  A single visited array is the classic wrong version here. Hitting an
+  already-visited node is not a cycle by itself, since a node can be reached
+  twice by two separate branches (a diamond shape) with no cycle at all. Only a
+  node still on the active path is proof of a cycle, which is why pathVisited is
+  set on the way in and cleared on the way out, while visited is set once and
+  never cleared.
 WATCH OUT
-  This is recursive, so the depth equals the longest path in the graph. A single
-  chain 0->1->2->...->numCourses-1 gives numCourses nested calls and can
-  overflow the call stack on a deep input. Also note the order inside the
-  foreach: the pathVisited[neighbor] test must come before the
-  !visited[neighbor] test, because a back edge always points at a node that is
-  already visited - swapping the two lines would silently skip every cycle. A
-  self-loop like [1,1] is handled correctly only because pathVisited[current] is
-  set before the neighbor scan starts.
+  The recursion depth is the length of the longest path in the graph. A chain
+  like 0 -> 1 -> 2 -> ... built from a long prerequisites list will recurse that
+  deep and can overflow the stack; an iterative version or Kahn's BFS avoids it.
+  The code assumes every value in pair is in range 0..numCourses-1; a stray
+  value throws IndexOutOfRangeException rather than returning false. Duplicate
+  edges in prerequisites are stored twice in adj, which costs extra traversal
+  work but does not change the answer. A self-loop [x, x] is handled correctly:
+  pathVisited[x] is already true when the loop reads it.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return an actual course order instead of true or false.
-     Push current onto a list right after pathVisited[current] = false, then
-     reverse the list at the end - that is a reverse post-order topological
-     sort. There the direction adj[prereq] -> course matters, while for the
-     yes/no answer it does not, since reversing every edge keeps the same
-     cycles.
-  2. Remove the recursion so a deep graph cannot blow the stack.
-     Either use an explicit Stack<int> plus a per-node index into adj so you
-     know when a node's children are done and pathVisited can be cleared, or
-     switch to Kahn's algorithm: compute in-degrees, queue every node with
-     in-degree 0, and check that the number of popped nodes equals numCourses.
-     Kahn's is iterative by nature and the same cost, but needs an extra
-     indegree array.
-  3. What if the input has duplicate pairs, or numCourses is larger than any
-  course number that appears?
-     Duplicate edges are harmless; visited makes the second copy a cheap skip,
-     so the answer does not change. Isolated courses are covered because the
-     outer loop starts a DFS from every index 0..numCourses-1, not only from
-     nodes named in prerequisites.
-  4. The graph is far too big to keep as one list per node - what changes?
-     Store edges in a compact layout instead: one int array of targets plus an
-     offset array giving each node's slice, built with a counting pass. The
-     algorithm is unchanged; only how adj is stored differs.
+  1. How would you return the actual course order, not just true/false?
+     Push node onto a stack right before pathVisited[node] = false; that gives
+     reverse finish order, which is a valid topological order. Pop the stack
+     into the result array. Same complexity, one extra array of size numCourses.
+  2. How would you do this without recursion?
+     Kahn's algorithm: compute an indegree count per course, put every
+     zero-indegree course in a queue, and pop and decrement. If fewer than
+     numCourses come out, a cycle exists. Same complexity, and no call stack to
+     overflow.
+  3. The graph is huge and mostly sparse, with numCourses very large but few
+  prerequisites. Anything to change?
+     The List<int>[] allocation is one List object per course whether or not it
+     has edges, so the setup loop alone touches numCourses entries. A Dictionary
+     keyed only by nodes that actually appear, or a flat CSR layout (one offsets
+     array plus one edges array), keeps memory near the edge count.
+  4. What if an edge could be dropped to make it finishable, and you had to name
+  which one?
+     Detect the cycle as here but carry the path, then report any edge on it.
+     Deciding whether removing one edge makes the whole graph acyclic in general
+     needs more care, since separate cycles may not share an edge.
 TRIGGER
-  A dependency or ordering question whose answer is just "is it possible" -
-  build the directed graph and look for an edge back into the live DFS path.
+  Dependencies given as ordered pairs plus the question "can all of them be
+  done" or "in what order" - build the directed graph and look for a cycle.
 C# NOTE
-  List<int>[] must be filled in by the first for loop; a fresh array of
-  reference types holds nulls, so dropping that loop gives a
-  NullReferenceException on the first Add. Using two bool[] instead of a
-  HashSet<int> for visited and pathVisited keeps every check a direct index read
-  with no hashing.
+  List<int>[] gives an array of separately allocated lists, so the first loop
+  must fill every slot or adj[prereq].Add throws NullReferenceException - it is
+  not optional setup. foreach over a List<int> uses a struct enumerator, so the
+  inner loop over adj[node] does not allocate per call.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n + m)

@@ -651,225 +651,196 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Clone Graph',
-  note: 'the copy is filed in the map before its neighbours are walked, so a cycle finds a copy waiting instead of building a second one',
+  note: 'the map is filled in before the neighbours are walked, which is the only thing keeping a cycle from looping forever',
   inputs: [
-    {id:'g', label:'adjacency list (node 1; node 2; ...)', value:'2,4; 1,3; 2,4; 1,3', width:340}
+    {id:'g', label:'adjacency list (node 1..n, ; between nodes)', value:'2,4;1,3;2,4;1,3', width:340}
   ],
   parse(raw){
-    const txt = String(raw.g).trim();
-    if (!txt.length) return {ok:false, msg:'Enter one neighbour list per node, e.g. 2,4; 1,3; 2,4; 1,3 - or "none" for an empty graph.'};
-    if (/^(none|empty|null|nil|-)$/i.test(txt)) return {ok:true, value:{n:0, adj:[]}, normalized:{g:'none'}};
-    const parts = txt.split(';').map(s => s.replace(/[\[\]]/g, '').trim());
+    const s = String(raw.g).trim();
+    if (!s.length) return {ok:false, msg:'Enter an adjacency list, e.g. 2,4;1,3;2,4;1,3'};
+    const parts = s.split(';').map(x => x.trim());
     const n = parts.length;
     if (n > 6) return {ok:false, msg:'Keep it to 6 nodes or fewer so the whole run stays watchable.'};
     const adj = [];
-    let edges = 0;
-    for (const p of parts){
-      if (!p.length){ adj.push([]); continue; }
-      const nums = p.split(',').map(s => s.trim()).filter(s => s.length).map(Number);
-      if (nums.some(x => !Number.isInteger(x) || x < 1 || x > n)){
-        return {ok:false, msg:'Neighbours are node numbers between 1 and ' + n + '.'};
-      }
+    for (let i = 0; i < n; i++){
+      if (!parts[i].length){ adj.push([]); continue; }
+      const nums = parseInts(parts[i]);
+      if (!nums) return {ok:false, msg:'Node ' + (i + 1) + ' has a neighbour that is not a number.'};
       const seen = {}, row = [];
       for (const x of nums){
-        if (x === adj.length + 1) continue;
+        if (!Number.isInteger(x) || x < 1 || x > n) return {ok:false, msg:'Neighbours must be node numbers between 1 and ' + n + '.'};
+        if (x === i + 1) return {ok:false, msg:'Node ' + x + ' cannot list itself as a neighbour.'};
         if (seen[x]) continue;
-        seen[x] = 1; row.push(x - 1);
+        seen[x] = 1; row.push(x);
       }
-      adj.push(row); edges += row.length;
+      if (row.length > 4) return {ok:false, msg:'Keep each node to 4 neighbours or fewer.'};
+      adj.push(row);
     }
-    if (edges > 12) return {ok:false, msg:'Keep it to 12 directed edges or fewer so the whole run stays watchable.'};
     return {
       ok:true,
-      value:{n: n, adj: adj},
-      normalized:{g: adj.map(r => r.map(j => j + 1).join(',')).join('; ')}
+      value:{adj: adj},
+      normalized:{g: adj.map(a => a.join(',')).join(';')}
     };
   },
   shuffle(){
     const n = 3 + Math.floor(Math.random() * 3);
     const adj = Array.from({length: n}, () => []);
-    const link = (a, b) => {
-      if (a === b) return;
-      if (adj[a].indexOf(b) >= 0) return;
+    const add = (a, b) => {
+      if (a === b || adj[a].indexOf(b) >= 0) return;
       if (adj[a].length >= 3 || adj[b].length >= 3) return;
       adj[a].push(b); adj[b].push(a);
     };
-    for (let i = 1; i < n; i++) link(i, Math.floor(Math.random() * i));
-    const extra = 1 + Math.floor(Math.random() * 2);
-    for (let k = 0; k < extra; k++) link(Math.floor(Math.random() * n), Math.floor(Math.random() * n));
-    return {g: adj.map(r => r.map(j => j + 1).sort((a, b) => a - b).join(',')).join('; ')};
+    for (let i = 1; i < n; i++) add(i, Math.floor(Math.random() * i));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (Math.random() < 0.35) add(i, j);
+    return {g: adj.map(a => a.map(x => x + 1).sort((p, q) => p - q).join(',')).join(';')};
   },
   solutions: [
   {
-    label: 'DFS with a map from original node to its copy',
-    badge: 'O(n + m) time · O(n) space · DFS + memo map · optimal.cs',
-    blurb: 'A cycle only stops the walk if a node can be recognised as already seen, so the copy goes into the map <em>before</em> the recursion. Every original then maps to exactly one copy: the first visit builds it, every later arrival gets that same object back in O(1), and neighbours are wired copy-to-copy as the calls unwind.',
+    label: 'DFS with a node -> copy map',
+    badge: 'O(n + m) time · O(n) space · DFS + memo · optimal.cs',
+    blurb: 'A graph is a tree that is allowed to come back, so a plain walk would spin round a cycle forever. The fix is the order of two lines: the copy is put in the map <em>before</em> its neighbours are visited, so when the walk returns to a node it finds a finished-or-not copy waiting and returns that instead of recursing. Each node is built once, each edge followed once.',
     legend: [
-      {cls:'hot', text:'the frame running now, and the edge it walks'},
-      {cls:'in-window', text:'callers parked mid-Add, waiting below'},
-      {cls:'good', text:'copy closed: every neighbour wired'},
-      {cls:'done', text:'neighbour already appended to the copy'}
+      {cls:'hot', text:'the call running now'},
+      {cls:'in-window', text:'copied, still wiring its neighbours'},
+      {cls:'good', text:'node fully cloned and returned'},
+      {cls:'dim', text:'map hit: nothing to do'}
     ],
     code: [
       'public Node CloneGraph(Node node)',
       '{',
-      '    Dictionary<Node, Node> visited = new Dictionary<Node, Node>();',
-      '    return Dfs(node, visited);',
+      '    Dictionary<Node, Node> map = new Dictionary<Node, Node>();',
+      '    return Dfs(node, map);',
       '}',
       '',
-      'private Node Dfs(Node node, Dictionary<Node, Node> visited)',
+      'private Node Dfs(Node node, Dictionary<Node, Node> map)',
       '{',
       '    if (node == null)',
       '        return null;',
       '',
-      '    // already cloned? hand back that same copy, do not build a second one',
-      '    if (visited.ContainsKey(node))',
-      '        return visited[node];',
+      '    if (map.ContainsKey(node))',
+      '        return map[node];',
       '',
       '    Node copy = new Node(node.val);',
-      '    visited[node] = copy;   // recorded BEFORE recursing - this is what breaks the cycle',
+      '    map[node] = copy;',
       '',
-      '    foreach (Node neighbor in node.neighbors)',
+      '    foreach (Node n in node.neighbors)',
       '    {',
-      '        copy.neighbors.Add(Dfs(neighbor, visited));',
+      '        copy.neighbors.Add(Dfs(n, map));',
       '    }',
       '    return copy;',
       '}'
     ],
     simulate(input){
-      const n = input.n, adj = input.adj;
-      const label = (i) => 'node ' + (i + 1);
-      const cloned = {}, copies = {}, closed = {}, order = [], frames = [];
-      const totalEdges = adj.reduce((a, r) => a + r.length, 0);
-      let calls = 0, maxF = 0, hits = 0, wired = 0, uid = 0, finished = false;
+      const adj = input.adj;
+      const n = adj.length;
+      const vals = Array.from({length: n}, (_, i) => i + 1);
+      const deg = (v) => adj[v - 1].length;
+
+      const mapObj = {};        // "node v" -> "copy v", in insertion order
+      const copyAdj = {};       // v -> list of neighbour vals wired into copy v
+      const done = {};          // v -> true once Dfs(v) has returned
+      const frames = [];
       const steps = [];
+      let calls = 0, maxF = 0, hits = 0;
 
-      const panels = (o) => {
-        o = o || {};
-        const cur = (o.cur === undefined || o.cur === null) ? null : o.cur;
-        const edge = o.edge || null;
-        return [
-          pChips('input graph - adjacency list', n ? adj.map((nbrs, i) => ({
-            left: label(i),
-            right: cur === i ? 'running'
-                 : closed[i] ? 'copy closed'
-                 : cloned[i] ? 'copy open'
-                 : finished ? 'never reached' : '',
-            items: nbrs.map((j, k) => ({
-              text: String(j + 1),
-              sub: edge && edge.from === i && edge.k === k ? 'walking' : '',
-              cls: edge && edge.from === i && edge.k === k ? 'hot'
-                 : (cloned[i] && k < copies[i].length) ? 'done' : ''
-            })),
-            empty: 'no neighbours'
-          })) : [{left: 'graph', items: [], empty: 'node is null - there is no graph'}]),
-          pChips('the clone - neighbours wired into each copy so far', order.length ? order.map(i => ({
-            left: 'copy ' + (i + 1),
-            right: closed[i] ? 'closed' : 'open',
-            items: copies[i].map((lbl, k) => ({
-              text: String(lbl),
-              sub: 'copy ' + lbl,
-              cls: 'done',
-              fresh: !!(o.freshEdge && o.freshEdge.from === i && o.freshEdge.k === k)
-            })),
-            empty: 'neighbour list still empty'
-          })) : [{left: 'clone', items: [], empty: 'nothing copied yet'}]),
-          pChips('visited - original node to its one copy', [{
-            left: 'key -> value',
-            items: order.map(i => ({
-              text: String(i + 1),
-              sub: 'copy ' + (i + 1),
-              cls: o.hotKey === i ? 'hot' : (closed[i] ? 'good' : ''),
-              fresh: o.freshKey === i
-            })),
-            empty: 'empty - nothing cloned yet'
-          }]),
-          pStack('call stack', [{
-            label: 'Dfs(node, visited)',
-            mode: 'stack',
-            items: frames.map((f, i) => ({
-              text: 'node = ' + (f.id + 1),
-              sub: f.hit ? 'found in visited, returns at once'
-                 : f.k < 0 ? 'copy made, no neighbour walked yet'
-                 : f.k >= adj[f.id].length ? 'all neighbours wired, returning'
-                 : 'Add parked on neighbour ' + (adj[f.id][f.k] + 1),
-              cls: i === frames.length - 1 ? 'hot' : 'in-window',
-              fresh: f.uid === o.freshFrame,
-              popped: f.uid === o.popFrame
-            })),
-            empty: 'no frames open',
-            foot: 'CloneGraph',
-            top: 'running now'
-          }]),
-          pPills('state', [
-            {k:'running', v: cur === null ? (finished ? 'done' : 'not started') : label(cur), cls:'hot'},
-            {k:'frames open', v: frames.length},
-            {k:'deepest stack', v: maxF},
-            {k:'copies made', v: order.length},
-            {k:'edges wired', v: wired + ' of ' + totalEdges},
-            {k:'memo hits', v: hits}
-          ])
-        ];
-      };
+      const panels = (cur, popV, freshFrame, hotKey, freshCopy) => [
+        pChips('graph: node -> neighbors', [{
+          left: 'original',
+          items: vals.map(v => ({
+            text: 'node ' + v,
+            sub: deg(v) ? adj[v - 1].join(' ') : 'none',
+            cls: v === cur ? 'hot'
+              : done[v] ? 'good'
+              : frames.some(f => f.v === v) ? 'in-window' : ''
+          }))
+        }]),
+        pChips('map: original -> copy', [{
+          left: 'Dictionary',
+          items: mapChips(mapObj, hotKey),
+          empty: 'empty'
+        }]),
+        pChips('clone: copy -> neighbors added', [{
+          left: 'new nodes',
+          items: Object.keys(copyAdj).map(k => ({
+            text: 'copy ' + k,
+            sub: copyAdj[k].length ? copyAdj[k].join(' ') : 'none yet',
+            cls: Number(k) === cur ? 'hot' : (done[k] ? 'good' : ''),
+            fresh: Number(k) === freshCopy
+          })),
+          empty: 'no copies yet'
+        }]),
+        pStack('call stack', [{
+          label: 'Dfs(node, map)',
+          mode: 'stack',
+          items: frames.map((f, i) => ({
+            text: 'node = ' + f.v,
+            sub: f.created
+              ? ('wired ' + copyAdj[f.v].length + ' of ' + deg(f.v))
+              : 'checking the map',
+            cls: i === frames.length - 1 ? 'hot' : '',
+            fresh: f.v === freshFrame,
+            popped: f.v === popV && i === frames.length - 1
+          })),
+          empty: 'no frames open',
+          foot: 'CloneGraph',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'running', v: cur ? 'node ' + cur : (done[1] ? 'done' : 'not started'), cls:'hot'},
+          {k:'frames open', v: frames.length},
+          {k:'deepest stack', v: maxF},
+          {k:'Dfs calls', v: calls},
+          {k:'map hits', v: hits},
+          {k:'copies made', v: Object.keys(copyAdj).length, cls: Object.keys(copyAdj).length === n ? 'good' : ''}
+        ])
+      ];
 
-      const callerNote = () => {
-        if (frames.length < 2) return '';
-        const p = frames[frames.length - 2];
-        return ' Its caller, <b>' + label(p.id) + '</b>, is frozen on line 21 with a half-finished <code>Add</code>.';
-      };
+      steps.push({lines:[1,3,4], msg:'<code>CloneGraph</code> owns one thing: an empty dictionary keyed by the <em>original</em> node objects. It is the visited set and the answer table at once - it remembers both that a node was reached and which fresh node stands for it. Then line 4 hands the entry node and that shared map to <code>Dfs</code>. Node 1 is the entry point here; if it were <code>null</code>, line 9 would return <code>null</code> straight away.', panels: panels(null, null, null, null, null)});
 
-      steps.push({lines:[3,4], msg:'<code>CloneGraph</code> builds one <code>Dictionary</code> and passes it into every recursive call, so all frames share a single memo. It maps an <em>original</em> node to <em>its</em> copy, and that is what makes this a clone rather than a new graph that merely looks alike: the second time the walk reaches an original, the very same copy object has to come back out.', panels: panels({})});
-
-      if (!n){
-        finished = true;
-        steps.push({lines:[4,9,10], msg:'There is no graph, so line 4 passes <code>null</code> straight into <code>Dfs</code>. Line 9 catches it and line 10 returns <code>null</code> - the clone of nothing is nothing. This guard only ever fires on this outermost call: inside the loop, line 21 recurses on entries pulled out of a real neighbour list, so it never hands <code>Dfs</code> a null.', panels: panels({})});
-        return steps;
-      }
-
-      const walk = (i) => {
-        const f = {id: i, k: -1, hit: false, uid: ++uid};
-        frames.push(f);
+      const walk = (v, fromV) => {
+        frames.push({v: v, created: false});
         calls++;
         maxF = Math.max(maxF, frames.length);
+        const key = 'node ' + v;
+        const cameFrom = fromV ? ' It was reached as a neighbour of <b>' + fromV + '</b>, which is parked on line 20 waiting for a node to add.' : '';
 
-        if (cloned[i]){
-          f.hit = true;
+        if (mapObj[key]){
           hits++;
-          steps.push({lines:[13,14], msg:'A frame opens for <b>' + label(i) + '</b>, and this time line 13 finds it: <code>visited</code> already holds a copy for it. Line 14 hands back that exact object - not a new node, not a second copy, and it does not matter that its neighbour list may still be half-built - then the frame pops without looking at any neighbour. This one line is what keeps the walk from going round the cycle again, and it is what makes the clone share structure the way the original does.' + callerNote(), panels: panels({cur:i, hotKey:i, freshFrame:f.uid, popFrame:f.uid})});
+          steps.push({lines:[12,13], msg:'<code>Dfs</code> opens on <b>node ' + v + '</b>, but line 12 finds it already in the map.' + cameFrom + ' So the walk stops dead here and line 13 returns the existing <b>copy ' + v + '</b> - possibly a copy whose own neighbours are still being filled in further down the stack, and that is fine, because the reference is what the caller needs, not a finished object. Without this branch the cycle would recurse forever.', panels: panels(v, v, v, key, null)});
           frames.pop();
-          return;
+          return v;
         }
 
-        cloned[i] = true;
-        copies[i] = [];
-        order.push(i);
-        steps.push({lines:[9,13,16,17], msg:'A frame opens for <b>' + label(i) + '</b>. It is not <code>null</code> (line 9), and line 13 does not find it in <code>visited</code>, so this is the first time the walk has reached it. Line 16 builds <code>copy ' + (i + 1) + '</code> carrying the value only - its neighbour list starts empty - and line 17 files it in the map <em>before</em> a single neighbour is touched. That ordering is the whole algorithm: any neighbour that loops back here will now find a copy waiting instead of making a second one.' + callerNote(), panels: panels({cur:i, hotKey:i, freshKey:i, freshFrame:f.uid})});
+        steps.push({lines:[7,9,12], msg:'A frame opens for <b>node ' + v + '</b>. It is not <code>null</code>, and line 12 misses: this node has never been seen, so no copy exists yet.' + cameFrom + ' The call falls through to the construction below.', panels: panels(v, null, v, null, null)});
 
-        for (let k = 0; k < adj[i].length; k++){
-          const j = adj[i][k];
-          f.k = k;
-          steps.push({lines:[19,21], msg:'Line 19 pulls neighbour <b>' + label(j) + '</b> off ' + label(i) + '’s list. Line 21 reads as one statement but runs in two halves: the argument <code>Dfs(neighbor, visited)</code> must be evaluated before <code>Add</code> can be called, so the call goes out now and this frame parks holding an <code>Add</code> with nothing to append yet.' + (cloned[j] ? ' <b>' + label(j) + '</b> is already in the map, so the call is about to bounce straight back.' : ' <b>' + label(j) + '</b> has not been seen, so the call will go all the way down.'), panels: panels({cur:i, edge:{from:i, k:k}})});
-          walk(j);
-          copies[i].push(j + 1);
-          wired++;
-          steps.push({lines:[21], msg:'<code>Dfs</code> returned <code>copy ' + (j + 1) + '</code>, so the parked <code>Add</code> on line 21 finally runs and appends it to <code>copy ' + (i + 1) + '</code>’s neighbour list. Look at what got appended: the copy, never the original. Every edge of the clone is drawn between two clones, which is the only reason the finished graph is independent of the one it was built from.', panels: panels({cur:i, edge:{from:i, k:k}, freshEdge:{from:i, k:copies[i].length - 1}})});
+        mapObj[key] = 'copy ' + v;
+        copyAdj[v] = [];
+        frames[frames.length - 1].created = true;
+        steps.push({lines:[15,16], msg:'Line 15 makes <b>copy ' + v + '</b> with the same value and an empty neighbour list, and line 16 records it in the map <em>before</em> a single neighbour is touched. That order is the whole algorithm: any later call that comes back round to node ' + v + ' - including one reached through node ' + v + ' itself - will hit line 12 and take this half-built copy rather than building a second one.', panels: panels(v, null, null, 'node ' + v, v)});
+
+        const nbrs = adj[v - 1];
+        for (let i = 0; i < nbrs.length; i++){
+          const nb = nbrs[i];
+          const got = walk(nb, v);
+          copyAdj[v].push(got);
+          steps.push({lines:[18,20], msg:'<code>Dfs(' + nb + ', map)</code> returned <b>copy ' + nb + '</b>, and line 20 adds it to <code>copy ' + v + '.neighbors</code> - edge ' + (i + 1) + ' of ' + nbrs.length + ' for this node. The clone edge is built from whatever object the map holds, so the two sides of an undirected edge end up pointing at the same pair of copies.', panels: panels(v, null, null, 'node ' + nb, null)});
         }
 
-        f.k = adj[i].length;
-        closed[i] = true;
-        steps.push({lines:[23], msg:'Every entry in ' + label(i) + '’s neighbour list has been walked and appended, so <code>copy ' + (i + 1) + '</code> is finished and line 23 returns it. Nothing here is ever recomputed: the map entry made back on line 17 still points at this same object, so a later arrival gets the completed copy for free.', panels: panels({cur:i, popFrame:f.uid})});
+        done[v] = true;
+        steps.push({lines:[22], msg:'Every neighbour of <b>node ' + v + '</b> has been visited, so <b>copy ' + v + '</b> is complete with neighbours [' + (copyAdj[v].join(', ') || 'none') + ']. Line 22 returns it and the frame pops. Nothing here will be rebuilt: the map entry made back on line 16 guarantees any future arrival is a lookup, not a rebuild.', panels: panels(v, v, null, 'node ' + v, null)});
+
         frames.pop();
+        return v;
       };
 
-      walk(0);
+      walk(1, null);
 
-      finished = true;
-      const unreached = n - order.length;
-      steps.push({lines:[4], msg:'Line 4 returns <code>copy 1</code>, and everything reachable from it is already wired underneath. The run made ' + calls + ' call(s) for ' + order.length + ' node(s) and ' + totalEdges + ' directed edge(s): each node was built exactly once and every later arrival - ' + hits + ' of them - was answered by the map in O(1), which is the O(n + m). The map holds one entry per node and the stack peaked at ' + maxF + ' frame(s), so the space is O(n).' + (unreached ? ' Note that ' + unreached + ' node(s) were never reached: <code>Dfs</code> only walks the component containing the node it was handed, so they are not in the clone at all.' : ''), panels: panels({})});
+      const edges = vals.reduce((s, v) => s + deg(v), 0);
+      steps.push({lines:[4], msg:'The entry copy comes back to line 4 and is the answer: ' + n + ' fresh node(s) mirroring the original, with no original object reachable from them. It took ' + calls + ' call(s) - one per node that built something, plus ' + hits + ' that were pure map hits - so every node was constructed once and every one of the ' + edges + ' directed edge(s) was followed exactly once: O(n + m). The map holds one entry per node and the stack peaked at ' + maxF + ' frame(s), which is the O(n) space.', panels: panels(null, null, null, null, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

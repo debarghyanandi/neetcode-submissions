@@ -651,71 +651,68 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Count Number of Islands',
-  note: 'the answer is not how much land there is, but how many times a flood fill had to be started from scratch',
+  note: 'both versions count the same way - one outer scan over every cell, and one flood per unvisited land cell that swallows the entire island so it can never be counted a second time; the only difference is whether the flood rides the call stack or a queue',
   inputs: [
-    {id:'g', label:'grid (rows of 0/1)', value:'1100,1001,0011', width:300}
+    {id:'grid', label:'grid rows (comma separated, 1 = land)', value:'110,010,001', width:260}
   ],
   parse(raw){
-    const rows = String(raw.g).split(/[^01]+/).filter(s => s.length);
-    if (!rows.length) return {ok:false, msg:'Enter rows of 0 and 1, e.g. 1100,1001,0011'};
-    const C = rows[0].length;
-    if (rows.some(r => r.length !== C)) return {ok:false, msg:'Every row needs the same number of cells.'};
-    if (rows.length > 5 || C > 6) return {ok:false, msg:'Keep it to 5 rows and 6 columns or fewer.'};
-    if (rows.length * C > 24) return {ok:false, msg:'Keep it to 24 cells or fewer so the whole run stays watchable.'};
-    const land = rows.join('').split('').filter(ch => ch === '1').length;
-    if (!land) return {ok:false, msg:'Needs at least one land cell, or there is nothing to walk.'};
-    if (land > 10) return {ok:false, msg:'Keep it to 10 land cells or fewer - every one of them is a visit.'};
-    return {
-      ok:true,
-      value:{grid: rows.map(r => r.split(''))},
-      normalized:{g: rows.join(',')}
-    };
+    const parts = String(raw.grid).split(',').map(s => s.trim());
+    if (parts.length < 2) return {ok:false, msg:'Give at least 2 rows, e.g. 110,010,001'};
+    if (parts.length > 4) return {ok:false, msg:'Keep it to 4 rows or fewer so the whole run stays watchable.'};
+    for (const p of parts){
+      if (!/^[01]+$/.test(p)) return {ok:false, msg:'Each row is 1s and 0s only, e.g. 110'};
+      if (p.length !== parts[0].length) return {ok:false, msg:'Every row must be the same length - grid[0].Length is used as the width of all of them.'};
+    }
+    const cols = parts[0].length;
+    if (cols < 2 || cols > 4) return {ok:false, msg:'Rows must be 2 to 4 characters wide.'};
+    let ones = 0;
+    for (const p of parts){ for (const ch of p){ if (ch === '1') ones++; } }
+    if (!ones) return {ok:false, msg:'Put at least one 1 in the grid, or no flood ever starts.'};
+    if (ones > 6) return {ok:false, msg:'Keep the number of 1s at 6 or fewer - every land cell costs about six steps to flood.'};
+    return {ok:true, value:{grid: parts}, normalized:{grid: parts.join(',')}};
   },
   shuffle(){
     for (let tries = 0; tries < 200; tries++){
       const rows = [];
-      let land = 0;
       for (let r = 0; r < 3; r++){
         let s = '';
-        for (let c = 0; c < 4; c++){
-          const bit = Math.random() < 0.42 ? '1' : '0';
-          if (bit === '1') land++;
-          s += bit;
-        }
+        for (let c = 0; c < 3; c++) s += (Math.random() < 0.45 ? '1' : '0');
         rows.push(s);
       }
-      if (land >= 3 && land <= 7) return {g: rows.join(',')};
+      const ones = rows.join('').split('').filter(ch => ch === '1').length;
+      if (ones >= 3 && ones <= 5) return {grid: rows.join(',')};
     }
-    return {g: '1100,1001,0011'};
+    return {grid: '110,010,001'};
   },
   solutions: [
   {
-    label: 'Recursive DFS flood fill',
-    badge: 'O(m * n) time · O(m * n) space · recursive DFS · optimal.cs',
-    blurb: 'Two nested loops do the counting; the DFS does the erasing. A walk is only ever started from land that <code>visited</code> has not claimed, and that walk marks every cell reachable from it, so an island is entered exactly once - from whichever of its cells the scan meets first. The answer is the number of times a walk had to be started.',
-    shapeOverride: {skip: ['queue'], reason: 'this version has no queue at all - the pending work lives in the C# call stack, which is the bucket drawn on the right.'},
+    label: 'Recursive DFS island search',
+    badge: 'O(m * n) time · O(m * n) space · recursive DFS island search · optimal.cs',
+    blurb: 'The outer loops touch every cell once. A cell that is unvisited land must belong to an island nobody has counted, so <code>cnt++</code> there is safe - provided the <code>Dfs</code> launched from it marks the whole island first. Because <code>vis</code> is set on entry, each cell is flooded at most once, so the whole run is linear in the cells.',
+    shapeOverride: {skip: ['queue'], reason: 'this version has no queue at all - the frontier of the flood lives implicitly in the recursion, so the call-stack panel is the frontier, drawn as the bucket it actually is.'},
     legend: [
-      {cls:'hot', text:'the cell being looked at now'},
-      {cls:'in-window', text:'a Dfs frame is still open on this cell'},
-      {cls:'good', text:'land already claimed by a walk'},
-      {cls:'dim', text:'water - never a seed, never entered'}
+      {cls:'hot', text:'the cell the top frame is standing on'},
+      {cls:'in-window', text:'the neighbour currently being tested'},
+      {cls:'good', text:'vis = 1 - already claimed by some island'},
+      {cls:'dim', text:'water - a 0, never entered'}
     ],
     code: [
       'public int NumIslands(char[][] grid)',
       '{',
+      '    //My solution',
       '    int rows = grid.Length;',
       '    int cols = grid[0].Length;',
       '',
       '    // Visited array',
-      '    int[,] visited = new int[rows, cols];',
+      '    int[,] vis = new int[rows, cols];',
       '    int cnt = 0;',
       '    for (int row = 0; row < rows; row++)',
       '    {',
       '        for (int col = 0; col < cols; col++)',
       '        {',
-      "            if (visited[row, col] == 0 && grid[row][col] == '1')",
+      '            if (vis[row, col] == 0 && grid[row][col] == \'1\')',
       '            {',
-      '                Dfs(row, col, visited, grid);',
+      '                Dfs(row, col, vis, grid);',
       '                cnt++;',
       '            }',
       '        }',
@@ -723,13 +720,13 @@ const PROBLEM = {
       '    return cnt;',
       '}',
       '',
-      'private void Dfs(int row, int col, int[,] visited, char[][] grid)',
+      'private void Dfs(int row, int col, int[,] vis, char[][] grid)',
       '{',
       '    int rows = grid.Length;',
       '    int cols = grid[0].Length;',
       '',
       '    //mark this node visisted',
-      '    visited[row, col] = 1;',
+      '    vis[row, col] = 1;',
       '',
       '    //visit all 6 neighbours',
       '    for (int delRow = -1; delRow <= 1; delRow++)',
@@ -743,143 +740,139 @@ const PROBLEM = {
       '            int nRow = row + delRow;',
       '            int nCol = col + delCol;',
       '',
-      '            //invalid neighbour, land and visited validation',
+      '            //invalid neighbour validation',
+      '            //land validation',
+      '            //visited validation',
       '            if (nRow >= 0 && nRow < rows &&',
       '                nCol >= 0 && nCol < cols &&',
-      '                visited[nRow, nCol] == 0 &&',
-      "                grid[nRow][nCol] == '1')",
+      '                vis[nRow, nCol] == 0 &&',
+      '                grid[nRow][nCol] == \'1\')',
       '            {',
-      '                Dfs(nRow, nCol, visited, grid);',
+      '                Dfs(nRow, nCol, vis, grid);',
       '            }',
       '        }',
       '    }',
       '}'
     ],
     simulate(input){
-      const g = input.grid;
-      const R = g.length, C = g[0].length;
-      const vis = Array.from({length: R}, () => Array(C).fill(0));
-      const isle = Array.from({length: R}, () => Array(C).fill(0));
-      const frames = [], steps = [];
-      let count = 0, calls = 0, maxF = 0, scanTxt = 'not started';
-      const rc = (r, c) => r + ',' + c;
+      const g = input.grid, R = g.length, C = g[0].length;
+      const vis = Array.from({length: R}, () => new Array(C).fill(0));
+      const frames = [];
+      const steps = [];
+      let cnt = 0, calls = 0, maxD = 0, scan = null;
+      const rowLabels = g.map((_, r) => 'r' + r);
+      const colLabels = g[0].split('').map((_, c) => 'c' + c);
+      const dirs = [
+        {dr:-1, dc:0, del:'delRow = -1, delCol = 0', name:'up'},
+        {dr:0, dc:-1, del:'delRow = 0, delCol = -1', name:'left'},
+        {dr:0, dc:1, del:'delRow = 0, delCol = 1', name:'right'},
+        {dr:1, dc:0, del:'delRow = 1, delCol = 0', name:'down'}
+      ];
 
-      const DELTAS = [];
-      for (let dr = -1; dr <= 1; dr++){
-        for (let dc = -1; dc <= 1; dc++){
-          if (Math.abs(dr) !== Math.abs(dc)) DELTAS.push([dr, dc]);
-        }
-      }
-
-      const panels = (cur, popKey, freshKey) => [
-        pGrid('grid', g.map((row, r) => row.map((v, c) => {
+      const panels = (hot, look, popTop, fresh) => [
+        pGrid('grid, with vis painted on top of it', g.map((row, r) => row.split('').map((ch, c) => {
           let cls = '';
-          if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
-          else if (frames.some(f => f.r === r && f.c === c)) cls = 'in-window';
+          if (hot && hot[0] === r && hot[1] === c) cls = 'hot';
+          else if (look && look[0] === r && look[1] === c) cls = 'in-window';
           else if (vis[r][c]) cls = 'good';
-          else if (v === '0') cls = 'dim';
-          return {v: v, cls: cls, sub: isle[r][c] ? 'isl ' + isle[r][c] : ''};
-        })), {
-          rowLabels: g.map((_, r) => 'r' + r),
-          colLabels: g[0].map((_, c) => 'c' + c),
-          scale: 0.9
-        }),
+          else if (ch === '0') cls = 'dim';
+          return {v: ch, cls: cls, sub: vis[r][c] ? 'vis' : '', fresh: fresh === r + ',' + c};
+        })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.9}),
         pStack('call stack', [{
           label: 'Dfs(row, col)',
           mode: 'stack',
-          items: frames.map((f, i) => ({
-            text: 'row, col = ' + rc(f.r, f.c),
+          items: frames.map((f, k) => ({
+            text: 'Dfs(' + f.r + ', ' + f.c + ')',
             sub: f.note,
-            cls: i === frames.length - 1 ? 'hot' : '',
-            fresh: freshKey === rc(f.r, f.c),
-            popped: popKey === rc(f.r, f.c) && i === frames.length - 1
+            cls: k === frames.length - 1 ? 'hot' : '',
+            fresh: fresh === 'frame',
+            popped: popTop && k === frames.length - 1
           })),
-          empty: 'no frames - the scan is between islands',
+          empty: 'no frames - Dfs is not running',
           foot: 'NumIslands',
           top: 'running now'
         }]),
         pPills('state', [
-          {k:'outer scan', v: scanTxt, cls:'hot'},
-          {k:'frames open', v: frames.length},
-          {k:'deepest stack', v: maxF},
+          {k:'scan at', v: scan ? scan[0] + ',' + scan[1] : '-'},
+          {k:'cnt', v: cnt, cls:'good'},
           {k:'Dfs calls', v: calls},
-          {k:'cnt', v: count, cls: count ? 'good' : ''}
+          {k:'frames open', v: frames.length},
+          {k:'deepest', v: maxD}
         ])
       ];
 
-      steps.push({lines:[7,8,9,11], msg:'<code>visited</code> starts as an all-zero array the same shape as the grid, and <code>cnt</code> at 0. The two loops below sweep every cell in reading order, but they are not counting land - they are only looking for a cell that is land <em>and</em> still unclaimed. Each time they find one, they let a walk loose on it, and that walk claims the entire island it belongs to.', panels: panels(null, null, null)});
+      steps.push({lines:[4,5,8,9], msg:'The board is <b>' + R + '</b> x <b>' + C + '</b>. <code>vis</code> is a parallel <code>int[rows, cols]</code> that C# zero-fills, and here those zeros are meaningful: 0 means "no island has claimed this cell yet". <code>cnt</code> starts at 0. Nothing is done to the grid itself - the input is never mutated, all the bookkeeping lives in <code>vis</code>.', panels: panels(null, null, false, null)});
 
-      const dfs = (r, c, via) => {
-        frames.push({r: r, c: c, note: 'entered, neighbours not scanned yet'});
+      const dfs = (r, c, lead) => {
+        frames.push({r: r, c: c, note:'just entered'});
         calls++;
-        maxF = Math.max(maxF, frames.length);
-        vis[r][c] = 1;
-        isle[r][c] = count + 1;
-        const lead = via
-          ? 'Line 49 in the frame for <b>' + via + '</b> found this cell to be unvisited land, so it recursed in and parked.'
-          : 'The scan handed this cell in on line 15 as the seed of a new island.';
-        steps.push({lines:[23,28,29], msg: lead + ' The frame for <b>' + rc(r, c) + '</b> opens and line 29 writes <code>visited[' + r + ', ' + c + '] = 1</code> immediately, before a single neighbour is read. Marking on the way <em>in</em> rather than on the way out is what keeps this finite: the cell it came from is already a 1, so the walk cannot turn round and bounce between two neighbours forever.', panels: panels([r, c], null, rc(r, c))});
-
+        maxD = Math.max(maxD, frames.length);
         const f = frames[frames.length - 1];
-        const log = [];
-        for (const d of DELTAS){
-          const nr = r + d[0], nc = c + d[1];
-          let why = '', ok = false;
-          if (nr < 0 || nr >= R || nc < 0 || nc >= C) why = 'off the grid';
-          else if (vis[nr][nc] === 1) why = 'already visited';
-          else if (g[nr][nc] === '0') why = 'water';
-          else { why = 'unvisited land, recursed'; ok = true; }
-          log.push('(' + d[0] + ',' + d[1] + ') → ' + nr + ',' + nc + ' ' + why);
-          if (ok){
-            f.note = 'parked on line 49, waiting on ' + rc(nr, nc);
-            dfs(nr, nc, rc(r, c));
-            f.note = 'back from ' + rc(nr, nc) + ', resuming the deltas';
+        vis[r][c] = 1;
+        steps.push({lines:[24,30], msg: lead + ' <b>Dfs(' + r + ', ' + c + ')</b> opens a frame and the very first thing it does is <code>vis[' + r + ', ' + c + '] = 1</code>. Marking on the way <em>in</em>, before any neighbour is looked at, is what stops the recursion running back into the cell it just came from and spinning forever.', panels: panels([r, c], null, false, r + ',' + c)});
+
+        for (const d of dirs){
+          const nr = r + d.dr, nc = c + d.dc;
+          const inb = nr >= 0 && nr < R && nc >= 0 && nc < C;
+          const ok = inb && vis[nr][nc] === 0 && g[nr][nc] === '1';
+          f.note = 'testing ' + d.name;
+          if (!ok){
+            let why;
+            if (!inb) why = 'that lands at <b>(' + nr + ', ' + nc + ')</b>, off the board, so the first two bounds tests fail and the <code>if</code> is abandoned before <code>vis</code> or <code>grid</code> are even indexed - the order of the four conditions is what keeps this from throwing.';
+            else if (vis[nr][nc] === 1) why = 'cell <b>(' + nr + ', ' + nc + ')</b> is in bounds but <code>vis</code> there is already 1 - it is part of this same island and has been handled, so recursing would only revisit it.';
+            else why = 'cell <b>(' + nr + ', ' + nc + ')</b> is in bounds and unvisited, but <code>grid</code> holds <code>0</code> there - water. An island only connects through land, so the flood stops at this edge.';
+            steps.push({lines:[38,39,41,42,47,48,49,50], msg:'From <b>(' + r + ', ' + c + ')</b>, the delta pair <code>' + d.del + '</code> is the <b>' + d.name + '</b> neighbour. The two diagonal-ish pairs where <code>Math.Abs(delRow) == Math.Abs(delCol)</code> - including (0,0), the cell itself - are skipped by the <code>continue</code> on line 39, which is how a 3x3 delta loop yields exactly 4 neighbours. Here ' + why, panels: panels([r, c], inb ? [nr, nc] : null, false, null)});
+            continue;
           }
+          f.note = 'waiting on Dfs(' + nr + ', ' + nc + ')';
+          dfs(nr, nc, 'All four conditions passed for the <b>' + d.name + '</b> neighbour of (' + r + ', ' + c + ') - in bounds, <code>vis</code> is 0, <code>grid</code> is <code>1</code> - so line 52 recurses.');
+          f.note = 'back from Dfs(' + nr + ', ' + nc + ')';
         }
-        f.note = 'all four neighbours settled';
-        steps.push({lines:[50,51,52,53], msg:'All nine <code>(delRow, delCol)</code> pairs have now been run for <b>' + rc(r, c) + '</b>. Line 37 threw away the five where <code>Math.Abs(delRow) == Math.Abs(delCol)</code> - the cell itself at (0,0) and the four diagonals, which is exactly why islands touching only at a corner stay separate - leaving these four: ' + log.join(' · ') + '. Nothing reachable is left unclaimed, so the method falls off the end, returns nothing, and the frame pops.', panels: panels([r, c], rc(r, c), null)});
+
+        steps.push({lines:[55,56], msg:'<b>Dfs(' + r + ', ' + c + ')</b> has tried all four neighbours, so the delta loops end and the frame returns nothing - the only thing it produced was the marks it left in <code>vis</code>. The frame pops and control returns to whoever asked for this cell.', panels: panels([r, c], null, true, null)});
         frames.pop();
       };
 
-      for (let r = 0; r < R; r++){
-        for (let c = 0; c < C; c++){
-          scanTxt = rc(r, c);
-          if (g[r][c] === '1' && vis[r][c] === 0){
-            steps.push({lines:[13,15], msg:'The scan arrives at <b>' + rc(r, c) + '</b>. Both halves of line 13 hold: <code>visited</code> is still 0 here and the grid holds land. No walk has ever reached this cell, so it cannot belong to an island counted earlier - it must be the first cell of a new one. Line 15 calls <code>Dfs</code> and the whole outer scan freezes until that walk is finished.', panels: panels([r, c], null, null)});
-            dfs(r, c, null);
-            count++;
-            const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);
-            steps.push({lines:[15,16], msg:'The recursion has unwound all the way back to line 15, which means every cell reachable from <b>' + rc(r, c) + '</b> - all <b>' + size + '</b> of them - now carries a 1 in <code>visited</code>. Only now does line 16 run <code>cnt++</code>, taking it to <b>' + count + '</b>. The increment is per walk started, never per cell: the other ' + (size - 1) + ' cell(s) of this island will be skipped when the scan reaches them.', panels: panels([r, c], null, null)});
-          } else if (g[r][c] === '1'){
-            steps.push({lines:[11,13], msg:'<b>' + rc(r, c) + '</b> is land, but a walk already claimed it for island <b>' + isle[r][c] + '</b>. The first half of the <code>&amp;&amp;</code> on line 13 is false, so the grid is not even read and no new count happens. This is the whole trick: every cell of an island after the first is absorbed by a walk that already ran.', panels: panels([r, c], null, null)});
-          } else {
-            steps.push({lines:[11,13], msg:'<b>' + rc(r, c) + '</b> has never been visited, so the first half of line 13 passes - but <code>grid[' + r + '][' + c + ']</code> is <code>0</code>. Water is never a seed and is never walked into, so <code>visited</code> stays 0 here for the entire run. The scan just steps on.', panels: panels([r, c], null, null)});
+      for (let row = 0; row < R; row++){
+        for (let col = 0; col < C; col++){
+          scan = [row, col];
+          if (g[row][col] === '0'){
+            steps.push({lines:[12,14], msg:'Scan reaches <b>(' + row + ', ' + col + ')</b>. <code>grid[' + row + '][' + col + ']</code> is <code>0</code> - water, so the second half of the <code>if</code> fails and there is nothing to start here. The outer scan never skips a cell; it just declines most of them.', panels: panels([row, col], null, false, null)});
+            continue;
           }
+          if (vis[row][col] === 1){
+            steps.push({lines:[12,14], msg:'Scan reaches <b>(' + row + ', ' + col + ')</b>. It is land, but <code>vis</code> is already 1 - an earlier <code>Dfs</code> reached it while flooding an island that has been counted. The first half of the <code>if</code> fails, so this cell does not create a second island. That single test is the whole correctness argument of the algorithm.', panels: panels([row, col], null, false, null)});
+            continue;
+          }
+          steps.push({lines:[14,16], msg:'Scan reaches <b>(' + row + ', ' + col + ')</b>: land, and <code>vis</code> is 0. No flood has ever touched it, so it cannot belong to an island already counted - it must be the first cell of a new one. <code>Dfs</code> is called to mark every cell reachable from here before <code>cnt</code> is touched.', panels: panels([row, col], null, false, null)});
+          dfs(row, col, 'Line 16 in the scan started this flood.');
+          cnt++;
+          steps.push({lines:[16,17], msg:'The recursion has fully unwound - the call stack is empty again and every cell of that island now carries <code>vis = 1</code>. Only now does <code>cnt++</code> run, making <code>cnt</code> = <b>' + cnt + '</b>. One increment per flood, and a flood consumes an entire connected component, so the count is exactly the number of components.', panels: panels(null, null, false, null)});
         }
       }
 
-      scanTxt = 'finished';
-      steps.push({lines:[19,20], msg:'Both loops have run out and line 20 returns <b>' + count + '</b>. Every one of the ' + (R * C) + ' cells was tested once by the scan, and <code>Dfs</code> ran ' + calls + ' time(s) - once per land cell, never twice, because line 29 marks a cell the instant it is entered. That is the O(m * n) time. The space is the <code>visited</code> array plus the stack, which peaked at ' + maxF + ' frame(s); a single snake-shaped island of land would push that to every cell at once.', panels: panels(null, null, null)});
+      scan = null;
+      steps.push({lines:[21], msg:'Both scan loops are exhausted: all <b>' + (R * C) + '</b> cells were examined, and every land cell is marked. <code>cnt</code> = <b>' + cnt + '</b> is returned. <code>Dfs</code> ran ' + calls + ' time(s) - once per land cell, never more, because of the mark-on-entry - and the stack peaked at ' + maxD + ' frame(s), which is the O(m * n) space in the worst case of a board that is all land.', panels: panels(null, null, false, null)});
       return steps;
     }
   },
   {
-    label: 'BFS flood fill with an explicit queue',
-    badge: 'O(m * n) time · O(m * n) space · BFS · optimal-variant.cs',
-    blurb: 'Same counting rule, different walk: a queue instead of the call stack, so an island is claimed in rings spreading out from the seed rather than down one long arm. The line that matters is marking <code>visited</code> at <em>enqueue</em> time - a cell that two neighbours can both see would otherwise be queued twice and expanded twice.',
-    shapeOverride: {skip: ['call-stack'], reason: 'this version is entirely iterative - the pending work that DFS kept in call frames is held in the queue panel instead.'},
+    label: 'Iterative BFS island search',
+    badge: 'O(m * n) time · O(m * n) space · iterative BFS island search · optimal-variant.cs',
+    blurb: 'Same outer scan and same counting argument; the flood is a queue instead of recursion, so the island is swallowed in rings rather than in one long dive. The detail that matters is marking <code>vis</code> at <em>enqueue</em> time: two cells in one ring can both see the same neighbour, and marking early stops it being queued twice.',
+    shapeOverride: {skip: ['call-stack'], reason: 'nothing recurses here - the frontier that the DFS kept in its frames is held explicitly in the queue, so there are no frames to draw.'},
     legend: [
-      {cls:'hot', text:'the cell just dequeued, being expanded'},
-      {cls:'in-window', text:'marked and sitting in the queue'},
-      {cls:'good', text:'dequeued and finished with'},
-      {cls:'dim', text:'water - never a seed, never enqueued'}
+      {cls:'hot', text:'the cell just dequeued'},
+      {cls:'in-window', text:'the neighbour currently being tested'},
+      {cls:'good', text:'vis = true - marked at enqueue time'},
+      {cls:'dim', text:'water - a 0, never enqueued'}
     ],
     code: [
       'public int NumIslands(char[][] grid)',
       '{',
       '    int rows = grid.Length;',
       '    int cols = grid[0].Length;',
-      '    bool[,] visited = new bool[rows, cols];',
+      '    bool[,] vis = new bool[rows, cols];',
       '    int cnt = 0;',
       '',
       '    int[] dRow = { -1, 1, 0, 0 };',
@@ -889,12 +882,12 @@ const PROBLEM = {
       '    {',
       '        for (int col = 0; col < cols; col++)',
       '        {',
-      "            if (!visited[row, col] && grid[row][col] == '1')",
+      '            if (!vis[row, col] && grid[row][col] == \'1\')',
       '            {',
       '                cnt++;',
       '                Queue<(int, int)> queue = new();',
       '                queue.Enqueue((row, col));',
-      '                visited[row, col] = true; // mark when ENQUEUED',
+      '                vis[row, col] = true; // mark visited when ENQUEUED, not when dequeued',
       '',
       '                while (queue.Count > 0)',
       '                {',
@@ -904,9 +897,9 @@ const PROBLEM = {
       '                        int nRow = r + dRow[i];',
       '                        int nCol = c + dCol[i];',
       '                        if (nRow >= 0 && nRow < rows && nCol >= 0 && nCol < cols &&',
-      "                            !visited[nRow, nCol] && grid[nRow][nCol] == '1')",
+      '                            !vis[nRow, nCol] && grid[nRow][nCol] == \'1\')',
       '                        {',
-      '                            visited[nRow, nCol] = true;',
+      '                            vis[nRow, nCol] = true;',
       '                            queue.Enqueue((nRow, nCol));',
       '                        }',
       '                    }',
@@ -918,121 +911,107 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const g = input.grid;
-      const R = g.length, C = g[0].length;
-      const vis = Array.from({length: R}, () => Array(C).fill(false));
-      const isle = Array.from({length: R}, () => Array(C).fill(0));
-      const RD = [-1, 1, 0, 0], CD = [0, 0, -1, 1];
-      const NAMES = ['up', 'down', 'left', 'right'];
+      const g = input.grid, R = g.length, C = g[0].length;
+      const vis = Array.from({length: R}, () => new Array(C).fill(false));
+      const dRow = [-1, 1, 0, 0], dCol = [0, 0, -1, 1];
+      const names = ['up', 'down', 'left', 'right'];
       const steps = [];
-      let q = [], count = 0, deqs = 0, maxQ = 0, scanTxt = 'not started';
-      const rc = (r, c) => r + ',' + c;
+      let queue = [], cnt = 0, scan = null, cur = null, pops = 0, pushes = 0, maxQ = 0;
+      const rowLabels = g.map((_, r) => 'r' + r);
+      const colLabels = g[0].split('').map((_, c) => 'c' + c);
 
-      const qItems = (outgoing, fresh) => {
-        const items = [];
-        if (outgoing){
-          items.push({
-            text: 'row, col = ' + rc(outgoing[0], outgoing[1]),
-            sub: 'dequeued - expanding it now',
-            cls: 'hot',
-            popped: true
-          });
-        }
-        q.forEach((cell, i) => items.push({
-          text: 'row, col = ' + rc(cell[0], cell[1]),
-          sub: (!outgoing && i === 0) ? 'front - next off the queue' : 'marked visited, waiting its turn',
-          cls: (!outgoing && i === 0) ? 'hot' : '',
-          fresh: fresh.indexOf(rc(cell[0], cell[1])) >= 0
-        }));
-        return items;
-      };
-
-      const panels = (cur, outgoing, fresh) => [
-        pGrid('grid', g.map((row, r) => row.map((v, c) => {
+      const panels = (hot, look, popFront, fresh) => [
+        pGrid('grid, with vis painted on top of it', g.map((row, r) => row.split('').map((ch, c) => {
           let cls = '';
-          if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
-          else if (q.some(x => x[0] === r && x[1] === c)) cls = 'in-window';
+          if (hot && hot[0] === r && hot[1] === c) cls = 'hot';
+          else if (look && look[0] === r && look[1] === c) cls = 'in-window';
           else if (vis[r][c]) cls = 'good';
-          else if (v === '0') cls = 'dim';
-          return {v: v, cls: cls, sub: isle[r][c] ? 'isl ' + isle[r][c] : ''};
-        })), {
-          rowLabels: g.map((_, r) => 'r' + r),
-          colLabels: g[0].map((_, c) => 'c' + c),
-          scale: 0.9
-        }),
-        pStack('queue', [{
-          label: 'Queue of (row, col)',
+          else if (ch === '0') cls = 'dim';
+          return {v: ch, cls: cls, sub: vis[r][c] ? 'vis' : '', fresh: fresh === r + ',' + c};
+        })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.9}),
+        pStack('queue of (row, col) - front on the left', [{
+          label: 'queue',
           mode: 'queue',
-          items: qItems(outgoing, fresh || []),
-          empty: 'queue empty - the while loop is not running',
-          foot: 'front: Dequeue takes from here',
-          top: 'back: Enqueue adds here'
+          items: queue.map((q, k) => ({
+            text: '(' + q[0] + ', ' + q[1] + ')',
+            sub: k === 0 ? 'front' : '',
+            cls: k === 0 ? 'hot' : '',
+            fresh: fresh === 'q' + q[0] + ',' + q[1],
+            popped: popFront && k === 0
+          })),
+          empty: 'empty - no flood in progress',
+          top: 'front - dequeued next',
+          foot: 'back'
         }]),
         pPills('state', [
-          {k:'outer scan', v: scanTxt, cls:'hot'},
-          {k:'in queue', v: q.length},
-          {k:'biggest queue', v: maxQ},
-          {k:'dequeues', v: deqs},
-          {k:'cnt', v: count, cls: count ? 'good' : ''}
+          {k:'scan at', v: scan ? scan[0] + ',' + scan[1] : '-'},
+          {k:'dequeued', v: cur ? cur[0] + ',' + cur[1] : '-'},
+          {k:'cnt', v: cnt, cls:'good'},
+          {k:'queue size', v: queue.length},
+          {k:'enqueues', v: pushes},
+          {k:'dequeues', v: pops},
+          {k:'peak queue', v: maxQ}
         ])
       ];
 
-      steps.push({lines:[5,6,8,9], msg:'Same setup as the recursive version, with two differences. <code>dRow</code> and <code>dCol</code> spell the four neighbours out directly - index <b>i</b> means ' + NAMES.join(', ') + ' - instead of generating nine offsets and filtering the diagonals out. And the pending work will live in a <code>Queue</code> the code owns, not in the call stack, so nothing here recurses.', panels: panels(null, null, [])});
+      steps.push({lines:[3,4,5,6,8,9], msg:'The board is <b>' + R + '</b> x <b>' + C + '</b>. <code>vis</code> is a <code>bool[rows, cols]</code>, all false. <code>dRow</code> and <code>dCol</code> are read together by index: <code>i</code> = 0 is (-1, 0) up, 1 is (1, 0) down, 2 is (0, -1) left, 3 is (0, 1) right. Four entries, so only the orthogonal neighbours exist - diagonals are simply not in the table.', panels: panels(null, null, false, null)});
 
-      for (let r = 0; r < R; r++){
-        for (let c = 0; c < C; c++){
-          scanTxt = rc(r, c);
-          if (g[r][c] === '1' && !vis[r][c]){
-            count++;
-            q = [[r, c]];
-            vis[r][c] = true;
-            isle[r][c] = count;
-            maxQ = Math.max(maxQ, q.length);
-            steps.push({lines:[15,17,19,20], msg:'<b>' + rc(r, c) + '</b> is land that nothing has claimed, so it opens island <b>' + count + '</b>. Note the order against the DFS version: line 17 increments <em>before</em> the walk, not after, which is safe because the walk cannot fail. A fresh queue is built holding just this seed, and line 20 marks it visited the moment it goes in - so it can never be enqueued a second time by one of its own neighbours later.', panels: panels([r, c], null, [rc(r, c)])});
-
-            while (q.length){
-              const cell = q.shift();
-              deqs++;
-              const log = [];
-              const fresh = [];
-              for (let i = 0; i < 4; i++){
-                const nr = cell[0] + RD[i], nc = cell[1] + CD[i];
-                let why;
-                if (nr < 0 || nr >= R || nc < 0 || nc >= C) why = 'off the grid';
-                else if (vis[nr][nc]) why = 'already marked';
-                else if (g[nr][nc] === '0') why = 'water';
-                else {
-                  why = 'land - marked and enqueued';
-                  vis[nr][nc] = true;
-                  isle[nr][nc] = count;
-                  q.push([nr, nc]);
-                  fresh.push(rc(nr, nc));
-                }
-                log.push(NAMES[i] + ' → ' + nr + ',' + nc + ' ' + why);
-              }
-              maxQ = Math.max(maxQ, q.length);
-              const tail = fresh.length
-                ? 'Line 32 marks ' + fresh.length + ' of them visited and line 33 puts them on the <em>back</em> of the queue, behind everything already waiting - that is what makes this breadth-first rather than depth-first. Marking at enqueue time is essential: a cell both of these could reach would otherwise be queued twice and expanded twice.'
-                : 'Nothing new came of it, so this cell is simply finished and the queue got shorter.';
-              steps.push({lines: fresh.length ? [24,29,30,32,33] : [24,29,30], msg:'The <code>while</code> condition still holds, so line 24 takes the oldest entry, <b>' + rc(cell[0], cell[1]) + '</b>, off the front. Its four neighbours in <code>dRow</code>/<code>dCol</code> order: ' + log.join(' · ') + '. ' + tail, panels: panels(cell, cell, fresh)});
-            }
-
-            const size = isle.reduce((a, row) => a + row.filter(x => x === count).length, 0);
-            steps.push({lines:[22,36,37], msg:'<code>queue.Count</code> is 0, so the <code>while</code> on line 22 ends. Every cell reachable from the seed was enqueued exactly once and dequeued exactly once - <b>' + size + '</b> cell(s) for island <b>' + count + '</b> - and all of them are now <code>true</code> in <code>visited</code>. The queue object goes out of scope, and the outer scan picks up where it left off.', panels: panels(null, null, [])});
-          } else if (g[r][c] === '1'){
-            steps.push({lines:[13,15], msg:'<b>' + rc(r, c) + '</b> is land, but island <b>' + isle[r][c] + '</b> already marked it - it was enqueued as somebody’s neighbour. <code>!visited[row, col]</code> is false, the <code>&amp;&amp;</code> short-circuits before the grid is read, and no new island is opened. Without that check every land cell would start its own BFS and the answer would just be the amount of land.', panels: panels([r, c], null, [])});
-          } else {
-            steps.push({lines:[13,15], msg:'<b>' + rc(r, c) + '</b> is unvisited, so the first half of line 15 passes, but the grid holds <code>0</code>. Water never seeds a BFS and the neighbour test on line 30 never lets it into the queue either, so it stays untouched all run.', panels: panels([r, c], null, [])});
+      for (let row = 0; row < R; row++){
+        for (let col = 0; col < C; col++){
+          scan = [row, col];
+          if (g[row][col] === '0'){
+            steps.push({lines:[13,15], msg:'Scan at <b>(' + row + ', ' + col + ')</b>: <code>grid</code> holds <code>0</code>, water. The second half of the <code>if</code> fails and no flood begins. The scan is just a way of guaranteeing that no island is missed, however oddly shaped.', panels: panels([row, col], null, false, null)});
+            continue;
           }
+          if (vis[row][col]){
+            steps.push({lines:[13,15], msg:'Scan at <b>(' + row + ', ' + col + ')</b>: land, but <code>vis</code> is already true - a previous BFS enqueued it while spreading through an island that has been counted. <code>!vis[row, col]</code> is false, so nothing happens. This is what makes each island contribute exactly one to <code>cnt</code>.', panels: panels([row, col], null, false, null)});
+            continue;
+          }
+          cnt++;
+          queue = [[row, col]];
+          vis[row][col] = true;
+          pushes++;
+          maxQ = Math.max(maxQ, queue.length);
+          cur = null;
+          steps.push({lines:[15,17,18,19,20], msg:'Scan at <b>(' + row + ', ' + col + ')</b>: unvisited land, so a brand new island has been found. Note the order here - unlike the DFS version, <code>cnt++</code> fires <em>first</em>, at line 17, before any flooding, and it is still correct because the flood that follows is guaranteed to mark this entire component. A fresh queue is created holding the seed cell, and the seed is marked visited the moment it is enqueued.', panels: panels(null, null, false, 'q' + row + ',' + col)});
+
+          while (queue.length){
+            const front = queue.shift();
+            cur = front;
+            pops++;
+            steps.push({lines:[22,24], msg:'<code>queue.Count</code> is above zero, so the wave continues. <code>Dequeue</code> takes the <em>front</em> - <b>(' + front[0] + ', ' + front[1] + ')</b> - which is what makes this breadth-first: cells leave in the order they were discovered, so the island is consumed ring by ring outward from the seed. Its four neighbours are checked next.', panels: panels(front, null, false, null)});
+
+            for (let i = 0; i < 4; i++){
+              const nr = front[0] + dRow[i], nc = front[1] + dCol[i];
+              const inb = nr >= 0 && nr < R && nc >= 0 && nc < C;
+              const ok = inb && !vis[nr][nc] && g[nr][nc] === '1';
+              if (!ok){
+                let why;
+                if (!inb) why = '<b>(' + nr + ', ' + nc + ')</b> is off the board, so the bounds tests short-circuit the <code>&&</code> chain before <code>vis</code> or <code>grid</code> are indexed at all.';
+                else if (vis[nr][nc]) why = '<b>(' + nr + ', ' + nc + ')</b> is already marked - it is either the cell this wave came from or a cell another neighbour queued a moment ago. Either way, queueing it again would just do the same work twice, so it is refused.';
+                else why = '<b>(' + nr + ', ' + nc + ')</b> is unvisited but holds <code>0</code> - water is not part of the island, so the wave stops at this edge.';
+                steps.push({lines:[26,27,28,29,30], msg:'<code>i = ' + i + '</code> means delta (' + dRow[i] + ', ' + dCol[i] + '), the <b>' + names[i] + '</b> neighbour of (' + front[0] + ', ' + front[1] + '). ' + why, panels: panels(front, inb ? [nr, nc] : null, false, null)});
+                continue;
+              }
+              vis[nr][nc] = true;
+              queue.push([nr, nc]);
+              pushes++;
+              maxQ = Math.max(maxQ, queue.length);
+              steps.push({lines:[29,32,33], msg:'<code>i = ' + i + '</code>, the <b>' + names[i] + '</b> neighbour <b>(' + nr + ', ' + nc + ')</b>, passes every test: in bounds, not visited, and land. <code>vis</code> is set to true <em>on the line before</em> the enqueue - that comment on line 20 is the whole point. If marking waited until the cell was dequeued, a neighbour shared by two cells of this same ring would be pushed twice and the queue could grow past the number of cells.', panels: panels(front, [nr, nc], false, 'q' + nr + ',' + nc)});
+            }
+          }
+
+          cur = null;
+          steps.push({lines:[22,36], msg:'The queue has drained: every cell reachable from the seed was enqueued exactly once and dequeued exactly once, so the island is now entirely marked. The <code>while</code> condition fails, the queue object goes out of scope, and the outer scan resumes at the next cell with <code>cnt</code> = <b>' + cnt + '</b>.', panels: panels(null, null, false, null)});
         }
       }
 
-      scanTxt = 'finished';
-      steps.push({lines:[39,40], msg:'The scan is done and line 40 returns <b>' + count + '</b> - the same answer the recursive version gives, reached by a different traversal order. There were ' + deqs + ' dequeue(s), one per land cell, each doing four constant-time checks: O(m * n). The space is <code>visited</code> plus the queue, which peaked at ' + maxQ + ' cell(s) - the widest frontier of an island, which for an island shaped like a full block is on the order of the whole grid.', panels: panels(null, null, [])});
+      scan = null;
+      steps.push({lines:[40], msg:'All <b>' + (R * C) + '</b> cells have been scanned and every island has been flooded. <b>' + cnt + '</b> is returned. Across the whole run there were ' + pushes + ' enqueue(s) and ' + pops + ' dequeue(s) - equal, and never more than one per land cell, which is why this is O(m * n) time. The queue peaked at ' + maxQ + ' entr(y/ies); a board that is entirely land would push it to O(m * n), the same worst case as the recursion depth in the DFS version.', panels: panels(null, null, false, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

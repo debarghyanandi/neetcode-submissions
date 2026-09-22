@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(m * n) time / O(m * n) space
-// #  DFS flood fill with visited matrix   [dfs-flood-fill]
+// #  DFS island traversal   [dfs-island-area]
 // #  the only solution in this folder
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  Each of the m*n cells is visited exactly once via recursive DFS; the
-// #  visited matrix and call-stack depth are both O(m*n) in the worst case.
+// #  Each cell visited once during DFS traversal; visited matrix and
+// #  recursion depth both O(m*n) in worst case
 // ##########################################################################
 
 public class Solution
@@ -72,79 +72,82 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Grid DFS Flood Fill - size of each connected region
+ PATTERN : Grid DFS flood fill - largest connected component
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  visited      visited[row, col] = 1 once that cell has been counted
+  size         in MaxAreaOfIsland: best island area found so far
+  islandSize   area of the one island reached from (row, col)
+  size         in Dfs: area of the component reached from this cell, counting itself
+  delRow/delCol  offset pair (-1..1) used to generate the 4 neighbours
 WHY THIS PATTERN
-  The question asks for the largest group of 1s joined side by side, so "island"
-  means a connected component in a grid graph where each cell has up to 4 edges.
-  Flood fill is the direct tool: from any unvisited land cell, walk the whole
-  component once and return its cell count. The outer double loop finds one
-  starting cell per island, Dfs returns islandSize, and size keeps the
-  running best.
+  The problem asks for the largest group of 1s joined side by side, so each
+  answer is the size of one connected component in a grid graph. DFS from an
+  unvisited land cell walks the whole component exactly once and returns its
+  area, which is what Dfs gives back as size. The outer double loop starts a new
+  DFS at every land cell that visited has not marked, so every component is
+  measured exactly once and Math.Max keeps the biggest in size.
 BRUTE FORCE
-  The simplest first attempt is: for every land cell, run a flood fill with a
-  fresh visited array and take the max size. That is O((m*n)^2) time because
-  every island is recounted once for each of its own cells. This code keeps one
-  shared visited array across the whole scan, so each cell is expanded exactly
-  once and the total work collapses to one pass.
+  The naive version is to re-run a fresh search from every land cell with a
+  fresh visited array and keep the largest count. That is O((m*n)^2) time
+  because each of the m*n starts can touch the whole grid. It loses because it
+  recomputes the same component once per cell inside it; sharing one visited
+  array across all starts is what makes the whole sweep linear.
 INVARIANT
-  A cell is written into visited at the very top of Dfs, before any recursion,
-  and a neighbour is only recursed into when visited[nRow, nCol]
-  == 0 and the cell is land. So every land cell enters Dfs at most once, and
-  size = 1 plus the sizes returned by its children counts each cell of the
-  component exactly once. In the outer loop, a cell that is already visited
-  never starts a new Dfs, so each island contributes one islandSize value to
-  size, not several partial ones.
-THE NEIGHBOUR TRICK
-  Instead of a directions array, the inner loops run delRow and delCol over
-  -1..1 (nine pairs) and skip when Math.Abs(delRow) == Math.Abs(delCol). That
-  single test removes the centre (0,0) and all four diagonals (1,1), (1,-1),
-  (-1,1), (-1,-1), leaving exactly the four side neighbours. It is correct, but
-  it does nine iterations per cell to use four; a static int[][] dirs =
-  {{1,0},{-1,0},{0,1},{0,-1}} says the same thing more plainly and is easier to
-  change if the problem switches to 8-directional.
+  A cell is marked visited[row, col] = 1 at the moment Dfs enters it, before any
+  neighbour is explored, so no cell is ever entered twice and no cell is counted
+  twice in size. When Dfs(r, c) returns, every land cell reachable from (r, c)
+  is marked and its 1 is included in the returned total. So when the outer loop
+  reaches a cell with visited == 0 and grid == 1, that cell belongs to a
+  component not yet measured, and islandSize is that component's full area.
+THE ABS TRICK FOR 4 NEIGHBOURS
+  Instead of a directions array, the code loops delRow and delCol over -1..1
+  (nine pairs) and skips any pair where Math.Abs(delRow) == Math.Abs(delCol).
+  That single test throws out the centre (0,0) and all four diagonals, because
+  those are exactly the cases where the two absolute values match, leaving the
+  four orthogonal moves. It is compact, but a reader has to decode it; an
+  explicit int[][] dirs = {{1,0},{-1,0},{0,1},{0,-1}} reads faster and does
+  fewer iterations.
 WATCH OUT
-  Depth is the danger here: on a grid that is all 1s the recursion nests
-  rows*cols deep, which can blow the call stack - the algorithm is fine but the
-  runtime stack is not. int cols = grid[0].Length throws if grid has zero rows,
-  so an empty grid is not handled. Also rows and cols are recomputed from grid
-  on every single Dfs call, which is pure repeated work; pass them in or make
-  them fields. The visited array is int[,] but only ever holds 0 or 1, so it
-  uses four bytes per cell for one bit of information.
+  grid[0].Length is read without checking grid.Length first, so an empty outer
+  array throws IndexOutOfRangeException; a null or empty grid needs a guard. The
+  recursion depth can reach m*n on one long snake-shaped island, which can
+  overflow the call stack on a large grid. The comment says "Visit all 4
+  neighbours" but the loop actually walks 9 offsets and discards 5, so it is 9
+  iterations of work per cell, not 4. Dfs also recomputes rows and cols from
+  grid on every call instead of receiving them. Minor: the comment "visisted" is
+  a typo, and jagged rows of unequal length would break cols.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do this without recursion?
-     Push the start cell on an explicit Stack<(int row, int col)>, mark visited
-     when you push, and pop-and-expand in a loop while counting; same time and
-     space bounds, and the stack lives on the heap so deep islands cannot
-     overflow the call stack.
-  2. Can you drop the visited array entirely?
-     Yes - set grid[row][col] = 0 as you enter a cell, so sunk land can never be
-     revisited; that removes the O(m*n) extra array but destroys the caller's
-     input, so you should say so or restore it afterwards.
-  3. What changes if islands may also connect diagonally?
-     Delete the Math.Abs(delRow) == Math.Abs(delCol) skip and replace it with a
-     skip only when delRow == 0 && delCol == 0, giving all 8 neighbours; nothing
-     else in the logic changes.
-  4. How would you answer this if the grid were streamed row by row and too
-  large to hold in memory?
+  1. How do you remove the recursion?
+     Push cells on an explicit Stack<(int,int)>, pop, and add 1 per popped cell;
+     mark visited when you push, not when you pop, or the same cell can be
+     pushed twice. Same time, and the stack size is bounded by the grid instead
+     of the call stack.
+  2. Can you drop the visited array?
+     Yes, write 0 into grid[row][col] as you enter, since a 0 cell is never
+     revisited. That removes the m*n extra ints but destroys the caller's input,
+     so it needs the caller's permission or a copy.
+  3. What if the grid is huge and streamed row by row, so you cannot hold it
+  all?
      Use union-find over two rows at a time: union each land cell with its left
-     and up neighbour, carry component ids and sizes forward as rows retire, and
-     track the max size, so memory is O(cols) instead of O(m*n).
+     and up neighbour, keep component sizes in the parent structure, and drop
+     rows once they can no longer be joined.
+  4. What changes if islands may wrap around the left and right edges?
+     Only neighbour generation changes: compute nCol as (col + delCol + cols) %
+     cols instead of rejecting out-of-range columns; the DFS and the visited
+     logic stay the same.
 TRIGGER
-  A 2D grid of 0/1 where the answer depends on groups of cells joined side by
-  side - count them, size them, or colour them.
+  A grid of 0s and 1s where you must measure or count groups of cells joined
+  edge to edge.
 C# NOTE
-  Note the two different array shapes in play: grid is int[][], a jagged array
-  of separate row objects, while visited is int[,], a single rectangular block -
-  that is why grid uses grid[row][col] and visited uses visited[row, col].
-  Switching visited to bool[,] gives the same logic at one byte per cell.
+  visited is int[,], a true rectangular array, which is one allocation and
+  indexes faster than the int[][] jagged form that grid uses; bool[,] would say
+  the intent better and use one byte per cell instead of four.
 COMPLEXITY
   Time  : O(m * n)
   Space : O(m * n)
