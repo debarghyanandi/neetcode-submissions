@@ -650,162 +650,177 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Kth Largest Element in a Stream',
-  note: 'keep only the k largest — their smallest is the answer, and it sits at the root',
+  title: 'Kth Largest Integer in a Stream',
+  note: 'keep only the k largest seen so far — their smallest sits at the root, and that is the answer',
   inputs: [
-    {id:'nums', label:'nums (constructor)', value:'4,5,8,2', width:180},
     {id:'k', label:'k', value:'3', width:60},
-    {id:'adds', label:'Add(val) calls', value:'3,5,10,9,4', width:200}
+    {id:'nums', label:'nums (constructor)', value:'4,5,8,2', width:160},
+    {id:'adds', label:'Add(val) calls', value:'3,5,10,9', width:160}
   ],
   parse(raw){
-    const numsRaw = String(raw.nums).trim();
-    let nums = [];
-    if (numsRaw.length){
-      nums = parseInts(numsRaw, 8);
-      if (!nums) return {ok:false, msg:'Enter nums as comma-separated whole numbers, or leave the box empty.'};
-    }
-    const adds = parseInts(raw.adds, 8);
-    if (!adds) return {ok:false, msg:'Enter at least one value for Add(), comma-separated.'};
     const kArr = parseInts(raw.k, 1);
     if (!kArr) return {ok:false, msg:'Enter k as a whole number.'};
     const k = kArr[0];
-    if (!Number.isInteger(k) || k < 1) return {ok:false, msg:'k must be a whole number of at least 1.'};
-    if (k > nums.length + 1) return {ok:false, msg:'k can be at most ' + (nums.length + 1) + ' here — the first Add() has to have k values to choose from.'};
-    return {ok:true, value:{nums: nums, k: k, adds: adds}, normalized:{nums: nums.join(','), k: String(k), adds: adds.join(',')}};
+    if (!Number.isInteger(k) || k < 1 || k > 6) return {ok:false, msg:'k must be a whole number between 1 and 6 so the heap stays readable.'};
+    const numsRaw = String(raw.nums).trim();
+    let nums = [];
+    if (numsRaw.length){
+      nums = parseInts(numsRaw, 6);
+      if (!nums || nums.some(n => !Number.isInteger(n))) return {ok:false, msg:'nums must be whole numbers separated by commas — or left empty.'};
+    }
+    if (nums.some(n => Math.abs(n) > 99)) return {ok:false, msg:'Keep values between -99 and 99 so the tiles stay readable.'};
+    const adds = parseInts(raw.adds, 5);
+    if (!adds || adds.some(n => !Number.isInteger(n))) return {ok:false, msg:'Enter at least one Add value as whole numbers separated by commas.'};
+    if (adds.some(n => Math.abs(n) > 99)) return {ok:false, msg:'Keep Add values between -99 and 99 so the tiles stay readable.'};
+    return {ok:true, value:{k: k, nums: nums, adds: adds}, normalized:{k: String(k), nums: nums.join(','), adds: adds.join(',')}};
   },
   shuffle(){
-    const nums = randInts(4, 1, 12);
-    return {nums: nums.join(','), k: String(2 + Math.floor(Math.random() * 2)), adds: randInts(4, 1, 14).join(',')};
+    const k = 2 + Math.floor(Math.random() * 2);
+    return {k: String(k), nums: randInts(3 + Math.floor(Math.random() * 2), 1, 20).join(','), adds: randInts(4, 1, 20).join(',')};
   },
   solutions: [
   {
     label: 'Size-capped min-heap',
     badge: 'O(n log k) time · O(k) space · heap · optimal.cs',
-    blurb: 'The kth largest only moves when a big enough value arrives, so nothing outside the top <b>k</b> ever matters. Hold exactly k in a min-heap: its root is the <b>smallest of the k largest</b> — the answer itself. Every arrival is enqueued, and the moment the count is k+1 the root is dequeued, since k values already beat it. <code>Peek</code> is then free.',
+    blurb: 'The kth largest value never depends on anything below it, so only the <b>k biggest seen so far</b> are worth storing. A min-heap of size k parks the <em>smallest of those k</em> at the root — which is exactly the kth largest — and makes the one value to evict when a (k+1)th arrives free to find.',
     legend: [
-      {cls:'hot', text:'the value being enqueued / the node moving'},
-      {cls:'in-window', text:'currently held in the heap'},
-      {cls:'good', text:'returned by Add'},
-      {cls:'dim', text:'evicted — too small to ever be the answer'},
-      {cls:'ghost', text:'not seen yet'}
+      {cls:'hot', text:'the value being enqueued'},
+      {cls:'done', text:'already fed into the heap'},
+      {cls:'good', text:'answer returned by an Add call'},
+      {cls:'dim', text:'evicted — too small to ever be the kth largest'},
+      {cls:'ghost', text:'not reached yet'}
     ],
     code: [
-      'private PriorityQueue<int, int> pq;',
-      'private int k;',
-      '',
-      'public KthLargest(int k, int[] nums)',
+      'public class KthLargest',
       '{',
-      '    this.k = k;',
-      '    this.pq = new PriorityQueue<int, int>();',
-      '    foreach (int v in nums)',
+      '    //My solution',
+      '    private PriorityQueue<int, int> pq;',
+      '    private int k;',
+      '',
+      '    public KthLargest(int k, int[] nums)',
       '    {',
-      '        pq.Enqueue(v, v);',
+      '        this.k = k;',
+      '        this.pq = new PriorityQueue<int, int>();',
+      '        foreach (int v in nums)',
+      '        {',
+      '            pq.Enqueue(v, v);',
+      '',
+      '            if (pq.Count > k)',
+      '                pq.Dequeue();',
+      '        }',
+      '    }',
+      '',
+      '    public int Add(int val)',
+      '    {',
+      '        pq.Enqueue(val, val);',
       '',
       '        if (pq.Count > k)',
       '            pq.Dequeue();',
+      '',
+      '        return pq.Peek();',
       '    }',
-      '}',
       '',
-      'public int Add(int val)',
-      '{',
-      '    pq.Enqueue(val, val);',
-      '',
-      '    if (pq.Count > k)',
-      '        pq.Dequeue();',
-      '',
-      '    return pq.Peek();',
       '}'
     ],
     simulate(input){
-      const nums = input.nums, adds = input.adds, K = input.k, steps = [];
-      const vals = nums.concat(adds), NN = nums.length;
-      let heap = [], out = [], readN = 0, readA = 0;
+      const K = input.k, nums = input.nums, adds = input.adds, steps = [];
+      let heap = [], readNums = 0, readAdds = 0, out = [];
 
-      const ord = (n) => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
-
-      const view = (cur, hotHi, freshHi, tags, caption) => {
-        const inHeap = new Set(heap);
-        const cell = (i, read) => i === cur ? 'hot' : inHeap.has(i) ? 'in-window' : read ? 'dim' : 'ghost';
-        return [
-          pTiles('nums — what the constructor is handed', nums, (i) => ({cls: cell(i, i < readN)})),
-          pTiles('Add(val) calls, left to right', adds, (j) => ({cls: cell(NN + j, j < readA)}),
-            cur >= NN ? {ptrs: [{name:'val', idx: cur - NN, cls:'accent'}]} : {}),
-          pHeap('min-heap — the ' + K + ' largest values seen so far', heap.map((vi, hi) => ({
-            v: vals[vi],
-            sub: vi < NN ? 'nums' : 'added',
-            cls: hi === hotHi ? 'hot' : '',
-            fresh: hi === freshHi
-          })), {tags: tags || [], caption: caption || '', empty: 'heap is empty', scale: 0.9}),
-          pPills('state', [
-            {k:'k', v: K},
-            {k:'heap count', v: heap.length},
-            {k:'incoming', v: cur >= 0 ? vals[cur] : '–', cls: cur >= 0 ? 'hot' : ''},
-            {k:'root (smallest kept)', v: heap.length ? vals[heap[0]] : '–'},
-            {k:ord(K) + ' largest', v: heap.length === K ? vals[heap[0]] : 'not yet', cls: heap.length === K ? 'good' : ''}
-          ]),
-          pSlots('what each Add returns', adds.map((v, j) => out[j] === undefined ? {text:''} : {text: String(out[j]), cls:'good'}))
-        ];
-      };
-
-      const siftUp = (cur, from) => {
-        let hi = from;
-        while (hi > 0 && vals[heap[(hi - 1) >> 1]] > vals[heap[hi]]){
-          const par = (hi - 1) >> 1, pv = vals[heap[par]];
-          const t = heap[par]; heap[par] = heap[hi]; heap[hi] = t;
-          hi = par;
-          steps.push({lines: cur < NN ? [10] : [19], msg:'Its parent <code>' + pv + '</code> was larger, so the pair swaps — in a min-heap a parent may never exceed a child. <code>' + vals[cur] + '</code> rises to index ' + hi + '. Only the path to the root is touched, which is why one insert costs log k rather than k.', panels: view(cur, hi, -1, [{name:'new', idx:hi, cls:'accent'}], 'sifting up')});
+      const view = (numIdx, addIdx, hotHi, freshHi, tags, caption) => {
+        const panels = [];
+        if (nums.length){
+          panels.push(pTiles('nums — the warm-up values handed to the constructor', nums,
+            (i) => ({cls: i === numIdx ? 'hot' : i < readNums ? 'done' : 'ghost'}),
+            numIdx >= 0 ? {ptrs: [{name:'v', idx: numIdx, cls:'accent'}]} : {}));
         }
-        return hi;
+        panels.push(pTiles('Add(val) calls — one at a time, in order', adds,
+          (i) => ({cls: i === addIdx ? 'hot' : i < readAdds ? 'done' : 'ghost'}),
+          addIdx >= 0 ? {ptrs: [{name:'val', idx: addIdx, cls:'accent'}]} : {}));
+        panels.push(pHeap('min-heap — at most ' + K + ' values, the largest seen so far, smallest of them at the root',
+          heap.map((v, hi) => ({v: v, cls: hi === hotHi ? 'hot' : '', fresh: hi === freshHi})),
+          {tags: tags || [], caption: caption || '', empty: 'heap is empty', scale: 0.8}));
+        panels.push(pPills('state', [
+          {k:'k', v: K},
+          {k:'pq.Count', v: heap.length},
+          {k:'value in hand', v: numIdx >= 0 ? nums[numIdx] : addIdx >= 0 ? adds[addIdx] : '–', cls: (numIdx >= 0 || addIdx >= 0) ? 'hot' : ''},
+          {k:'root = kth largest', v: heap.length === K ? heap[0] : 'not yet ' + K + ' values', cls: heap.length === K ? 'good' : 'dim'}
+        ]));
+        panels.push(pSlots('what each Add returns', out.map(v => ({text: String(v), cls:'good'}))
+          .concat(Array.from({length: Math.max(0, adds.length - out.length)}, () => ({text:''})))));
+        return panels;
       };
 
-      const sinkFromRoot = () => {
+      const siftUp = (line, numIdx, addIdx) => {
+        let i = heap.length - 1;
+        while (i > 0 && heap[(i - 1) >> 1] > heap[i]){
+          const p = (i - 1) >> 1, pv = heap[p], me = heap[i];
+          heap[p] = me; heap[i] = pv; i = p;
+          steps.push({lines:[line], msg:'Its parent <code>' + pv + '</code> is larger than <code>' + me + '</code>, and a min-heap never lets a bigger value sit above a smaller one — so the pair swaps and <code>' + me + '</code> rises to index ' + i + '. Only the path to the root is ever touched, which is why one insert costs log k rather than k.', panels: view(numIdx, addIdx, i, -1, [{name:'sift', idx:i, cls:'accent'}], 'sifting up')});
+        }
+        return i;
+      };
+
+      const sink = () => {
         let j = 0, hops = 0;
         for (;;){
           const l = 2 * j + 1, r = 2 * j + 2;
-          let small = j;
-          if (l < heap.length && vals[heap[l]] < vals[heap[small]]) small = l;
-          if (r < heap.length && vals[heap[r]] < vals[heap[small]]) small = r;
-          if (small === j) break;
-          const t = heap[j]; heap[j] = heap[small]; heap[small] = t;
-          j = small; hops++;
+          let m = j;
+          if (l < heap.length && heap[l] < heap[m]) m = l;
+          if (r < heap.length && heap[r] < heap[m]) m = r;
+          if (m === j) break;
+          const t = heap[j]; heap[j] = heap[m]; heap[m] = t;
+          j = m; hops++;
         }
         return hops;
       };
 
-      const evict = (cur, inCtor) => {
-        const goneI = heap[0], goneV = vals[goneI];
-        steps.push({lines: inCtor ? [12, 13] : [21, 22], msg:'The heap now holds <b>' + heap.length + '</b> values, one more than k = ' + K + '. Exactly one of them can never be the ' + ord(K) + ' largest again: the smallest, because ' + K + ' values at least as big are already sitting here and the stream only ever adds more. It is the root, so finding it costs nothing — <code>' + goneV + '</code> is about to go.', panels: view(cur, 0, -1, [{name:'evict', idx:0, cls:'accent'}], 'root leaves next')});
-        const last = heap.pop();
-        if (heap.length) heap[0] = last;
-        const hops = sinkFromRoot();
-        steps.push({lines: inCtor ? [13] : [22], msg:'<code>' + goneV + '</code> is discarded for good — ' + (goneI === cur ? 'the value that just arrived was itself the smallest of the ' + (K + 1) + ', so it never survived its own insert.' : 'it lost to ' + K + ' larger values, and nothing can shrink that competition.') + ' The last array element moved into the empty root and ' + (hops ? 'sank ' + hops + ' level' + (hops > 1 ? 's' : '') + ' to restore the heap order.' : 'was already the smallest of what remains, so nothing sank.'), panels: view(cur, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'back down to ' + heap.length + ' kept')});
-      };
+      steps.push({lines:[7, 10], msg:'A C# <code>PriorityQueue</code> dequeues the <b>lowest</b> priority first, and here the priority <em>is</em> the value — so this is a plain min-heap. That is the right shape: to answer "what is the ' + K + 'th largest?" only the ' + K + ' biggest values ever matter, and among those ' + K + ' the <em>smallest</em> is the answer. A min-heap keeps precisely that value at the root.', panels: view(-1, -1, -1, -1, [], 'nothing stored yet')});
 
-      steps.push({lines:[6, 7], msg:'A C# <code>PriorityQueue</code> always dequeues the <b>lowest</b> priority, and each value is enqueued with itself as its priority — so this is a plain min-heap. That is the right shape here: keep only the <b>' + K + '</b> largest values ever seen, and the smallest of those ' + K + ', which is precisely the ' + ord(K) + ' largest overall, is the element already at the root.', panels: view(-1, -1, -1, [], 'nothing kept yet')});
+      for (let i = 0; i < nums.length; i++){
+        readNums = i + 1;
+        steps.push({lines:[11, 13], msg:'Constructor value <code>' + nums[i] + '</code>. It is enqueued with itself as its priority — there is no cheaper test than simply letting it in and checking the size afterwards, because a value can only be rejected once ' + K + ' bigger ones exist.', panels: view(i, -1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'about to enqueue')});
 
-      for (let i = 0; i < NN; i++){
-        readN = i + 1;
-        heap.push(i);
-        let hi = heap.length - 1;
-        steps.push({lines:[10], msg:'The constructor is just the stream arriving all at once. <code>' + vals[i] + '</code> is enqueued with priority <code>' + vals[i] + '</code> and lands at index ' + hi + ', the end of the backing array, then sifts up while a parent is larger than it.', panels: view(i, hi, hi, [{name:'new', idx:hi, cls:'accent'}], 'just appended, not yet in place')});
-        siftUp(i, hi);
-        if (heap.length > K) evict(i, true);
+        heap.push(nums[i]);
+        const at = heap.length - 1;
+        steps.push({lines:[13], msg:'<code>Enqueue</code> appends <code>' + nums[i] + '</code> at index ' + at + ', the end of the backing array, then sifts it up while its parent is larger — a min-heap must have every parent no greater than its children.', panels: view(i, -1, at, at, [{name:'new', idx:at, cls:'accent'}], 'just appended, not yet in place')});
+        siftUp(13, i, -1);
+
+        if (heap.length > K){
+          const gone = heap[0];
+          steps.push({lines:[15, 16], msg:'The heap holds <b>' + heap.length + '</b> values, one more than k = ' + K + '. Exactly one of them can never be the ' + K + 'th largest again: the smallest, since ' + K + ' values at least as big are already here and the stream only adds more. It is the root, so no search is needed — <code>' + gone + '</code> goes.', panels: view(i, -1, 0, -1, [{name:'evict', idx:0, cls:'accent'}], 'root leaves next')});
+          const last = heap.pop();
+          if (heap.length) heap[0] = last;
+          const hops = sink();
+          steps.push({lines:[16], msg:'<code>' + gone + '</code> is discarded for good. The last array element filled the empty root and ' + (hops ? 'sank ' + hops + ' level' + (hops > 1 ? 's' : '') + ' until both of its children were larger' : 'was already the smallest of what remains, so nothing sank') + '. The heap is back to ' + heap.length + ' values, with the ' + K + 'th largest at the root.', panels: view(i, -1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'capped at ' + K + ' again')});
+        }
       }
+
+      steps.push({lines:[18], msg:'The constructor is done. The heap holds the <b>' + heap.length + '</b> largest of the warm-up values' + (heap.length === K ? ', so <code>' + heap[0] + '</code> at the root is already the ' + K + 'th largest.' : ' — fewer than k = ' + K + ', which is allowed: the problem guarantees there will be at least k values by the time <code>Add</code> has to answer.') + ' Everything smaller was thrown away and never needs to come back.', panels: view(-1, -1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'constructor finished')});
 
       for (let j = 0; j < adds.length; j++){
-        const i = NN + j;
-        readA = j + 1;
-        heap.push(i);
-        let hi = heap.length - 1;
-        steps.push({lines:[17, 19], msg:'<code>Add(' + vals[i] + ')</code>. Nothing restarts — the same heap carries across calls, which is the whole point of a stream solution. The new value is enqueued at index ' + hi + ' and sifts up from there.', panels: view(i, hi, hi, [{name:'new', idx:hi, cls:'accent'}], 'just appended, not yet in place')});
-        siftUp(i, hi);
-        if (heap.length > K) evict(i, false);
-        const ans = vals[heap[0]];
-        out.push(ans);
-        steps.push({lines:[24], msg:'<code>Peek</code> reads the root without removing it: <b>' + ans + '</b>. The heap holds exactly the ' + K + ' largest values seen so far, so its smallest element is the ' + ord(K) + ' largest of the whole stream. The read is O(1) — the call paid only for one insert and at most one delete.', panels: view(-1, 0, -1, [{name:'answer', idx:0, cls:'accent'}], 'root = ' + ord(K) + ' largest')});
+        readAdds = j + 1;
+        const val = adds[j];
+        steps.push({lines:[20, 22], msg:'<code>Add(' + val + ')</code>. The same two moves as in the constructor, which is the whole point of the design: one new value costs one push and at most one pop, never a re-sort of everything seen so far.', panels: view(-1, j, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'new value arriving')});
+
+        heap.push(val);
+        const at = heap.length - 1;
+        steps.push({lines:[22], msg:'<code>' + val + '</code> lands at index ' + at + ' and sifts up past any parent larger than it, restoring the min-heap order.', panels: view(-1, j, at, at, [{name:'new', idx:at, cls:'accent'}], 'just appended')});
+        siftUp(22, -1, j);
+
+        if (heap.length > K){
+          const gone = heap[0];
+          steps.push({lines:[24, 25], msg:'Count is <b>' + heap.length + '</b> > k = ' + K + ', so the smallest held value drops out. ' + (gone === val ? 'It is the value that just arrived — <code>' + val + '</code> was smaller than all ' + K + ' kept values, so it never survived its own insert.' : '<code>' + gone + '</code> has now been beaten by ' + K + ' larger values and can never be the ' + K + 'th largest again.'), panels: view(-1, j, 0, -1, [{name:'evict', idx:0, cls:'accent'}], 'root leaves next')});
+          const last = heap.pop();
+          if (heap.length) heap[0] = last;
+          const hops = sink();
+          steps.push({lines:[25], msg:'<code>' + gone + '</code> is gone. The last element moved to the root and sank ' + hops + ' level' + (hops === 1 ? '' : 's') + ', so the smallest of the remaining ' + heap.length + ' is at index 0 once more.', panels: view(-1, j, -1, -1, [{name:'root', idx:0, cls:'accent'}], 'capped at ' + K + ' again')});
+        }
+
+        out.push(heap[0]);
+        steps.push({lines:[27], msg:'<code>Peek</code> reads the root without removing it: <b>' + heap[0] + '</b>. The heap holds the ' + K + ' largest values of the whole stream so far, and the root is the smallest of those ' + K + ' — which is the definition of the ' + K + 'th largest. Answering costs O(1); no scan of the stream happens at all.', panels: view(-1, j, 0, -1, [{name:'answer', idx:0, cls:'accent'}], 'returning the root')});
       }
 
-      steps.push({lines:[24], msg:'Every call answered: <b>' + out.join(' ') + '</b>. The heap was pinned at ' + K + ' the whole way, so each of the ' + vals.length + ' values paid one push and at most one pop against a tree of height log ' + K + ' — <b>O(log k)</b> per Add in <b>O(k)</b> memory, however long the stream runs. Re-sorting the history on every call would have cost O(n log n) each time.', panels: view(-1, -1, -1, [{name:'root', idx:0, cls:'accent'}], 'these ' + K + ' are all that was ever worth keeping')});
+      steps.push({lines:[27], msg:'All ' + adds.length + ' calls answered: <b>' + out.join(', ') + '</b>. Each value ever seen paid one push and at most one pop against a tree capped at height log ' + K + ' — <b>O(log k)</b> per <code>Add</code> in <b>O(k)</b> space, no matter how long the stream grows. Re-sorting the whole stream for each query would have been O(n log n) every time.', panels: view(-1, -1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'stream exhausted')});
       return steps;
     }
   }]

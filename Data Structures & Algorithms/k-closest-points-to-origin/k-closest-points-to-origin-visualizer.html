@@ -651,141 +651,161 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'K Closest Points to Origin',
-  note: 'a heap of size K remembers the K best without ever sorting the rest',
+  note: 'keep only K points — their farthest sits at the root, ready to be thrown out',
   inputs: [
-    {id:'pts', label:'points (x,y pairs)', value:'1,3,-2,2,5,8,0,1,3,3', width:260},
-    {id:'k', label:'K', value:'2', width:70}
+    {id:'points', label:'points (x,y ; x,y ; ...)', value:'1,3;-2,2;5,8;0,1', width:240},
+    {id:'k', label:'K', value:'2', width:60}
   ],
   parse(raw){
-    const flat = parseInts(raw.pts, 16);
-    if (!flat) return {ok:false, msg:'Enter points as comma-separated x,y pairs.'};
-    if (flat.length % 2) return {ok:false, msg:'Needs an even count of numbers — every point is an x and a y.'};
+    const parts = String(raw.points).split(';').map(s => s.trim()).filter(s => s.length);
+    if (!parts.length) return {ok:false, msg:'Enter at least one point as x,y — separate points with semicolons.'};
     const pts = [];
-    for (let i = 0; i < flat.length; i += 2) pts.push([flat[i], flat[i + 1]]);
-    if (pts.length < 2) return {ok:false, msg:'Needs at least two points.'};
+    for (const p of parts){
+      const xy = parseInts(p);
+      if (!xy || xy.length !== 2 || !xy.every(Number.isInteger)) return {ok:false, msg:'Each point needs exactly two whole numbers, like 1,3 — separate points with semicolons.'};
+      if (Math.abs(xy[0]) > 99 || Math.abs(xy[1]) > 99) return {ok:false, msg:'Keep coordinates between -99 and 99 so the distances stay readable.'};
+      pts.push(xy);
+      if (pts.length === 6) break;
+    }
     const kArr = parseInts(raw.k, 1);
     if (!kArr) return {ok:false, msg:'Enter K as a whole number.'};
     const k = kArr[0];
-    if (!Number.isInteger(k) || k < 1 || k > pts.length) return {ok:false, msg:'K must be a whole number between 1 and ' + pts.length + '.'};
-    return {ok:true, value:{pts: pts, k: k}, normalized:{pts: flat.join(','), k: String(k)}};
+    if (!Number.isInteger(k) || k < 1) return {ok:false, msg:'K must be a whole number of at least 1.'};
+    if (k > pts.length) return {ok:false, msg:'K can be at most ' + pts.length + ' here — there are only that many points.'};
+    return {ok:true, value:{points: pts, k: k}, normalized:{points: pts.map(p => p.join(',')).join(';'), k: String(k)}};
   },
   shuffle(){
-    return {pts: randInts(10, -6, 8).join(','), k: String(1 + Math.floor(Math.random() * 3))};
+    const n = 4 + Math.floor(Math.random() * 2);
+    const pts = Array.from({length: n}, () => randInts(2, -6, 6).join(','));
+    return {points: pts.join(';'), k: String(1 + Math.floor(Math.random() * Math.min(3, n)))};
   },
   solutions: [
   {
-    label: 'Bounded max-heap of size K',
+    label: 'Size-capped max-heap',
     badge: 'O(n log k) time · O(k) space · heap · optimal.cs',
-    blurb: 'Sorting all <b>n</b> points to keep <b>K</b> of them does more work than the question asks. Hold a heap of exactly K with the <b>farthest</b> on top: every point goes in, and the moment the heap is K+1 the top is thrown out — the one point that cannot belong. C# only gives a min-heap, so the priority is <code>-distance</code>. No square roots: comparing <code>x*x + y*y</code> orders points identically.',
+    blurb: 'Only the <b>K</b> closest points ever matter, so hold exactly K and evict on sight. Priority <code>-distance</code> flips C#\'s min-heap into a max-heap, which parks the <b>farthest kept point at the root</b> — the one candidate that is always the first to lose when a K+1th arrives. Squared distance is compared directly: the square root would not change any ordering.',
     legend: [
-      {cls:'hot', text:'the point being enqueued / the node leaving'},
-      {cls:'in-window', text:'currently kept in the heap'},
-      {cls:'good', text:'popped into result'},
-      {cls:'dim', text:'evicted — too far to ever be an answer'},
-      {cls:'ghost', text:'not read yet'}
+      {cls:'hot', text:'the point being enqueued / the node moving'},
+      {cls:'in-window', text:'currently held in the heap'},
+      {cls:'good', text:'drained into the result'},
+      {cls:'dim', text:'evicted — too far to ever be in the answer'},
+      {cls:'ghost', text:'not visited yet'}
     ],
     code: [
-      'PriorityQueue<int[], int> maxHeap = new();   // min-heap on priority',
-      '',
-      'foreach (var point in points)',
+      'public int[][] KClosest(int[][] points, int K)',
       '{',
-      '    int distance = point[0] * point[0] + point[1] * point[1];',
-      '    maxHeap.Enqueue(point, -distance);   // negate: farthest = lowest',
-      '    if (maxHeap.Count > K)',
+      '    PriorityQueue<int[], int> maxHeap = new();',
+      '',
+      '    foreach (var point in points)',
       '    {',
-      '        maxHeap.Dequeue();   // drops the farthest',
+      '        int distance = point[0] * point[0] + point[1] * point[1];',
+      '        maxHeap.Enqueue(point, -distance);',
+      '        if (maxHeap.Count > K)',
+      '        {',
+      '            maxHeap.Dequeue();',
+      '        }',
       '    }',
-      '}',
       '',
-      'var result = new List<int[]>();',
-      'while (maxHeap.Count > 0)',
-      '{',
-      '    result.Add(maxHeap.Dequeue());',
-      '}',
+      '    var result = new List<int[]>();',
+      '    while (maxHeap.Count > 0)',
+      '    {',
+      '        result.Add(maxHeap.Dequeue());',
+      '    }',
       '',
-      'return result.ToArray();'
+      '    return result.ToArray();',
+      '}'
     ],
     simulate(input){
-      const pts = input.pts, K = input.k, steps = [];
-      const d = pts.map(p => p[0] * p[0] + p[1] * p[1]);
-      const lab = pts.map(p => '(' + p[0] + ',' + p[1] + ')');
-      let heap = [], out = [], read = 0;
+      const pts = input.points, K = input.k, steps = [];
+      const dist = pts.map(p => p[0] * p[0] + p[1] * p[1]);
+      const label = (i) => '(' + pts[i][0] + ',' + pts[i][1] + ')';
+      let heap = [], out = [], read = 0, draining = false;
 
       const view = (cur, hotHi, freshHi, tags, caption) => {
-        const inHeap = new Set(heap), got = new Set(out);
-        const slots = [];
-        for (let s = 0; s < K; s++) slots.push(out[s] === undefined ? {text:''} : {text: lab[out[s]], cls:'good'});
+        const inHeap = new Set(heap);
+        const picked = new Set(out);
+        const cell = (i) => i === cur ? 'hot' : inHeap.has(i) ? 'in-window' : picked.has(i) ? 'good' : i < read ? 'dim' : 'ghost';
         return [
-          pTiles('points', lab, (i) => ({cls:
-            i === cur ? 'hot'
-            : got.has(i) ? 'good'
-            : inHeap.has(i) ? 'in-window'
-            : i >= read ? 'ghost' : 'dim'})),
-          pHeap('max-heap — value is squared distance, sub is the point', heap.map((pi, hi) => ({
-            v: d[pi], sub: lab[pi],
+          pTiles('points — scanned once, left to right', pts.map((p, i) => label(i)), (i) => ({cls: cell(i)}),
+            (cur >= 0 && !draining) ? {ptrs: [{name:'point', idx: cur, cls:'accent'}]} : {}),
+          pTiles('squared distance x*x + y*y', dist, (i) => ({cls: cell(i)})),
+          pHeap('max-heap — the ' + K + ' closest points so far, farthest one at the root', heap.map((pi, hi) => ({
+            v: label(pi),
+            sub: 'd ' + dist[pi],
             cls: hi === hotHi ? 'hot' : '',
             fresh: hi === freshHi
-          })), {tags: tags || [], caption: caption || '', empty: 'heap is empty', scale: 0.9}),
+          })), {tags: tags || [], caption: caption || '', empty: 'heap is empty', scale: 0.8}),
           pPills('state', [
             {k:'K', v: K},
             {k:'heap count', v: heap.length},
-            {k:'this point', v: cur >= 0 ? lab[cur] : '–', cls: cur >= 0 ? 'hot' : ''},
-            {k:'its distance', v: cur >= 0 ? d[cur] : '–'},
-            {k:'farthest kept', v: heap.length ? d[heap[0]] : '–'}
+            {k:'point', v: cur >= 0 && !draining ? label(cur) : '–', cls: (cur >= 0 && !draining) ? 'hot' : ''},
+            {k:'distance', v: cur >= 0 && !draining ? dist[cur] : '–'},
+            {k:'root (farthest kept)', v: heap.length ? dist[heap[0]] : '–'}
           ]),
-          pSlots('result', slots)
+          pSlots('result — built by draining the heap', out.map(i => ({text: label(i), cls:'good'}))
+            .concat(Array.from({length: Math.max(0, K - out.length)}, () => ({text:''}))))
         ];
+      };
+
+      const siftUp = (cur, from) => {
+        let hi = from;
+        while (hi > 0 && dist[heap[(hi - 1) >> 1]] < dist[heap[hi]]){
+          const par = (hi - 1) >> 1, pv = label(heap[par]), pd = dist[heap[par]];
+          const t = heap[par]; heap[par] = heap[hi]; heap[hi] = t;
+          hi = par;
+          steps.push({lines:[8], msg:'Its parent ' + pv + ' is only <code>' + pd + '</code> away, closer than <code>' + dist[cur] + '</code> — under priority <code>-distance</code> the parent has the <em>higher</em> priority number, which a heap keeps below. So the pair swaps and ' + label(cur) + ' rises to index ' + hi + '. Only the path to the root is touched, which is what makes one insert cost log K instead of K.', panels: view(cur, hi, -1, [{name:'new', idx:hi, cls:'accent'}], 'sifting up')});
+        }
+        return hi;
       };
 
       const sinkFromRoot = () => {
         let j = 0, hops = 0;
         for (;;){
           const l = 2 * j + 1, r = 2 * j + 2;
-          let big = j;
-          if (l < heap.length && d[heap[l]] > d[heap[big]]) big = l;
-          if (r < heap.length && d[heap[r]] > d[heap[big]]) big = r;
-          if (big === j) break;
-          const t = heap[j]; heap[j] = heap[big]; heap[big] = t;
-          j = big; hops++;
+          let far = j;
+          if (l < heap.length && dist[heap[l]] > dist[heap[far]]) far = l;
+          if (r < heap.length && dist[heap[r]] > dist[heap[far]]) far = r;
+          if (far === j) break;
+          const t = heap[j]; heap[j] = heap[far]; heap[far] = t;
+          j = far; hops++;
         }
         return hops;
       };
 
-      steps.push({lines:[1], msg:'The heap is the whole algorithm. <code>PriorityQueue</code> in C# always dequeues the <b>lowest</b> priority, so passing <code>-distance</code> turns it into a max-heap on distance: the point furthest from the origin sits at the root, ready to be thrown away. The drawing shows the distance itself, unnegated, so the root is simply the biggest number.', panels: view(-1, -1, -1, [], 'nothing kept yet')});
+      steps.push({lines:[1, 3], msg:'A C# <code>PriorityQueue</code> always dequeues the <b>lowest</b> priority value. Enqueuing each point with priority <code>-distance</code> therefore makes the <em>largest</em> distance come out first — a max-heap in a min-heap\'s clothing. That is exactly the tool needed: keep only ' + K + ' points, and the one at risk of eviction, the farthest, is always sitting at the root where it is free to find.', panels: view(-1, -1, -1, [], 'nothing kept yet')});
 
       for (let i = 0; i < pts.length; i++){
         read = i + 1;
+        steps.push({lines:[5, 7], msg:'Point ' + label(i) + ': its squared distance is <code>' + pts[i][0] + '*' + pts[i][0] + ' + ' + pts[i][1] + '*' + pts[i][1] + ' = ' + dist[i] + '</code>. No square root is taken, and none is needed — the square root is monotonic, so comparing squares ranks the points in exactly the same order for less arithmetic.', panels: view(i, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'about to enqueue')});
+
         heap.push(i);
         let hi = heap.length - 1;
-        steps.push({lines:[5, 6], msg:'Point ' + lab[i] + ' has squared distance <code>' + pts[i][0] + '*' + pts[i][0] + ' + ' + pts[i][1] + '*' + pts[i][1] + '</code> = <b>' + d[i] + '</b>. No <code>Math.Sqrt</code> is needed — the square root is increasing, so ordering by d² is the same ordering. The point lands at index ' + hi + ', the end of the backing array, and now sifts up while a parent is <em>nearer</em> than it.', panels: view(i, hi, hi, [{name:'new', idx:hi, cls:'accent'}], 'just appended, not yet in place')});
-        while (hi > 0 && d[heap[(hi - 1) >> 1]] < d[heap[hi]]){
-          const par = (hi - 1) >> 1;
-          const t = heap[par]; heap[par] = heap[hi]; heap[hi] = t;
-          hi = par;
-          steps.push({lines:[6], msg:'Its parent was nearer, so the two swap — a farther point must sit above a nearer one. ' + lab[i] + ' rises to index ' + hi + '. Only the path to the root is touched, which is why an insert costs log k and not k.', panels: view(i, hi, -1, [{name:'new', idx:hi, cls:'accent'}], 'sifting up')});
-        }
+        steps.push({lines:[8], msg:'Enqueued with priority <code>' + (-dist[i]) + '</code>. It lands at index ' + hi + ', the end of the backing array, and now sifts up while a parent is <em>closer</em> than it, because the farther point must end up nearer the root.', panels: view(i, hi, hi, [{name:'new', idx:hi, cls:'accent'}], 'just appended, not yet in place')});
+        siftUp(i, hi);
+
         if (heap.length > K){
-          const goneP = heap[0];
-          steps.push({lines:[7, 8, 9], msg:'The heap now holds <b>' + heap.length + '</b> points, one more than K = ' + K + '. Exactly one of them cannot be in the answer: the farthest. It is already at the root, so it costs no search to find — ' + lab[goneP] + ' at distance <b>' + d[goneP] + '</b> is about to go.', panels: view(i, 0, -1, [{name:'evict', idx:0, cls:'accent'}], 'root leaves next')});
+          const goneI = heap[0], goneV = label(goneI), goneD = dist[goneI];
+          steps.push({lines:[9, 11], msg:'The heap holds <b>' + heap.length + '</b> points, one more than K = ' + K + '. Exactly one of them can never belong to the answer: the farthest, since ' + K + ' points at least as close are already here and the scan only adds more candidates. It is the root, so no search is needed — ' + goneV + ' at distance <code>' + goneD + '</code> goes.', panels: view(i, 0, -1, [{name:'evict', idx:0, cls:'accent'}], 'root leaves next')});
           const last = heap.pop();
           if (heap.length) heap[0] = last;
           const hops = sinkFromRoot();
-          steps.push({lines:[9], msg:lab[goneP] + ' is discarded for good — ' + (goneP === i ? 'the point that just arrived was itself the farthest, so it never survived a single step.' : 'K points are already known to be closer than it, and later points can only add more competition.') + ' The last element moved into the empty root and ' + (hops ? 'sank ' + hops + ' level' + (hops > 1 ? 's' : '') + ' to restore the heap.' : 'was already the farthest of what remains, so nothing sank.'), panels: view(i, -1, -1, [{name:'root', idx:0, cls:'accent'}], 'back down to ' + heap.length + ' kept')});
+          steps.push({lines:[11], msg:goneV + ' is discarded for good — ' + (goneI === i ? 'the point that just arrived was itself the farthest of the ' + (K + 1) + ', so it never survived its own insert.' : 'it lost to ' + K + ' closer points, and that competition can only get harder.') + ' The last array element filled the empty root and ' + (hops ? 'sank ' + hops + ' level' + (hops > 1 ? 's' : '') + ' until both its children were closer.' : 'was already the farthest of what remains, so nothing sank.'), panels: view(i, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], 'back down to ' + heap.length + ' kept')});
         }
       }
 
-      steps.push({lines:[13], msg:'Every point has been read, and the heap has been pinned at ' + K + ' the whole way. Whatever survived is precisely the K closest — each of the ' + (pts.length - K) + ' discarded points lost to K points nearer than it at the moment it was thrown out, and nothing ever re-enters. All that is left is to empty the heap into a list.', panels: view(-1, -1, -1, [{name:'root', idx:0, cls:'accent'}], 'these ' + K + ' are the answer')});
+      draining = true;
+      steps.push({lines:[15, 16], msg:'The scan is over and the heap holds precisely the <b>' + K + '</b> closest points — nothing else was ever worth remembering. Now it is emptied into a list. Each <code>Dequeue</code> hands back the current root, so the points come out <em>farthest first</em>; the problem accepts any order, so no sort is needed at the end.', panels: view(-1, 0, -1, [{name:'root', idx:0, cls:'accent'}], 'the ' + K + ' survivors')});
 
       while (heap.length){
-        const top = heap[0];
-        out.push(top);
+        const takeI = heap[0];
         const last = heap.pop();
         if (heap.length) heap[0] = last;
-        const hops = sinkFromRoot();
-        steps.push({lines:[14, 16], msg:'Dequeue hands back the root, ' + lab[top] + ' at distance <b>' + d[top] + '</b>' + (hops ? ', and the heap re-settles by sinking the old last element ' + hops + ' level' + (hops > 1 ? 's' : '') + '.' : '.') + ' Because this is a max-heap, the drain comes out <em>farthest first</em> — the order is not sorted the way you might expect, and the problem does not ask it to be.', panels: view(-1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], heap.length ? 'still to drain' : 'drained')});
+        const hops = heap.length ? sinkFromRoot() : 0;
+        out.push(takeI);
+        steps.push({lines:[18], msg:'<code>Dequeue</code> removes the root ' + label(takeI) + ' at distance <code>' + dist[takeI] + '</code> and appends it to <code>result</code>. ' + (heap.length ? 'The last element took its place and sank ' + hops + ' level' + (hops === 1 ? '' : 's') + ', so the next-farthest kept point is the new root.' : 'The heap is now empty, so the loop ends.'), panels: view(-1, -1, -1, heap.length ? [{name:'root', idx:0, cls:'accent'}] : [], heap.length ? heap.length + ' still to drain' : 'drained')});
       }
 
-      steps.push({lines:[19], msg:'Answer: <b>' + out.map(i => lab[i]).join(' ')  + '</b> — the ' + K + ' closest of ' + pts.length + ' points, found without ever sorting the other ' + (pts.length - K) + '. Each point paid one push and at most one pop against a heap of height log ' + K + ', so the whole run is <b>O(n log k)</b> time in <b>O(k)</b> space.', panels: view(-1, -1, -1, [], 'heap emptied')});
+      steps.push({lines:[21], msg:'Returned: <b>' + out.map(label).join(' ') + '</b>. Each of the ' + pts.length + ' points paid one push and at most one pop against a tree capped at height log ' + K + ' — <b>O(n log K)</b> time in <b>O(K)</b> space. Sorting every point by distance would have cost O(n log n) time and held all n of them at once.', panels: view(-1, -1, -1, [], 'heap emptied, answer complete')});
       return steps;
     }
   }]

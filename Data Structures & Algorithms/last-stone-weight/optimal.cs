@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n log n) time / O(n) space
-// #  max-heap via negated-priority min-heap   [heap-simulate-collisions]
+// #  max-heap greedy simulation   [max-heap-greedy]
 // #  the only solution in this folder
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  each of n stones is enqueued once and the smash loop
-// #  dequeues/re-enqueues O(n) times total, each heap operation costing
-// #  O(log n)
+// #  Each enqueue and dequeue operation on the heap is O(log n), and O(n)
+// #  such operations are performed during initialization and simulation.
 // ##########################################################################
 
 public class Solution
@@ -40,74 +39,78 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Max-Heap Simulation - smash the two heaviest stones
+ PATTERN : Max-heap simulation - repeatedly smash the two heaviest
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
-WHY A HEAP
-  The problem hands you the greedy rather than asking you to discover it: the
-  rules state that the two heaviest stones collide each turn, so there is no
-  exchange argument to make. What the code has to supply is a structure that
-  answers "what is the current maximum" after every mutation, where the mutation
-  is awkward - the residue newStone lands back somewhere in the middle of the
-  ordering, not at either end. A sorted array would need a shift per round to
-  reinsert; re-sorting per round is worse still. Two Dequeues and at most one
-  Enqueue per round is exactly the operation set a binary heap is built for.
-THE NEGATION TRICK
-  PriorityQueue<int,int> in .NET is a min-heap, and this file never passes a
-  comparer to the constructor. The max-heap comes from splitting element and
-  priority: Enqueue(stones[i], -stones[i]) and Enqueue(newStone, -newStone)
-  store the positive weight as the payload and its negation as the sort key.
-  Dequeue hands back the element, so first and second are ordinary positive
-  weights and Math.Abs works on real magnitudes. The equivalent alternative is
-  new PriorityQueue<int,int>(Comparer<int>.Create((a, b) => b - a)) with (w, w)
-  enqueued. Negation is safe at these weights - the constraint floor of 1 means
-  -stones[i] never approaches int.MinValue.
-LOOP INVARIANT
-  At the top of every while iteration the heap holds exactly the multiset of
-  stones still standing - no placeholders, no stale entries. Heap order
-  therefore guarantees first is the heaviest survivor and second the next, so
-  first >= second holds unconditionally. Each pass removes two entries and
-  pushes back at most one, so Count strictly decreases every iteration and the
-  loop cannot spin; it exits with the heap holding one stone or none.
-THE EQUAL-PAIR SHORTCUT
-  When first == second both stones are annihilated and the continue pushes
-  nothing back. Enqueueing Math.Abs(first - second), which is 0, would also give
-  the right answer: a 0 carries priority 0 and sorts behind every real stone in
-  this max-heap, so it only resurfaces once nothing real is left, and abs(x - 0)
-  = x leaves a genuine stone untouched. The continue just refuses to circulate
-  those phantoms. Note the consequence that the next section depends on - this
-  branch is the only way the heap can drain to empty.
-WHY TRYPEEK AND NOT PEEK
-  The input is guaranteed non-empty, so it is tempting to end with return
-  pq.Peek(). On an input like [1,1] or [2,7,4,1,8,1] the cancellation
-  path empties the heap, and Peek throws InvalidOperationException on an empty
-  PriorityQueue. TryPeek collapses both terminal states into one expression:
-  hasElement false yields 0, which is precisely the value the problem specifies
-  when no stone remains. The discarded second out parameter is the priority,
-  i.e. -element.
+VARIABLES
+  pq          min-heap holding every current stone; element = weight, priority = -weight
+  first       heaviest stone this round
+  second      second heaviest stone this round
+  newStone    Math.Abs(first - second), the leftover piece put back
+  hasElement  false only when the heap ran empty, meaning all stones cancelled
+WHY THIS PATTERN
+  The problem always asks for the two largest values, then changes the set and
+  asks again. A sorted array would have to be re-sorted after every smash, but a
+  heap gives the maximum in O(log n) and takes the leftover back in O(log n). pq
+  is exactly the live multiset of stones, so the loop is a direct simulation of
+  the rules, not a clever reformulation.
+BRUTE FORCE
+  Keep the stones in a List, sort it each round, take the last two, remove them,
+  insert the difference. That is O(n) rounds times O(n log n) per sort, so O(n^2
+  log n), and the insert shifts elements too. It loses because a full sort
+  recomputes order for stones that never moved, while a heap only repairs the
+  one path touched by the change.
+INVARIANT
+  At the top of every while iteration, pq contains exactly the stones that still
+  exist, with the heaviest on top because each priority is the negated weight.
+  One iteration removes two stones and adds at most one, so Count strictly drops
+  and the loop must end. When it ends, zero or one stone is left, which is the
+  definition of the answer.
+NEGATED PRIORITY
+  C# PriorityQueue dequeues the SMALLEST priority first, so it is a min-heap.
+  Enqueuing weight w with priority -w flips the order and makes Dequeue return
+  the heaviest stone. The value and the priority are two separate arguments
+  here, so both the initial Enqueue and the newStone Enqueue must remember to
+  negate; forgetting once silently returns the lightest stone instead.
 WATCH OUT
-  Writing Enqueue(newStone, newStone) - forgetting the minus on just the
-  re-insert - compiles, runs, and silently reverts that entry to min-heap
-  ordering. It still returns a number, so the bug shows up only as a wrong
-  answer on inputs where the residue matters. Second, Math.Abs never actually
-  fires: heap order already makes first - second non-negative. Keep it as
-  documentation of intent if you like, but do not read it as evidence that
-  dequeue order is interchangeable, because taking second before first is not
-  something this code can do.
-FOLLOW-UP
-  An interviewer can ask why the result is well defined at all, since "the two
-  heaviest" is ambiguous when several stones share a weight and the heap breaks
-  those ties arbitrarily (PriorityQueue is not stable). The answer is that equal
-  weights are interchangeable: swapping which of two identical stones is called
-  first produces an identical multiset afterward, so every tie-breaking order
-  reaches the same final heap. That is also why this solution can ignore
-  insertion order entirely and store nothing but the weight.
+  The element and its priority are stored twice and nothing enforces that they
+  stay opposites - a later edit that pushes newStone with priority newStone
+  breaks the heap with no error. The if/else with continue is dead weight: if
+  first == second then Math.Abs is 0, and pushing a 0 stone would still
+  terminate and still give the same final answer, so the branch is an
+  optimisation, not a correctness guard. A null stones array throws a
+  NullReferenceException on stones.Length before anything else. TryPeek handles
+  the empty-array and all-cancelled cases and returns 0, so there is no separate
+  Count check.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you build the heap without n separate Enqueue calls?
+     pq.EnqueueRange(stones.Select(s => (s, -s))) hands all items over at once,
+     which lets the queue heapify in one pass instead of n sift-ups. Cost is the
+     LINQ allocation and slightly less obvious code.
+  2. What if the rule became "smash the three heaviest each round"?
+     Same shape - Dequeue three times, push back whatever the new rule produces.
+     The heap does not care how many you pull; only the termination argument
+     changes, since you must still remove more than you add.
+  3. What if you must also report every pair that was smashed, in order?
+     Record (first, second) into a List inside the loop before the Enqueue. No
+     change to complexity, but memory grows to O(n) extra entries.
+  4. Last Stone Weight II asks for the smallest possible remaining weight
+  instead. Does this code adapt?
+     No. That version is a subset-sum partition problem solved with a boolean DP
+     over half the total sum; greedily taking the two largest does not minimise
+     the leftover.
+TRIGGER
+  The state changes after every step and each step needs the current maximum (or
+  minimum) of a shrinking set.
+C# NOTE
+  Because the value and the key are the same number, PriorityQueue<int, int>
+  with a reversed comparer - new PriorityQueue<int,
+  int>(Comparer<int>.Create((a, b) => b - a)) - would let you Enqueue(s, s) and
+  drop the negation entirely, at the cost of a comparer call per comparison.
 COMPLEXITY
   Time  : O(n log n)
   Space : O(n)

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T22:08:29.439Z",
+  "updatedAt": "2026-09-22T22:48:59.432Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1952,13 +1952,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "9dc695fc5a28",
-          "renames": []
+          "version": 2,
+          "codePrint": "9dc695fc5a28"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"bounded max-heap of size K, evict farthest\",\"approachKey\":\"max-heap-size-k\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Max heap, maintain K closest\",\"approachKey\":\"max-heap-k-closest\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1971,8 +1970,8 @@
         "optimal.cs": {
           "time": "O(n log k)",
           "space": "O(k)",
-          "algorithm": "bounded max-heap of size K, evict farthest",
-          "approachKey": "max-heap-size-k",
+          "algorithm": "Max heap, maintain K closest",
+          "approachKey": "max-heap-k-closest",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -1981,9 +1980,11 @@
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Max heap, maintain K closest\",\"approachKey\":\"max-heap-k-closest\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -1994,7 +1995,7 @@
           "array",
           "heap"
         ],
-        "builtAt": "2026-09-12T17:53:06.757Z"
+        "builtAt": "2026-09-22T22:46:36.297Z"
       }
     },
     "kth-largest-integer-in-a-stream": {
@@ -2013,12 +2014,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "7ac2d53d1f52"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"size-capped min-heap\",\"approachKey\":\"min-heap-size-k\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap of size k\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2031,19 +2032,20 @@
         "optimal.cs": {
           "time": "O(n log k)",
           "space": "O(k)",
-          "algorithm": "size-capped min-heap",
-          "approachKey": "min-heap-size-k",
+          "algorithm": "Min-heap of size k",
+          "approachKey": "min-heap-kth-largest",
           "correct": true,
           "bruteForce": false,
           "structures": [
-            "array",
             "heap"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap of size k\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -2051,10 +2053,9 @@
           "optimal.cs": "7ac2d53d1f52"
         },
         "structures": [
-          "array",
           "heap"
         ],
-        "builtAt": "2026-09-13T06:48:27.585Z"
+        "builtAt": "2026-09-22T22:47:56.536Z"
       }
     },
     "kth-smallest-integer-in-bst": {
@@ -2134,12 +2135,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "04449d586ae7"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap via negated-priority min-heap\",\"approachKey\":\"heap-simulate-collisions\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap greedy simulation\",\"approachKey\":\"max-heap-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2152,18 +2153,21 @@
         "optimal.cs": {
           "time": "O(n log n)",
           "space": "O(n)",
-          "algorithm": "max-heap via negated-priority min-heap",
-          "approachKey": "heap-simulate-collisions",
+          "algorithm": "max-heap greedy simulation",
+          "approachKey": "max-heap-greedy",
           "correct": true,
           "bruteForce": false,
           "structures": [
+            "array",
             "heap"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap greedy simulation\",\"approachKey\":\"max-heap-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
@@ -2171,9 +2175,10 @@
           "optimal.cs": "04449d586ae7"
         },
         "structures": [
+          "array",
           "heap"
         ],
-        "builtAt": "2026-09-13T06:50:48.811Z"
+        "builtAt": "2026-09-22T22:48:59.430Z"
       }
     },
     "level-order-traversal-of-binary-tree": {
