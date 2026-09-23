@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  hash set, add-and-check, early exit on repeat   [hashset-membership]
-// -  ranks above optimal-variant.cs (O(n) time / O(n) space)
+// -  HashSet with early exit   [hashset-early-exit]
+// -  ties with optimal-variant.cs on O(n) time / O(n) space
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  HashSet.Add returns false on a duplicate, letting the loop return
-// -  immediately; worst case (all distinct) still does n adds
+// -  Single pass with immediate return when HashSet.Add() detects a
+// -  duplicate.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -29,77 +29,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Set membership - Add's return value is the test
+ PATTERN : Hash Set - detect a repeat on first insert failure
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  seen     the distinct values met so far, left of the current element
 WHY THIS PATTERN
-  The question "has any value appeared before?" is a membership query over a
-  growing prefix. Anything that answers membership in constant expected time
-  collapses the problem to a single pass, and HashSet<int> is the built-in that
-  does it. Nothing about order, position, or count of the duplicate is asked for
-  - only existence - so no structure richer than a set is needed.
-THE ONE MOVE TO REMEMBER
-  seen.Add(number) returns false when number was already in the set, true when
-  it was newly inserted. So !seen.Add(number) is simultaneously the "already
-  seen" test and the insert. The naive version is:
-
-      if (seen.Contains(number)) return true;
-      seen.Add(number);
-
-  which hashes number twice and probes twice on every non-duplicate element. The
-  one-call form is the reason the comment in the file exists - this is the
-  detail that will not be obvious on reread.
+  The question only asks whether any value appears twice; it does not ask which
+  value, where, or how many times. That means each element only needs one
+  question answered: "have I seen this exact value before?" A hash set answers
+  that in constant expected time, so one pass over nums is enough. seen grows as
+  the scan moves right, and the moment Add reports the value was already there,
+  the answer is true.
+BRUTE FORCE
+  The first thing most people write is a double loop: for each i compare nums[i]
+  against every nums[j] with j > i. That is correct but O(n^2) time, and it
+  re-reads the same values over and over. Sorting first and checking
+  neighbouring pairs is better at O(n log n) time and O(1) extra space, but it
+  still loses to the single pass here and it destroys the input order.
 INVARIANT
-  At the top of each iteration, seen holds exactly the distinct values among the
-  elements of nums already consumed. That is maintained by the only mutation in
-  the loop: every element is either added (new value) or found present (returns
-  immediately). Nothing is ever removed.
-CORRECTNESS ARGUMENT
-  Returning true: by the invariant, !seen.Add(number) means number was inserted
-  by some earlier iteration j, so nums[j] == nums[i] with j < i - a real
-  duplicate pair exists.
-
-  Returning false: reaching the end means every Add returned true, so all
-  nums.Length insertions were new values and seen.Count == nums.Length. A set of
-  that size over that many elements forces all elements distinct. Both
-  directions are covered, so the answer is exact, not one-sided.
+  Before each iteration, seen holds exactly the distinct values from the part of
+  nums already scanned, and no duplicate was found among them. So when
+  Add(number) returns false, number equals some earlier element, which proves a
+  duplicate exists and returning true right away is safe. If the loop finishes,
+  every element failed to collide with all earlier ones, so all n values are
+  distinct and false is correct.
+ADD AS A COMBINED TEST AND INSERT
+  HashSet.Add computes the hash once and returns a bool saying whether the value
+  was new. Writing Contains(number) followed by Add(number) would do the same
+  hashing work twice and needs two lines to express one idea. The comment in the
+  code is accurate: false means already present.
 WATCH OUT
-  The early return means the set only ever grows to the number of distinct
-  values before the first repeat - the peak size is data-dependent, and the
-  all-distinct input is the worst case that pins it at nums.Length.
-
-  An empty array skips the loop and correctly returns false. A null nums throws
-  NullReferenceException at the foreach, not a clean argument error - flag it if
-  the interviewer cares about contract validation.
-
-  The HashSet is constructed with no capacity argument, so it resizes as it
-  fills. Passing nums.Length to the constructor pre-sizes it and is the obvious
-  tweak if asked to tighten this.
-ALTERNATIVES AND WHY THEY LOSE
-  Sort then scan adjacent pairs: O(n log n) time, but O(1) extra space if you
-  are allowed to mutate nums. That is the trade to name when the interviewer
-  says "now do it without extra memory."
-
-  new HashSet<int>(nums).Count != nums.Length, or nums.Distinct().Count() !=
-  nums.Length: same asymptotics, one line, but both build the full set before
-  answering - no early exit on an input that repeats at index 1.
-
-  Nested double loop: O(n^2), only defensible when n is tiny or allocation is
-  forbidden.
+  The code assumes nums is not null; a null argument throws
+  NullReferenceException at foreach, not a clean message. An empty array is
+  handled correctly and returns false. Memory is the real risk: if every value
+  is distinct, seen ends up holding all n elements, so this trades space for
+  speed, unlike the sort-based approach. Also note the method name hasDuplicate
+  starts lowercase, which breaks normal C# naming and would be flagged in a real
+  codebase.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if you are not allowed to use extra space?
+     Sort nums in place and compare each element to its neighbour. That gives
+     O(1) extra space but O(n log n) time and it mutates the caller's array.
+  2. What if the question changes to "does any value appear at least three
+  times"?
+     Swap HashSet<int> for Dictionary<int,int> counting occurrences and return
+     true when a count reaches 3. Same one pass, but you now store a count per
+     distinct value instead of just membership.
+  3. What if nums is a huge stream that does not fit in memory?
+     An exact answer still needs to remember what was seen, so you either sort
+     externally on disk or partition by hash into buckets and check each bucket
+     separately. A Bloom filter gives a cheap approximate answer with false
+     positives but never false negatives.
+  4. What if the values are guaranteed to be in the range 1..n?
+     Use the array itself as the table - mark nums[abs(v)-1] negative as you go,
+     and a value already negative means a repeat. That reaches O(1) extra space
+     but changes the input.
 TRIGGER
-  Reach for set-while-scanning whenever the predicate depends only on the
-  multiset of elements already visited and can be answered by an existence check
-  - duplicate detection, first repeating character, two-sum complement lookup.
-  The tell is that you never need to know where the earlier element was, only
-  that it was there.
-GENERALIZING
-  This works on int because int has value equality and a sensible hash for free.
-  Swap in a reference type and correctness now rests entirely on that type's
-  GetHashCode and Equals being consistent with each other; a type that overrides
-  one but not the other silently reports every element as distinct. Worth
-  stating out loud if the follow-up is "now detect duplicate objects."
+  The question asks only "does X already exist" for each element as you scan,
+  with no need for position or count.
+C# NOTE
+  HashSet<int> is the right pick over Dictionary<int,bool> here because only
+  membership matters and no value is stored per key. Passing an initial
+  capacity, as in new HashSet<int>(nums.Length), would avoid the internal
+  resize-and-rehash steps as the set grows.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

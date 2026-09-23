@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n * k) time / O(n) space
-// -  hash by 26-letter frequency-count signature
-// -  [frequency-signature-hashmap]
-// -  ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)
+// -  Character frequency signature hashing   [frequency-hash]
+// -  ranks above suboptimal.cs (O(n * k log k) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  counting letters is O(k) per word with no sort, and the serialized
-// -  signature key has a fixed number of fields (26) independent of k, so
-// -  key storage is O(n) rather than scaling with word length.
+// -  Each word processes through its characters once and builds a
+// -  constant-size signature, avoiding sorting overhead.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -54,74 +52,84 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Hash map on a canonical key - 26-slot letter count
+ PATTERN : Hash Map Grouping - canonical count signature as key
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  groupsByKey    signature string -> every word that has that letter count
+  letterCounts   letterCounts[i] = how many times char ('a'+i) appears in word
+  keyBuilder     builds the flattened signature text for one word
+  signature      the finished key, e.g. "1,0,2,0,...,0,"
+  group          the live list inside groupsByKey for this signature
 WHY THIS PATTERN
-  Grouping means partitioning into equivalence classes, and the cheap way to do
-  that is never to compare pairs of words - it is to map each word to a
-  canonical representative of its class and bucket on that. Here the class is
-  "same multiset of letters" and the representative is letterCounts, a 26-slot
-  tally serialized into signature. Each word is touched once and dropped into a
-  dictionary; strs is never scanned against itself.
-CORRECTNESS
-  Two directions, both needed.
-  1. No group is split. letterCounts is built by ++ over the characters of word,
-  and increments commute, so the array depends only on which letters appear and
-  how often - not on their order. Anagrams therefore produce identical arrays
-  and identical signature strings, so they always land in the same bucket.
-  2. No two classes merge. Non-anagrams differ in at least one of the 26 counts.
-  The counts are appended in fixed index order 0..25, each followed by a
-  delimiter, so signature is an injective encoding of the int[26]: different
-  arrays give different strings.
-  Together the buckets are exactly the anagram classes.
-THE SEPARATOR TRAP
-  The Append(',') is load-bearing for the injectivity argument above. Without
-  it, counts of 1 then 11 and 11 then 1 both flatten to "111" and two unrelated
-  groups silently fuse. The comma makes each field self-delimiting so
-  multi-digit counts cannot bleed into their neighbor. Note how quietly this
-  fails: no count reaches 10 until a word has ten copies of one letter, so the
-  broken version compiles and passes every small hand-written test.
-WHY NOT USE INT[] AS THE KEY DIRECTLY
-  int[] inherits reference equality and the default object hash, so two arrays
-  holding identical counts are distinct dictionary keys and every word would get
-  a bucket of its own. That is the reason for flattening to a string at all. The
-  alternatives to the StringBuilder: pass a custom IEqualityComparer<int[]> to
-  the Dictionary, or use a sorted-characters key such as new
-  string(word.OrderBy(c => c).ToArray()), which is a canonical form too but pays
-  a sort per word instead of a linear count.
-WHY TRYGETVALUE AND NOT CONTAINSKEY
-  TryGetValue does one hash lookup that both answers "is it there" and hands
-  back the list. Just as important, group is a reference to the very
-  List<string> stored in the dictionary - on the miss branch the new list is
-  inserted at groupsByKey[signature] first, so the later group.Add(word) mutates
-  the stored object and no write-back is required. ContainsKey followed by the
-  indexer would hash signature twice and read the same list twice.
+  Two words are anagrams exactly when their letter counts match, so the relation
+  is an equivalence: every word belongs to one and only one bucket. That means
+  you never need to compare word against word; you only need a canonical form
+  (one fixed representative value per bucket) that is equal for equal buckets.
+  letterCounts is that canonical form, and turning it into signature lets a
+  Dictionary do the bucketing in one pass over strs.
+BRUTE FORCE
+  The first thing most people write is a double loop: for each word, scan the
+  groups already built and test "is this word an anagram of the group's first
+  word" by sorting both or comparing counts. That is O(n^2 * k) because every
+  word may be checked against every existing group. It loses because the anagram
+  test is recomputed over and over, while the signature computes each word's
+  identity once and lets hashing find the bucket.
+INVARIANT
+  After processing each word, groupsByKey holds exactly the words seen so far,
+  partitioned so that every list contains words with identical letterCounts and
+  no two lists share a signature. TryGetValue either finds the existing bucket
+  or creates it, so the mapping signature -> bucket is created once and never
+  duplicated. Because signature is a function of the counts only, and equal
+  counts mean anagram, the final partition is the correct grouping.
+THE COMMA IS NOT DECORATION
+  Without the separator, counts 1 then 11 and 11 then 1 both flatten to "111",
+  merging two different buckets into one wrong group. Appending ',' after every
+  count makes the digit boundaries explicit, so distinct count vectors always
+  give distinct strings. Any fixed non-digit separator works; the trailing comma
+  on the last count is harmless because every key has one.
 WATCH OUT
-  letter - 'a' hard-codes the lowercase a-z alphabet. An uppercase 'A' indexes
-  at -32 and throws IndexOutOfRangeException; digits and spaces are equally
-  unsafe. Confirm that constraint before writing the fixed array - if the input
-  can be arbitrary characters, switch to a Dictionary<char,int> emitted in
-  sorted key order, or fall back to sorting the word.
-  Also, groupsByKey.Values.ToList() yields groups in the dictionary's own
-  enumeration order and each group in first-seen order within strs. The problem
-  accepts any order, so this is fine, but do not build later code on that
-  ordering.
-INTERVIEW FOLLOW-UPS
-  Expect "what if the alphabet is Unicode" (the 26-slot array stops being
-  viable; a per-word map of only the characters present, canonicalized by
-  sorting its keys, keeps the counting idea) and "is the count key always better
-  than the sorted-string key". The honest answer from this code: the
-  key-building loop runs all 26 slots for every word regardless of length, so a
-  one-letter word still emits a 26-field signature, while sorting a one-letter
-  word does almost nothing. Counting pulls ahead as words get long; the fixed 26
-  fields are the price of admission.
+  c - 'a' assumes only lowercase a-z. An uppercase letter, a digit, or a space
+  gives an index outside 0..25, so letterCounts[c - 'a']++ throws
+  IndexOutOfRangeException or writes past the intended slot. An empty string is
+  fine: it produces the all-zero signature and all empty strings group together.
+  Also note the file fully qualifies System.Text.StringBuilder but calls
+  ToList() unqualified, so it only compiles if System.Linq is in scope from
+  global or implicit usings.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How would you build the key without a StringBuilder allocation per word?
+     Sort the word's chars into a stack-allocated Span<char> and build one
+     string from that, or use a custom IEqualityComparer<int[]> that hashes
+     contents so the int[] itself can be the key. Sorting costs k log k per word
+     instead of k, but it drops the 26-entry scan and the comma padding.
+  2. What if the input is Unicode, not just 26 letters?
+     The fixed 26-slot array no longer works. Use a Dictionary<char,int> per
+     word and build the key from its entries in sorted char order, or simply
+     sort the string's characters. The key becomes proportional to the number of
+     distinct characters instead of always 26.
+  3. The input does not fit in memory - how do you group it?
+     Shard by hash of the signature: send each word to file bucket
+     hash(signature) % m, then group each shard independently, since all
+     anagrams share a signature and so land in the same shard. Cost is extra
+     disk I/O and a merge pass.
+  4. The caller wants groups sorted by size, largest first.
+     Order groupsByKey.Values by Count descending before materializing the
+     result. That adds a sort over the number of groups and makes output order
+     deterministic, which the current Dictionary.Values order is not guaranteed
+     to be.
+TRIGGER
+  You must group items where "same group" is decided by some
+  rearrangement-invariant property - reach for a canonical key plus a dictionary
+  instead of pairwise comparison.
+C# NOTE
+  TryGetValue with the out parameter does one hash lookup and, on a miss, one
+  insert; the common ContainsKey-then-indexer-then-assign version hashes the
+  same signature three times. Holding the returned group reference and calling
+  group.Add also avoids a fourth lookup.
 COMPLEXITY
   Time  : O(n * k)
   Space : O(n)

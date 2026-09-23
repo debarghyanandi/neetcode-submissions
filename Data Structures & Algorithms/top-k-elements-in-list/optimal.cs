@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  bucket sort by frequency   [bucket-sort-frequency]
+// -  Frequency buckets, highest-first traversal   [bucket-by-frequency]
 // -  ranks above suboptimal.cs (O(n log k) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  counts frequencies into a dictionary, then places values into
-// -  frequency-indexed buckets (bounded by n) and scans buckets from high
-// -  to low, avoiding any comparison sort.
+// -  Bucket array sized by frequency range avoids sorting; single pass
+// -  through descending frequencies collects k values in linear time.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -63,83 +62,79 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Bucket sort by frequency - count, bucket, walk down
+ PATTERN : Bucket Sort by Frequency - count, then scan buckets down
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-WHY BUCKETS, NOT A HEAP
-  The whole trick is a bound: a value in nums can occur at most nums.Length
-  times, so a frequency is a small non-negative integer, not an arbitrary sort
-  key. That lets frequency be used as an ARRAY INDEX instead of something to
-  compare. Once valuesByFrequency is indexed by count, the values are already
-  grouped in count order for free, and the ordering step disappears - no sort of
-  occurrences by value, no size-k min-heap over the distinct counts. If you can
-  only recall one line weeks later, recall that the key you want to order by is
-  bounded by the input length.
+VARIABLES
+  occurrences         occurrences[value] = how many times value appears in nums
+  valuesByFrequency   valuesByFrequency[f] = list of every value seen exactly f times
+  filled              how many slots of result are already written
+  frequency           the bucket index being read, used as a real frequency count
+WHY THIS PATTERN
+  The problem asks for the k most frequent values, not for a full ordering of
+  all values. A frequency can never exceed nums.Length, so frequencies are small
+  integers in a known range - that is exactly the condition for bucket sort,
+  where you use the value itself as an array index instead of comparing items.
+  So occurrences gives each value its count, valuesByFrequency puts each value
+  in the slot named by its count, and one downward scan from the last index
+  reaches the top k without any comparison sort.
+BRUTE FORCE
+  The first thing most people write: build the same occurrences dictionary, copy
+  it to a list, sort by count descending, take the first k keys. That is O(n log
+  n) time because of the sort. A heap of size k is the usual middle step at O(n
+  log k). Both lose here because sorting or heap-ordering the counts is wasted
+  work when the counts are already bounded by nums.Length and can index an array
+  directly.
 INVARIANT
-  After the second foreach: for every f, valuesByFrequency[f] holds exactly
-  those values that occur exactly f times, and every key of occurrences lands in
-  exactly one bucket. The buckets are a partition of the distinct values.
-  Because the walk in Step 3 goes from index nums.Length downward, values are
-  emitted in non-increasing frequency order, so any prefix of that emission - in
-  particular the first k written into result - is a valid top-k answer.
-THE COUNTING IDIOM
-  occurrences.TryGetValue(number, out int currentCount) sets currentCount to 0
-  on a miss (default for int), so currentCount + 1 is 1 for a first sighting and
-  the following indexer assignment inserts it. This is the reason the loop needs
-  no ContainsKey branch. Note what you cannot write instead:
-  occurrences[number]++ throws KeyNotFoundException on the first sighting,
-  because the read side of the compound assignment hits the missing key. The
-  idiom here does a lookup plus a store per element;
-  CollectionsMarshal.GetValueRefOrAddDefault would fold those into one, at the
-  cost of readability.
-THE DESCENDING WALK
-  The for starts at valuesByFrequency.Length - 1, which is nums.Length - the
-  largest count any value could have. It stops at frequency > 0 rather than >= 0
-  because bucket 0 is provably empty: every key in occurrences was seen at least
-  once, so nothing ever gets added at index 0. The nested for/foreach looks
-  quadratic but is not: the buckets partition the distinct values, so across the
-  entire outer loop each value is visited at most once.
-THE BREAK GUARD
-  More than k values can tie at the same top frequency, while result has room
-  for exactly k. Two separate conditions cooperate here and BOTH are
-  load-bearing:
-  1. if (filled == k) break exits the inner foreach mid-bucket, before
-  result[filled] is written out of range.
-  2. filled < k in the outer for header stops the descent entirely.
-  Drop the outer condition and keep the break: the loop moves to the next lower
-  non-empty bucket and the foreach writes result[k] immediately -
-  IndexOutOfRangeException. Drop the break and keep the outer condition: the
-  current bucket keeps writing past the end - same exception. The break only
-  leaves one foreach, it does not leave the for.
+  When the downward loop is at index frequency, every value whose count is
+  strictly greater than frequency has already been visited, and filled holds how
+  many of them were copied into result. So the values written into result are
+  always taken in non-increasing order of count. The loop stops the moment
+  filled == k, which means result holds k values none of which has a smaller
+  count than a value left behind.
+WHY INDEX 0 IS SKIPPED
+  The loop condition is frequency > 0, not frequency >= 0. Bucket 0 is allocated
+  and always stays empty, because a value only lands in occurrences if it
+  appeared at least once. Stopping at 1 costs nothing and makes it clear that a
+  count of zero is not a real entry.
 WATCH OUT
-  The initialization loop fills all nums.Length + 1 slots with real List
-  instances before a single value is inserted. For nums = [1,1,1,1,1] that is
-  six Lists allocated so that one of them can hold a single value; the empties
-  are pure waste. The payoff is that Step 2 and Step 3 need no null checks
-  anywhere. Lazy allocation (create the List on first Add, null-check on read)
-  is the trade if the eager fill is ever challenged.
-
-  Second trap: result is sized k unconditionally. If k exceeded the number of
-  distinct values, the walk would run out of buckets and the tail of result
-  would silently stay 0 rather than throw. The code relies on the problem
-  constraint that k is at most the distinct count.
-INTERVIEW FOLLOW-UPS
-  Ties: the order of values inside one bucket is Dictionary enumeration order,
-  which is unspecified. This solution therefore breaks ties arbitrarily. If
-  asked for a deterministic tie-break (smallest value first, say), you must sort
-  each bucket as you consume it - the bucket structure itself gives you no
-  ordering within a frequency.
-
-  When buckets lose: they need the nums.Length bound known up front and
-  materialized as an array. For a stream, or when the count range is unbounded
-  or enormous relative to the number of distinct values, go back to a size-k
-  min-heap over occurrences.
-
-  Why no comparison sort is needed at all: the values being ordered are the
-  counts, and counts are dense small integers in [1, nums.Length] - the same
-  reason counting sort escapes the comparison lower bound.
+  The inner break only leaves the foreach; the outer for then re-checks filled <
+  k and exits, so the guard works, but it is two exits, not one - do not move
+  the break logic around carelessly. If k is larger than the number of distinct
+  values in nums, the loop runs out of buckets and returns a result array with
+  trailing zeros instead of throwing - the code assumes k is valid. Allocating
+  nums.Length + 1 List objects up front means one empty List per bucket even
+  when only a handful of distinct values exist; for a long nums with few
+  distinct values that is a lot of dead allocation. If nums is empty,
+  valuesByFrequency has length 1, the loop body never runs, and you get back an
+  array of k zeros.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How do you cut the memory used by the empty buckets?
+     Allocate the List lazily - leave the array entries null and create a List
+     only in the second foreach when a value first lands in that bucket. The
+     scan loop then needs a null check per index, trading a branch for far fewer
+     allocations.
+  2. What if nums does not fit in memory and arrives as a stream?
+     Bucket sort needs the full count table, so switch to a min-heap of size k
+     keyed on count, evicting the smallest. That is O(n log k) time but only
+     O(k) extra space beyond the counts.
+  3. What if ties at the boundary frequency must be broken by value, smallest
+  first?
+     Sort just the one bucket where the cut happens before copying from it. Only
+     that bucket needs ordering, so the cost is O(m log m) for m values sharing
+     that frequency, not a full sort.
+  4. What if you must return the k least frequent values instead?
+     Walk the same buckets upward from index 1 with the same filled guard;
+     nothing else changes.
+TRIGGER
+  You need the top k by a count, and that count is bounded by the input length -
+  index an array by the count instead of sorting.
+C# NOTE
+  TryGetValue(number, out int currentCount) sets currentCount to 0 when the key
+  is absent, so the increment works for both first and later sightings with one
+  lookup plus one write - cleaner than ContainsKey followed by a second lookup.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

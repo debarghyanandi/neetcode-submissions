@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  two pointers converging inward, skip non-alphanumerics
-// -  [two-pointer-inplace-palindrome]
+// -  Two-pointer, converging ends   [two-pointer]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  left/right indices walk toward each other over the original string,
-// -  skipping non-alphanumeric chars and case-folding, using only O(1)
-// -  extra scalars
+// -  Each character is visited at most once by the converging pointers, and
+// -  all character checks are constant-time operations.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -38,82 +36,78 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Two Pointers - converge inward, skip non-alphanumerics
+ PATTERN : Two Pointers - skip non-alphanumeric, compare inward
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  left     index scanning from the front, first unchecked character
+  right    index scanning from the back, last unchecked character
 WHY THIS PATTERN
-  A palindrome check is a statement about pairs: position i from the front must
-  match position i from the back. Two pointers walk those pairs directly, so no
-  copy of the input is needed. The obvious alternative - filter s into a new
-  string of lowercase alphanumerics, then compare it to its reverse (or run two
-  pointers over it) - is easier to write and just as fast asymptotically, but it
-  allocates a second buffer proportional to the input. This version pays nothing
-  extra by doing the filtering inline: the skip loops ARE the filter, applied
-  lazily at the moment each pointer is consulted.
+  The question asks whether the string reads the same forward and backward after
+  dropping punctuation and case. That is a symmetric comparison between position
+  left and its mirror position right, so one pass from both ends is enough. The
+  two inner while loops push left and right past characters that do not count,
+  so the outer comparison only ever sees letters and digits.
+BRUTE FORCE
+  The obvious first attempt is to build a cleaned string: loop over s, keep only
+  char.IsLetterOrDigit, lowercase it, then compare that string with its reverse.
+  It is still O(n) time but it allocates two extra strings of size n, so O(n)
+  space. This file loses nothing in speed and keeps space at a constant two
+  integers.
 INVARIANT
-  Everything strictly outside [left, right] has already been matched as an equal
-  pair. The outer condition left < right is the termination rule: when the
-  pointers meet or cross, every remaining pair is exhausted. Note that left ==
-  right means one character is left in the middle, and a middle character is its
-  own mirror - it never needs a comparison, which is why the outer loop uses <
-  and not <=.
-
-  The nested while loops do not make this quadratic. left only ever increases
-  and right only ever decreases; between them they can take at most s.Length
-  steps in total across the whole run, no matter how they are distributed
-  between the skip loops and the trailing left++/right--.
-ALGORITHM
-  1. left = 0, right = s.Length - 1.
-  2. While left < right:
-  3. Advance left past any character where char.IsLetterOrDigit is false.
-  4. Retreat right past any such character.
-  5. Compare char.ToLower(s[left]) against char.ToLower(s[right]); return
-  false on mismatch.
-  6. Step both pointers inward past the pair just matched.
-  7. Surviving the loop means no mismatching pair exists - return true.
-WHY THE INNER GUARDS MATTER
-  The skip loops re-test left < right (and right > left) rather than just left <
-  s.Length. Drop that guard and the code crashes on any input with no
-  alphanumerics at all: for s = ".,", left would run off the end and
-  s[left] throws IndexOutOfRangeException. With the guard, left stops at 1,
-  the second skip loop sees right > left is false and does nothing, and the
-  comparison degenerates to s[1] against s[1] - a character compared with
-  itself, trivially equal. So the guard converts the degenerate case into a
-  harmless self-comparison instead of an out-of-range read.
-
-  That self-comparison is also what saves the one-alphanumeric case such as
-  "a.": correctness does not depend on avoiding it, only on it being safe.
-THE TOLOWER TRAP
-  char.ToLower(char) uses the current culture, not the invariant one. Under a
-  Turkish culture, 'I' lowercases to dotless 'i' while 'i' stays 'i', so s =
-  "Ii" would report false on a machine set to tr-TR and true everywhere else.
-  char.ToLowerInvariant is the correct call here, since the comparison is about
-  character identity, not about how a human reads the s.
-
-  Related: char.IsLetterOrDigit is Unicode-aware, so accented letters, non-Latin
-  scripts, and non-ASCII digits all count as comparable characters. If the
-  intended definition is ASCII-only, this admits more characters than expected -
-  worth stating out loud rather than leaving to the reader.
-EDGE CASES TO REPLAY
-  Empty string: right = -1, the outer loop never runs, returns true.
-  Single character: left == right immediately, returns true without any
-  comparison.
-  All punctuation such as ",.": handled by the guard path described above,
-  returns true.
-  Digits: IsLetterOrDigit admits them and ToLower leaves them unchanged, so "0P"
-  correctly returns false on the P/0 mismatch.
+  At the top of the outer while loop, every pair of positions already consumed
+  outside the window [left, right] has matched after case folding, and all
+  characters outside that window are either matched or ignorable. Each iteration
+  either shrinks the window or returns false. If left and right cross without a
+  mismatch, every kept character has been paired with its mirror, so the string
+  is a palindrome.
+THE GUARDS INSIDE THE SKIP LOOPS
+  Both skip loops re-test left < right (and right > left) inside their own
+  condition. Without that guard a string with no letters or digits at all, like
+  ",.;", would run left past the end of the string and throw an
+  IndexOutOfRangeException. With the guard, left and right meet in the middle,
+  the outer loop condition left < right fails, and the method returns true.
+WATCH OUT
+  When the skip loops stop because left == right, the code still runs the
+  comparison char.ToLower(s[left]) != char.ToLower(s[right]). That compares a
+  character with itself, so it is always false and harmless, but it means one
+  wasted comparison on odd-length inputs and on all-punctuation inputs.
+  char.ToLower uses the current culture; in a Turkish culture 'I' does not lower
+  to 'i', which can change the answer for inputs containing I or i.
+  char.ToLowerInvariant is the safer call here. Also note s is never
+  null-checked, so a null argument throws on s.Length.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The input is a stream too large to hold in memory. How does this change?
+     Two pointers need random access from both ends, so it breaks. You would
+     need to buffer the whole stream, or read from two file handles seeking from
+     each end, which trades memory for seek cost.
+  2. What if the palindrome check must treat accented letters as equal to their
+  plain form, so "Café" matches "éfac"?
+     Normalize each character with string.Normalize(NormalizationForm.FormD) and
+     drop combining marks before comparing. That costs an allocation per
+     character or a pre-pass, so the O(1) space is lost unless you fold per
+     character in place.
+  3. Allow removing at most one character and still call it a palindrome.
+     On the first mismatch, recurse or loop twice: check the substring (left+1,
+     right) and (left, right-1). Still O(n) time because each helper scan runs
+     at most once, still O(1) space.
+  4. Return the longest palindromic substring instead.
+     Two pointers from the ends no longer applies; you expand around each of the
+     2n-1 centers for O(n^2) time and O(1) space, or use Manacher's algorithm
+     for O(n).
 TRIGGER
-  Reach for converging two pointers when the input is a linear sequence, the
-  property is defined over symmetric pairs, and the problem asks you to ignore
-  or filter certain elements. The filter belongs inside the pointer advance, not
-  in a preprocessing pass - that is the move that turns an O(n) space solution
-  into an O(1) space one without changing the shape of the loop.
+  Reach for this when a problem compares a sequence against its mirror, or pairs
+  the ends of a sorted or symmetric input, and you want to avoid building a
+  copy.
+C# NOTE
+  char.IsLetterOrDigit and char.ToLower take a char, so no substring or string
+  allocation happens anywhere in this method; indexing s[left] on a string is a
+  direct read. Prefer char.ToLowerInvariant to make the case folding independent
+  of the thread's current culture.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

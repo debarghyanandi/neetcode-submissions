@@ -651,92 +651,107 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Max Water Container',
-  note: 'the shorter wall is the whole problem — widening cannot save it, so throw it away',
+  note: 'the shorter wall is the one holding you back, so it is the one to drop',
   inputs: [{id:'h', label:'heights', value:'1,7,2,5,4,7,3,6', width:260}],
   parse(raw){
     const h = parseInts(raw.h, 12);
-    if (!h) return {ok:false, msg:'Enter a valid comma-separated list of wall heights.'};
-    if (h.length < 2) return {ok:false, msg:'Needs at least two walls to hold water.'};
+    if (!h) return {ok:false, msg:'Enter a valid comma-separated list of heights.'};
+    if (h.length < 2) return {ok:false, msg:'Needs at least two walls.'};
     if (h.some(v => v < 0)) return {ok:false, msg:'Heights must be non-negative.'};
     return {ok:true, value:{h}, normalized:{h: h.join(',')}};
   },
   shuffle(){ return {h: randInts(7 + Math.floor(Math.random()*3), 1, 9).join(',')}; },
   solutions: [
   {
-    label: 'Two pointers, drop the shorter wall',
+    label: 'Two pointers, shrink the shorter wall',
     badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'Start at the widest possible pair. Every other pair is narrower, so the only way to beat it is a taller <b>shorter</b> wall. Moving the taller wall inward cannot help — width shrinks and the short wall still caps the height — so the shorter wall is the one to discard, and every remaining pair that used it dies with it.',
+    blurb: 'Start at the widest possible pair. Water is <code>width × min(left, right)</code>, so the shorter wall caps it. Moving the <b>taller</b> wall inward can only lose width while the same short wall still caps the height — never better. So the shorter wall is safe to discard outright, and one pass covers every pair worth checking.',
     legend: [
-      {cls:'hot', text:'left / right — the pair being measured'},
-      {cls:'in-window', text:'still in play'},
-      {cls:'good', text:'best pair found'},
-      {cls:'dim', text:'discarded'}
+      {cls:'hot', text:'left / right walls'},
+      {cls:'in-window', text:'water between them'},
+      {cls:'good', text:'best container so far'},
+      {cls:'dim', text:'discarded — can never win'}
     ],
     code: [
-      'int left = 0;',
-      'int right = heights.Length - 1;',
-      'int maxArea = 0;',
-      '',
-      'while (left < right)',
+      'public class Solution',
       '{',
-      '    int width = right - left;',
-      '    int height = Math.Min(heights[left], heights[right]);',
-      '    int area = width * height;',
+      '    public int MaxArea(int[] heights)',
+      '    {',
+      '        int left = 0;',
+      '        int right = heights.Length - 1;',
+      '        int maxArea = 0;',
       '',
-      '    if (area > maxArea)',
-      '        maxArea = area;',
+      '        while (left < right)',
+      '        {',
+      '            // Width is the index gap; height is capped by the SHORTER wall.',
+      '            int width = right - left;',
+      '            int height = Math.Min(heights[left], heights[right]);',
+      '            int area = width * height;',
       '',
-      '    // the shorter wall is the binding constraint',
-      '    if (heights[left] < heights[right])',
-      '        left++;',
-      '    else',
-      '        right--;',
-      '}',
+      '            if (area > maxArea)',
+      '                maxArea = area;',
       '',
-      'return maxArea;'
+      '            // Discard the shorter wall - it is the binding constraint and',
+      '            // cannot do better with any narrower pairing.',
+      '            if (heights[left] < heights[right])',
+      '                left++;',
+      '            else',
+      '                right--;',
+      '        }',
+      '',
+      '        return maxArea;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const h = input.h, steps = [];
-      let l = 0, r = h.length - 1, best = 0, bl = -1, br = -1;
-      const panels = (cl, cr, extra) => [
-        pBars('Walls', h, (k) => ({
-          cls: (k === cl || k === cr) ? 'hot'
+      const h = input.h, n = h.length, steps = [];
+      let left = 0, right = n - 1, maxArea = 0;
+      let bl = -1, br = -1;
+      const panels = (l, r, area) => {
+        const lvl = (l >= 0 && r >= 0 && l < r) ? Math.min(h[l], h[r]) : 0;
+        const bars = pBars('heights', h, (k) => ({
+          cls: (l >= 0 && (k === l || k === r)) ? 'hot'
              : (k === bl || k === br) ? 'good'
-             : (cl >= 0 && k > cl && k < cr) ? 'in-window'
-             : 'dim'
-        })),
-        pPills('', [
-          {k:'left', v: cl >= 0 ? cl + ' (h=' + h[cl] + ')' : '–', cls:'hot'},
-          {k:'right', v: cr >= 0 ? cr + ' (h=' + h[cr] + ')' : '–', cls:'hot'},
-          {k:'width', v: extra && extra.w !== undefined ? extra.w : '–'},
-          {k:'height', v: extra && extra.ht !== undefined ? extra.ht : '–'},
-          {k:'area', v: extra && extra.a !== undefined ? extra.a : '–', cls:'accent'},
-          {k:'maxArea', v: best, cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1,2,3], msg:'Open with the <b>widest</b> container there is: wall 0 and wall ' + r + '. Width can only shrink from here, so this pair is the natural opening bid — every later pair has to win on height instead. <code>maxArea</code> starts at <b>0</b>, which is always achievable.', panels: panels(l, r)});
-      while (l < r){
-        const w = r - l, ht = Math.min(h[l], h[r]), a = w * ht;
-        const better = a > best;
-        if (better){ best = a; bl = l; br = r; }
-        steps.push({lines:[7,8,9,11,12], msg:'Walls ' + l + ' and ' + r + ': width <b>' + w + '</b> × height <b>' + ht + '</b> = <b>' + a + '</b>. The height is <code>Math.Min(' + h[l] + ', ' + h[r] + ')</code> because water spills over the lower rim — the taller wall’s extra height is simply wasted. ' + (better ? 'That is a new best.' : '<code>maxArea</code> stays ' + best + '.'),
-          panels: panels(l, r, {w:w, ht:ht, a:a})});
-        if (h[l] < h[r]){
-          steps.push({lines:[15,16], msg:'Wall ' + l + ' (<b>' + h[l] + '</b>) is the shorter one. Every <em>other</em> pair that uses it is narrower than this one and still capped at ' + h[l] + ', so none of them can beat ' + a + '. Wall ' + l + ' is finished — one <code>left++</code> erases all of those pairs at once.',
-            panels: panels(l, r, {w:w, ht:ht, a:a})});
-          l++;
+             : (k < left || k > right) ? 'dim'
+             : ''
+        }), (l >= 0 && l < r) ? {fill:{from:l, to:r, level:lvl}} : {});
+        const pills = pPills('', [
+          {k:'left', v: l >= 0 ? l : '–', cls:'hot'},
+          {k:'right', v: r >= 0 ? r : '–', cls:'hot'},
+          {k:'width', v: (l >= 0 && l < r) ? (r - l) : '–'},
+          {k:'height', v: (l >= 0 && l < r) ? lvl : '–'},
+          {k:'area', v: area === null ? '–' : area},
+          {k:'maxArea', v: maxArea, cls:'good'}
+        ]);
+        const tiles = pTiles('indices', h, (k) => ({
+          cls: (l >= 0 && (k === l || k === r)) ? 'hot'
+             : (k < left || k > right) ? 'dim'
+             : 'in-window'
+        }), {ptrs: l >= 0 ? [{name:'left', idx:l}, {name:'right', idx:r, cls:'accent'}] : []});
+        return [bars, tiles, pills];
+      };
+      steps.push({lines:[5,6,7], msg:'Both pointers start at the ends, because index <b>0</b> and index <b>' + (n-1) + '</b> give the <em>widest</em> container that exists. Width can only shrink from here, so any later pair has to win on height instead. <code>maxArea</code> starts at <b>0</b>.', panels: panels(-1, -1, null)});
+      let guard = 0;
+      while (left < right && guard++ < 200){
+        const width = right - left;
+        const height = Math.min(h[left], h[right]);
+        const area = width * height;
+        const better = area > maxArea;
+        if (better){ maxArea = area; bl = left; br = right; }
+        steps.push({lines:[12,13,14,16,17], msg:'Walls at <b>' + left + '</b> (height ' + h[left] + ') and <b>' + right + '</b> (height ' + h[right] + '): width <b>' + width + '</b> × height <b>' + height + '</b> = <b>' + area + '</b>. Water spills over the shorter wall, so <code>Math.Min</code> — not the taller one — sets the level. ' + (better ? 'That beats the old best; <code>maxArea</code> becomes <b>' + area + '</b>.' : '<code>maxArea</code> stays <b>' + maxArea + '</b>.'), panels: panels(left, right, area)});
+        if (h[left] < h[right]){
+          steps.push({lines:[21,22], msg:'Left wall <b>' + h[left] + '</b> is shorter than right wall <b>' + h[right] + '</b>. Pair index ' + left + ' with anything inside index ' + right + ' and the height is still capped at ' + h[left] + ' or less, while the width is strictly smaller — so every remaining pair using index ' + left + ' is worse than the one just measured. Drop it: <code>left++</code>.', panels: panels(left, right, area)});
+          left++;
         } else {
-          steps.push({lines:[15,18], msg:'Wall ' + r + ' (<b>' + h[r] + '</b>) is the shorter one — and on a tie either wall may go, since both are capped the same. Keeping it only buys narrower containers under the same cap, so retreat <code>right</code> and write wall ' + r + ' off for good.',
-            panels: panels(l, r, {w:w, ht:ht, a:a})});
-          r--;
+          steps.push({lines:[21,23,24], msg:'Right wall <b>' + h[right] + '</b> is no taller than left wall <b>' + h[left] + '</b>, so the right one is the binding constraint here. Any narrower pairing with index ' + right + ' keeps that same cap and loses width, so index ' + right + ' is finished for good: <code>right--</code>.', panels: panels(left, right, area)});
+          right--;
         }
       }
-      steps.push({lines:[5,21], msg:'<code>left</code> has met <code>right</code>, so no pair is left to try. Largest container <b>' + best + '</b>' + (bl >= 0 ? ' (walls ' + bl + ' and ' + br + ', heights ' + h[bl] + ' and ' + h[br] + ')' : '') + '. Each step retired one wall permanently, so <b>' + (h.length - 1) + '</b> measurements settled all ' + (h.length * (h.length - 1) / 2) + ' possible pairs.',
-        panels: panels(-1, -1)});
+      steps.push({lines:[9,27], msg:'<code>left</code> and <code>right</code> have met, so every pair that could ever have been the best has been measured — each step threw away a wall only after proving nothing it could still form beats what we had. Answer: <b>' + maxArea + '</b>' + (bl >= 0 ? ' from walls ' + bl + ' and ' + br + ' (' + h[bl] + ' and ' + h[br] + ').' : '.') + ' One pass, two indices, no extra memory.', panels: panels(-1, -1, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

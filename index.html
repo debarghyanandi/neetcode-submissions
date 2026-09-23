@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">39</span> / 66</b></div>
-      <div class="bar"><span id="bar" style="width:59.1%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">50</span> / 66</b></div>
+      <div class="bar"><span id="bar" style="width:75.8%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -152,38 +152,38 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Arrays &amp; Hashing">
   <div class="group-head">
     <h2>Arrays &amp; Hashing</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>8</b> at standard</span>
+    <span class="group-count"><b class="gdone">7</b> / <b>7</b> at standard</span>
   </div>
   <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
   <ul>
-    <li data-hay="anagram groups anagram-groups arrays &amp; hashing hash map on a canonical key - 26-slot letter count  needs rebuilt" data-status="rebuild">
+    <li data-hay="anagram groups anagram-groups arrays &amp; hashing hash map grouping - canonical count signature as key array string hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/anagram-groups" target="_blank" rel="noopener noreferrer">Anagram Groups</a>
-        <span class="why">Hash map on a canonical key - 26-slot letter count</span>
+        <span class="why">Hash Map Grouping - canonical count signature as key</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n * k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/anagram-groups/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/anagram-groups/anagram-groups-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="duplicate integer duplicate-integer arrays &amp; hashing hash set membership - add's return value is the test  needs rebuilt" data-status="rebuild">
+    <li data-hay="duplicate integer duplicate-integer arrays &amp; hashing hash set - detect a repeat on first insert failure array hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/duplicate-integer" target="_blank" rel="noopener noreferrer">Duplicate Integer</a>
-        <span class="why">Hash Set membership - Add's return value is the test</span>
+        <span class="why">Hash Set - detect a repeat on first insert failure</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/duplicate-integer/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/duplicate-integer/duplicate-integer-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="is anagram is-anagram arrays &amp; hashing fixed counting array - balances must cancel to zero  needs rebuilt" data-status="rebuild">
+    <li data-hay="is anagram is-anagram arrays &amp; hashing fixed-size counting array - one pass, credit and debit array string hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/is-anagram" target="_blank" rel="noopener noreferrer">Is Anagram</a>
-        <span class="why">Fixed counting array - balances must cancel to zero</span>
+        <span class="why">Fixed-size counting array - one pass, credit and debit</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-anagram/is-anagram-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-anagram/is-anagram-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set - expand each run only from its left edge array hash-set current" data-status="current">
@@ -196,34 +196,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="products of array discluding self products-of-array-discluding-self arrays &amp; hashing prefix/suffix products - two passes, output as scratch  needs rebuilt" data-status="rebuild">
+    <li data-hay="products of array discluding self products-of-array-discluding-self arrays &amp; hashing prefix/suffix products - two passes into the output array array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/products-of-array-discluding-self" target="_blank" rel="noopener noreferrer">Products Of Array Discluding Self</a>
-        <span class="why">Prefix/Suffix Products - two passes, output as scratch</span>
+        <span class="why">Prefix/Suffix Products - two passes into the output array</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/products-of-array-discluding-self/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/products-of-array-discluding-self/products-of-array-discluding-self-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="string encode and decode string-encode-and-decode arrays &amp; hashing length-prefixed framing - count, '#', then raw payload  needs rebuilt" data-status="rebuild">
+    <li data-hay="string encode and decode string-encode-and-decode arrays &amp; hashing length-prefixed encoding - &quot;len#payload&quot; framing string array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/string-encode-and-decode" target="_blank" rel="noopener noreferrer">String Encode And Decode</a>
-        <span class="why">Length-Prefixed Framing - count, '#', then raw payload</span>
+        <span class="why">Length-prefixed encoding - &quot;len#payload&quot; framing</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/string-encode-and-decode-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
-      </span>
-    </li>
-    <li data-hay="top k elements in list top-k-elements-in-list arrays &amp; hashing bucket sort by frequency - count, bucket, walk down  needs rebuilt" data-status="rebuild">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/top-k-elements-in-list" target="_blank" rel="noopener noreferrer">Top K Elements In List</a>
-        <span class="why">Bucket sort by frequency - count, bucket, walk down</span>
-      </span>
-      <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/top-k-elements-in-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n + m) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/string-encode-and-decode/string-encode-and-decode-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="two integer sum two-integer-sum arrays &amp; hashing hash map lookup - store seen values, search for complement array hash-map current" data-status="current">
@@ -242,18 +232,18 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Two Pointers">
   <div class="group-head">
     <h2>Two Pointers</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>7</b> at standard</span>
+    <span class="group-count"><b class="gdone">7</b> / <b>7</b> at standard</span>
   </div>
   <p class="group-note">Two indices moving under a rule that never lets you miss an answer.</p>
   <ul>
-    <li data-hay="is palindrome is-palindrome two pointers two pointers - converge inward, skip non-alphanumerics  needs rebuilt" data-status="rebuild">
+    <li data-hay="is palindrome is-palindrome two pointers two pointers - skip non-alphanumeric, compare inward string current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/is-palindrome" target="_blank" rel="noopener noreferrer">Is Palindrome</a>
-        <span class="why">Two Pointers - converge inward, skip non-alphanumerics</span>
+        <span class="why">Two Pointers - skip non-alphanumeric, compare inward</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-palindrome/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-palindrome/is-palindrome-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="longest palindromic substring longest-palindromic-substring two pointers expand around center - two pointers from every index string current" data-status="current">
@@ -266,24 +256,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="max water container max-water-container two pointers two pointers - shrink inward from the widest pair  needs rebuilt" data-status="rebuild">
+    <li data-hay="max water container max-water-container two pointers two pointers - shrink from the shorter wall array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/max-water-container" target="_blank" rel="noopener noreferrer">Max Water Container</a>
-        <span class="why">Two Pointers - shrink inward from the widest pair</span>
+        <span class="why">Two Pointers - shrink from the shorter wall</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/max-water-container/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/max-water-container/max-water-container-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="move zeroes move-zeroes two pointers two pointers (read/write) - stable partition by swap  needs rebuilt" data-status="rebuild">
+    <li data-hay="move zeroes move-zeroes two pointers two pointers - read/write index with swap array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/move-zeroes" target="_blank" rel="noopener noreferrer">Move Zeroes</a>
-        <span class="why">Two Pointers (read/write) - stable partition by swap</span>
+        <span class="why">Two Pointers - read/write index with swap</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/move-zeroes/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/move-zeroes/move-zeroes-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="remove duplicates from sorted array remove-duplicates-from-sorted-array two pointers two pointers - read/write index on a sorted array array current" data-status="current">
@@ -296,24 +286,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="three integer sum three-integer-sum two pointers sort, anchor each index, two-pointer the suffix  needs rebuilt" data-status="rebuild">
+    <li data-hay="three integer sum three-integer-sum two pointers sort + two pointers - fix anchor, two-sum the suffix array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/three-integer-sum" target="_blank" rel="noopener noreferrer">Three Integer Sum</a>
-        <span class="why">Sort, anchor each index, two-pointer the suffix</span>
+        <span class="why">Sort + Two Pointers - fix anchor, two-sum the suffix</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n^2) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/three-integer-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/three-integer-sum/three-integer-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n^2) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/three-integer-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/three-integer-sum/three-integer-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="two integer sum ii two-integer-sum-ii two pointers two pointers - converging on a sorted array  needs rebuilt" data-status="rebuild">
+    <li data-hay="two integer sum ii two-integer-sum-ii two pointers two pointers on a sorted array - converge from both ends array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/two-integer-sum-ii" target="_blank" rel="noopener noreferrer">Two Integer Sum Ii</a>
-        <span class="why">Two Pointers - Converging on a Sorted Array</span>
+        <span class="why">Two Pointers on a sorted array - converge from both ends</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/two-integer-sum-ii/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/two-integer-sum-ii/two-integer-sum-ii-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>
@@ -722,7 +712,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Heap / Priority Queue">
   <div class="group-head">
     <h2>Heap / Priority Queue</h2>
-    <span class="group-count"><b class="gdone">3</b> / <b>3</b> at standard</span>
+    <span class="group-count"><b class="gdone">4</b> / <b>4</b> at standard</span>
   </div>
   <p class="group-note">You need the best few, not the sorted whole.</p>
   <ul>
@@ -753,6 +743,16 @@ li + li{border-top:2px dashed var(--pencil-light);}
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/last-stone-weight/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/last-stone-weight/last-stone-weight-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
+      </span>
+    </li>
+    <li data-hay="top k elements in list top-k-elements-in-list heap / priority queue bucket sort by frequency - count, then scan buckets down array hash-map heap current" data-status="current">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/top-k-elements-in-list" target="_blank" rel="noopener noreferrer">Top K Elements In List</a>
+        <span class="why">Bucket Sort by Frequency - count, then scan buckets down</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/top-k-elements-in-list/top-k-elements-in-list-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>

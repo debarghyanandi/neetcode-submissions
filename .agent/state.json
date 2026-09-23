@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T05:45:50.444Z",
+  "updatedAt": "2026-09-23T06:15:03.679Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -142,38 +142,67 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "83ca03147a9c"
         },
         "suboptimal.cs": {
-          "version": 1,
-          "codePrint": "a765bb90aa15",
-          "renames": []
+          "version": 2,
+          "codePrint": "a765bb90aa15"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"hash by 26-letter frequency-count signature\",\"approachKey\":\"frequency-signature-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n * k) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n * k)\",\"algorithm\":\"hash by sorted-character canonical key\",\"approachKey\":\"sorted-key-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n * k)",
           "space": "O(n)",
-          "algorithm": "hash by 26-letter frequency-count signature",
-          "approachKey": "frequency-signature-hashmap",
+          "algorithm": "Character frequency signature hashing",
+          "approachKey": "frequency-hash",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "string",
+            "hash-map"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n * k log k)",
-          "space": "O(n * k)",
-          "algorithm": "hash by sorted-character canonical key",
-          "approachKey": "sorted-key-hashmap",
+          "space": "O(n)",
+          "algorithm": "Sort each word to canonical form",
+          "approachKey": "sort-canonical",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "string",
+            "hash-map"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "83ca03147a9c",
+          "suboptimal.cs": "a765bb90aa15"
+        },
+        "structures": [
+          "array",
+          "string",
+          "hash-map"
+        ],
+        "builtAt": "2026-09-23T06:03:04.690Z"
+      }
     },
     "balanced-binary-tree": {
       "topic": "Data Structures & Algorithms",
@@ -1134,41 +1163,51 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, add-and-check, early exit on repeat\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above optimal-variant.cs (O(n) time / O(n) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash set, build full set then compare cardinality to length\",\"approachKey\":\"hashset-membership\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash set, add-and-check, early exit on repeat",
-          "approachKey": "hashset-membership",
+          "algorithm": "HashSet with early exit",
+          "approachKey": "hashset-early-exit",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "hash-set"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "hash set, build full set then compare cardinality to length",
-          "approachKey": "hashset-membership",
+          "algorithm": "HashSet size comparison",
+          "approachKey": "hashset-size-compare",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "hash-set"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "04893c3ee615",
-          "renames": []
+          "version": 2,
+          "codePrint": "04893c3ee615"
         },
         "optimal-variant.cs": {
-          "version": 1,
-          "codePrint": "256ee4307930",
-          "renames": []
+          "version": 2,
+          "codePrint": "256ee4307930"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -1177,8 +1216,11 @@
           "optimal.cs": "04893c3ee615",
           "optimal-variant.cs": "256ee4307930"
         },
-        "builtAt": "2026-09-06T08:56:01.926Z",
-        "v": 1
+        "structures": [
+          "array",
+          "hash-set"
+        ],
+        "builtAt": "2026-09-23T06:03:44.502Z"
       }
     },
     "eating-bananas": {
@@ -1809,7 +1851,7 @@
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
         "optimal.cs",
-        "suboptimal.cs"
+        "optimal-variant.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
@@ -1824,7 +1866,7 @@
         "b0562e76a11c3dc1ff8d328f9e24fc0a165ce8a524a9a05362e9f5299c477711": "optimal.cs",
         "63d3f18741b30b8120c5415e909f20b302906935822fb97a44d3d9e29ece34e4": "suboptimal.cs",
         "88f0e23101d4949f8d280c4c174a7f52f8c93ceb2a5149689ee0dda245fcd909": "optimal.cs",
-        "e6f9eb6baa4ffdc8f0e34b48a3d8891e9327cb094798ff3007efd037c2d2c8c1": "suboptimal.cs"
+        "e6f9eb6baa4ffdc8f0e34b48a3d8891e9327cb094798ff3007efd037c2d2c8c1": "optimal-variant.cs"
       },
       "fingerprints": {
         "ddf7058904455fc82f9ef0a1f6b5a2c48b7c78aa0d1b61064625a2e1e548a583": "optimal.cs",
@@ -1836,7 +1878,7 @@
         "b0562e76a11c3dc1ff8d328f9e24fc0a165ce8a524a9a05362e9f5299c477711": "optimal.cs",
         "63d3f18741b30b8120c5415e909f20b302906935822fb97a44d3d9e29ece34e4": "suboptimal.cs",
         "88f0e23101d4949f8d280c4c174a7f52f8c93ceb2a5149689ee0dda245fcd909": "optimal.cs",
-        "e6f9eb6baa4ffdc8f0e34b48a3d8891e9327cb094798ff3007efd037c2d2c8c1": "suboptimal.cs"
+        "e6f9eb6baa4ffdc8f0e34b48a3d8891e9327cb094798ff3007efd037c2d2c8c1": "optimal-variant.cs"
       },
       "provenance": {
         "optimal.cs": {
@@ -1844,24 +1886,28 @@
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
         },
-        "suboptimal.cs": {
+        "optimal-variant.cs": {
           "selfMarked": false,
           "evidence": "your own annotation at c76939d",
           "recordedFrom": "c76939d"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ddf705890445\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"fixed 26-slot array, signed balance counting\",\"approachKey\":\"array-frequency-balance\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"36e22936a298\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map frequency count, build then drain\",\"approachKey\":\"hashmap-frequency-consume\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ddf705890445\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Fixed-size array character balance\",\"approachKey\":\"array-balance-fixed\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"36e22936a298\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hash-map-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "fixed 26-slot array, signed balance counting",
-          "approachKey": "array-frequency-balance",
+          "algorithm": "Fixed-size array character balance",
+          "approachKey": "array-balance-fixed",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "string"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n)",
@@ -1870,30 +1916,50 @@
           "approachKey": "hashmap-frequency-consume",
           "correct": true,
           "bruteForce": false
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Hash map frequency counting",
+          "approachKey": "hash-map-frequency",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "string",
+            "hash-map"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ddf705890445\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Fixed-size array character balance\",\"approachKey\":\"array-balance-fixed\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"36e22936a298\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hash-map-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "ddf705890445"
         },
-        "suboptimal.cs": {
-          "version": 1,
+        "optimal-variant.cs": {
+          "version": 2,
           "codePrint": "36e22936a298"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
-          "suboptimal.cs"
+          "optimal-variant.cs"
         ],
         "prints": {
           "optimal.cs": "ddf705890445",
-          "suboptimal.cs": "36e22936a298"
+          "optimal-variant.cs": "36e22936a298"
         },
-        "builtAt": "2026-09-06T12:31:11.027Z",
-        "v": 1
+        "structures": [
+          "array",
+          "string",
+          "hash-map"
+        ],
+        "builtAt": "2026-09-23T06:06:00.724Z"
       }
     },
     "is-palindrome": {
@@ -1926,34 +1992,42 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5a0fe1057baf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers converging inward, skip non-alphanumerics\",\"approachKey\":\"two-pointer-inplace-palindrome\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5a0fe1057baf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, converging ends\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two pointers converging inward, skip non-alphanumerics",
-          "approachKey": "two-pointer-inplace-palindrome",
+          "algorithm": "Two-pointer, converging ends",
+          "approachKey": "two-pointer",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "string"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5a0fe1057baf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, converging ends\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "5a0fe1057baf"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "5a0fe1057baf"
         },
-        "builtAt": "2026-09-06T12:33:29.066Z",
-        "v": 1
+        "structures": [
+          "string"
+        ],
+        "builtAt": "2026-09-23T06:07:04.878Z"
       }
     },
     "k-closest-points-to-origin": {
@@ -3204,35 +3278,42 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, discard shorter wall\",\"approachKey\":\"two-pointer-elimination\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, shrink shorter\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two pointers, discard shorter wall",
-          "approachKey": "two-pointer-elimination",
+          "algorithm": "two-pointer, shrink shorter",
+          "approachKey": "two-pointer-shrink",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, shrink shorter\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "d6040c070cce",
-          "renames": []
+          "version": 2,
+          "codePrint": "d6040c070cce"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "d6040c070cce"
         },
-        "builtAt": "2026-09-11T05:00:02.630Z",
-        "v": 1
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:07:36.106Z"
       }
     },
     "maximum-subarray": {
@@ -3650,19 +3731,43 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers, fast/slow swap partition\",\"approachKey\":\"two-pointer-swap-partition\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb7a14bc9901\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer swap in-place\",\"approachKey\":\"two-pointer-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two pointers, fast/slow swap partition",
-          "approachKey": "two-pointer-swap-partition",
+          "algorithm": "Two-pointer swap in-place",
+          "approachKey": "two-pointer-swap",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb7a14bc9901\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer swap in-place\",\"approachKey\":\"two-pointer-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "eb7a14bc9901"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "eb7a14bc9901"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:08:12.469Z"
+      }
     },
     "permutation-string": {
       "topic": "Data Structures & Algorithms",
@@ -3751,19 +3856,43 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"prefix/suffix product accumulation\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eeb48d2a7bff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pass prefix-suffix products\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "prefix/suffix product accumulation",
+          "algorithm": "Two-pass prefix-suffix products",
           "approachKey": "prefix-suffix-product",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eeb48d2a7bff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pass prefix-suffix products\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "eeb48d2a7bff"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "eeb48d2a7bff"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:08:48.727Z"
+      }
     },
     "remove-duplicates-from-sorted-array": {
       "topic": "Data Structures & Algorithms",
@@ -4427,8 +4556,8 @@
         "bdf9c8ff38369582bca50bc65f2c346a50bdacef60f53f51f1b78661da85fcd1": "suboptimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"length-prefix encoding (interleaved length#string)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"length-prefix encoding (sizes header + concatenated payload)\",\"approachKey\":\"length-prefix-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1ff27499b86d\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Length-prefix inline encoding\",\"approachKey\":\"length-prefix-inline\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(m) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"584f9cc2424a\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"Two-phase encoding with collected metadata\",\"approachKey\":\"two-phase-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4444,23 +4573,60 @@
       },
       "classification": {
         "optimal.cs": {
-          "time": "O(n)",
+          "time": "O(n + m)",
           "space": "O(1)",
-          "algorithm": "length-prefix encoding (interleaved length#string)",
-          "approachKey": "length-prefix-encoding",
+          "algorithm": "Length-prefix inline encoding",
+          "approachKey": "length-prefix-inline",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "string",
+            "array"
+          ]
         },
         "suboptimal.cs": {
-          "time": "O(n)",
-          "space": "O(n)",
-          "algorithm": "length-prefix encoding (sizes header + concatenated payload)",
-          "approachKey": "length-prefix-encoding",
+          "time": "O(n + m)",
+          "space": "O(m)",
+          "algorithm": "Two-phase encoding with collected metadata",
+          "approachKey": "two-phase-encoding",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "string",
+            "array"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1ff27499b86d\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Length-prefix inline encoding\",\"approachKey\":\"length-prefix-inline\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(m) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"584f9cc2424a\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"Two-phase encoding with collected metadata\",\"approachKey\":\"two-phase-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "1ff27499b86d"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "584f9cc2424a"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "1ff27499b86d",
+          "suboptimal.cs": "584f9cc2424a"
+        },
+        "structures": [
+          "string",
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:10:38.029Z"
+      }
     },
     "subtree-of-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
@@ -4550,19 +4716,43 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"sort + fix anchor + two pointers\",\"approachKey\":\"sort-fix-two-pointers\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ce0637d27283\",\"time\":\"O(n^2)\",\"space\":\"O(log n)\",\"algorithm\":\"Sorting with two-pointer scan\",\"approachKey\":\"sort-two-pointer\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n^2)",
-          "space": "O(1)",
-          "algorithm": "sort + fix anchor + two pointers",
-          "approachKey": "sort-fix-two-pointers",
+          "space": "O(log n)",
+          "algorithm": "Sorting with two-pointer scan",
+          "approachKey": "sort-two-pointer",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ce0637d27283\",\"time\":\"O(n^2)\",\"space\":\"O(log n)\",\"algorithm\":\"Sorting with two-pointer scan\",\"approachKey\":\"sort-two-pointer\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "ce0637d27283"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ce0637d27283"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:12:30.536Z"
+      }
     },
     "top-k-elements-in-list": {
       "topic": "Data Structures & Algorithms",
@@ -4602,28 +4792,66 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"bucket sort by frequency\",\"approachKey\":\"bucket-sort-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":2,\"name\":\"suboptimal.cs\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"bounded min-heap of size k\",\"approachKey\":\"bounded-min-heap-topk\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8d0903e0e7b7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Frequency buckets, highest-first traversal\",\"approachKey\":\"bucket-by-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"ea1cc8905e6b\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"Min-heap with size-k limit\",\"approachKey\":\"min-heap-k-limit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "bucket sort by frequency",
-          "approachKey": "bucket-sort-frequency",
+          "algorithm": "Frequency buckets, highest-first traversal",
+          "approachKey": "bucket-by-frequency",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array",
+            "hash-map"
+          ]
         },
         "suboptimal.cs": {
           "time": "O(n log k)",
           "space": "O(n)",
-          "algorithm": "bounded min-heap of size k",
-          "approachKey": "bounded-min-heap-topk",
+          "algorithm": "Min-heap with size-k limit",
+          "approachKey": "min-heap-k-limit",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "hash-map",
+            "heap"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8d0903e0e7b7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Frequency buckets, highest-first traversal\",\"approachKey\":\"bucket-by-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"ea1cc8905e6b\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"Min-heap with size-k limit\",\"approachKey\":\"min-heap-k-limit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "8d0903e0e7b7"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "ea1cc8905e6b"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "8d0903e0e7b7",
+          "suboptimal.cs": "ea1cc8905e6b"
+        },
+        "structures": [
+          "array",
+          "hash-map",
+          "heap"
+        ],
+        "builtAt": "2026-09-23T06:14:33.386Z"
+      }
     },
     "two-integer-sum": {
       "topic": "Data Structures & Algorithms",
@@ -4719,17 +4947,42 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two pointers converging on sorted array\",\"approachKey\":\"two-pointers-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7443ea4decbf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer shrink while comparing to target\",\"approachKey\":\"two-pointer-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(1)",
-          "algorithm": "two pointers converging on sorted array",
-          "approachKey": "two-pointers-sorted",
+          "algorithm": "Two-pointer shrink while comparing to target",
+          "approachKey": "two-pointer-sorted",
           "correct": true,
-          "bruteForce": false
+          "bruteForce": false,
+          "structures": [
+            "array"
+          ]
         }
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "7443ea4decbf"
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7443ea4decbf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer shrink while comparing to target\",\"approachKey\":\"two-pointer-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "7443ea4decbf"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-23T06:15:03.439Z"
       }
     },
     "valid-binary-search-tree": {

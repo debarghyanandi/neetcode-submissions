@@ -53,7 +53,7 @@ body{
 .brand-note{font-size:16px;color:var(--pencil);margin:0 0 2px;transform:rotate(-1.2deg);transform-origin:left bottom;}
 .brand-title{font-family:var(--hand);font-size:clamp(30px, 3.2vw, 42px);font-weight:700;line-height:1;margin:0 0 8px;}
 .brand-sub{font-size:16px;line-height:1.45;color:var(--ink);margin:0;max-width:min(112ch, 100%);}
-.brand-sub code, .status code, .note-s code{
+.brand-sub code, .status code, .note-text code{
   font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);
 }
 .brand-sub b{font-weight:700;}
@@ -82,7 +82,7 @@ button.primary:hover{background:#F7B85F;}
 .tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
 .tab{
   display:flex;flex-direction:column;align-items:flex-start;gap:3px;
-  padding:9px 18px 11px;s-align:left;background:var(--paper);
+  padding:9px 18px 11px;text-align:left;background:var(--paper);
 }
 .tab b{font-size:17px;font-weight:700;line-height:1.1;}
 .tab span{font-family:var(--mono);font-size:11px;color:var(--pencil);line-height:1.1;}
@@ -99,7 +99,7 @@ button.primary:hover{background:#F7B85F;}
 .swatch.good{background:var(--green);}
 .swatch.dim{opacity:.42;}
 .swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
-.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;s-align:center;font-family:var(--hand);}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
 
 /* ---------- stage ---------- */
 .stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
@@ -149,12 +149,12 @@ button.primary:hover{background:#F7B85F;}
 
 .ptr-marker{
   position:absolute;bottom:0;transform:translateX(-50%);
-  font-size:19px;font-weight:700;line-height:1;s-align:center;pointer-events:none;
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
 }
 .ptr-marker.visible{opacity:1;}
 .ptr-marker::before{content:'↑';display:block;font-size:15px;line-height:1;}
-.ptr-marker.accent{color:var(--orange);s-shadow:0.5px 0 var(--ink);}
+.ptr-marker.accent{color:var(--orange);text-shadow:0.5px 0 var(--ink);}
 .ptr-marker.accent::before{color:var(--orange);}
 .ptr-marker.red{color:var(--red);}
 .ptr-marker.red::before{color:var(--red);}
@@ -231,7 +231,7 @@ button.primary:hover{background:#F7B85F;}
 .pill.accent{background:var(--orange-soft);}
 .pill.hot{background:var(--orange);}
 .pill.good{background:var(--green);color:var(--paper);}
-.note-s{font-size:17px;line-height:1.45;}
+.note-text{font-size:17px;line-height:1.45;}
 
 /* ==========================================================================
    Structural panels: tree, linked list, stack/queue, grid, heap.
@@ -290,7 +290,7 @@ button.primary:hover{background:#F7B85F;}
   font-size:calc(15px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;pointer-events:none;
   transition:left .32s ease, top .32s ease, opacity .2s ease;
 }
-.node-tag.accent{color:var(--orange);s-shadow:.5px 0 var(--ink);}
+.node-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
 .node-tag.red{color:var(--red);}
 .node-tag.green{color:var(--green);}
 
@@ -317,7 +317,7 @@ button.primary:hover{background:#F7B85F;}
 .list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
 .list-cell.fresh{animation:fill-flash .5s ease;}
 .list-arrow{
-  flex:none;width:calc(30px * var(--pscale));s-align:center;font-size:calc(19px * var(--pscale));
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
   line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
 }
 .list-arrow.back{transform:scaleX(-1);}
@@ -329,7 +329,7 @@ button.primary:hover{background:#F7B85F;}
 }
 .list-tag{
   position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
-  line-height:1;s-align:center;white-space:nowrap;pointer-events:none;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;
 }
 .list-tag.visible{opacity:1;}
@@ -337,7 +337,7 @@ button.primary:hover{background:#F7B85F;}
 .list-tag.above::after{content:'↓';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
 .list-tag.below{bottom:calc(2px * var(--pscale));}
 .list-tag.below::before{content:'↑';display:block;font-size:calc(14px * var(--pscale));line-height:1;}
-.list-tag.accent{color:var(--orange);s-shadow:.5px 0 var(--ink);}
+.list-tag.accent{color:var(--orange);text-shadow:.5px 0 var(--ink);}
 .list-tag.red{color:var(--red);}
 .list-tag.green{color:var(--green);}
 .list-cycle{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
@@ -350,8 +350,8 @@ button.primary:hover{background:#F7B85F;}
    as a plain flex column they drifted against each other and the panel read as
    three unrelated drawings. */
 .bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
-.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;s-align:center;}
-.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;s-align:center;}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
 /* three sides only: the top is open, because that is the whole point of a bucket */
 .bucket-box{
   align-self:end;
@@ -372,7 +372,7 @@ button.primary:hover{background:#F7B85F;}
 .cell{
   border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
   padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
-  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;s-align:center;white-space:nowrap;
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
   transition:background .25s ease, color .25s ease;
 }
 .cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
@@ -388,7 +388,7 @@ button.primary:hover{background:#F7B85F;}
 .cell.popped{animation:pop-fade .55s ease;}
 .bucket-empty{
   position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
-  s-align:center;font-size:15px;color:var(--pencil);
+  text-align:center;font-size:15px;color:var(--pencil);
 }
 .bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
 /* A normal flex child, appended last, so column-reverse lands it directly above
@@ -411,7 +411,7 @@ button.primary:hover{background:#F7B85F;}
 .grid-cell{
   min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
-  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;s-align:center;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
   vertical-align:middle;white-space:nowrap;position:relative;
   transition:background .25s ease, color .25s ease, border-color .25s ease;
 }
@@ -493,7 +493,7 @@ button.primary:hover{background:#F7B85F;}
 }
 .layer > .stub:hover{background:var(--orange-soft);color:var(--ink);}
 .layer > .stub .caret{font-size:11px;}
-.layer > .stub .sig{overflow:hidden;s-overflow:ellipsis;white-space:nowrap;}
+.layer > .stub .sig{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .layer.open > .stub{display:none;}
 .code .line.outside{color:var(--pencil-light);}
 
@@ -574,7 +574,7 @@ function pBars(title, values, decorate, extra){
 function pRanges(title, items, min, max){ return {t:'ranges', title: title, items: items, min: min, max: max}; }
 function pNote(title, html){ return {t:'note', title: title, html: html}; }
 function mapChips(map, hot){
-  return Object.keys(map).map(k => ({s: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
+  return Object.keys(map).map(k => ({text: k, sub: String(map[k]), cls: (k === hot ? 'head' : '')}));
 }
 /* ---- structural panel constructors ----
    Shape belongs to the panel, not to the problem. A tree is drawn as a tree, a
@@ -651,116 +651,137 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Valid Palindrome',
-  note: 'the two ends must agree — check them, then throw them both away',
-  inputs: [{id:'s', label:'s', value:'rAce, car!', width:260}],
+  note: 'a palindrome is a promise about pairs, so read it from both ends at once',
+  inputs: [{id:'s', label:'s', value:'A car, a man, a maraca!', width:320}],
   parse(raw){
     const s = String(raw.s);
-    if (!s.length) return {ok:false, msg:'Enter some s to check.'};
-    if (s.length > 16) return {ok:false, msg:'Keep it to 16 characters so the walk stays watchable.'};
-    return {ok:true, value:{s}, normalized:{s}};
+    if (!s.length) return {ok:false, msg:'Enter a string.'};
+    if (s.length > 30) return {ok:false, msg:'Keep it under 30 characters so the whole run stays watchable.'};
+    return {ok:true, value:{s}, normalized:{s: s}};
   },
   shuffle(){
-    const pool = ['rAce, car!', 'Ab@ba', 'tab a, {cat}', 'No lemon!', 'a.', 'X#x', 'abc, cbA', ' ,.'];
-    return {s: pool[Math.floor(Math.random() * pool.length)]};
+    const picks = ['A car, a man, a maraca!', 'Was it a car or a cat?', 'No lemon, no melon!', 'race a car', 'Ab,Ba', 'Step on no pets.', '0P', 'Dogma: I am God.'];
+    return {s: picks[Math.floor(Math.random() * picks.length)]};
   },
   solutions: [
   {
-    label: 'Two pointers converging inward',
-    badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'Reading the same forwards and backwards means the first surviving character must equal the last. Two pointers walk inward: non-alphanumerics are stepped over <b>in place</b>, each matching pair retires both ends at once, and one mismatch settles the whole answer — no cleaned copy of the string is ever built.',
+    label: 'Two pointers walking inward',
+    badge: 'O(n) time · O(1) space · two-pointer · optimal.cs',
+    blurb: 'A palindrome says character <b>i</b> matches character <b>n−1−i</b>, so the whole claim is a set of independent pairs. Check them from the outside in: one pointer at each end, skip anything that is not a letter or digit, compare case-folded, and stop the instant a pair disagrees. No cleaned copy of the string is ever built.',
     legend: [
-      {cls:'hot', s:'left / right'},
-      {cls:'good', s:'pair already matched'},
-      {cls:'dim', s:'skipped — not a letter or digit'},
-      {cls:'bad', s:'mismatch'}
+      {cls:'hot', text:'left / right — the pair under test'},
+      {cls:'in-window', text:'still unchecked'},
+      {cls:'good', text:'already agreed'},
+      {cls:'dim', text:'skipped — not a letter or digit'}
     ],
     code: [
-      'int left = 0;',
-      'int right = s.Length - 1;',
-      '',
-      'while (left < right)',
+      'public class Solution',
       '{',
-      '    // Skip anything that is not part of the comparison.',
-      '    while (left < right && !char.IsLetterOrDigit(s[left]))',
-      '        left++;',
+      '    public bool IsPalindrome(string s)',
+      '    {',
+      '        int left = 0;',
+      '        int right = s.Length - 1;',
       '',
-      '    while (right > left && !char.IsLetterOrDigit(s[right]))',
-      '        right--;',
+      '        while (left < right)',
+      '        {',
+      '            // Skip anything that is not part of the comparison.',
+      '            while (left < right && !char.IsLetterOrDigit(s[left]))',
+      '                left++;',
       '',
-      '    if (char.ToLower(s[left]) != char.ToLower(s[right]))',
-      '        return false;',
+      '            while (right > left && !char.IsLetterOrDigit(s[right]))',
+      '                right--;',
       '',
-      '    left++;',
-      '    right--;',
-      '}',
+      '            if (char.ToLower(s[left]) != char.ToLower(s[right]))',
+      '                return false;',
       '',
-      'return true;'
+      '            left++;',
+      '            right--;',
+      '        }',
+      '',
+      '        return true;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const t = input.s, n = t.length, steps = [];
-      const isAlnum = (c) => /[a-z0-9]/i.test(c);
-      const show = (c) => c === ' ' ? '␣' : c;
-      const matched = {}, skipped = {};
-      let left = 0, right = n - 1, badL = -1, badR = -1, done = false, answer = null;
-      const at = (i) => (i >= 0 && i < n) ? show(t[i]) : '–';
-      const panels = () => [
-        pTiles('s', t.split('').map(show), (k) => ({
-          cls: (k === badL || k === badR) ? 'bad'
-             : (!done && (k === left || k === right)) ? 'hot'
-             : matched[k] ? 'good'
-             : skipped[k] ? 'dim'
-             : (k < left || k > right) ? 'dim' : ''
-        })),
-        pPills('', [
-          {k:'left', v: left, cls:'hot'},
-          {k:'s[left]', v: at(left)},
-          {k:'right', v: right, cls:'hot'},
-          {k:'s[right]', v: at(right)},
-          {k:'result', v: answer === null ? 'still checking' : (answer ? 'true' : 'false'), cls: answer === false ? 'bad' : 'good'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'The definition forces the outermost surviving characters to be equal, so <code>left</code> starts at <b>0</b> and <code>right</code> at the last index <b>' + (n - 1) + '</b>. Nothing is copied or lowercased up front — building a cleaned string would cost O(n) extra space, so instead the junk gets stepped over where it stands.', panels: panels()});
-      while (left < right){
-        steps.push({lines:[4], msg:'<code>left</code> = ' + left + ' is still strictly left of <code>right</code> = ' + right + ', so at least one unchecked pair remains. Once they meet or cross, every character has already been accounted for.', panels: panels()});
-        let movedL = false;
-        while (left < right && !isAlnum(t[left])){
-          const c = t[left];
-          skipped[left] = 1;
+      const s = input.s;
+      const ch = s.split('');
+      const disp = ch.map(c => c === ' ' ? '_' : c);
+      const isAl = (c) => /[A-Za-z0-9]/.test(c);
+      const low = (c) => c.toLowerCase();
+      const steps = [];
+      const skipped = {}, matched = {};
+      const pairs = [];
+      let left = 0, right = s.length - 1, verdict = null;
+
+      const panels = () => {
+        const ptrs = [];
+        if (left >= 0 && left < ch.length) ptrs.push({name:'left', idx:left, cls:'accent'});
+        if (right >= 0 && right < ch.length) ptrs.push({name:'right', idx:right});
+        const tiles = pTiles('s', disp, (i) => {
+          if (verdict === false && (i === left || i === right)) return {cls:'hot'};
+          if (verdict === false) return {cls:'dim'};
+          if (verdict === null && (i === left || i === right)) return {cls:'hot'};
+          if (matched[i]) return {cls:'good'};
+          if (skipped[i]) return {cls:'dim'};
+          if (i > left && i < right) return {cls:'in-window'};
+          return {cls:'good'};
+        }, {ptrs: ptrs, scale: 0.85});
+        const pills = pPills('state', [
+          {k:'left', v: left, cls:'accent'},
+          {k:'right', v: right},
+          {k:'s[left]', v: (left >= 0 && left < ch.length) ? disp[left] : '-', cls:'hot'},
+          {k:'s[right]', v: (right >= 0 && right < ch.length) ? disp[right] : '-', cls:'hot'},
+          {k:'verdict', v: verdict === null ? 'undecided' : (verdict ? 'true' : 'false'), cls: verdict === false ? 'dim' : (verdict ? 'good' : '')}
+        ]);
+        const chips = pChips('pairs already agreed', [{
+          left: 'outermost first',
+          items: pairs.map(p => ({text: p.a + ' = ' + p.b, sub: p.i + ' , ' + p.j, cls:'good'})),
+          empty: 'nothing compared yet'
+        }]);
+        return [tiles, pills, chips];
+      };
+
+      steps.push({lines:[5,6], msg:'Put <code>left</code> on the first character and <code>right</code> on the last. Everything strictly between them is still unchecked; everything outside is, trivially, already settled. The answer is decided by pairs, and this is the outermost pair.', panels: panels()});
+      steps.push({lines:[8], msg:'The loop runs while <code>left &lt; right</code>. When they meet or cross, every pair has been checked — a single middle character has no partner, so it can never break a palindrome.', panels: panels()});
+
+      let guard = 0;
+      while (left < right && guard++ < 200){
+        while (left < right && !isAl(ch[left])){
+          skipped[left] = true;
+          steps.push({lines:[11,12], msg:'<code>' + disp[left] + '</code> at index ' + left + ' is punctuation or a space, and the problem only compares letters and digits — so it is not a character that has to match anything. Advance <code>left</code> past it instead of building a cleaned copy of the string.', panels: (function(){ left++; const p = panels(); left--; return p; })()});
           left++;
-          movedL = true;
-          steps.push({lines:[7,8], msg:'<code>s[' + (left - 1) + ']</code> is <b>' + show(c) + '</b> — not a letter or digit, so it plays no part in the palindrome and <code>left</code> simply steps past it. The <code>left &lt; right</code> guard is what stops this loop from walking off the end of an all-punctuation string.', panels: panels()});
         }
-        if (!movedL) steps.push({lines:[7], msg:'<code>s[' + left + ']</code> is <b>' + at(left) + '</b>, already a letter or digit, so the skip loop body never runs and <code>left</code> stays at ' + left + '.', panels: panels()});
-        let movedR = false;
-        while (right > left && !isAlnum(t[right])){
-          const c = t[right];
-          skipped[right] = 1;
+        while (right > left && !isAl(ch[right])){
+          skipped[right] = true;
+          steps.push({lines:[14,15], msg:'Same on the other side: <code>' + disp[right] + '</code> at index ' + right + ' is not a letter or digit, so pull <code>right</code> inward. The guard <code>right &gt; left</code> stops the two pointers from stepping over each other when the tail is all punctuation.', panels: (function(){ right--; const p = panels(); right++; return p; })()});
           right--;
-          movedR = true;
-          steps.push({lines:[10,11], msg:'<code>s[' + (right + 1) + ']</code> is <b>' + show(c) + '</b>, ignorable too, so <code>right</code> walks inward.' + (right === left ? ' Its guard is <code>right &gt; left</code>, so it halts exactly here rather than crossing below <code>left</code>.' : ''), panels: panels()});
         }
-        if (!movedR) steps.push({lines:[10], msg:'<code>s[' + right + ']</code> is <b>' + at(right) + '</b>, a real character, so <code>right</code> holds at ' + right + '.', panels: panels()});
-        const a = String(t[left]).toLowerCase(), b = String(t[right]).toLowerCase();
-        if (a !== b){
-          badL = left; badR = right; answer = false; done = true;
-          steps.push({lines:[13,14], msg:'Comparing lowercased <b>' + show(a) + '</b> against <b>' + show(b) + '</b> — they differ. A single disagreeing pair rules the whole string out; nothing further inside could ever repair it, so the method returns <b>false</b> right away.', panels: panels()});
-          return steps;
+        if (left >= right){
+          steps.push({lines:[8], msg:'Skipping has brought the pointers together, so there is no pair left to test. Nothing is outstanding.', panels: panels()});
+          break;
         }
-        matched[left] = 1; matched[right] = 1;
-        if (left === right){
-          steps.push({lines:[13], msg:'The pointers have landed on the same index ' + left + ', so this compares <b>' + show(a) + '</b> with itself — trivially equal. That is the centre of an odd-length palindrome, and letting it compare costs less than adding another guard for it.', panels: panels()});
-        } else {
-          steps.push({lines:[13], msg:'Comparing lowercased <b>' + show(a) + '</b> against <b>' + show(b) + '</b> — equal, so this pair is consistent with a palindrome. <code>char.ToLower</code> on both sides is what makes the check case-insensitive without allocating a lowercased copy.', panels: panels()});
+        const a = ch[left], b = ch[right];
+        if (low(a) !== low(b)){
+          verdict = false;
+          steps.push({lines:[17,18], msg:'Compare case-folded: <code>' + low(a) + '</code> against <code>' + low(b) + '</code> — they differ. One broken pair is enough to disprove the whole string, so return <b>false</b> immediately; the unchecked middle cannot repair it.', panels: panels()});
+          break;
         }
-        steps.push({lines:[16,17], msg:'That pair is settled, so <em>both</em> ends retire together: <code>left</code> → ' + (left + 1) + ', <code>right</code> → ' + (right - 1) + '. Every iteration eliminates two characters, which is why a single inward pass is enough.', panels: panels()});
+        pairs.push({a: low(a), b: low(b), i: left, j: right});
+        matched[left] = true; matched[right] = true;
+        steps.push({lines:[17,20,21], msg:'<code>' + disp[left] + '</code> and <code>' + disp[right] + '</code> fold to the same letter, so this pair holds. <code>char.ToLower</code> on both sides is what makes <b>A</b> and <b>a</b> count as equal. Retire both ends and step inward — the remaining question is exactly the same question on a shorter string.', panels: (function(){ left++; right--; const p = panels(); left--; right++; return p; })()});
         left++; right--;
       }
-      done = true; answer = true;
-      steps.push({lines:[4,20], msg:'<code>left</code> = ' + left + ' is no longer left of <code>right</code> = ' + right + ' — the pointers have met or crossed, meaning every pair was compared and every one agreed. Falling out of the loop <em>is</em> the proof, so the answer is <b>true</b>. Two ints of memory, one pass over the s.', panels: panels()});
+
+      if (verdict === false){
+        steps.push({lines:[18], msg:'Returned <b>false</b>. The scan stopped early, which is why a long string with a mismatch near the front costs almost nothing.', panels: panels()});
+      } else {
+        verdict = true;
+        steps.push({lines:[24], msg:'The pointers met with every pair agreeing, so <code>s</code> reads the same both ways once punctuation and case are ignored: return <b>true</b>. Each index was visited by exactly one pointer — one pass, two ints, no extra string.', panels: panels()});
+      }
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.
@@ -788,7 +809,7 @@ function buildHeader(){
     const d = document.createElement('div');
     d.className = 'field';
     d.innerHTML = '<span>' + esc(inp.label) + '</span>' +
-      '<input id="in_' + inp.id + '" type="' + (inp.type || 's') + '" value="' + esc(inp.value) +
+      '<input id="in_' + inp.id + '" type="' + (inp.type || 'text') + '" value="' + esc(inp.value) +
       '" spellcheck="false" style="width:' + (inp.width || 210) + 'px" aria-label="' + esc(inp.label) + '">';
     f.appendChild(d);
   });
@@ -878,8 +899,8 @@ function loadSolution(){
   sol = PROBLEM.solutions[solIdx];
   $('brandSub').innerHTML = sol.blurb;
   $('legend').innerHTML = (sol.legend || []).map(l =>
-    l.cls === null ? '<span>' + l.s + '</span>'
-                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.s + '</span>').join('');
+    l.cls === null ? '<span>' + l.text + '</span>'
+                   : '<span><i class="swatch ' + l.cls + '"></i> ' + l.text + '</span>').join('');
 
   sol.__layers = findLayers(sol.code);
   pinned = new Set();
@@ -1095,7 +1116,7 @@ RENDER.chips = function(body, p, animate){
     } else {
       box.innerHTML = r.items.map(c =>
         '<span class="chip ' + (c.cls || '') + (animate && c.fresh ? ' fresh' : '') + '">' +
-        esc(c.s) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
+        esc(c.text) + (c.sub ? ' <small>' + esc(c.sub) + '</small>' : '') + '</span>').join('');
     }
   });
 };
@@ -1112,8 +1133,8 @@ RENDER.slots = function(body, p, animate){
   p.items.forEach((it, i) => {
     const s = slots[i];
     const wasFilled = s.classList.contains('filled');
-    const filled = it.s !== null && it.s !== undefined && it.s !== '';
-    s.textContent = filled ? it.s : '—';
+    const filled = it.text !== null && it.text !== undefined && it.text !== '';
+    s.textContent = filled ? it.text : '—';
     s.className = 'slot' + (filled ? ' filled' : '') + (it.cls ? ' ' + it.cls : '') +
                   (filled && !wasFilled && animate ? ' fresh' : '');
   });
@@ -1182,10 +1203,10 @@ RENDER.ranges = function(body, p){
   });
 };
 
-/* --- note: a free-s panel --- */
+/* --- note: a free-text panel --- */
 RENDER.note = function(body, p){
-  let n = body.querySelector('.note-s');
-  if (!n){ body.innerHTML = '<div class="note-s"></div>'; n = body.querySelector('.note-s'); }
+  let n = body.querySelector('.note-text');
+  if (!n){ body.innerHTML = '<div class="note-text"></div>'; n = body.querySelector('.note-text'); }
   n.innerHTML = p.html;
 };
 
@@ -1299,17 +1320,17 @@ function drawTree(stage, nodes, p, k){
                     cls: e.cls || 'ghost', label: e.label || ''})));
 
   if (keyed(svg, edges.map((e) => e.key).join('|'))){
-    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('s')); });
+    edges.forEach(() => { svg.appendChild(mkSvg('line')); svg.appendChild(mkSvg('text')); });
   }
   edges.forEach((e, i) => {
-    const line = svg.children[i * 2], s = svg.children[i * 2 + 1];
+    const line = svg.children[i * 2], text = svg.children[i * 2 + 1];
     line.setAttribute('class', 'edge ' + (e.cls || ''));
     line.setAttribute('x1', e.a.px); line.setAttribute('y1', e.a.py);
     line.setAttribute('x2', e.b.px); line.setAttribute('y2', e.b.py);
-    s.setAttribute('class', 'edge-label');
-    s.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
-    s.setAttribute('y', (e.a.py + e.b.py) / 2);
-    s.textContent = e.label || '';
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', (e.a.px + e.b.px) / 2 + 6);
+    text.setAttribute('y', (e.a.py + e.b.py) / 2);
+    text.textContent = e.label || '';
   });
 
   const wrapKey = L.work.map((n) => n.id).join('|');
@@ -1446,7 +1467,7 @@ RENDER.list = function(body, p, animate){
       const spec = (r.arrows || [])[i];
       const cls = typeof spec === 'string' ? spec : (spec && spec.cls) || '';
       a.className = 'list-arrow ' + cls;
-      a.textContent = (spec && spec.s) || (cls.indexOf('back') >= 0 ? '←' : '→');
+      a.textContent = (spec && spec.text) || (cls.indexOf('back') >= 0 ? '←' : '→');
     });
 
     // Markers, placed against real measured geometry rather than guessed at.
@@ -1550,7 +1571,7 @@ RENDER.stack = function(body, p, animate){
       const c = cells[i];
       c.className = 'cell ' + (it.cls || '') +
                     (animate && it.fresh ? ' fresh' : '') + (animate && it.popped ? ' popped' : '');
-      c.innerHTML = esc(String(it.s)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
+      c.innerHTML = esc(String(it.text)) + (it.sub ? ' <small>' + esc(it.sub) + '</small>' : '');
     });
     const empty = el.querySelector('.bucket-empty');
     empty.textContent = b.empty || 'empty';
@@ -1700,7 +1721,7 @@ function blankPanels(panels){
     if (p.t === 'bars'){ p.items.forEach(i => { i.cls = ''; }); p.fill = null; }
     if (p.t === 'ranges'){ p.items.forEach(i => { i.cls = 'ghost'; }); }
     if (p.t === 'chips'){ p.rows.forEach(r => { r.items = []; }); }
-    if (p.t === 'slots'){ p.items.forEach(i => { i.s = ''; i.cls = ''; }); }
+    if (p.t === 'slots'){ p.items.forEach(i => { i.text = ''; i.cls = ''; }); }
     if (p.t === 'pills'){ p.items.forEach(i => { i.v = '–'; }); }
     // A structure is shown in its starting state, not emptied: the whole point
     // of step -1 on a tree problem is seeing the tree you are about to walk.

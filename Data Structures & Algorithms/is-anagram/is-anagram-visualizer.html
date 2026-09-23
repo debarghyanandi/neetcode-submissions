@@ -651,213 +651,223 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Valid Anagram',
-  note: 'order is noise — only the letter counts survive',
+  note: 'two words are anagrams exactly when their letter counts cancel',
   inputs: [
-    {id:'s', label:'s', value:'silent', width:170},
-    {id:'t', label:'t', value:'listen', width:170}
+    {id:'s', label:'s', value:'racecar', width:180},
+    {id:'t', label:'t', value:'carrace', width:180}
   ],
   parse(raw){
     const s = String(raw.s).trim().toLowerCase();
     const t = String(raw.t).trim().toLowerCase();
-    if (!s.length || !t.length) return {ok:false, msg:'Both words are required.'};
-    if (!/^[a-z]+$/.test(s) || !/^[a-z]+$/.test(t)) return {ok:false, msg:'Lowercase letters a–z only — the 26-slot array indexes with c - a.'};
-    if (s.length > 10 || t.length > 10) return {ok:false, msg:'Keep both words to 10 letters or fewer so the run stays watchable.'};
-    return {ok:true, value:{s:s, t:t}, normalized:{s:s, t:t}};
+    if (!s.length || !t.length) return {ok:false, msg:'Both strings must be non-empty.'};
+    if (!/^[a-z]+$/.test(s) || !/^[a-z]+$/.test(t)) return {ok:false, msg:'Use lowercase letters a-z only.'};
+    if (s.length > 10 || t.length > 10) return {ok:false, msg:'Keep both strings to 10 letters or fewer so the run stays watchable.'};
+    return {ok:true, value:{s, t}, normalized:{s: s, t: t}};
   },
   shuffle(){
-    const n = 5 + Math.floor(Math.random()*2);
-    const w = randWord(n, 'aelnrst');
-    const arr = w.split('');
-    for (let i = arr.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random()*(i+1));
-      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    const s = randWord(5 + Math.floor(Math.random()*3), 'aabcert');
+    const letters = s.split('');
+    for (let i = letters.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = letters[i]; letters[i] = letters[j]; letters[j] = tmp;
     }
-    const r = Math.random();
-    if (r < 0.2) arr[Math.floor(Math.random()*arr.length)] = 'z';
-    else if (r < 0.3) arr.pop();
-    return {s: w, t: arr.join('')};
+    if (Math.random() < 0.4){
+      const pool = 'abcert';
+      letters[Math.floor(Math.random() * letters.length)] = pool[Math.floor(Math.random() * pool.length)];
+    }
+    return {s: s, t: letters.join('')};
   },
   solutions: [
   {
-    label: 'Signed balance in 26 fixed slots',
-    badge: 'O(n) time · O(1) space · counting array · optimal.cs',
-    blurb: 'Each letter of <b>s</b> credits its slot and each letter of <b>t</b> debits the same slot, so a true anagram cancels itself out to nothing. Position never enters the arithmetic — only totals do. Equal lengths plus 26 zeroes <em>is</em> the definition of an anagram, and 26 is a constant, so the space never grows.',
+    label: 'One balance slot per letter',
+    badge: 'O(n) time · O(1) space · fixed array · optimal.cs',
+    blurb: 'The alphabet is only 26 letters, so a fixed <code>int[26]</code> can hold a running balance. Credit every letter of <b>s</b> and debit every letter of <b>t</b> in the same pass: if the two words use each letter the same number of times, every slot lands back on <b>0</b>. Any non-zero slot names the letter where they differ.',
     legend: [
-      {cls:'hot', text:'original[i] — credits +1'},
-      {cls:'win', text:'candidate[i] — debits −1'},
-      {cls:'good', text:'slot balanced back to 0'},
-      {cls:'dim', text:'not yet read'}
+      {cls:'hot', text:'letter being read / slot being checked'},
+      {cls:'in-window', text:'slot currently non-zero'},
+      {cls:'good', text:'confirmed back to zero'},
+      {cls:'dim', text:'untouched or not reached'}
     ],
     code: [
-      'if (original.Length != candidate.Length)',
-      '    return false;',
-      '',
-      'int[] letterBalance = new int[26];   // 0 = a … 25 = z',
-      '',
-      'for (int i = 0; i < original.Length; i++)',
+      'public bool IsAnagram(string s, string t)',
       '{',
-      '    letterBalance[original[i] - \'a\']++;',
-      '    letterBalance[candidate[i] - \'a\']--;',
-      '}',
-      '',
-      'foreach (int balance in letterBalance)',
-      '{',
-      '    if (balance != 0)',
+      '    if (s.Length != t.Length)',
       '        return false;',
-      '}',
       '',
-      'return true;'
+      '    // One slot per lowercase letter. Index 0 = \'a\', index 25 = \'z\'.',
+      '    int[] letterBalance = new int[26];',
+      '',
+      '    // Single pass over both strings at once: credit for s, debit for t.',
+      '    for (int i = 0; i < s.Length; i++)',
+      '    {',
+      '        letterBalance[s[i] - \'a\']++;',
+      '        letterBalance[t[i] - \'a\']--;',
+      '    }',
+      '',
+      '    // Anagrams cancel out exactly, so every slot must be back to zero.',
+      '    foreach (int balance in letterBalance)',
+      '    {',
+      '        if (balance != 0)',
+      '            return false;',
+      '    }',
+      '',
+      '    return true;',
+      '}'
     ],
     simulate(input){
-      const A = input.s.split(''), B = input.t.split(''), steps = [];
+      const s = input.s, t = input.t, steps = [];
+      const A = 'abcdefghijklmnopqrstuvwxyz';
       const bal = new Array(26).fill(0);
-      const touched = [];
-      const idx = (c) => c.charCodeAt(0) - 97;
-      const chips = (focus, bad) => {
-        const items = touched.slice().sort((x,y) => x - y).map(k => ({
-          text: String.fromCharCode(97 + k),
-          sub: (bal[k] > 0 ? '+' : '') + bal[k],
-          cls: k === bad ? 'hot' : k === focus ? 'head' : bal[k] === 0 ? 'good' : ''
-        }));
-        return [{left:'slots touched', items: items, empty:'all 26 slots still 0'}];
+      const panels = (i, scan, hot) => {
+        const isHot = (k) => hot && hot.indexOf(k) >= 0;
+        const nz = [];
+        for (let k = 0; k < 26; k++){
+          if (bal[k] !== 0) nz.push({text: A[k], sub: (bal[k] > 0 ? '+' : '') + bal[k], cls: isHot(k) ? 'head' : ''});
+        }
+        return [
+          pTiles('s', s.split(''), (k) => ({cls: k === i ? 'hot' : (i > k ? 'done' : 'dim')}),
+            i >= 0 ? {ptrs: [{name:'i', idx: i, cls:'accent'}]} : {}),
+          pTiles('t', t.split(''), (k) => ({cls: k === i ? 'hot' : (i > k ? 'done' : 'dim')}),
+            i >= 0 ? {ptrs: [{name:'i', idx: i, cls:'accent'}]} : {}),
+          pTiles('letterBalance  (index 0 = a  ...  index 25 = z)', bal, (k) => ({
+            cls: isHot(k) || scan === k ? 'hot'
+               : (scan >= 0 && k < scan) ? 'good'
+               : bal[k] !== 0 ? 'in-window' : 'dim'
+          }), {narrow: true, scale: 0.72}),
+          pChips('slots away from zero', [{
+            left: 'letter -> balance',
+            items: nz,
+            empty: 'every slot is 0 - the two words cancel so far'
+          }])
+        ];
       };
-      const panels = (i, focus, bad) => [
-        pTiles('original — credits', A, (k) => ({cls: k === i ? 'hot' : (i >= 0 && k > i) ? 'dim' : ''})),
-        pTiles('candidate — debits', B, (k) => ({cls: k === i ? 'win' : (i >= 0 && k > i) ? 'dim' : ''})),
-        pChips('letterBalance', chips(focus, bad)),
-        pPills('', [
-          {k:'i', v: i >= 0 ? i : '–'},
-          {k:'original[i]', v: i >= 0 && i < A.length ? A[i] : '–', cls:'hot'},
-          {k:'candidate[i]', v: i >= 0 && i < B.length ? B[i] : '–', cls:'win'},
-          {k:'non-zero slots', v: bal.filter(x => x !== 0).length}
-        ])
-      ];
-      if (A.length !== B.length){
-        steps.push({lines:[1,2], msg:'Lengths <b>' + A.length + '</b> and <b>' + B.length + '</b> differ. A rearrangement cannot invent or destroy a character, so this is decided before a single letter is counted — an O(1) rejection that also lets the main loop index both strings with one counter.', panels: panels(-1, -1, -1)});
+      if (s.length !== t.length){
+        steps.push({lines:[3,4], msg:'<code>s</code> has <b>' + s.length + '</b> letters and <code>t</code> has <b>' + t.length + '</b>. An anagram is a rearrangement, so the multiset sizes must match; different lengths are rejected in O(1) before a single slot is touched.', panels: panels(-1, -1, null)});
         return steps;
       }
-      steps.push({lines:[1,4], msg:'Both words are <b>' + A.length + '</b> letters, so the cheap rejection does not fire. The alphabet is fixed at 26 lowercase letters, so a plain <code>int[26]</code> replaces a hash map entirely: <code>c - \'a\'</code> turns a character straight into an index, with no hashing and no allocation per distinct letter.', panels: panels(-1, -1, -1)});
-      for (let i = 0; i < A.length; i++){
-        const ka = idx(A[i]), kb = idx(B[i]);
-        if (touched.indexOf(ka) < 0) touched.push(ka);
-        if (touched.indexOf(kb) < 0) touched.push(kb);
-        bal[ka]++; bal[kb]--;
-        const same = ka === kb;
-        steps.push({lines:[6,8,9], msg:'Position ' + i + ': <code>' + A[i] + '</code> credits slot <b>' + A[i] + '</b> to <b>' + ((bal[ka] > 0 ? '+' : '') + bal[ka]) + '</b>, <code>' + B[i] + '</code> debits slot <b>' + B[i] + '</b> to <b>' + ((bal[kb] > 0 ? '+' : '') + bal[kb]) + '</b>. ' + (same ? 'Same letter in both words, so the two operations cancel on the spot and the slot is untouched in net. ' : '') + 'Both strings are walked in <em>one</em> pass because the totals do not care which position a letter came from — a balance can dip negative now and be repaid later.', panels: panels(i, ka, -1)});
+      steps.push({lines:[3,4,7], msg:'Both strings are <b>' + s.length + '</b> letters long, so the cheap rejection does not fire. <code>letterBalance</code> is 26 zeros - one slot per lowercase letter, and <code>c - \'a\'</code> turns a character straight into its index. The array is a fixed size, which is why this counts as O(1) extra space.', panels: panels(-1, -1, null)});
+      for (let i = 0; i < s.length; i++){
+        const a = s.charCodeAt(i) - 97, b = t.charCodeAt(i) - 97;
+        bal[a]++; bal[b]--;
+        const hot = a === b ? [a] : [a, b];
+        steps.push({lines:[10,12,13], msg:'Position ' + i + ': credit <b>' + s[i] + '</b> from <code>s</code> (slot ' + a + ' -> ' + bal[a] + ') and debit <b>' + t[i] + '</b> from <code>t</code> (slot ' + b + ' -> ' + bal[b] + ').' + (a === b ? ' Same letter both sides, so the two moves cancel immediately.' : ' Order never matters here - a credit and a debit can arrive in any order and still meet.'), panels: panels(i, -1, hot)});
       }
-      let bad = -1;
-      const sorted = touched.slice().sort((x,y) => x - y);
-      for (let n = 0; n < sorted.length; n++){
-        const k = sorted[n], ch = String.fromCharCode(97 + k), v = bal[k];
-        if (v !== 0){
-          bad = k;
-          steps.push({lines:[12,14,15], msg:'Slot <code>' + ch + '</code> holds <b>' + ((v > 0 ? '+' : '') + v) + '</b>: original uses <code>' + ch + '</code> ' + Math.abs(v) + ' time(s) ' + (v > 0 ? 'more' : 'fewer') + ' than candidate. Anagrams must cancel <em>exactly</em>, so a single surviving non-zero is proof enough — return <b>false</b> without checking the rest.', panels: panels(-1, -1, k)});
+      let k = 0, ok = true;
+      while (k < 26){
+        if (bal[k] !== 0){
+          steps.push({lines:[17,19,20], msg:'Slot ' + k + ' (<b>' + A[k] + '</b>) is <b>' + bal[k] + '</b>, not zero: ' + (bal[k] > 0 ? '<code>s</code> uses that letter ' + bal[k] + ' more time(s) than <code>t</code>' : '<code>t</code> uses that letter ' + (-bal[k]) + ' more time(s) than <code>s</code>') + '. One unbalanced letter is enough - return <b>false</b>.', panels: panels(-1, k, [k])});
+          ok = false;
           break;
         }
-        steps.push({lines:[12,14], msg:'Slot <code>' + ch + '</code> is back to <b>0</b>: every credit from original was matched by a debit from candidate, so <code>' + ch + '</code> appears the same number of times in both. Balanced slots prove nothing on their own — the sweep only ends early on a failure.', panels: panels(-1, k, -1)});
+        let j = k;
+        while (j < 26 && bal[j] === 0) j++;
+        const last = j - 1;
+        steps.push({lines:[17,19], msg:'Slots ' + k + '..' + last + ' (<b>' + A[k] + '</b> through <b>' + A[last] + '</b>) are all <b>0</b>' + (j < 26 ? ' - every credit met its debit, so the scan keeps going.' : ' - the sweep reaches the end of the alphabet with nothing left over.'), panels: panels(-1, k, null)});
+        k = j;
       }
-      if (bad < 0){
-        steps.push({lines:[12,18], msg:'The other <b>' + (26 - sorted.length) + '</b> slots were never written by either word, so they are still 0 and pass for free. Every slot cancelled and the lengths already matched — the words are anagrams, <b>true</b>. One pass over the input plus a fixed 26-step sweep, and the memory never depends on <code>n</code>.', panels: panels(-1, -1, -1)});
+      if (ok){
+        steps.push({lines:[23], msg:'All 26 balances are zero, so each letter appears the same number of times in both words: <b>true</b>. Two passes total, 26 ints of scratch, and no sorting anywhere.', panels: panels(-1, 26, null)});
       }
       return steps;
     }
   },
   {
-    label: 'Frequency map: build, then drain',
-    badge: 'O(n) time · O(n) space · dictionary · suboptimal.cs',
-    blurb: 'Let the first word declare a budget of letters, then make the second word spend it. A letter that is missing from the map, or whose budget already hit zero, is direct proof the counts differ. Because the lengths match, spending all of <b>t</b> without overdrawing leaves nothing behind — so no second sweep is needed.',
+    label: 'Spend a frequency budget',
+    badge: 'O(n) time · O(1) space · hash map · optimal-variant.cs',
+    blurb: 'Count the letters of <b>s</b> into a dictionary, then walk <b>t</b> spending one unit per character. A missing key, or a key already at zero, means <b>t</b> wants more of that letter than <b>s</b> can give. Because the lengths are equal, spending all of <b>t</b> without overdrawing leaves nothing behind - so no final sweep is needed.',
     legend: [
-      {cls:'hot', text:'letter being counted into the budget'},
-      {cls:'win', text:'letter spending the budget'},
-      {cls:'good', text:'budget for that letter now 0'},
-      {cls:'dim', text:'not yet read'}
+      {cls:'hot', text:'character being read'},
+      {cls:'good', text:'already spent / settled'},
+      {cls:'dim', text:'not reached yet'},
+      {cls:'head', text:'map entry touched this step'}
     ],
     code: [
-      'if (first.Length != second.Length)',
-      '    return false;',
-      '',
-      'var charFrequency = new Dictionary<char, int>();',
-      '',
-      'foreach (char letter in first)',
+      'public bool IsAnagram(string s, string t)',
       '{',
-      '    charFrequency.TryGetValue(letter, out int currentCount);',
-      '    charFrequency[letter] = currentCount + 1;',
-      '}',
+      '    // Different lengths can never be anagrams. O(1) rejection.',
+      '    if (s.Length != t.Length)',
+      '        return false;',
       '',
-      'foreach (char letter in second)',
-      '{',
-      '    if (!charFrequency.TryGetValue(letter, out int remaining))',
-      '        return false;      // letter never appears in first',
+      '    // Build the frequency map of the first string.',
+      '    var charFrequency = new Dictionary<char, int>();',
       '',
-      '    if (remaining == 0)',
-      '        return false;      // second needs more than first has',
+      '    foreach (char c in s)',
+      '    {',
+      '        charFrequency.TryGetValue(c, out int currentCount);',
+      '        charFrequency[c] = currentCount + 1;',
+      '    }',
       '',
-      '    charFrequency[letter] = remaining - 1;',
-      '}',
+      '    // Walk the second string and spend one unit of each character\'s budget.',
+      '    foreach (char c in t)',
+      '    {',
+      '        if (!charFrequency.TryGetValue(c, out int remaining))',
+      '            return false;              // character not in first at all',
       '',
-      'return true;'
+      '        if (remaining == 0)',
+      '            return false;              // second uses this character more often than first',
+      '',
+      '        charFrequency[c] = remaining - 1;',
+      '    }',
+      '',
+      '    // Lengths matched and every character in t was covered by s\'s budget,',
+      '    // so no character can be left over. No second sweep needed.',
+      '    return true;',
+      '}'
     ],
     simulate(input){
-      const A = input.s.split(''), B = input.t.split(''), steps = [];
-      const freq = {};
-      const order = [];
-      const chips = (focus, bad) => {
-        const items = order.map(k => ({
-          text: k,
-          sub: String(freq[k]),
-          cls: k === bad ? 'hot' : k === focus ? 'head' : freq[k] === 0 ? 'good' : ''
-        }));
-        return [{left:'charFrequency', items: items, empty:'map is empty'}];
-      };
-      const left = () => order.reduce((acc, k) => acc + freq[k], 0);
-      const panels = (bi, si, focus, bad, phase) => [
-        pTiles('first — builds the budget', A, (k) => ({cls: k === bi ? 'hot' : (bi >= 0 && k > bi) || phase === 'drain' && bi < 0 ? '' : (bi < 0 ? 'dim' : '')})),
-        pTiles('second — spends the budget', B, (k) => ({cls: k === si ? 'win' : (si < 0 || k > si) ? 'dim' : ''})),
-        pChips('charFrequency', chips(focus, bad)),
-        pPills('', [
-          {k:'phase', v: phase},
-          {k:'letter', v: focus || '–', cls: phase === 'drain' ? 'win' : 'hot'},
-          {k:'distinct keys', v: order.length},
-          {k:'budget left', v: left()}
+      const s = input.s, t = input.t, steps = [];
+      const map = {};
+      const panels = (si, ti, hot, spent) => [
+        pTiles('s  (builds the budget)', s.split(''), (k) => ({cls: k === si ? 'hot' : (si > k || si === -2 ? 'done' : 'dim')}),
+          si >= 0 ? {ptrs: [{name:'c', idx: si, cls:'accent'}]} : {}),
+        pTiles('t  (spends the budget)', t.split(''), (k) => ({cls: k === ti ? 'hot' : (ti > k ? 'good' : 'dim')}),
+          ti >= 0 ? {ptrs: [{name:'c', idx: ti, cls:'accent'}]} : {}),
+        pChips('charFrequency', [{
+          left: 'char -> remaining',
+          items: mapChips(map, hot),
+          empty: 'empty dictionary'
+        }]),
+        pPills('state', [
+          {k:'s.Length', v: s.length},
+          {k:'t.Length', v: t.length},
+          {k:'spent from t', v: spent, cls:'good'}
         ])
       ];
-      if (A.length !== B.length){
-        steps.push({lines:[1,2], msg:'Lengths <b>' + A.length + '</b> and <b>' + B.length + '</b> differ, so no rearrangement can match them. This guard is doing real work later too: it is the reason the drain pass can skip a final leftovers check.', panels: panels(-1, -1, '', '', 'guard')});
+      if (s.length !== t.length){
+        steps.push({lines:[4,5], msg:'Lengths <b>' + s.length + '</b> and <b>' + t.length + '</b> differ. No amount of rearranging changes how many characters a word has, so this is decided before any counting happens.', panels: panels(-1, -1, null, 0)});
         return steps;
       }
-      steps.push({lines:[1,4], msg:'Both words are <b>' + A.length + '</b> letters, so the cheap length rejection does not fire. A <code>Dictionary&lt;char,int&gt;</code> is allocated to hold one entry per <em>distinct</em> letter of the first word — that is the O(n) space this version pays that a fixed 26-slot array would not.', panels: panels(-1, -1, '', '', 'setup')});
-      for (let i = 0; i < A.length; i++){
-        const c = A[i];
-        const had = Object.prototype.hasOwnProperty.call(freq, c);
-        if (!had){ freq[c] = 0; order.push(c); }
-        freq[c]++;
-        steps.push({lines:[6,8,9], msg:'Counting <code>' + c + '</code>: <code>TryGetValue</code> ' + (had ? 'finds the running count and it becomes <b>' + freq[c] + '</b>' : 'misses, so <code>currentCount</code> is left at its default <b>0</b> and the entry starts at <b>1</b>') + '. Using the out-default instead of a ContainsKey check keeps this to a single lookup per letter.', panels: panels(i, -1, c, '', 'build')});
+      steps.push({lines:[4,8], msg:'Equal lengths, so the O(1) rejection does not fire and the dictionary is created empty. Unlike the array version this only ever stores letters that actually occur - the cost is a hash lookup instead of an index.', panels: panels(-1, -1, null, 0)});
+      for (let i = 0; i < s.length; i++){
+        const c = s[i];
+        const before = map[c] === undefined ? 0 : map[c];
+        map[c] = before + 1;
+        steps.push({lines:[10,12,13], msg:'Read <b>' + c + '</b> from <code>s</code>. <code>TryGetValue</code> hands back <b>' + before + '</b> on a miss - <code>out int currentCount</code> is zero-initialised - so the same two lines handle "first sighting" and "seen before" without an <code>if</code>. Budget for <b>' + c + '</b> is now <b>' + map[c] + '</b>.', panels: panels(i, -1, c, 0)});
       }
-      steps.push({lines:[10,12], msg:'The budget is complete: <b>' + order.length + '</b> distinct letters totalling <b>' + left() + '</b> units. Nothing about the <em>order</em> of the first word was kept, which is exactly the information an anagram is allowed to destroy.', panels: panels(-1, -1, '', '', 'drain')});
-      let failed = false;
-      for (let i = 0; i < B.length; i++){
-        const c = B[i];
-        if (!Object.prototype.hasOwnProperty.call(freq, c)){
-          failed = true;
-          order.push(c); freq[c] = 0;
-          steps.push({lines:[12,14,15], msg:'<code>' + c + '</code> is not in the map at all — the first word never uses it. The second word therefore contains a letter it cannot pay for, so return <b>false</b> right here rather than finishing the walk.', panels: panels(-1, i, '', c, 'drain')});
+      let ok = true;
+      for (let i = 0; i < t.length; i++){
+        const c = t[i];
+        if (map[c] === undefined){
+          steps.push({lines:[17,19,20], msg:'<code>t</code> wants <b>' + c + '</b>, but that key is not in the map at all - <code>s</code> never used this character. Return <b>false</b>.', panels: panels(-2, i, c, i)});
+          ok = false;
           break;
         }
-        if (freq[c] === 0){
-          failed = true;
-          steps.push({lines:[12,17,18], msg:'<code>' + c + '</code> exists but its budget is already spent down to <b>0</b>. The second word wants more copies of <code>' + c + '</code> than the first word has, and the count can never be refilled, so the answer is <b>false</b>.', panels: panels(-1, i, '', c, 'drain')});
+        if (map[c] === 0){
+          steps.push({lines:[17,22,23], msg:'The key <b>' + c + '</b> exists but its budget is already <b>0</b>: <code>t</code> uses <b>' + c + '</b> more often than <code>s</code> does. Return <b>false</b>.', panels: panels(-2, i, c, i)});
+          ok = false;
           break;
         }
-        freq[c]--;
-        steps.push({lines:[12,14,17,20], msg:'Spending one <code>' + c + '</code>: budget drops to <b>' + freq[c] + '</b>. Both guards passed — the letter exists and had units to spare — so this occurrence of <code>' + c + '</code> is matched against a real occurrence in the first word and can never be double-counted.', panels: panels(-1, i, c, '', 'drain')});
+        const rem = map[c];
+        map[c] = rem - 1;
+        steps.push({lines:[17,19,22,25], msg:'Spend one <b>' + c + '</b>: budget ' + rem + ' -> <b>' + map[c] + '</b>. Both guards passed, so this occurrence in <code>t</code> is paid for by a matching occurrence in <code>s</code>.', panels: panels(-2, i, c, i + 1)});
       }
-      if (!failed){
-        steps.push({lines:[23], msg:'Every letter of the second word was paid for, and the two words are the same length — so the ' + B.length + ' units spent are exactly the ' + A.length + ' units created. No key can still hold a positive count, which is why there is no closing sweep over the map: <b>true</b>.', panels: panels(-1, -1, '', '', 'drain')});
+      if (ok){
+        steps.push({lines:[30], msg:'Every one of the <b>' + t.length + '</b> characters in <code>t</code> was paid for, and <code>s</code> put in exactly <b>' + s.length + '</b> units. Equal totals with nothing overdrawn means nothing can be left over, so there is no need to re-scan the map: return <b>true</b>.', panels: panels(-2, t.length, null, t.length)});
       }
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

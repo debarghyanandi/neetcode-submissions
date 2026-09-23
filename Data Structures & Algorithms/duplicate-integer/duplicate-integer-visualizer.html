@@ -651,131 +651,153 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Duplicate Integer',
-  note: 'the only history you need is “have I seen this value before?”',
-  inputs: [{id:'n', label:'nums', value:'1,2,3,4,2,5', width:260}],
+  note: 'a set answers "have I seen this before?" in one step, so one pass is enough',
+  inputs: [{id:'n', label:'nums', value:'1,4,7,2,4,9,3', width:260}],
   parse(raw){
     const n = parseInts(raw.n, 12);
     if (!n) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (n.length < 2) return {ok:false, msg:'Needs at least two numbers.'};
+    if (!n.length) return {ok:false, msg:'Needs at least one number.'};
     return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
-  shuffle(){ return {n: randInts(6 + Math.floor(Math.random()*3), 1, 7).join(',')}; },
+  shuffle(){
+    const len = 6 + Math.floor(Math.random()*2);
+    const a = randInts(len, 1, 9);
+    return {n: a.join(',')};
+  },
   solutions: [
   {
-    label: 'Add to a hash set, stop at the first rejection',
+    label: 'One pass, Add tells you the answer',
     badge: 'O(n) time · O(n) space · hash set · optimal.cs',
-    blurb: 'A duplicate is just a value you meet twice, so the only thing worth carrying is the set of values already met. <code>HashSet.Add</code> does the lookup and the insert in one O(1) call and returns <b>false</b> when the value was already present — so the first false is the answer, and the rest of the array never has to be read.',
+    blurb: 'Comparing every pair costs <code>n²</code>; a <code>HashSet</code> turns "have I seen this value?" into one hash lookup. And <code>Add</code> already <b>returns</b> whether the value was new, so the lookup and the insert are a single call — the first time it returns <code>false</code>, a duplicate exists and the rest of the array cannot change that.',
     legend: [
-      {cls:'hot', text:'current number'},
-      {cls:'good', text:'earlier copy that Add remembered'},
-      {cls:'dim', text:'not visited'},
-      {cls:'accent', text:'seen set'}
+      {cls:'hot', text:'number being added'},
+      {cls:'good', text:'already in the set — duplicate'},
+      {cls:'done', text:'inserted, was new'},
+      {cls:'dim', text:'never looked at'}
     ],
     code: [
-      'var seen = new HashSet<int>();',
-      '',
-      'foreach (int number in nums)',
+      'public class Solution',
       '{',
-      '    // Add returns FALSE when the value was already present.',
-      '    // One call does both the lookup and the insert.',
-      '    if (!seen.Add(number))',
-      '        return true;',
-      '}',
+      '    public bool hasDuplicate(int[] nums)',
+      '    {',
+      '        var seen = new HashSet<int>();',
       '',
-      'return false;'
+      '        foreach (int number in nums)',
+      '        {',
+      '            // HashSet.Add returns FALSE when the value was already present.',
+      '            // One call does both the lookup and the insert.',
+      '            if (!seen.Add(number))',
+      '                return true;',
+      '        }',
+      '',
+      '        return false;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const n = input.n, steps = [];
-      const order = [], set = new Set();
-      const panels = (i, dupAt, added) => [
-        pTiles('nums', n, (k) => ({
-          cls: k === i ? 'hot'
-             : k === dupAt ? 'good'
-             : (i >= 0 && k > i) ? 'dim' : ''
-        })),
-        pSlots('seen (HashSet)', order.length
-          ? order.map(v => ({text: String(v), cls: (i >= 0 && v === n[i]) ? 'hot' : 'accent'}))
-          : [{text:'∅', cls:'dim'}]),
+      const a = input.n, steps = [];
+      const seen = [];
+      let cur = -1, dup = -1, stopped = -1;
+      const panels = () => [
+        pTiles('nums', a, (i) => ({
+          cls: i === dup ? 'good'
+             : i === cur ? 'hot'
+             : (stopped >= 0 && i > stopped) ? 'dim'
+             : i < cur ? 'done'
+             : (cur < 0 ? 'dim' : (i > cur ? 'dim' : ''))
+        }), {ptrs: cur >= 0 ? [{name:'number', idx: cur, cls:'accent'}] : []}),
+        pChips('seen (HashSet)', [{left:'values', items: seen.map(v => ({
+          text: String(v), cls: (dup >= 0 && v === a[dup]) ? 'good' : 'done',
+          fresh: (cur >= 0 && dup < 0 && v === a[cur])
+        })), empty:'empty'}]),
         pPills('', [
-          {k:'number', v: i >= 0 ? n[i] : '–', cls:'hot'},
-          {k:'seen.Count', v: set.size},
-          {k:'Add returned', v: added === null ? '–' : (added ? 'true' : 'false'), cls: added === false ? 'good' : ''}
+          {k:'number', v: cur >= 0 ? a[cur] : '–', cls:'hot'},
+          {k:'seen.Count', v: seen.length},
+          {k:'Add returned', v: cur < 0 ? '–' : (dup >= 0 ? 'false' : 'true'), cls: dup >= 0 ? 'good' : ''}
         ])
       ];
-      steps.push({lines:[1], msg:'Start with an empty <code>HashSet</code>. It buys O(1) membership tests with O(n) memory — the trade that turns the obvious O(n²) “compare every pair” into a single pass.', panels: panels(-1, -1, null)});
-      let found = -1;
-      for (let i = 0; i < n.length; i++){
-        const v = n[i];
-        if (set.has(v)){
-          const first = n.indexOf(v);
-          found = i;
-          steps.push({lines:[7,8], msg:'<code>seen.Add(' + v + ')</code> returns <b>false</b> — the set already holds <b>' + v + '</b> from index ' + first + '. That is a duplicate, so we return <code>true</code> immediately: nothing later in the array can un-make this pair, so reading indices ' + (i+1) + '..' + (n.length-1) + ' would be wasted work.', panels: panels(i, first, false)});
+      steps.push({lines:[5], msg:'The set starts empty. It is the only memory this algorithm keeps: membership, not order, not counts — because the question only asks whether a value has <em>ever</em> appeared.', panels: panels()});
+      let found = false;
+      for (let i = 0; i < a.length; i++){
+        cur = i;
+        const already = seen.indexOf(a[i]) >= 0;
+        if (already){
+          dup = i; stopped = i; found = true;
+          steps.push({lines:[11,12], msg:'<code>seen.Add(' + a[i] + ')</code> returns <b>false</b> — <b>' + a[i] + '</b> is already in the set, so this is its second appearance. That is a duplicate by definition, and nothing later in the array could undo it, so we return <code>true</code> immediately instead of finishing the scan.', panels: panels()});
           break;
         }
-        set.add(v); order.push(v);
-        steps.push({lines:[7], msg:'<code>seen.Add(' + v + ')</code> returns <b>true</b> — <b>' + v + '</b> was new, and it is now stored. The single call did the check <em>and</em> the insert, so there is no separate <code>Contains</code> hash lookup to pay for.', panels: panels(i, -1, true)});
+        seen.push(a[i]);
+        steps.push({lines:[7,11], msg:'<code>seen.Add(' + a[i] + ')</code> returns <b>true</b>: <b>' + a[i] + '</b> was new, and the same call has now stored it. One hash of the value did the lookup and the insert — no second pass over the set, and no comparison against the ' + seen.length + ' value' + (seen.length === 1 ? '' : 's') + ' already held.', panels: panels()});
       }
-      if (found < 0){
-        steps.push({lines:[11], msg:'Every one of the ' + n.length + ' numbers was accepted by the set, so <code>seen.Count</code> ended at <b>' + set.size + '</b> — no value ever repeated. Return <code>false</code>.', panels: panels(-1, -1, null)});
+      if (!found){
+        cur = -1; stopped = a.length;
+        steps.push({lines:[15], msg:'The loop ran out with every <code>Add</code> returning <b>true</b>, so all ' + a.length + ' values were distinct — the set holds exactly ' + seen.length + ' of them. Answer <b>false</b>.', panels: panels()});
       } else {
-        steps.push({lines:[8], msg:'Answer: <b>true</b>. The scan stopped at index ' + found + ' after ' + (found + 1) + ' of ' + n.length + ' elements — worst case is still one full pass, but a repeat near the front costs far less.', panels: panels(-1, -1, null)});
+        steps.push({lines:[12], msg:'Answer <b>true</b>. The scan stopped at index ' + dup + ', so on an array whose duplicate appears early this touches only a prefix; the worst case is still one full pass.', panels: panels()});
       }
       return steps;
     }
   },
   {
-    label: 'Build the whole set, then compare sizes',
+    label: 'Build the set, compare the counts',
     badge: 'O(n) time · O(n) space · hash set · optimal-variant.cs',
-    blurb: 'A <code>HashSet</code> keeps one copy of each value, so constructing it from the array silently collapses every repeat. If nothing collapsed, <code>Count</code> equals <code>Length</code>; any shortfall means some value showed up twice. Same asymptotics as the early-exit version, but it always consumes the entire array before answering.',
+    blurb: 'A <code>HashSet</code> silently swallows repeats, so the set built from <code>nums</code> has one entry per <em>distinct</em> value. If that count is smaller than the array length, at least one value was dropped — which can only happen when it was already there. One expression, but it always reads the whole array.',
     legend: [
-      {cls:'hot', text:'element being inserted'},
-      {cls:'good', text:'swallowed by the set (no new slot)'},
-      {cls:'dim', text:'not yet inserted'},
-      {cls:'accent', text:'set contents'}
+      {cls:'hot', text:'value being fed to the constructor'},
+      {cls:'good', text:'dropped — already in the set'},
+      {cls:'done', text:'accepted as a new distinct value'},
+      {cls:'dim', text:'not yet consumed'}
     ],
     code: [
-      '// Build the whole set first, then compare sizes.',
-      '// A HashSet silently drops repeats, so a smaller',
-      '// Count means duplicates existed.',
-      'return new HashSet<int>(nums).Count < nums.Length;'
+      'public class Solution',
+      '{',
+      '    public bool hasDuplicate(int[] nums)',
+      '    {',
+      '        // Build the whole set first, then compare sizes.',
+      '        // A HashSet silently drops repeats, so a smaller Count means duplicates existed.',
+      '        return new HashSet<int>(nums).Count < nums.Length;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const n = input.n, steps = [];
-      const order = [], set = new Set();
-      const panels = (i, dupAt) => [
-        pTiles('nums', n, (k) => ({
-          cls: k === i ? 'hot'
-             : k === dupAt ? 'good'
-             : (i >= 0 && k > i) ? 'dim' : ''
-        })),
-        pSlots('new HashSet<int>(nums)', order.length
-          ? order.map(v => ({text: String(v), cls: (i >= 0 && v === n[i]) ? 'hot' : 'accent'}))
-          : [{text:'∅', cls:'dim'}]),
+      const a = input.n, steps = [];
+      const seen = [];
+      const dropped = [];
+      let cur = -1, done = false;
+      const panels = () => [
+        pTiles('nums', a, (i) => ({
+          cls: dropped.indexOf(i) >= 0 ? 'good'
+             : i === cur ? 'hot'
+             : (done || i < cur) ? 'done'
+             : 'dim'
+        }), {ptrs: cur >= 0 ? [{name:'feeding', idx: cur, cls:'accent'}] : []}),
+        pChips('new HashSet<int>(nums)', [{left:'distinct', items: seen.map(v => ({
+          text: String(v), cls:'done', fresh: (cur >= 0 && v === a[cur] && dropped.indexOf(cur) < 0)
+        })), empty:'empty'}]),
         pPills('', [
-          {k:'Count', v: set.size, cls:'accent'},
-          {k:'nums.Length', v: n.length},
-          {k:'dropped so far', v: (i >= 0 ? i + 1 : n.length) - set.size, cls:'good'}
+          {k:'Count', v: seen.length},
+          {k:'nums.Length', v: a.length},
+          {k:'Count < Length', v: done ? String(seen.length < a.length) : '–', cls: done ? 'good' : ''}
         ])
       ];
-      steps.push({lines:[1,2,3], msg:'The constructor <code>new HashSet&lt;int&gt;(nums)</code> feeds every element in. There is no early exit here — the set is built in full, and only afterwards is a single question asked of it.', panels: panels(-1, -1)});
-      for (let i = 0; i < n.length; i++){
-        const v = n[i];
-        if (set.has(v)){
-          const first = n.indexOf(v);
-          steps.push({lines:[4], msg:'Element ' + i + ' is <b>' + v + '</b>, already contributed by index ' + first + '. The constructor drops it without complaint — <code>Count</code> stays at <b>' + set.size + '</b> while the array index keeps advancing. That growing gap is the whole signal.', panels: panels(i, first)});
+      steps.push({lines:[7], msg:'The constructor <code>new HashSet&lt;int&gt;(nums)</code> is not free — it walks the array and inserts every element. Watch it consume the input one value at a time; there is no early exit here, the whole array is always read.', panels: panels()});
+      for (let i = 0; i < a.length; i++){
+        cur = i;
+        if (seen.indexOf(a[i]) >= 0){
+          dropped.push(i);
+          steps.push({lines:[6,7], msg:'<b>' + a[i] + '</b> is already in the set, so the insert is <b>discarded</b> — no error, no growth. <code>Count</code> stays at <b>' + seen.length + '</b> while the array index moves on, and that gap is the whole signal this method relies on.', panels: panels()});
         } else {
-          set.add(v); order.push(v);
-          steps.push({lines:[4], msg:'Element ' + i + ' is <b>' + v + '</b>, new to the set, so <code>Count</code> rises to <b>' + set.size + '</b> — still exactly one slot per element consumed so far.', panels: panels(i, -1)});
+          seen.push(a[i]);
+          steps.push({lines:[7], msg:'<b>' + a[i] + '</b> is new, so <code>Count</code> rises to <b>' + seen.length + '</b>, keeping pace with the ' + (i + 1) + ' element' + (i ? 's' : '') + ' consumed so far. While they match, every value seen has been distinct.', panels: panels()});
         }
       }
-      const dup = set.size < n.length;
-      steps.push({lines:[4], msg:'The set finished with <code>Count = ' + set.size + '</code> against <code>Length = ' + n.length + '</code>' + (dup
-        ? ', so <b>' + (n.length - set.size) + '</b> element' + (n.length - set.size === 1 ? ' was' : 's were') + ' swallowed as repeats → return <b>true</b>. Note it cannot tell you <em>which</em> value repeated, only that one did.'
-        : ' — every element earned its own slot, so there were no repeats → return <b>false</b>.'), panels: panels(-1, -1)});
+      cur = -1; done = true;
+      const ans = seen.length < a.length;
+      steps.push({lines:[7], msg:'Final comparison: <code>Count</code> = <b>' + seen.length + '</b> against <code>nums.Length</code> = <b>' + a.length + '</b> → answer <b>' + ans + '</b>. ' + (ans ? (a.length - seen.length) + ' insert' + ((a.length - seen.length) === 1 ? ' was' : 's were') + ' swallowed, so a repeat must exist.' : 'Nothing was swallowed, so every value was distinct.') + ' Same complexity as the one-pass version, but it never stops early and it says nothing about <em>which</em> value repeated.', panels: panels()});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.
