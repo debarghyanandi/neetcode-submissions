@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T20:02:25.158Z",
+  "updatedAt": "2026-09-23T20:05:16.295Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3478,6 +3478,17 @@
         ],
         "builtAt": "2026-09-22T20:39:20.606Z"
       }
+    },
+    "merge-k-sorted-linked-lists": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "merge-two-sorted-linked-lists": {
       "topic": "Data Structures & Algorithms",
