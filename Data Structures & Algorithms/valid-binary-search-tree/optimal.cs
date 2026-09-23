@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  Recursive post-order with min/max tuple   [tuple-minmax-sentinel]
+// #  recursive bounds validation with return tuple
+// #  [recursive-bounds-check]
 // #  ties with optimal-variant.cs on O(n) time / O(n) space
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  Each node visited once; call stack depth is tree height (O(n) worst
-// #  case for skewed tree).
+// #  Each node visited once; recursion depth O(n) in worst case.
 // ##########################################################################
 
 // Sentinel values are safe only because Node.val is restricted to [-1000000000, 1000000000];
@@ -50,83 +50,85 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Post-order DFS - each subtree returns (min, max, valid)
+ PATTERN : Post-order DFS - bubble up (min, max, valid)
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  result   the tuple from the root call; only .found is used
+  result   the tuple returned for the root; only .found is read
   left     (min, max, found) summary of the entire left subtree
-  right    same summary for the right subtree
-  min      smallest value in this subtree, reported to the parent
-  max      largest value in this subtree, reported to the parent
-  found    true if this subtree is itself a valid BST
+  right    (min, max, found) summary of the entire right subtree
+  min      smallest value in this subtree = Math.Min(left.min, root.val)
+  max      largest value in this subtree = Math.Max(right.max, root.val)
 WHY THIS PATTERN
-  The BST rule is not about a node and its two children; it is about a node and
-  every value in its two subtrees. So the check at root needs one number from
-  each side: the biggest thing on the left and the smallest thing on the right.
-  A post-order walk gives exactly that, because children finish before the
-  parent runs, and left.max and right.min arrive already computed. The boolean
-  found rides along in the same tuple so one traversal answers both questions.
+  "Valid BST" is not a local rule about a node and its two children; every value
+  in the left subtree must be smaller than root.val, not just the child. So a
+  node cannot be judged until its subtrees report something about themselves.
+  Post-order fits: each call returns the subtree's min and max plus found, and
+  the parent tests left.max >= root.val and right.min <= root.val in O(1).
 BRUTE FORCE
-  The first thing most people write is: at every node, walk the whole left
-  subtree and confirm every value is smaller, then walk the whole right subtree
-  and confirm every value is larger, then recurse. That is correct but costs O(n
-  * h) - near O(n^2) on a skewed tree - because each node is visited once per
-  ancestor. This file pays for each subtree scan only once by summarizing it
-  into two integers.
+  The first thing most people write is: for each node, walk the whole left
+  subtree to find its maximum and the whole right subtree to find its minimum,
+  then compare. That is correct but re-walks the same nodes once per ancestor,
+  so it costs O(n^2) on a skewed tree. This file walks each node exactly once
+  because the min and max travel upward with the return value instead of being
+  recomputed.
 INVARIANT
-  Whenever IsValidBSTWithMinMax returns found = true, min and max are the true
-  smallest and largest values in that whole subtree, and that subtree is already
-  a valid BST. Given that, the parent's two tests left.max >= root.val and
-  right.min <= root.val are equivalent to comparing root.val against every
-  single descendant. By induction from the null leaves upward, a true at the
-  root means the whole tree passed.
-SENTINELS FOR THE NULL CHILD
-  A null child returns (int.MaxValue, int.MinValue, true) - the min and max are
-  deliberately swapped. This makes left.max = int.MinValue lose the >= test and
-  right.min = int.MaxValue lose the <= test, so a missing child never blocks the
-  parent. It also makes Math.Min(left.min, root.val) and Math.Max(right.max,
-  root.val) collapse to root.val on that side. Because of this, the explicit
-  leaf branch that returns (root.val, root.val, true) is redundant; deleting it
-  gives the same answer through the null path.
+  After IsValidBSTWithMinMax(x) returns with found == true, min and max really
+  are the smallest and largest values in the subtree rooted at x, and that
+  subtree is a valid BST. The parent only trusts those numbers after checking
+  left.found and right.found, so a false never gets treated as a real range.
+  Because the parent compares against the extreme value of the whole subtree,
+  not just the child, the BST rule holds for every ancestor-descendant pair,
+  which is exactly the definition.
+THE NULL SENTINELS
+  An empty child returns (int.MaxValue, int.MinValue, true), and both of its
+  jobs are to be neutral. In the guard, right.min = int.MaxValue can never be <=
+  root.val, and left.max = int.MinValue can never be >= root.val, so a missing
+  child never rejects the tree. In the combine step, Math.Min(left.min,
+  root.val) collapses to root.val and Math.Max(right.max, root.val) does the
+  same, so the returned range is still exact.
 WATCH OUT
-  The failure return is (0, 0, false), and 0 is a lie about min and max. It is
-  safe only because both checks are written as !left.found || ... - the short
-  circuit means the garbage 0 is never compared. If someone reorders those
-  conditions or hoists the min/max comparison first, a false subtree reporting 0
-  can be accepted. Also note >= and <= reject equal values, so a duplicate key
-  anywhere in the tree fails, which is what this problem wants but is easy to
-  break by accident. Finally the recursion is as deep as the tree, so a long
-  one-sided chain can overflow the stack.
+  The header comment is right and the code truly depends on it: a node holding
+  int.MaxValue with no right child makes right.min <= root.val true (MaxValue <=
+  MaxValue) and a valid tree is rejected. The failure return (0, 0, false)
+  carries meaningless min and max; it is safe only because every caller reads
+  .found first, so do not "optimize" by reading left.max before checking
+  left.found. Note the asymmetry - min only consults left.min and max only
+  consults right.max; that is correct here only because the validity checks
+  already passed, so copying those two lines into another problem is risky. The
+  leaf-node special case is dead weight: with both children null the general
+  path already returns (root.val, root.val, true).
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without returning tuples up the tree?
-     Yes - pass bounds down instead: helper(node, low, high) checks low <
-     node.val < high and recurses with tightened bounds. Same time, but you need
-     long or nullable bounds at the root instead of the sentinel trick used
-     here.
-  2. Remove the recursion entirely.
-     Do an in-order traversal with an explicit Stack<TreeNode> and keep a single
-     prev variable; the tree is a BST exactly when the in-order sequence is
-     strictly increasing. Extra space drops to the stack height and there is no
-     call-stack overflow risk.
-  3. Can space go below O(h)?
-     Morris in-order threading gives O(1) extra space by temporarily rewiring
-     right pointers to the in-order successor and restoring them. It mutates the
-     tree during the walk, which is unacceptable if other threads read it.
-  4. The tree is huge and lives on disk in chunks.
-     Keep the same post-order summary, but return only (min, max, found) per
-     chunk so a child chunk can be evicted from memory once its three values are
-     known - the summary is what makes the algorithm streamable.
+  1. Can you do this top-down instead of bottom-up?
+     Pass an allowed range (low, high) down as long or nullable int and check
+     low < root.val < high at each node. Same O(n), but it fails fast on the
+     first bad node and sidesteps the int.MaxValue sentinel problem entirely;
+     the cost is an extra parameter instead of a returned tuple.
+  2. The tree is one long chain of a million nodes. What breaks?
+     The recursion depth equals the height, so the call stack can overflow.
+     Switch to an iterative inorder traversal with an explicit Stack<TreeNode>
+     and one prev variable, asserting prev < current.val; same time, and the
+     stack lives on the heap instead of the thread stack.
+  3. What if equal values are allowed in the left subtree?
+     Change left.max >= root.val to left.max > root.val. The strict >= and <=
+     here are what enforce the "no duplicates" version of the BST rule.
+  4. How would you return the size of the largest BST subtree instead of a
+  yes/no?
+     Add a size field to the tuple and stop returning early on failure - an
+     invalid subtree still returns found = false but the parent keeps scanning,
+     and you track a running best across all nodes. Same single post-order pass.
 TRIGGER
-  Reach for this when a node's validity depends on every value in its subtrees,
-  and a small fixed summary from each child is enough to decide it.
+  A tree rule that talks about a whole subtree ("all values below", "every
+  descendant") rather than just the immediate children - return a small summary
+  tuple from each node in post-order.
 C# NOTE
-  (int min, int max, bool found) is a named ValueTuple, which is a struct, so
-  each of the n recursive returns copies three fields on the stack with no heap
-  object per node. The named fields also keep left.max and right.min readable,
-  which Item1/Item2 would not.
+  Naming the tuple fields as (int min, int max, bool found) is what makes
+  left.max readable instead of left.Item2, and ValueTuple is a struct, so the
+  per-node return is a plain value with no class to define. If you later add
+  more fields, a small readonly record struct keeps the same cost with a real
+  type name.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

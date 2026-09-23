@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-22T23:26:00.021Z",
+  "updatedAt": "2026-09-23T01:20:23.567Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4714,8 +4714,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive post-order with min/max tuple\",\"approachKey\":\"tuple-minmax-sentinel\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive bounds checking validation\",\"approachKey\":\"recursive-bound-checking\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with return tuple\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with parameters\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4733,8 +4733,8 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Recursive post-order with min/max tuple",
-          "approachKey": "tuple-minmax-sentinel",
+          "algorithm": "recursive bounds validation with return tuple",
+          "approachKey": "recursive-bounds-check",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4745,8 +4745,8 @@
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "Recursive bounds checking validation",
-          "approachKey": "recursive-bound-checking",
+          "algorithm": "recursive bounds validation with parameters",
+          "approachKey": "recursive-bounds-check",
           "correct": true,
           "bruteForce": false,
           "structures": [
@@ -4756,11 +4756,11 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive post-order with min/max tuple\",\"approachKey\":\"tuple-minmax-sentinel\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive bounds checking validation\",\"approachKey\":\"recursive-bound-checking\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with return tuple\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with parameters\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -4773,7 +4773,7 @@
           "tree",
           "call-stack"
         ],
-        "builtAt": "2026-09-13T07:37:25.109Z"
+        "builtAt": "2026-09-23T01:20:23.564Z"
       }
     },
     "validate-parentheses": {
