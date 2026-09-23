@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Iterative three-pointer reversal   [iterative-pointer-reversal]
+// -  iterative pointer reversal   [iterative-reverse]
 // -  ranks above suboptimal.cs (O(n) time / O(n) space)
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Single forward pass with constant variables rewiring each node's next
-// -  pointer in place.
+// -  Single pass iterating through the linked list with constant auxiliary
+// -  pointers.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -29,74 +29,77 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Linked List - iterative three-pointer reversal
+ PATTERN : Iterative Pointer Reversal - three-pointer walk
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  prev        head of the already-reversed part, null at the start
+  current     node being re-pointed right now
+  nextNode    saved successor of current, before the link is overwritten
 WHY THIS PATTERN
-  The task is to flip the direction of every next link in a singly linked list.
-  Each node only knows its successor, so once you overwrite current.next you
-  lose the rest of the list unless you saved it first. The three pointers prev,
-  current and nextNode give exactly that: nextNode holds the tail before the
-  cut, prev holds the already reversed part, and current is the node being
-  re-pointed. One pass is enough because each link needs to be flipped exactly
-  once.
+  A singly linked list can only be walked forward, and reversing it means every
+  next pointer must end up aimed at the node that came before it. Each node
+  needs to know its predecessor, which the list does not store, so we carry it
+  ourselves in prev. One forward pass is enough because at the moment we visit
+  current we already hold both the node behind it (prev) and, after the save,
+  the node ahead of it (nextNode).
 BRUTE FORCE
-  The simplest correct first attempt is to walk the list, push every node (or
-  every value) onto a stack or List, then walk back and rebuild the links in
-  reverse order. That is still O(n) time but costs O(n) extra memory. Recursion
-  is the other common first answer: it is short, but it uses a call stack that
-  is as deep as the list, so a long list can throw StackOverflowException. This
-  loop replaces that memory with three local references.
+  The simplest first attempt is to walk the list, push every value into a List
+  or array, then walk again and write the values back in reverse order. That is
+  O(n) time but O(n) extra space, and it only works because we are allowed to
+  touch the values; it does not reverse the structure. Recursion is the other
+  common first try - it is O(n) time but uses O(n) stack frames, which can
+  overflow on a long list.
 INVARIANT
-  At the top of every iteration, prev points at the head of the fully reversed
-  prefix, and current points at the head of the untouched suffix; the two pieces
-  together contain all original nodes exactly once. The body cuts one node off
-  the suffix and pushes it onto the front of the prefix, so the invariant holds
-  again. When current becomes null the suffix is empty, so prev is the head of
-  the reversed whole list, which is why prev is returned and not current.
+  At the top of each loop pass, prev points to the reversed chain of all nodes
+  seen so far, and current points to the first untouched node of the original
+  list. The body keeps that true: it saves nextNode, flips current.next to prev,
+  then slides both pointers forward one step. When current is null every node
+  has been flipped exactly once, so prev is the new head and the return is
+  correct.
+WHY NEXTNODE MUST BE SAVED FIRST
+  The line current.next = prev destroys the only reference to the rest of the
+  list. Saving nextNode before that write is what keeps the walk alive; swap the
+  two lines and the loop would follow the link it just rewrote and spin between
+  two nodes. This is the whole reason the reversal needs three pointers instead
+  of two.
 WATCH OUT
-  The returned value must be prev, not head - head still refers to the original
-  first node, which is now the tail and whose next is null. Return current by
-  mistake and you always return null. An empty list (head == null) is handled by
-  luck rather than a special case: the loop body never runs and prev is still
-  null, which is the right answer. Also note the original head's next is set to
-  null on the first iteration, so the caller's old head reference no longer
-  reaches any other node; if the caller needed the old order, it is gone because
-  this reverses in place.
+  Return prev, not current or head - current is always null when the loop exits,
+  and head has become the tail. An empty list (head is null) never enters the
+  loop and correctly returns null, so no special case is needed. The original
+  head node is left with next = null and is now the last node; any caller still
+  holding the old head reference is holding the tail, which surprises people who
+  reverse a list in place and keep using the old variable.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Write the recursive version and say what it costs.
-     Recurse to the end, get the new head back, then set current.next.next =
-     current and current.next = null on the way up. Same O(n) time but O(n)
-     stack depth, so it risks a stack overflow on a long list where this loop
-     does not.
-  2. Reverse only the nodes between positions left and right, leaving the rest
-  attached.
-     Walk to the node before left and keep it as a fixed anchor, run this same
-     three-pointer loop for right - left + 1 steps, then reconnect: anchor.next
-     becomes the new sub-head, and the old sub-head's next becomes the node
-     after right. A dummy node in front of head removes the special case when
-     left is 1.
-  3. How do you detect that the list has a cycle before reversing it?
-     Run Floyd's fast and slow pointer first; if they meet, there is a cycle.
-     Without that check this loop never terminates on a cyclic list, because
-     current never reaches null.
-  4. Reverse the list in groups of k nodes.
-     Count k nodes ahead; if fewer than k remain, leave them as they are.
-     Otherwise reverse that block with this loop, join the previous block's tail
-     to the new block head, and continue from the block's original first node,
-     which is now its tail. Still O(n) time and O(1) space.
+  1. Write it recursively - what changes?
+     Recurse to the end, then on the way back set head.next.next = head and
+     head.next = null, returning the deepest node as the new head. Same O(n)
+     time, but O(n) stack space, and a very long list can throw
+     StackOverflowException, which .NET does not let you catch.
+  2. Reverse only the nodes between positions left and right?
+     Walk to the node before left, keep it in a pointer, run this same
+     three-pointer loop for right - left + 1 steps, then stitch: the node before
+     left points at prev, and the node that was at left points at current. A
+     dummy head node in front removes the special case where left is 1.
+  3. Reverse the list in groups of k, leaving a short tail as is?
+     First count ahead k nodes to confirm a full group exists; if not, stop and
+     leave that part alone. Otherwise reverse the group with this loop and
+     connect the previous group's tail to the new group head. Still O(n) time
+     and O(1) space, just more bookkeeping pointers.
+  4. How would you check if the list is a palindrome using this?
+     Find the middle with slow and fast pointers, reverse the second half with
+     this exact loop, compare the halves node by node, then reverse the second
+     half back to restore the input. O(n) time, O(1) space.
 TRIGGER
-  When a singly linked list must be re-pointed in place and you need the
-  successor saved before overwriting next, reach for the prev / current /
-  nextNode trio.
+  A singly linked list problem where you need a node's predecessor, or need the
+  links themselves flipped, and extra space is not allowed.
 C# NOTE
-  ListNode is a class, so prev, current and nextNode are references: assigning
+  ListNode is a class, so prev, current and nextNode are references - assigning
   them copies a pointer, not a node, which is what makes the O(1) space claim
-  real. Note the field is lowercase next, matching LeetCode's provided class
-  rather than normal C# PascalCase property style - keep that in mind if you
-  retype the node class yourself.
+  real. Declaring ListNode nextNode inside the loop body costs nothing extra
+  here; it just limits the name to the one pass where it is meaningful.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

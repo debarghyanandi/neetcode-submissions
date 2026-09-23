@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(1) space
-// -  iterative merge with dummy head   [iterative-merge-dummy-head]
+// -  Two-pointer merge   [two-pointer-merge]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  single pass through both lists comparing heads and relinking nodes, no
-// -  extra allocation beyond dummy node
+// -  Each node from both lists is visited exactly once; comparison at each
+// -  step determines which node to append.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -45,84 +45,77 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Dummy head + two pointers - splice, never allocate
+ PATTERN : Two-pointer merge on sorted lists with a dummy head
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  dummy    a throwaway node whose next ends up being the merged head
+  node     the tail of the merged list built so far
+  list1    the still-unmerged part of the first input list
+  list2    the still-unmerged part of the second input list
 WHY THIS PATTERN
-  Both inputs are already sorted, so the smallest unused node in the whole
-  problem is always sitting at the head of list1 or at the head of list2 -
-  nowhere else. That single observation removes any need to search, buffer, or
-  re-sort: you compare two heads, take the winner, and repeat. The dummy node
-  exists only so that the first append is written the same way as every other
-  append. Without it you would need a special case to decide which node becomes
-  the head before the loop can start.
+  Both inputs are already sorted, so the smallest remaining value is always at
+  the front of list1 or list2. That means one comparison per step picks the next
+  output node, and no sorting or extra storage is needed. The dummy node exists
+  so the first append is written the same way as every later one: node.next =
+  ..., no special case for an empty result. Because nodes are relinked instead
+  of copied, the merge runs without allocating per element.
+BRUTE FORCE
+  The first thing most people write is: walk both lists, copy every val into a
+  List<int>, call Sort(), then build a fresh linked list. That is O((n+m)
+  log(n+m)) time and O(n+m) extra space, and it throws away the fact that the
+  inputs are already ordered. It also allocates a whole new set of nodes instead
+  of reusing the ones handed in.
 INVARIANT
-  At the top of every iteration:
-  (1) dummy.next ... tail is a sorted chain of exactly the nodes already
-  consumed, and tail is its last node;
-  (2) list1 and list2 point at the first unconsumed node of their own list, and
-  every remaining node in each is >= tail.val;
-  (3) no node has been copied - the output is built out of the original nodes.
-  The body preserves this: it appends min(list1.val, list2.val), which is <=
-  every remaining value on both sides and >= tail.val by (2), then advances tail
-  so (1) holds again. Each iteration advances list1 or list2 by exactly one
-  node, so the loop runs at most n + m times and cannot spin.
-ALGORITHM
-  1. dummy = new ListNode(0); tail = dummy. dummy.val is never read - 0 is
-  arbitrary filler, not a sentinel value that must beat the data.
-  2. While both list1 and list2 are non-null: if list1.val < list2.val, splice
-  list1 onto tail.next and advance list1; else splice list2 and advance list2.
-  3. tail = tail.next after either branch - this is the one line whose omission
-  silently drops nodes, since the next iteration would overwrite the same
-  tail.next.
-  4. After the loop, attach the leftover: tail.next = list1 if list1 is
-  non-null, else tail.next = list2.
-  5. Return dummy.next, not dummy.
-WHY THE LEFTOVER SPLICE IS ONE POINTER WRITE
-  The remaining nodes are already a sorted, null-terminated chain, and by
-  invariant (2) all of them are >= tail.val. So one assignment finishes the
-  merge - there is no need to walk the tail, and no need to write tail.next =
-  null anywhere, because the suffix carries its own terminator.
-  Edge case the if/else quietly covers: the loop is only entered when both are
-  non-null, so on exit at least one is null and the other holds the suffix. The
-  exception is when the loop never ran at all - if both inputs were null on
-  entry, the else branch sets tail.next = list2 = null, dummy.next is null, and
-  the function correctly returns null.
-TIE HANDLING
-  The comparison is strict: list1.val < list2.val. On equal values control falls
-  to the else branch, so ties are taken from list2 first. For this problem that
-  is unobservable - the nodes carry only val, so two equal nodes are
-  interchangeable. If an interviewer adds a payload and asks for a stable merge
-  that keeps list1's element first among equals, the entire fix is changing < to
-  <=. Know that this line is the stability knob; do not claim the current code
-  is stable in list1's favor.
+  At the top of every loop pass, the chain from dummy.next to node holds all
+  values already taken, in sorted order, and every value still in list1 or list2
+  is greater than or equal to node.val. So appending the smaller of list1.val
+  and list2.val keeps the output sorted. The loop ends when one list is empty;
+  the remaining list is sorted and all of it is at least node.val, so a single
+  link to it finishes the job.
+THE TAIL SPLICE IS ONE POINTER WRITE
+  After the loop, at most one list is non-empty, and it is already a correctly
+  ordered chain. The code links to it whole instead of walking it node by node.
+  The if/else is not really two cases: if list1 is null the else branch assigns
+  list2, which may itself be null, and that is the correct terminator anyway.
 WATCH OUT
-  - This is destructive. Every taken node's next is rewritten, so after the call
-  list1 and list2 as the caller held them are no longer valid lists - they alias
-  into the merged result. If the original lists must survive, you must allocate
-  new nodes and give up the O(1) space.
-  - Returning dummy instead of dummy.next prepends a phantom 0 to the answer,
-  which passes trivial eyeballing and fails the tests.
-  - Do not restructure to while (list1 != null || list2 != null); that forces a
-  null check inside both branches for no gain, since the leftover suffix needs
-  no per-node work.
-  - The recursive formulation (return the smaller head with .next = merge(rest,
-  other)) is shorter but adds O(n + m) call frames, which is a real difference
-  from this version, not a stylistic one.
+  If both inputs are null the loop never runs, node.next is set to null, and
+  dummy.next returns null - correct, but only because the else branch tolerates
+  a null list2. This merge is destructive: the next pointers of the input nodes
+  are rewritten, so the caller can no longer use list1 or list2 as they were.
+  Using < rather than <= means that on a tie the node from list2 is taken first;
+  the result is still sorted, but the merge is not stable with respect to list1,
+  which matters if nodes carry extra data beyond val. The dummy node is
+  allocated on every call even when one list is empty.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Merge k sorted lists instead of two.
+     Either fold this method over the k lists pairwise in a tournament, O(N log
+     k) total, or push the k heads into a min-heap and pop-and-advance. The
+     pairwise fold reuses this exact code and needs no new data structure.
+  2. Write it recursively.
+     Compare the two heads, set the smaller node's next to the recursive merge
+     of the rest, and return that node. It is shorter, but it uses stack depth
+     proportional to n+m and can overflow on long lists, which the loop here
+     cannot.
+  3. The caller must keep the original lists intact.
+     Allocate a new ListNode per output element instead of relinking, copying
+     val across. Same time, but space grows to O(n+m).
+  4. The inputs are sorted descending.
+     Flip the comparison to list1.val > list2.val. The invariant argument is
+     unchanged, only the ordering relation is reversed.
 TRIGGER
-  Reach for a dummy head whenever the head of the result is not known until the
-  first comparison, or whenever the head itself might be removed or replaced -
-  merge, partition list, remove nth from end, remove duplicates. Reach for the
-  two-head comparison whenever the inputs are independently sorted and the
-  output must be sorted; this is the merge half of merge sort, and it is also
-  the routine that k-way list merging calls, with a heap over the k heads in
-  place of the single if.
+  Two or more already-sorted sequences that must become one sorted sequence,
+  especially when the container is a linked list and you can move links instead
+  of copying values.
+C# NOTE
+  ListNode is a class, so list1 and node are references; node = node.next just
+  moves the reference and no data is copied. Returning dummy.next rather than
+  dummy is the whole point of the pattern - and since dummy is a local with no
+  other reference to it, it becomes garbage as soon as the method returns.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(1)

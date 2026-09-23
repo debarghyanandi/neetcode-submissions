@@ -651,127 +651,167 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Merge Two Sorted Linked Lists',
-  note: 'both lists are sorted, so the answer is always whichever head is smaller',
+  note: 'both inputs are already sorted, so the smallest node still unused is always one of the two heads - you never have to look past them. Compare the two heads, splice the smaller one onto the tail of the answer, advance that list, repeat. When one list runs out the other is already sorted and already linked, so it gets attached whole in a single pointer write.',
   inputs: [
-    {id:'a', label:'list1', value:'1,2,4', width:200},
-    {id:'b', label:'list2', value:'1,3,5', width:200}
+    {id:'a', label:'list1 (sorted)', value:'1,2,4', width:200},
+    {id:'b', label:'list2 (sorted)', value:'1,3,5', width:200}
   ],
   parse(raw){
-    const t1 = String(raw.a).trim(), t2 = String(raw.b).trim();
-    const a = t1.length ? parseInts(t1, 8) : [];
-    const b = t2.length ? parseInts(t2, 8) : [];
-    if (!a || !b) return {ok:false, msg:'Enter comma-separated integers (an empty list is allowed).'};
-    if (!a.length && !b.length) return {ok:false, msg:'At least one list needs a node.'};
-    a.sort((x, y) => x - y);
-    b.sort((x, y) => x - y);
-    return {ok:true, value:{a, b}, normalized:{a: a.join(','), b: b.join(',')}};
+    const a = parseInts(raw.a, 5), b = parseInts(raw.b, 5);
+    if (!a || !b) return {ok:false, msg:'Enter two comma-separated lists, e.g. 1,2,4 and 1,3,5'};
+    if (a.length > 5 || b.length > 5) return {ok:false, msg:'Keep each list to 5 nodes or fewer so the whole run stays watchable.'};
+    const sorted = (xs) => xs.every((v, i) => i === 0 || xs[i - 1] <= v);
+    if (!sorted(a) || !sorted(b)) return {ok:false, msg:'Each list must already be sorted in non-decreasing order - that is the precondition the merge relies on.'};
+    return {ok:true, value:{a: a, b: b}, normalized:{a: a.join(','), b: b.join(',')}};
   },
   shuffle(){
-    const mk = (n) => randInts(n, 1, 9).sort((x, y) => x - y).join(',');
-    return {a: mk(3 + Math.floor(Math.random()*2)), b: mk(3 + Math.floor(Math.random()*2))};
+    const mk = () => randInts(2 + Math.floor(Math.random() * 2), 0, 9).sort((x, y) => x - y);
+    return {a: mk().join(','), b: mk().join(',')};
   },
   solutions: [
   {
-    label: 'Iterative merge with a dummy head',
-    badge: 'O(n + m) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'Both inputs are already sorted, so the next node of the answer is always the smaller of the two heads — no lookahead, no re-scanning. A dummy head kills the “first node is special” branch, and relinking <code>next</code> pointers instead of copying values keeps the extra space at O(1).',
+    label: 'Two cursors and a dummy head',
+    badge: 'O(n + m) time · O(1) space · two-pointer merge · optimal.cs',
+    blurb: 'Sortedness means the next node of the answer is whichever head is smaller - nothing deeper in either list can beat them. A dummy node gives the first splice the same shape as every later one, no nodes are allocated, and when one list empties the other is appended in one assignment because it is already a sorted chain.',
     legend: [
-      {cls:'hot', text:'current head (null tile = exhausted)'},
-      {cls:'good', text:'tail — last node linked in'},
-      {cls:'in-window', text:'already merged'},
-      {cls:'dim', text:'consumed / dummy'}
+      {cls:'hot', text:'the head being compared or just spliced'},
+      {cls:'done', text:'a node already moved into the answer'},
+      {cls:'dim', text:'not reached yet'},
+      {cls:'good', text:'a node sitting in the merged chain'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'this is a single while loop walking two cursors - it never calls itself, so there is no recursion stack to draw.'},
     code: [
-      'ListNode dummy = new ListNode(0);   // a node that is never returned',
-      'ListNode tail = dummy;              // last node of the merged list',
-      '',
-      'while (list1 != null && list2 != null)',
+      'public class Solution',
       '{',
-      '    if (list1.val < list2.val)',
+      '    public ListNode MergeTwoLists(ListNode list1, ListNode list2)',
       '    {',
-      '        tail.next = list1;',
-      '        list1 = list1.next;',
+      '        ListNode dummy = new ListNode(0);',
+      '        ListNode node = dummy;',
+      '',
+      '        while (list1 != null && list2 != null)',
+      '        {',
+      '            if (list1.val < list2.val)',
+      '            {',
+      '                node.next = list1;',
+      '                list1 = list1.next;',
+      '            }',
+      '            else',
+      '            {',
+      '                node.next = list2;',
+      '                list2 = list2.next;',
+      '            }',
+      '',
+      '            node = node.next;',
+      '        }',
+      '',
+      '        if (list1 != null)',
+      '        {',
+      '            node.next = list1;',
+      '        }',
+      '        else',
+      '        {',
+      '            node.next = list2;',
+      '        }',
+      '',
+      '        return dummy.next;',
       '    }',
-      '    else',
-      '    {',
-      '        tail.next = list2;',
-      '        list2 = list2.next;',
-      '    }',
-      '',
-      '    tail = tail.next;',
-      '}',
-      '',
-      'if (list1 != null)',
-      '{',
-      '    tail.next = list1;',
-      '}',
-      'else',
-      '{',
-      '    tail.next = list2;',
-      '}',
-      '',
-      'return dummy.next;'
+      '}'
     ],
     simulate(input){
-      const a = input.a, b = input.b, steps = [];
-      const merged = [];
-      let i = 0, j = 0;
-      const head1 = () => (i < a.length ? String(a[i]) : 'null');
-      const head2 = () => (j < b.length ? String(b[j]) : 'null');
+      const a = input.a, b = input.b;
+      const steps = [];
+      const out = [];
+      let i = 0, j = 0, freshAt = -1, attachFrom = -1;
+
+      const head = (vals, cur) => (cur < vals.length ? String(vals[cur]) : 'null');
+
+      const srcRow = (tag, vals, cur) => ({
+        label: tag + (cur < vals.length ? ' - head is ' + vals[cur] : ' - exhausted'),
+        nodes: vals.map((v, k) => ({id: tag + k, v: v, cls: k === cur ? 'hot' : (k < cur ? 'done' : 'dim')})),
+        tail: true,
+        arrows: vals.slice(1).map((_, k) => (k < cur ? 'dim' : '')),
+        tags: cur < vals.length ? [{name: tag, idx: cur, cls: 'accent'}] : []
+      });
+
+      const outRow = () => ({
+        label: 'dummy.next onward - the merged chain, made of the original nodes relinked',
+        nodes: out.map((o, k) => ({
+          id: 'o' + k,
+          v: o.v,
+          sub: 'from ' + o.src,
+          cls: k === freshAt ? 'hot' : (attachFrom >= 0 && k >= attachFrom ? 'good' : 'good'),
+          fresh: k === freshAt || (attachFrom >= 0 && k >= attachFrom)
+        })),
+        tail: true,
+        arrows: out.slice(1).map(() => ''),
+        tags: out.length ? [{name: 'node', idx: out.length - 1}] : [],
+        empty: 'nothing spliced yet - node still sits on the dummy'
+      });
+
       const panels = () => [
-        pTiles('list1', a.map(String).concat(['null']), (k) => ({
-          cls: k < i ? 'dim' : k === i ? 'hot' : ''
-        })),
-        pTiles('list2', b.map(String).concat(['null']), (k) => ({
-          cls: k < j ? 'dim' : k === j ? 'hot' : ''
-        })),
-        pTiles('dummy → merged', ['dummy'].concat(merged.map(String)), (k) => ({
-          cls: k === 0 ? (merged.length ? 'dim' : 'good')
-             : k === merged.length ? 'good' : 'in-window'
-        })),
-        pPills('', [
-          {k:'list1 head', v: head1(), cls:'hot'},
-          {k:'list2 head', v: head2(), cls:'hot'},
-          {k:'tail', v: merged.length ? merged[merged.length - 1] : 'dummy', cls:'good'},
-          {k:'nodes linked', v: merged.length}
+        pList('two sorted lists and the chain being stitched from them', [
+          srcRow('list1', a, i),
+          srcRow('list2', b, j),
+          outRow()
+        ], {scale: 0.9}),
+        pPills('state', [
+          {k: 'list1', v: head(a, i)},
+          {k: 'list2', v: head(b, j)},
+          {k: 'tail value', v: out.length ? out[out.length - 1].v : 'dummy'},
+          {k: 'nodes merged', v: out.length}
         ])
       ];
 
-      steps.push({lines:[1,2], msg:'The <code>dummy</code> node holds no real value and is never returned — it exists so that <code>tail.next = …</code> is legal on the <em>very first</em> link. Without it every splice would need an “is the result still empty?” check. <code>tail</code> always points at the last node of the merged list, so appending is O(1).', panels: panels()});
+      steps.push({lines: [5, 6], msg: 'A throwaway <b>dummy</b> node is created and <b>node</b> starts on it. Every splice is then just <code>node.next = ...</code>, including the very first one, so there is no "is the answer empty yet" branch inside the loop.', panels: panels()});
 
-      while (i < a.length && j < b.length){
-        const av = a[i], bv = b[j];
-        if (av < bv){
-          i++; merged.push(av);
-          steps.push({lines:[4,6,8,9,17], msg:'<code>list1</code> head <b>' + av + '</b> &lt; <code>list2</code> head <b>' + bv + '</b>. Because <code>list2</code> is sorted, <em>everything</em> behind ' + bv + ' is ≥ ' + bv + ' too, so ' + av + ' is the smallest node left anywhere — it can be committed with no lookahead. <code>tail.next = list1</code> re-points an existing node (nothing is copied or allocated), then <code>list1</code> and <code>tail</code> both step forward.', panels: panels()});
-        } else if (av === bv){
-          j++; merged.push(bv);
-          steps.push({lines:[4,6,11,13,14,17], msg:'The heads tie at <b>' + av + '</b>, and the test is <em>strictly</em> <code>&lt;</code>, so the <code>else</code> runs and <code>list2</code>&rsquo;s node goes first. Either order produces a sorted list; what matters is only that the comparison is consistent so the loop always makes progress.', panels: panels()});
+      let guard = 0;
+      while (i < a.length && j < b.length && guard++ < 24){
+        freshAt = -1; attachFrom = -1;
+        steps.push({lines: [8], msg: 'Loop test: list1 is at <b>' + head(a, i) + '</b> and list2 is at <b>' + head(b, j) + '</b>. Both are non-null, so a real comparison is still needed - the moment either ends, the rest of the other can be taken wholesale.', panels: panels()});
+
+        const x = a[i], y = b[j];
+        const takeA = x < y;
+        steps.push({lines: [10], msg: 'Compare the heads: <b>' + x + '</b> ' + (takeA ? '&lt; ' : '&gt;= ') + '<b>' + y + '</b>. Because both lists are sorted, every remaining node is at least as large as its own head, so the smaller head is the smallest node left anywhere - it must come next.', panels: panels()});
+
+        if (takeA){
+          out.push({v: x, src: 'list1'});
+          freshAt = out.length - 1;
+          i++;
+          steps.push({lines: [12, 13], msg: 'The node holding <b>' + x + '</b> is linked in after node - the existing node is reused, nothing is allocated - and list1 advances to <b>' + head(a, i) + '</b>.', panels: panels()});
         } else {
-          j++; merged.push(bv);
-          steps.push({lines:[4,6,11,13,14,17], msg:'<code>list2</code> head <b>' + bv + '</b> is the smaller of the two heads, so the <code>else</code> branch splices it in and advances <code>list2</code>. Exactly one node is consumed per iteration, which is why the whole merge is O(n + m) — each node is looked at once and never revisited.', panels: panels()});
+          out.push({v: y, src: 'list2'});
+          freshAt = out.length - 1;
+          j++;
+          steps.push({lines: [17, 18], msg: 'The node holding <b>' + y + '</b> is linked in after node and list2 advances to <b>' + head(b, j) + '</b>.' + (x === y ? ' The test is a strict <code>&lt;</code>, so on a tie list2 wins - either choice is sorted, this one just has to be consistent.' : ''), panels: panels()});
         }
+
+        steps.push({lines: [21], msg: 'node moves onto the node just spliced, so it is always the tail of the answer and the next <code>node.next = ...</code> lands at the end again.', panels: panels()});
       }
 
-      steps.push({lines:[4,18], msg:'The loop stops the moment <em>either</em> list runs out: <code>list1</code> is at <b>' + head1() + '</b>, <code>list2</code> is at <b>' + head2() + '</b>. Whatever is left over is already sorted among itself, and every one of those nodes is ≥ every node already merged — so no more comparisons can change anything.', panels: panels()});
+      freshAt = -1;
+      steps.push({lines: [8], msg: (i >= a.length ? 'list1' : 'list2') + ' is now null, so the loop condition fails and the pairwise comparing is over. Exactly one list can still have nodes left.', panels: panels()});
+
+      steps.push({lines: [24], msg: 'Which one survived? list1 is <b>' + head(a, i) + '</b>' + (i < a.length ? ' - still has nodes' : ' - exhausted') + '.', panels: panels()});
 
       if (i < a.length){
-        const rest = a.slice(i);
-        merged.push.apply(merged, rest);
-        i = a.length;
-        steps.push({lines:[20,22], msg:'<code>list1</code> still has ' + rest.length + ' node' + (rest.length === 1 ? '' : 's') + ' (' + rest.join(' → ') + '), so <code>tail.next = list1</code> hangs the <b>entire run</b> on in one assignment — <b>O(1)</b>, not a loop. There is nothing to walk: that tail is already a sorted list, and it is already ≥ everything merged.', panels: panels()});
+        attachFrom = out.length;
+        while (i < a.length) out.push({v: a[i++], src: 'list1'});
+        steps.push({lines: [26], msg: 'The remainder of list1 is already a sorted chain, and every one of its values is at least the last value merged, so the whole tail is attached with a single pointer write instead of node by node. That is why the extra space stays O(1) and the time stays linear.', panels: panels()});
       } else {
-        const rest = b.slice(j);
-        merged.push.apply(merged, rest);
-        j = b.length;
-        steps.push({lines:[20,24,26], msg:'<code>list1</code> is <code>null</code>, so the <code>else</code> runs: <code>tail.next = list2</code>' + (rest.length ? ' attaches the remaining run (' + rest.join(' → ') + ') in one assignment — O(1), no walking needed.' : '. Here <code>list2</code> is <code>null</code> as well, so this just writes <code>null</code> onto the end, which is exactly the terminator the list needs.'), panels: panels()});
+        attachFrom = out.length;
+        while (j < b.length) out.push({v: b[j++], src: 'list2'});
+        steps.push({lines: [30], msg: (out.length > attachFrom
+          ? 'list1 ended, so whatever is left of list2 is hung off the tail in one assignment - it is already sorted and already linked, so no further work is needed.'
+          : 'list1 ended and list2 is null too, so this writes <b>null</b> - it simply terminates the merged chain.'), panels: panels()});
       }
 
-      steps.push({lines:[29], msg:'Return <code>dummy.next</code>, never <code>dummy</code> itself — the dummy was only ever a hook to hang the first real node on. Result: <b>' + (merged.length ? merged.join(' → ') : 'null') + '</b>, built by re-pointing the original ' + merged.length + ' node' + (merged.length === 1 ? '' : 's') + ' with two pointers and no new allocations.', panels: panels()});
+      attachFrom = -1;
+      steps.push({lines: [33], msg: 'The real head is one past the dummy, so <code>dummy.next</code> is returned: <b>' + out.map(o => o.v).join(' → ') + '</b>. Each node of each list was looked at once and no new nodes were made, giving O(n + m) time and O(1) extra space.', panels: panels()});
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

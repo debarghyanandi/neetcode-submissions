@@ -1,13 +1,13 @@
 // --------------------------------------------------------------------------
-// -  suboptimal.cs         O(n) time / O(n) space
-// -  recursive digit-by-digit addition with carry
-// -  [recursive-carry-addition]
-// -  ranks below optimal.cs (O(n) time / O(1) space)
+// -  suboptimal.cs         O(n + m) time / O(n + m) space
+// -  Recursive linked list traversal with carry
+// -  [linked-list-carry-recursion]
+// -  ranks below optimal.cs (O(n + m) time / O(1) space)
 // -
-// -  Reference solution - not one you solved yourself (from submission-0)
+// -  Reference solution - not one you solved yourself
 // -
-// -  recurses one call per node pair, so call stack depth is O(n) auxiliary
-// -  space beyond the output list
+// -  Recursion depth equals max list length; call stack accumulates
+// -  O(max(m,n)) frames.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -49,68 +49,79 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Recursion with carry passed down, nodes built on unwind
+ PATTERN : Linked list digit addition - recursion carrying the carry
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  carry       carry coming in from the less significant digit already processed
+  v1, v2      digit at this position, or 0 when that list has already ended
+  sum         v1 + v2 + carry for this one position
+  newCarry    sum / 10, the carry handed to the next recursive call
+  nodeValue   sum % 10, the digit stored in the node built here
+  nextNode    the already-built rest of the result list (higher digits)
 WHY THIS PATTERN
-  Both lists store the least significant digit at the head, so column addition
-  runs head-to-tail - the exact direction the recursion descends. The only state
-  that has to travel forward is the carry, and it rides down as the third
-  parameter of Add. Nothing has to be reversed, and no digit is looked at twice.
-THE BASE CASE HAS THREE CLAUSES
-  Add returns null only when first == null && second == null && carry == 0. The
-  carry == 0 clause is the one people drop. With it gone, 5 -> null plus 5 ->
-  null returns just 0 and silently loses the leading 1; with it in place, one
-  extra frame runs with both inputs null, v1 and v2 default to
-  0, and it emits the final 1 node. That same defaulting to 0 is what makes
-  unequal lengths work - the short list just contributes zeros until the long
-  one runs out.
+  The digits are stored least significant first, so walking both lists forward
+  is exactly the order you add by hand: position by position, right to left,
+  with one carry passed along. That single piece of state, carry, is all that
+  links one position to the next, so the problem folds naturally into a
+  recursive call on l1.next and l2.next with newCarry. The stopping condition is
+  the honest one: nothing is left in either list and carry is 0, so there is no
+  digit to emit.
+BETTER APPROACH
+  The better version is the same algorithm written as a loop with a dummy head
+  node and a tail pointer, advancing l1 and l2 while either is non-null or carry
+  is non-zero. That uses only a few pointers of extra state, while this file
+  puts one stack frame per digit, so the extra space grows with the longer list.
+  On a very long list the recursion can overflow the call stack; the loop
+  cannot. The digit work is identical, so this file loses on space and
+  robustness, not on speed.
 INVARIANT
-  Add(a, b, c) returns the complete digit list for the number a + b + c, where c
-  is the carry out of every column already consumed by the callers above it. Two
-  directions of flow meet in one function: carry flows down the stack (newCarry
-  becomes the callee's carry), and nodes flow back up. The line new
-  ListNode(nodeValue) { next = nextNode } executes only after the recursive call
-  has returned, so the tail is fully built before the head node pointing at it
-  exists - and because the list is LSB-first, that back-to-front construction
-  still yields the digits in the right order.
-WHY THIS LOSES TO THE ITERATIVE VERSION
-  This burns one stack frame per output digit, and that stack is pure overhead -
-  it holds v1, v2, sum and newCarry, none of which are needed
-  after the recursive call returns. The recursion is tail-shaped in spirit but
-  not in form, since the new node is constructed after the call, so nothing
-  collapses it for you. The iterative version keeps a dummy head plus a tail
-  pointer and loops while (first != null || second != null || carry != 0),
-  running the identical sum / newCarry / nodeValue three lines in the body and
-  allocating only the output nodes. Same work, constant auxiliary memory, no
-  depth limit on long inputs. Recursion earns its keep when the call tree
-  branches; here it never does.
+  Every call to Add receives lists positioned at the same digit index and the
+  carry produced by all lower positions. It returns the complete correctly
+  formed list for that position and everything above it. By induction from the
+  base case, where no digits and no carry give null, the list returned by the
+  top call spells out the full sum, least significant digit first.
 WATCH OUT
-  1. Advance each list independently: first != null ? first.next : null,
-  evaluated per side. Writing Add(first.next, second.next, newCarry) throws a
-  NullReferenceException the moment one list is shorter.
-  2. newCarry = sum / 10 and nodeValue = sum % 10 are exact here because each
-  val is 0..9 and carry is 0 or 1, so sum is at most 19 and newCarry is always 0
-  or 1. No need to hand-roll a comparison; nothing to gain and a boundary to get
-  wrong.
-  3. The object initializer { next = nextNode } depends on next being a writable
-  field on ListNode. If the node type only exposes a constructor taking (val,
-  next), pass nextNode there instead.
+  Add returns null when both lists are null and carry is 0, so calling
+  AddTwoNumbers(null, null) gives back null rather than a node holding 0; if the
+  caller can pass two empty lists, that is a crash waiting to happen downstream.
+  The recursion is not tail recursive: the new ListNode is built after nextNode
+  comes back, so depth really is the length of the longer list. The null guards
+  on l1 and l2 are repeated three times each (value read, and twice in the
+  recursive call arguments) - easy to edit one and forget another. Leading zeros
+  in the input are copied straight through, since nothing trims them.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Rewrite it without recursion.
+     Use a dummy head, a tail pointer, and a while loop that runs while l1 !=
+     null || l2 != null || carry != 0; append new ListNode(sum % 10) each turn
+     and return dummy.next. Same time, constant extra space beyond the output.
+  2. What if the digits were stored most significant first?
+     You cannot add left to right with one carry. Either reverse both lists
+     first, or push all digits onto two Stack<int> and pop them together,
+     building the result by prepending each new node. Both cost extra space
+     proportional to the lists.
+  3. Can you avoid allocating a new list at all?
+     Write the result into the longer input list in place, reusing its nodes,
+     and only allocate when a final carry needs one more node. Saves allocations
+     but destroys the input, which is often not allowed.
+  4. What if each node held a digit in base 1000 instead of base 10?
+     Only the two constants change: newCarry = sum / 1000 and nodeValue = sum %
+     1000. The structure is untouched, which is a sign the carry logic is the
+     real core here.
 TRIGGER
-  Reach for this shape when a problem threads a small piece of forward state - a
-  carry, a borrow, a running remainder - through a sequence traversed in the
-  same direction the answer is built, and the output is itself a linked
-  structure. The tell is that the accumulator must be passed as an argument
-  while the result is assembled from the return value. Then ask whether the
-  traversal ever branches; if it does not, write the loop instead.
+  Two sequences to combine position by position where one small piece of state
+  (a carry, a borrow) is the only thing passed forward.
+C# NOTE
+  LeetCode's ListNode has a constructor overload taking (val, next), so new
+  ListNode(nodeValue, nextNode) replaces the object initializer new
+  ListNode(nodeValue) { next = nextNode } and does not depend on next being
+  publicly settable.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  : O(n + m)
+  Space : O(n + m)
 ================================================================================
 */

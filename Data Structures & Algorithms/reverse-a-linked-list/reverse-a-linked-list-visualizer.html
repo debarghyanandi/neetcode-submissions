@@ -650,33 +650,32 @@ function randWord(len, alphabet){
 }
 
 const PROBLEM = {
-  title: 'Reverse a Linked List',
-  note: 'a singly linked list can only be walked forwards, so reversing it means rewriting every next pointer to aim at the node before it. The only real difficulty is that overwriting current.next destroys the way forward, so the rest of the list has to be held onto - either in a saved variable, or in a stack frame.',
+  title: 'Reverse A Linked List',
+  note: 'a singly linked list only lets you walk forwards, so reversing it means rewriting every next pointer to aim at the node behind instead of the node ahead. The whole difficulty is that the moment you overwrite current.next you lose the rest of the list - so the rest of the list has to be saved in a local first, or recovered on the way back out of a recursion.',
   inputs: [
-    {id:'l', label:'list (head to tail)', value:'1,2,3,4,5', width:280}
+    {id:'a', label:'list values, head first', value:'1,2,3,4', width:220}
   ],
   parse(raw){
-    const vals = parseInts(raw.l, 8);
-    if (!vals) return {ok:false, msg:'Enter a comma-separated list, e.g. 1,2,3,4,5'};
-    if (vals.length < 2) return {ok:false, msg:'Give at least 2 nodes so there is a pointer to actually reverse.'};
-    if (vals.length > 7) return {ok:false, msg:'Keep it to 7 nodes or fewer so the whole run stays watchable.'};
-    return {ok:true, value:{vals: vals}, normalized:{l: vals.join(',')}};
+    const a = parseInts(raw.a, 6);
+    if (!a) return {ok:false, msg:'Enter a comma-separated list, e.g. 1,2,3,4'};
+    if (a.length > 5) return {ok:false, msg:'Keep the list to 5 nodes or fewer so the whole run stays watchable.'};
+    return {ok:true, value:{a: a}, normalized:{a: a.join(',')}};
   },
   shuffle(){
-    return {l: randInts(4 + Math.floor(Math.random() * 3), 1, 9).join(',')};
+    return {a: randInts(3 + Math.floor(Math.random() * 3), 1, 9).join(',')};
   },
   solutions: [
   {
-    label: 'Iterative three-pointer reversal',
-    badge: 'O(n) time · O(1) space · prev / current / nextNode · optimal.cs',
-    blurb: 'Walk the list once, flipping one pointer per node. Before current.next is overwritten it is copied into nextNode, so the unvisited tail is never lost; prev trails one node behind and collects the reversed chain. When current falls off the end, prev is the old tail, which is the new head. Three variables, no extra memory.',
-    shapeOverride: {skip: ['call-stack'], reason: 'the iterative version runs entirely inside one frame with three local pointers - it never recurses, so there is no call stack to draw.'},
+    label: 'Three pointers, one pass, rewiring in place',
+    badge: 'O(n) time · O(1) space · iterative pointer reversal · optimal.cs',
+    blurb: 'Walk the list once holding three references: the node already reversed behind you, the node you are on, and the node ahead. Saving nextNode before overwriting current.next is the whole trick - without it the tail is unreachable the instant the pointer flips. Nothing is allocated, so the space is a fixed three references.',
     legend: [
-      {cls:'hot', text:'the node current is sitting on'},
-      {cls:'good', text:'already reversed - reachable from prev'},
-      {cls:'dim', text:'not reached yet, still pointing forwards'},
-      {cls:'ghost', text:'a link that no longer leads anywhere useful'}
+      {cls:'hot', text:'current - the node being rewired now'},
+      {cls:'good', text:'already flipped to point backwards'},
+      {cls:'dim', text:'not reached yet'},
+      {cls:'ghost', text:'a pointer about to be overwritten'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'this version is a single while loop over three local references - it never calls itself, so there is no recursion stack to draw.'},
     code: [
       'public class Solution',
       '{',
@@ -697,82 +696,90 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const vals = input.vals, n = vals.length;
-      const next = vals.map((_, i) => (i + 1 < n ? i + 1 : null));
+      const vals = input.a;
+      const n = vals.length;
       const steps = [];
-      const showV = (i) => (i === null || i === undefined ? 'null' : String(vals[i]));
+      let p = -1, c = 0, rev = -1, ghost = false, nx = -1;
 
-      const chainFrom = (start) => {
-        const out = [];
-        let cur = start, guard = 0;
-        while (cur !== null && cur !== undefined && guard++ <= n + 1){ out.push(cur); cur = next[cur]; }
-        return out;
+      const val = (k) => (k >= 0 && k < n ? String(vals[k]) : 'null');
+
+      const gapCls = (k) => {
+        if (k + 1 <= rev) return 'back';
+        if (k <= rev) return 'dim';
+        if (ghost && k === c) return 'ghost';
+        return '';
       };
 
-      const panels = (prev, cur, nx) => {
-        const good = new Set(prev === null ? [] : chainFrom(prev));
-        const nodes = vals.map((v, i) => ({
-          id: 'n' + i, v: v,
-          cls: i === cur ? 'hot' : (good.has(i) ? 'good' : 'dim')
-        }));
-        const arrows = [];
-        for (let j = 0; j < n - 1; j++){
-          const fwd = next[j] === j + 1;
-          const back = next[j + 1] === j;
-          arrows.push(back ? 'back' : (fwd ? '' : 'ghost'));
-        }
+      const mainRow = () => {
         const tags = [];
-        if (prev !== null) tags.push({name: 'prev', idx: prev});
-        if (cur !== null && cur !== undefined) tags.push({name: 'current', idx: cur, cls: 'accent'});
-        if (nx !== null && nx !== undefined) tags.push({name: 'nextNode', idx: nx, below: true});
-        const prevChain = prev === null ? [] : chainFrom(prev);
-        return [
-          pList('the nodes, drawn in their original order - only the arrows move', [
-            {label: 'original order', nodes: nodes, tail: false, arrows: arrows, tags: tags},
-            {label: 'reversed so far - walk from prev', nodes: prevChain.map((i) => ({id: 'r' + i, v: vals[i], cls: 'good'})), tail: true, arrows: prevChain.slice(0, -1).map(() => ''), empty: 'nothing reversed yet'}
-          ]),
-          pPills('state', [
-            {k: 'prev', v: prev === null ? 'null' : vals[prev], cls: 'good'},
-            {k: 'current', v: showV(cur), cls: 'hot'},
-            {k: 'nextNode', v: nx === undefined ? '-' : showV(nx)}
-          ])
-        ];
+        if (p >= 0) tags.push({name: 'prev', idx: p});
+        if (c >= 0 && c < n) tags.push({name: 'current', idx: c, cls: 'accent'});
+        if (nx >= 0 && nx < n) tags.push({name: 'nextNode', idx: nx, below: true});
+        return {
+          label: 'the nodes, in their original memory order - only the arrows change',
+          nodes: vals.map((v, k) => ({id: 'n' + k, v: v, cls: k === c ? 'hot' : (k <= rev ? 'good' : (k < c ? 'good' : 'dim'))})),
+          tail: true,
+          arrows: vals.slice(1).map((_, k) => gapCls(k)),
+          tags: tags
+        };
       };
 
-      let prev = null, cur = 0, nx = undefined;
-      steps.push({lines: [5, 6], msg: 'prev starts at null because the old head must end up pointing at nothing - it becomes the new tail. current starts at the head, and will walk the whole list flipping one arrow per node.', panels: panels(prev, cur, nx)});
+      const revRow = () => ({
+        label: 'the reversed chain, read forward from prev',
+        nodes: vals.slice(0, rev + 1).reverse().map((v, k) => ({id: 'r' + k, v: v, cls: 'good'})),
+        tail: true,
+        arrows: vals.slice(0, rev + 1).slice(1).map(() => ''),
+        empty: 'nothing reversed yet - prev is still null'
+      });
 
-      while (cur !== null){
-        steps.push({lines: [8], msg: 'current is on <b>' + vals[cur] + '</b>, so there is still a pointer left to reverse.', panels: panels(prev, cur, nx)});
-        nx = next[cur];
-        steps.push({lines: [10], msg: 'nextNode saves <b>' + showV(nx) + '</b> first. The very next line overwrites current.next, and once that arrow is gone there is no other way back to the rest of the list - so it has to be held in a variable before the damage is done.', panels: panels(prev, cur, nx)});
-        next[cur] = prev;
-        steps.push({lines: [11], msg: '<b>' + vals[cur] + '</b> now points at ' + (prev === null ? '<b>null</b> - as the original head it is the new tail' : '<b>' + vals[prev] + '</b>, the node that used to come before it') + '. That single assignment is the whole reversal, repeated n times.', panels: panels(prev, cur, nx)});
-        prev = cur; cur = nx;
-        steps.push({lines: [12, 13], msg: cur === null
-          ? 'Both pointers shuffle forward: prev takes over <b>' + vals[prev] + '</b>, and current becomes null because nextNode was null. The walk is over.'
-          : 'Both pointers shuffle forward one node: prev is now <b>' + vals[prev] + '</b> (the head of the reversed part) and current is <b>' + vals[cur] + '</b> (the first node still pointing the old way).', panels: panels(prev, cur, nx)});
+      const panels = () => [
+        pList('reversing in place', [mainRow(), revRow()], {scale: 0.9}),
+        pPills('state', [
+          {k: 'prev', v: val(p), cls: p >= 0 ? 'good' : ''},
+          {k: 'current', v: val(c), cls: c < n ? 'hot' : ''},
+          {k: 'nextNode', v: nx >= 0 ? val(nx) : '-'},
+          {k: 'flipped', v: rev + 1}
+        ])
+      ];
+
+      steps.push({lines: [5], msg: 'prev starts at <b>null</b>. That is not a placeholder - the old head must end up pointing at null, so the very first rewire needs prev to already be null.', panels: panels()});
+      steps.push({lines: [6], msg: 'current starts on the head, <b>' + val(0) + '</b>. These two references plus one more inside the loop are all the memory this algorithm ever uses, which is why it is O(1) space.', panels: panels()});
+
+      let guard = 0;
+      while (c < n && guard++ < 20){
+        steps.push({lines: [8], msg: 'Loop test: current is <b>' + val(c) + '</b>, not null, so there is still a pointer to flip.', panels: panels()});
+
+        nx = c + 1;
+        ghost = true;
+        steps.push({lines: [10], msg: 'nextNode remembers <code>current.next</code> = <b>' + val(nx) + '</b>. This has to happen first: the next line overwrites <code>current.next</code>, and without this saved reference the entire rest of the list would be unreachable.', panels: panels()});
+
+        ghost = false;
+        rev = c;
+        steps.push({lines: [11], msg: '<code>current.next = prev</code> flips node <b>' + val(c) + '</b> to point ' + (p >= 0 ? 'back at <b>' + val(p) + '</b>' : 'at <b>null</b>, making it the future tail') + '. The link forward is gone, but nextNode still holds it.', panels: panels()});
+
+        p = c;
+        steps.push({lines: [12], msg: 'prev moves onto <b>' + val(p) + '</b> - the head of the reversed section built so far, and the target the next node will be pointed at.', panels: panels()});
+
+        c = nx;
+        nx = -1;
+        steps.push({lines: [13], msg: 'current jumps to the saved nextNode, <b>' + val(c) + '</b>' + (c >= n ? ' - the list has run out' : '') + '. Each node is touched exactly once, so the whole walk is O(n).', panels: panels()});
       }
 
-      steps.push({lines: [8], msg: 'current is null - it walked off the end of the original list, so every node has had its arrow flipped and the loop stops.', panels: panels(prev, cur, nx)});
-      const finalChain = chainFrom(prev);
-      steps.push({lines: [15], msg: 'prev is left on <b>' + vals[prev] + '</b>, the old tail, which is exactly the new head. Returning it gives <b>' + finalChain.map(i => vals[i]).join(' → ') + '</b>. One pass over n nodes and three pointers of storage: O(n) time, O(1) space.', panels: [
-        pList('final list', [{label: 'new head to new tail', nodes: finalChain.map((i) => ({id: 'f' + i, v: vals[i], cls: 'good'})), tail: true, arrows: finalChain.slice(0, -1).map(() => ''), tags: [{name: 'returned', idx: 0, cls: 'accent'}]}]),
-        pPills('state', [{k: 'returned head', v: vals[prev], cls: 'good'}, {k: 'result', v: finalChain.map(i => vals[i]).join(',')}])
-      ]});
+      steps.push({lines: [8], msg: 'current is <b>null</b>: the walk has stepped off the end of the original list, so every pointer has been flipped and the loop ends.', panels: panels()});
+      steps.push({lines: [15], msg: 'prev is sitting on the last node visited, which is now the front of the chain, so it is returned as the new head: <b>' + vals.slice().reverse().join(' → ') + '</b>. One pass, three references, no allocation.', panels: panels()});
 
       return steps;
     }
   },
   {
-    label: 'Recursive reversal, fix the pointer on the way back up',
-    badge: 'O(n) time · O(n) space · recursion + rewire on unwind · suboptimal.cs',
-    blurb: 'Recurse all the way to the tail first, which becomes the new head and is passed back unchanged through every frame. Each frame, on the way back up, only has to do local work: head.next.next = head turns the link to its successor around, then head.next = null in case it is the new tail. Same n pointer flips, but n stack frames.',
+    label: 'Recurse to the tail, then rewire on the way back',
+    badge: 'O(n) time · O(n) space · recursive pointer reversal · suboptimal.cs',
+    blurb: 'Every frame hands the problem to its tail first, so the deepest call reaches the last node and names it newHead - that same reference is then passed untouched back up through every frame. Each unwinding frame flips exactly one link with head.next.next = head and cuts its own forward pointer, which is what stops the two nodes pointing at each other.',
     legend: [
-      {cls:'hot', text:'the frame running right now'},
-      {cls:'good', text:'a node whose frame has finished'},
-      {cls:'in-window', text:'a frame parked on the stack, waiting on its child call'},
-      {cls:'dim', text:'a node the recursion has not reached yet'}
+      {cls:'hot', text:'the node whose frame is running'},
+      {cls:'in-window', text:'a frame parked waiting on its child'},
+      {cls:'good', text:'a node whose frame already returned'},
+      {cls:'dim', text:'not reached yet'}
     ],
     code: [
       'public class Solution',
@@ -795,85 +802,84 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const vals = input.vals, n = vals.length;
-      const next = vals.map((_, i) => (i + 1 < n ? i + 1 : null));
+      const vals = input.a;
+      const n = vals.length;
       const steps = [];
       const frames = [];
-      const doneSet = new Set();
+      const back = {}, cut = {}, done = {};
+      let newHeadIdx = -1;
 
-      const chainFrom = (start) => {
-        const out = [];
-        let cur = start, guard = 0;
-        while (cur !== null && cur !== undefined && guard++ <= n + 1){ out.push(cur); cur = next[cur]; }
-        return out;
-      };
+      const val = (k) => (k >= 0 && k < n ? String(vals[k]) : 'null');
+      const top = () => (frames.length ? frames[frames.length - 1] : -1);
 
-      const stackPanel = () => {
-        const items = frames.map((f, i) => ({
-          text: 'ReverseList(' + vals[f.idx] + ')',
-          sub: i === frames.length - 1 ? 'running' : 'parked on line 12, waiting for newHead',
-          cls: i === frames.length - 1 ? 'hot' : 'in-window'
-        }));
-        return pStack('call stack', [{label: 'frames', items: items, mode: 'stack', empty: 'no frames yet', top: 'innermost call', foot: 'caller'}]);
-      };
-
-      const panels = (curIdx, note) => {
-        const open = new Set(frames.slice(0, -1).map(f => f.idx));
-        const nodes = vals.map((v, i) => ({
-          id: 'n' + i, v: v,
-          cls: i === curIdx ? 'hot' : (doneSet.has(i) ? 'good' : (open.has(i) ? 'in-window' : 'dim'))
-        }));
-        const arrows = [];
-        for (let j = 0; j < n - 1; j++){
-          const fwd = next[j] === j + 1;
-          const back = next[j + 1] === j;
-          arrows.push(fwd && back ? {cls: 'hot', text: 'cycle'} : (back ? 'back' : (fwd ? '' : 'ghost')));
-        }
+      const listRow = () => {
+        const t = top();
         const tags = [];
-        if (curIdx !== null && curIdx !== undefined) tags.push({name: 'head', idx: curIdx, cls: 'accent'});
-        const pills = [{k: 'frames open', v: frames.length}];
-        if (curIdx !== null && curIdx !== undefined) pills.push({k: 'head', v: vals[curIdx], cls: 'hot'});
-        if (note) pills.push({k: note.k, v: note.v});
-        return [
-          pList('the nodes, drawn in their original order - only the arrows move', [
-            {label: 'original order', nodes: nodes, tail: false, arrows: arrows, tags: tags}
-          ]),
-          stackPanel(),
-          pPills('state', pills)
-        ];
+        if (t >= 0) tags.push({name: 'head', idx: t, cls: 'accent'});
+        if (newHeadIdx >= 0) tags.push({name: 'newHead', idx: newHeadIdx, below: true});
+        return {
+          label: 'the nodes - forward arrows are cut and back arrows appear as frames unwind',
+          nodes: vals.map((v, k) => ({id: 'n' + k, v: v, cls: k === t ? 'hot' : (frames.indexOf(k) >= 0 ? 'in-window' : (done[k] ? 'good' : 'dim'))})),
+          tail: true,
+          arrows: vals.slice(1).map((_, k) => (back[k] ? 'back' : (cut[k] ? 'dim' : ''))),
+          tags: tags
+        };
       };
 
-      const walk = (idx) => {
-        frames.push({idx: idx});
-        steps.push({lines: [5, 8], msg: 'A new frame opens with head = <b>' + vals[idx] + '</b>. It is not null, so the base case is skipped - that guard only fires on an empty list.', panels: panels(idx)});
-        steps.push({lines: [9, 10], msg: 'newHead starts as <b>' + vals[idx] + '</b>, which is only the final answer if this node is the tail. Then head.next is checked to see whether there is anything left to recurse into.', panels: panels(idx, {k: 'newHead', v: vals[idx]})});
-        let result;
-        if (next[idx] === null){
-          steps.push({lines: [15, 16], msg: '<b>' + vals[idx] + '</b> is the tail, so the if block is skipped entirely. head.next is already null, and this node is returned as newHead - the deepest frame decides the new head, and every frame above will pass that same value straight back up.', panels: panels(idx, {k: 'returns', v: vals[idx]})});
-          result = idx;
-        } else {
-          const s = next[idx];
-          steps.push({lines: [12], msg: '<b>' + vals[idx] + '</b> has a successor <b>' + vals[s] + '</b>, so the tail of the list must be reversed before this frame can do anything useful. This frame parks here until the call returns.', panels: panels(idx, {k: 'recurse on', v: vals[s]})});
-          const nh = walk(s);
-          steps.push({lines: [13], msg: 'The call handed back <b>' + vals[nh] + '</b>. Everything after <b>' + vals[idx] + '</b> is reversed now, which means <b>' + vals[s] + '</b> is the tail of that reversed piece - so head.next.next = head turns its pointer around to aim back at <b>' + vals[idx] + '</b>.', panels: panels(idx, {k: 'newHead', v: vals[nh]})});
-          next[s] = idx;
-          steps.push({lines: [13], msg: '<b>' + vals[s] + '</b> now points at <b>' + vals[idx] + '</b> - but <b>' + vals[idx] + '</b> still points forward at <b>' + vals[s] + '</b>, so for this instant the two form a cycle. The next line breaks it.', panels: panels(idx, {k: 'newHead', v: vals[nh]})});
-          next[idx] = null;
-          steps.push({lines: [15, 16], msg: 'head.next = null cuts the stale forward link, leaving <b>' + vals[idx] + '</b> as the temporary tail; the parent frame will overwrite it on its own line 13. newHead is returned untouched: <b>' + vals[nh] + '</b>.', panels: panels(idx, {k: 'returns', v: vals[nh]})});
-          result = nh;
-        }
-        doneSet.add(idx);
-        frames.pop();
-        return result;
-      };
+      const stackPanel = () => pStack('call stack', [{
+        label: 'frames',
+        items: frames.map((d, k) => ({
+          text: 'ReverseList(node ' + vals[d] + ')',
+          sub: k === frames.length - 1 ? 'running' : 'parked on line 12, waiting for newHead',
+          cls: k === frames.length - 1 ? 'hot' : 'in-window'
+        })),
+        mode: 'stack',
+        empty: 'no frames - the call has returned',
+        top: 'innermost call',
+        foot: 'caller'
+      }], {scale: 0.9});
 
-      const newHead = walk(0);
-      const finalChain = chainFrom(newHead);
-      steps.push({lines: [16], msg: 'The recursion has unwound completely and the outermost frame returns <b>' + vals[newHead] + '</b>: <b>' + finalChain.map(i => vals[i]).join(' → ') + '</b>. Each node was visited once, so O(n) time - but n nested frames sat on the stack at the deepest point, making it O(n) space rather than the loop’s O(1).', panels: [
-        pList('final list', [{label: 'new head to new tail', nodes: finalChain.map((i) => ({id: 'f' + i, v: vals[i], cls: 'good'})), tail: true, arrows: finalChain.slice(0, -1).map(() => ''), tags: [{name: 'returned', idx: 0, cls: 'accent'}]}]),
+      const panels = () => [
+        pList('recursion down to the tail, rewiring on the way out', [listRow()], {scale: 0.9}),
         stackPanel(),
-        pPills('state', [{k: 'returned head', v: vals[newHead], cls: 'good'}, {k: 'result', v: finalChain.map(i => vals[i]).join(',')}])
-      ]});
+        pPills('state', [
+          {k: 'depth', v: frames.length},
+          {k: 'head', v: val(top())},
+          {k: 'newHead', v: newHeadIdx >= 0 ? val(newHeadIdx) : 'not known yet'},
+          {k: 'links flipped', v: Object.keys(back).length}
+        ])
+      ];
+
+      steps.push({lines: [3], msg: 'The call starts on the head, <b>' + val(0) + '</b>. Nothing is rewired going down - the descent exists only to reach the last node, which has to become the new head.', panels: panels()});
+
+      const go = (d) => {
+        frames.push(d);
+        steps.push({lines: [5], msg: 'Guard: head is <b>' + val(d) + '</b>, not null, so this frame has real work. The null check is what makes an empty list - and the recursion off the end - return null safely.', panels: panels()});
+        steps.push({lines: [9], msg: 'newHead provisionally points at this node, <b>' + val(d) + '</b>. That guess is only correct for the very last node; every other frame is about to overwrite it with whatever the child returns.', panels: panels()});
+
+        if (d < n - 1){
+          steps.push({lines: [10], msg: '<code>head.next</code> is <b>' + val(d + 1) + '</b>, not null, so this is not the tail - the real head lies further down.', panels: panels()});
+          steps.push({lines: [12], msg: 'The frame recurses on <b>' + val(d + 1) + '</b> and parks. Everything below this line waits, so the actual rewiring happens back to front, deepest node first.', panels: panels()});
+          go(d + 1);
+          steps.push({lines: [12], msg: 'The child returned <b>' + val(newHeadIdx) + '</b>. This frame does not touch it - the same new head reference is simply relayed upward by every frame.', panels: panels()});
+          back[d] = true;
+          steps.push({lines: [13], msg: '<code>head.next.next = head</code> makes <b>' + val(d + 1) + '</b> point back at <b>' + val(d) + '</b> - the one link this frame is responsible for. For a moment the two nodes point at each other, which is exactly why the next line exists.', panels: panels()});
+        } else {
+          steps.push({lines: [10], msg: '<code>head.next</code> is null: <b>' + val(d) + '</b> is the last node, so the descent bottoms out here. Its provisional newHead is the answer - this node is the front of the reversed list.', panels: panels()});
+          newHeadIdx = d;
+        }
+
+        cut[d] = true;
+        steps.push({lines: [15], msg: '<code>head.next = null</code> cuts node <b>' + val(d) + '</b>\'s old forward pointer' + (d < n - 1 ? ', breaking the two-node cycle just created and leaving only the backward link.' : ' - already null for the tail, but it will become the final tail\'s terminator once its parent points it back.'), panels: panels()});
+
+        done[d] = true;
+        frames.pop();
+        steps.push({lines: [16], msg: 'Frame for <b>' + val(d) + '</b> returns newHead = <b>' + val(newHeadIdx) + '</b> and pops. Each of the n frames does O(1) work, so time is O(n) - but the stack held all n of them at once, which is the O(n) space this version pays.', panels: panels()});
+      };
+
+      go(0);
+
+      steps.push({lines: [16], msg: 'The outermost call hands back <b>' + val(newHeadIdx) + '</b>, and following the flipped pointers gives <b>' + vals.slice().reverse().join(' → ') + '</b>. Same pointer surgery as the loop, just scheduled by the call stack instead of by three locals.', panels: panels()});
 
       return steps;
     }

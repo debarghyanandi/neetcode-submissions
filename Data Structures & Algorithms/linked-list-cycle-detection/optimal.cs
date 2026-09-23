@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Floyd's slow/fast pointer cycle detection   [floyd-cycle-detection]
+// -  Two-pointer cycle detection   [two-pointer-cycle-detection]
 // -  the only solution in this folder
 // -
-// -  Reference solution - not one you solved yourself (from submission-1)
+// -  Reference solution - not one you solved yourself
 // -
-// -  Fast pointer moves two steps and slow one step per iteration; they
-// -  meet within one traversal if a cycle exists.
+// -  Fast pointer moves at 2x speed; if cycle exists, pointers meet within
+// -  n iterations; if no cycle, fast reaches null in O(n) time.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -28,67 +28,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fast and Slow Pointers - Floyd's cycle detection
+ PATTERN : Floyd's Cycle Detection - slow and fast pointers
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  slow     walks one node per step
+  fast     walks two nodes per step; null means a clean end
 WHY THIS PATTERN
-  The obvious alternative walks the list once and puts every node into a
-  HashSet<ListNode>, returning true on the first repeat. It works, but it holds
-  a live reference to every node it has seen. Floyd replaces that set with two
-  cursors, slow and fast, and uses their difference in speed as the only
-  bookkeeping. Note also that nothing is written to the nodes - no visited flag,
-  no rewiring of next - so the list the caller passed in is untouched when
-  HasCycle returns.
+  The problem asks only whether the list ever loops back, and it wants no extra
+  memory. A hash set of visited nodes answers it but stores a node per step. Two
+  pointers at different speeds solve it with two references: if there is a loop,
+  fast keeps circling it and closes the gap on slow one node per iteration until
+  fast == slow; if there is no loop, fast or fast.next hits null and the loop
+  ends.
+BRUTE FORCE
+  Walk the list and put every node reference into a HashSet<ListNode>; return
+  true the first time Add fails. That is O(n) time but O(n) space, and it needs
+  reference identity, not value equality, so it breaks if ListNode ever
+  overrides Equals. This file gets the same time with two local variables.
 INVARIANT
-  Say the cycle has length L. slow reaches the cycle after some number of steps;
-  fast is already inside it by then. From that point, let d be the forward
-  distance from fast to slow measured around the cycle. Each iteration fast
-  advances 2 and slow advances 1, so fast gains exactly 1 on slow and d
-  decreases by 1 modulo L. A gain of exactly 1 cannot step over slow, so d must
-  land on 0 rather than skip past it, and it does so within L iterations. That
-  is why fast == slow is guaranteed, not merely likely - the usual interview
-  challenge is "how do you know they do not leapfrog forever?" and this is the
-  answer. With no cycle, fast reaches the null tail first and the loop exits
-  false.
-WHY THE LOOP GUARD HAS TWO TESTS
-  The body dereferences fast.next.next, which needs two links to exist. fast !=
-  null makes fast.next legal; fast.next != null makes the second hop legal. Drop
-  either test and you get a NullReferenceException at the end of an acyclic list
-  - dropping the first fails on even lengths, dropping the second on odd. slow
-  is never null-checked and does not need to be: slow always trails fast along a
-  path fast has already traversed and the guard has already validated.
-WHY THE COMPARISON SITS AFTER THE ADVANCES
-  slow and fast are both initialized to head, so they are equal before the loop
-  ever runs. The if (fast == slow) is placed after both pointers move, so the
-  first comparison happens at step 1, not step 0. Hoist that test to the top of
-  the body and every non-null head returns true. Also, == on ListNode here is
-  reference identity, not value comparison - two separate nodes holding the same
-  val are correctly not a match, since what matters is revisiting the same
-  object.
-EDGE CASES
-  head == null: the guard fails on the first test, returns false without
-  dereferencing anything.
-  Single node, next == null: guard fails on the second test, false.
-  Single node pointing at itself: slow = head, fast = head.next.next = head,
-  they match on the first iteration, true.
-  Two nodes pointing at each other: slow = b, fast = a on iteration 1 (no
-  match), then slow = a, fast = a on iteration 2, true.
+  At the top of every iteration, fast is exactly as many steps ahead of slow as
+  the number of iterations done so far, and both are on real nodes. If a cycle
+  exists, once both pointers are inside it the distance from fast to slow around
+  the loop shrinks by one each iteration, so it must reach zero and trigger fast
+  == slow. If no cycle exists, the list is finite, so fast reaches the last node
+  or past it and the while condition fails.
+WHY THE GUARD TESTS TWO THINGS
+  fast takes two hops per iteration, so both fast and fast.next must exist
+  before fast.next.next is read. Checking only fast would throw
+  NullReferenceException on a list with an even number of nodes and no cycle,
+  where fast lands on the final node. The order matters too: fast != null is
+  evaluated first, and && short-circuits, so fast.next is never read on a null
+  reference.
+WATCH OUT
+  The equality check sits after both moves, so the pointers are never compared
+  while they are both still at head; that is what keeps a one-node list without
+  a cycle from reporting true. head == null falls straight through the while
+  condition and returns false, which is correct for an empty list. This returns
+  only a yes or no - it does not leave the pointers anywhere useful for finding
+  where the cycle starts, since slow stops at a meeting point inside the loop,
+  not at its entrance. The method mutates nothing, so calling it twice on the
+  same list is safe.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return the node where the cycle begins, not just true or false.
+     After the meeting, reset one pointer to head and advance both one step at a
+     time; they meet at the cycle entrance. Same O(1) space, one more pass.
+  2. Report the length of the cycle.
+     From the meeting point, keep one pointer fixed and walk the other until it
+     comes back; count the steps. Adds one loop traversal, still no extra
+     memory.
+  3. What if the list is huge and stored across a network or disk, so each node
+  read is expensive?
+     Floyd reads roughly three nodes per step and revisits them, so a
+     visited-set pass with one read per node is cheaper on I/O even though it
+     costs O(n) memory. The trade flips from space to read count.
+  4. Could you use Brent's algorithm instead?
+     Yes - keep slow still and move fast in doubling-length bursts. Same O(1)
+     space, fewer pointer moves in practice, but the code is longer and the
+     stopping rule is easier to get wrong.
 TRIGGER
-  Reach for this whenever the question is "does this linked structure revisit a
-  node" and you are told not to modify the nodes or not to allocate proportional
-  storage. The same two-cursor trick generalizes to any deterministic next-state
-  function, not just linked lists - the happy-number problem and cycle detection
-  in a functional graph f(x) are the same code with slow = f(slow), fast =
-  f(f(fast)).
-FOLLOW-UP
-  The near-certain next question is "now return the node where the cycle
-  begins." This method cannot be reused as-is because it throws away the meeting
-  node and returns bool. Save the node where fast == slow, then reset one
-  pointer to head and advance both one step at a time; they meet at the cycle
-  entry. Cycle length is easier: park one pointer at the meeting node and walk
-  the other until it comes back around, counting steps.
+  A linked structure where you must detect repetition or find a meeting point
+  with no extra memory allowed.
+C# NOTE
+  fast == slow uses the default reference comparison for a class, which is
+  identity - exactly what is wanted here. If ListNode were ever changed to a
+  struct or given an == overload, this line would silently start comparing
+  values and could report a cycle that does not exist.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

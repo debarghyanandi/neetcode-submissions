@@ -651,230 +651,293 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Add Two Numbers',
-  note: 'the digits arrive ones-first, which is exactly the order long addition wants',
+  note: 'the digits arrive least significant first, which is exactly the order you add them in by hand: pair up the two heads, add them plus whatever was carried, write the ones digit, carry the tens. The lists can be different lengths and the carry can outlive both of them, so the walk stops only when both lists and the carry are all exhausted.',
   inputs: [
-    {id:'a', label:'l1 (ones digit first)', value:'2,4,9', width:200},
-    {id:'b', label:'l2 (ones digit first)', value:'5,6', width:200}
+    {id:'a', label:'l1 (ones digit first)', value:'2,4,3', width:200},
+    {id:'b', label:'l2 (ones digit first)', value:'5,6,4', width:200}
   ],
   parse(raw){
-    const a = parseInts(raw.a, 6);
-    const b = parseInts(raw.b, 6);
-    if (!a || !b) return {ok:false, msg:'Enter two comma-separated digit lists, e.g. 2,4,9 and 5,6.'};
-    if (a.concat(b).some(d => !Number.isInteger(d) || d < 0 || d > 9)) return {ok:false, msg:'Every node holds a single digit 0-9.'};
-    return {ok:true, value:{a:a, b:b}, normalized:{a:a.join(','), b:b.join(',')}};
+    const a = parseInts(raw.a, 5), b = parseInts(raw.b, 5);
+    if (!a || !b) return {ok:false, msg:'Enter two comma-separated digit lists, e.g. 2,4,3 and 5,6,4'};
+    const bad = (xs) => xs.some(d => !Number.isInteger(d) || d < 0 || d > 9);
+    if (bad(a) || bad(b)) return {ok:false, msg:'Every node holds a single digit 0-9.'};
+    if (a.length > 4 || b.length > 4) return {ok:false, msg:'Keep each list to 4 digits or fewer so the whole run stays watchable.'};
+    return {ok:true, value:{a: a, b: b}, normalized:{a: a.join(','), b: b.join(',')}};
   },
   shuffle(){
-    const mk = () => {
-      const n = 2 + Math.floor(Math.random() * 3);
-      const d = randInts(n, 0, 9);
-      d[n-1] = 1 + Math.floor(Math.random() * 9);
-      return d.join(',');
-    };
-    return {a: mk(), b: mk()};
+    const mk = (n) => randInts(n, 0, 9);
+    return {a: mk(2 + Math.floor(Math.random() * 3)).join(','), b: mk(2 + Math.floor(Math.random() * 3)).join(',')};
   },
   solutions: [
   {
-    label: 'One pass with a dummy head',
-    badge: 'O(n) time · O(1) extra space · iterative · optimal.cs',
-    blurb: 'Ones-first storage means the lists can be walked in lockstep exactly like hand-written long addition: one column, one output digit, at most <b>1</b> carried forward. A <code>dummy</code> node lets the first result node be appended by the same two lines as every other one, and keeping <code>carry != 0</code> in the loop condition lets the answer grow longer than either input.',
+    label: 'One pass with a dummy head and a running carry',
+    badge: 'O(n + m) time · O(1) space · iterative traversal with carry · optimal.cs',
+    blurb: 'A dummy head means the first real digit is appended by the same line as every other digit, so there is no special case for an empty result. A missing node counts as 0, which lets one loop handle unequal lengths, and the loop condition also watches carry so a final 1 still gets its own node.',
     legend: [
-      {cls:'hot', text:'digits being added this column'},
-      {cls:'good', text:'node just appended'},
-      {cls:'in-window', text:'result nodes already built'},
-      {cls:'dim', text:'consumed digits · dummy placeholder'}
+      {cls:'hot', text:'the node being read or written right now'},
+      {cls:'done', text:'a digit already consumed'},
+      {cls:'dim', text:'not reached yet'},
+      {cls:'good', text:'a digit written into the answer'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'this version is a single while loop with two cursors and a carry - it never calls itself, so there is no recursion stack to draw.'},
     code: [
-      'ListNode dummy = new ListNode(0);',
-      'ListNode current = dummy;',
-      'int carry = 0;',
-      '',
-      'while (l1 != null || l2 != null || carry != 0)',
+      'public class Solution',
       '{',
-      '    int x = l1 != null ? l1.val : 0;',
-      '    int y = l2 != null ? l2.val : 0;',
+      '    public ListNode AddTwoNumbers(ListNode l1, ListNode l2)',
+      '    {',
+      '        // my solution',
+      '        ListNode dummy = new ListNode(0);',
+      '        ListNode res = dummy;',
       '',
-      '    int sum = x + y + carry;',
-      '    carry = sum / 10;',
+      '        int carry = 0;',
+      '        while (l1 != null || l2 != null || carry != 0)',
+      '        {',
+      '            int x = l1 != null ? l1.val : 0;',
+      '            int y = l2 != null ? l2.val : 0;',
       '',
-      '    current.next = new ListNode(sum % 10);',
-      '    current = current.next;',
+      '            int sum = x + y + carry;',
+      '            carry = (sum) / 10;',
       '',
-      '    if (l1 != null) l1 = l1.next;',
-      '    if (l2 != null) l2 = l2.next;',
-      '}',
+      '            res.next = new ListNode(sum % 10);',
+      '            res = res.next;',
       '',
-      'return dummy.next;'
+      '            if (l1 != null)',
+      '                l1 = l1.next;',
+      '',
+      '            if (l2 != null)',
+      '                l2 = l2.next;',
+      '',
+      '        }',
+      '',
+      '        return dummy.next;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const a = input.a, b = input.b, steps = [];
-      const num = (d) => d.slice().reverse().join('');
+      const a = input.a, b = input.b;
+      const steps = [];
       const out = [];
-      let carry = 0, i = 0, j = 0, col = 0;
-      const listPanels = (hi, hj) => [
-        pTiles('l1 = ' + num(a) + '  (ones digit first)', a, (k) => ({cls: k === hi ? 'hot' : (k < hi ? 'dim' : '')})),
-        pTiles('l2 = ' + num(b) + '  (ones digit first)', b, (k) => ({cls: k === hj ? 'hot' : (k < hj ? 'dim' : '')}))
+      let i = 0, j = 0, carry = 0, freshAt = -1;
+
+      const srcRow = (label, tag, vals, cur) => ({
+        label: label,
+        nodes: vals.map((v, k) => ({id: tag + k, v: v, cls: k === cur ? 'hot' : (k < cur ? 'done' : 'dim')})),
+        tail: true,
+        arrows: vals.slice(1).map((_, k) => (k < cur ? 'dim' : '')),
+        tags: cur < vals.length ? [{name: tag, idx: cur, cls: 'accent'}] : []
+      });
+
+      const outRow = () => ({
+        label: 'dummy.next onward - the answer being appended to',
+        nodes: out.map((v, k) => ({id: 'o' + k, v: v, cls: k === freshAt ? 'hot' : 'good', fresh: k === freshAt})),
+        tail: true,
+        arrows: out.slice(1).map(() => ''),
+        tags: out.length ? [{name: 'res', idx: out.length - 1}] : [],
+        empty: 'no digits written yet'
+      });
+
+      const panels = () => [
+        pList('two numbers, ones digit first, and the sum being built', [
+          srcRow('l1', 'l1', a, i),
+          srcRow('l2', 'l2', b, j),
+          outRow()
+        ], {scale: 0.9}),
+        pPills('state', [
+          {k: 'carry', v: carry, cls: carry ? 'hot' : ''},
+          {k: 'l1', v: i < a.length ? a[i] : 'null'},
+          {k: 'l2', v: j < b.length ? b[j] : 'null'},
+          {k: 'digits written', v: out.length}
+        ])
       ];
-      const outPanel = () => pTiles('dummy -> result (ones digit first)', ['0'].concat(out),
-        (k) => ({cls: k === 0 ? 'dim' : (k === out.length ? 'good' : 'in-window')}));
-      const pills = (d1, d2, cin, sum, cout) => pPills('', [
-        {k:'x', v: d1 === null ? '-' : d1, cls:'hot'},
-        {k:'y', v: d2 === null ? '-' : d2, cls:'hot'},
-        {k:'carry in', v: cin},
-        {k:'sum', v: sum === null ? '-' : sum},
-        {k:'sum % 10', v: sum === null ? '-' : (sum % 10), cls:'good'},
-        {k:'carry out', v: cout === null ? '-' : cout, cls:'accent'}
-      ]);
 
-      steps.push({lines:[1,2,3], msg:'The head of the answer is not known until the first column is added, so a throwaway <code>dummy</code> node is created and <code>current</code> points at it. Every append is then just <code>current.next = ...</code>, with no "is this the first node?" branch anywhere in the loop. <code>carry</code> starts at <b>0</b> because nothing has spilled over yet.',
-        panels: listPanels(-1, -1).concat([outPanel(), pills(null, null, 0, null, null)])});
+      steps.push({lines: [6, 7], msg: 'A throwaway <b>dummy</b> node is created and <b>res</b> starts on it. Appending to <code>res.next</code> then works identically for the very first digit and every later one - no "is the result empty yet" branch anywhere in the loop.', panels: panels()});
+      steps.push({lines: [9], msg: 'carry starts at <b>0</b>. It is the only memory carried between columns, which is what keeps this O(1) space.', panels: panels()});
 
-      while (i < a.length || j < b.length || carry !== 0){
-        const d1 = i < a.length ? a[i] : 0;
-        const d2 = j < b.length ? b[j] : 0;
-        const sum = d1 + d2 + carry;
-        const nc = Math.floor(sum / 10);
-        const nd = sum % 10;
-        let why;
-        if (i < a.length && j < b.length){
-          why = 'both lists still have a node here';
-        } else if (i < a.length || j < b.length){
-          why = 'one list has run out, so its digit reads as <b>0</b> &mdash; padding the shorter number with zeros is cheaper than a separate "copy the rest of the longer list" loop';
-        } else {
-          why = 'both lists are exhausted, yet <code>carry != 0</code> keeps the loop alive &mdash; the sum is one digit longer than either input, and that digit exists in neither of them';
-        }
-        steps.push({lines:[5,7,8,10,11], msg:'Column ' + col + ': ' + why + '. <code>x</code> = <b>' + d1 + '</b>, <code>y</code> = <b>' + d2 + '</b>, carry in <b>' + carry + '</b>, so <code>sum</code> = <b>' + sum + '</b>. A column can never exceed 9 + 9 + 1 = 19, so <code>sum / 10</code> is always 0 or 1: one column spills at most a single unit into the next.',
-          panels: listPanels(i, j).concat([outPanel(), pills(d1, d2, carry, sum, nc)])});
+      let guard = 0;
+      while ((i < a.length || j < b.length || carry !== 0) && guard++ < 20){
+        const parts = [];
+        if (i < a.length) parts.push('l1 still has digits'); else parts.push('l1 is null');
+        if (j < b.length) parts.push('l2 still has digits'); else parts.push('l2 is null');
+        parts.push(carry ? 'carry is ' + carry : 'carry is 0');
+        steps.push({lines: [10], msg: 'Loop test: ' + parts.join(', ') + '. Any one of the three being live means there is still a column to add - the carry is in the condition so a final <b>1</b> gets a node of its own even after both lists run out.', panels: panels()});
 
-        out.push(nd);
-        carry = nc;
-        if (i < a.length) i++;
-        if (j < b.length) j++;
-        steps.push({lines:[13,14,16,17], msg:'Only the units digit belongs in this position, so a node holding <code>sum % 10</code> = <b>' + nd + '</b> is hung off <code>current</code>, and <code>current</code> walks onto it so the next append lands after it.' + (nc ? ' The overflow <b>1</b> is not discarded &mdash; it is the carry-in for column ' + (col + 1) + '.' : '') + ' Each pointer advances only when it is non-null; stepping past the end of the shorter list would dereference null.',
-          panels: listPanels(i, j).concat([outPanel(), pills(d1, d2, sum - d1 - d2, sum, nc)])});
-        col++;
+        freshAt = -1;
+        const x = i < a.length ? a[i] : 0;
+        const y = j < b.length ? b[j] : 0;
+        steps.push({lines: [12, 13], msg: 'x = <b>' + x + '</b>' + (i < a.length ? '' : ' (l1 is null, so a missing digit reads as 0)') + ' and y = <b>' + y + '</b>' + (j < b.length ? '' : ' (l2 is null, so it reads as 0)') + '. Treating an absent node as zero is what lets one loop handle lists of different lengths.', panels: panels()});
+
+        const sum = x + y + carry;
+        const newCarry = Math.floor(sum / 10);
+        steps.push({lines: [15, 16], msg: 'sum = ' + x + ' + ' + y + ' + ' + carry + ' = <b>' + sum + '</b>. Since each addend is one digit, sum is at most 19, so <code>sum / 10</code> is <b>' + newCarry + '</b> - the carry into the next column.', panels: panels()});
+        carry = newCarry;
+
+        out.push(sum % 10);
+        freshAt = out.length - 1;
+        steps.push({lines: [18, 19], msg: '<code>sum % 10</code> = <b>' + (sum % 10) + '</b> is the digit for this column, appended after res; res then advances onto it so the next append lands at the end again.', panels: panels()});
+
+        const hadA = i < a.length, hadB = j < b.length;
+        if (hadA) i++;
+        if (hadB) j++;
+        steps.push({lines: [21, 22, 24, 25], msg: (hadA || hadB)
+          ? 'Each cursor only advances if it was non-null: ' + (hadA ? 'l1 moves to <b>' + (i < a.length ? a[i] : 'null') + '</b>' : 'l1 is already null and stays there') + ', ' + (hadB ? 'l2 moves to <b>' + (j < b.length ? b[j] : 'null') + '</b>' : 'l2 is already null and stays there') + '. Guarding both moves avoids dereferencing a null once the shorter list ends.'
+          : 'Both lists are already null, so neither <code>if</code> body runs - this iteration existed purely to flush the carry.', panels: panels()});
       }
 
-      steps.push({lines:[5], msg:'<code>l1</code> and <code>l2</code> are both null and <code>carry</code> is <b>0</b>, so all three parts of the condition fail and the loop ends. There is nothing left that could change a digit, which is why a single forward pass is enough.',
-        panels: listPanels(i, j).concat([outPanel(), pills(null, null, 0, null, null)])});
+      freshAt = -1;
+      steps.push({lines: [10], msg: 'l1 is null, l2 is null and carry is 0 - nothing left to add, so the loop ends.', panels: panels()});
+      steps.push({lines: [29], msg: 'The real answer starts one node past the dummy, so <code>dummy.next</code> is returned: <b>' + out.join(' → ') + '</b>. Each node of each list was visited exactly once and only a single integer of extra state was kept, giving O(n + m) time and O(1) extra space beyond the output.', panels: panels()});
 
-      steps.push({lines:[20], msg:'The answer is <b>' + num(out) + '</b> stored as ' + out.join(' -> ') + '. <code>dummy</code> itself was never part of the result &mdash; it only gave <code>current</code> somewhere legal to write on the first iteration &mdash; so <code>dummy.next</code> is returned. Beyond the output nodes the whole method holds three ints and two pointers.',
-        panels: listPanels(-1, -1).concat([outPanel(), pills(null, null, 0, null, null)])});
       return steps;
     }
   },
   {
-    label: 'Recursive descent, build on the way back',
-    badge: 'O(n) time · O(n) stack space · recursion · suboptimal.cs',
-    blurb: 'The column arithmetic is identical, but each call computes its digit and then asks the rest of the lists for the tail <em>before</em> constructing anything. Nodes are therefore built on the way back up, last digit first, so no dummy head is needed &mdash; paid for with one parked stack frame per digit instead of O(1) space.',
+    label: 'Recursion, one frame per digit column',
+    badge: 'O(n + m) time · O(n + m) space · recursive traversal with carry · suboptimal.cs',
+    blurb: 'The same column-by-column addition, but each column is a call: the frame computes its own digit, recurses on both tails with the new carry, and only builds its node once the child hands back the rest of the chain. The result is assembled tail-first on the way out, and the stack holds one frame per digit.',
     legend: [
-      {cls:'hot', text:'frame currently executing'},
-      {cls:'in-window', text:'frames parked, waiting for a tail'},
-      {cls:'good', text:'node built while returning'},
-      {cls:'dim', text:'digits behind the current depth'}
+      {cls:'hot', text:'the column the running frame is on'},
+      {cls:'in-window', text:'a frame parked waiting on its child call'},
+      {cls:'done', text:'a column whose frame already returned'},
+      {cls:'good', text:'a node already spliced into the answer'}
     ],
     code: [
-      'ListNode Add(ListNode first, ListNode second, int carry)',
+      'public class Solution',
       '{',
-      '    if (first == null && second == null && carry == 0)',
+      '    public ListNode Add(ListNode l1, ListNode l2, int carry)',
       '    {',
-      '        return null;',
+      '        if (l1 == null && l2 == null && carry == 0)',
+      '        {',
+      '            return null;',
+      '        }',
+      '',
+      '        int v1 = 0;',
+      '        int v2 = 0;',
+      '        if (l1 != null)',
+      '        {',
+      '            v1 = l1.val;',
+      '        }',
+      '        if (l2 != null)',
+      '        {',
+      '            v2 = l2.val;',
+      '        }',
+      '',
+      '        int sum = v1 + v2 + carry;',
+      '        int newCarry = sum / 10;',
+      '        int nodeValue = sum % 10;',
+      '',
+      '        ListNode nextNode = Add(',
+      '            (l1 != null ? l1.next : null),',
+      '            (l2 != null ? l2.next : null),',
+      '            newCarry',
+      '        );',
+      '',
+      '        return new ListNode(nodeValue) { next = nextNode };',
       '    }',
       '',
-      '    int v1  = first  != null ? first.val  : 0;',
-      '    int v2 = second != null ? second.val : 0;',
-      '',
-      '    int sum = v1 + v2 + carry;',
-      '    int newCarry  = sum / 10;',
-      '    int nodeValue = sum % 10;',
-      '',
-      '    ListNode nextNode = Add(',
-      '        first  != null ? first.next  : null,',
-      '        second != null ? second.next : null,',
-      '        newCarry);',
-      '',
-      '    return new ListNode(nodeValue) { next = nextNode };',
-      '}',
-      '',
-      'public ListNode AddTwoNumbers(ListNode first, ListNode second)',
-      '    => Add(first, second, 0);'
+      '    public ListNode AddTwoNumbers(ListNode l1, ListNode l2)',
+      '    {',
+      '        return Add(l1, l2, 0);',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const a = input.a, b = input.b, steps = [];
-      const num = (d) => d.slice().reverse().join('');
+      const a = input.a, b = input.b;
+      const steps = [];
       const frames = [];
-      let c = 0, p = 0;
-      while (p < a.length || p < b.length || c !== 0){
-        const d1 = p < a.length ? a[p] : 0;
-        const d2 = p < b.length ? b[p] : 0;
-        const sum = d1 + d2 + c;
-        frames.push({p:p, d1:d1, d2:d2, cin:c, sum:sum, nc:Math.floor(sum/10), nd:sum%10, h1:p < a.length, h2:p < b.length});
-        c = Math.floor(sum / 10);
-        p++;
-      }
-      const N = frames.length;
       const chain = [];
-      const label = (f) => 'Add(' + (f.h1 ? 'l1@' + f.p : 'null') + ', ' + (f.h2 ? 'l2@' + f.p : 'null') + ', carry=' + f.cin + ')';
-      const listPanels = (h) => [
-        pTiles('l1 = ' + num(a) + '  (ones digit first)', a, (k) => ({cls: k === h ? 'hot' : (k < h ? 'dim' : '')})),
-        pTiles('l2 = ' + num(b) + '  (ones digit first)', b, (k) => ({cls: k === h ? 'hot' : (k < h ? 'dim' : '')}))
-      ];
-      const stackPanel = (depth, hotIdx, hotCls, extra) => {
-        const items = [];
-        for (let k = 0; k < depth; k++){
-          items.push({text: 'depth ' + k + ': ' + label(frames[k]), cls: k === hotIdx ? hotCls : 'in-window'});
-        }
-        if (extra) items.push(extra);
-        return pSlots('Call stack (deepest at the bottom)', items);
+      let freshHead = false;
+
+      const shown = (vals, k) => (k < vals.length ? String(vals[k]) : 'null');
+
+      const srcRow = (tag, vals, cur, openTo) => ({
+        label: tag + ' - one column per frame',
+        nodes: vals.map((v, k) => ({id: tag + k, v: v, cls: k === cur ? 'hot' : (k < openTo ? 'in-window' : (k < cur ? 'done' : 'dim'))})),
+        tail: true,
+        arrows: vals.slice(1).map(() => ''),
+        tags: cur !== null && cur < vals.length ? [{name: tag, idx: cur, cls: 'accent'}] : []
+      });
+
+      const chainRow = () => ({
+        label: 'chain returned so far - built tail first, as frames unwind',
+        nodes: chain.map((v, k) => ({id: 'c' + k, v: v, cls: (k === 0 && freshHead) ? 'hot' : 'good', fresh: k === 0 && freshHead})),
+        tail: true,
+        arrows: chain.slice(1).map(() => ''),
+        empty: 'nothing returned yet - every frame is still waiting on its child'
+      });
+
+      const stackPanel = () => pStack('call stack', [{
+        label: 'frames',
+        items: frames.map((f, k) => ({
+          text: 'Add(' + f.x + ', ' + f.y + ', carry ' + f.carry + ')',
+          sub: k === frames.length - 1 ? 'running' : 'parked on line 25, waiting for nextNode',
+          cls: k === frames.length - 1 ? 'hot' : 'in-window'
+        })),
+        mode: 'stack',
+        empty: 'no frames',
+        top: 'innermost call',
+        foot: 'AddTwoNumbers'
+      }], {scale: 0.9});
+
+      const panels = (cur) => {
+        const openTo = frames.length ? frames[frames.length - 1].d : 0;
+        return [
+          pList('the two numbers and the chain coming back up', [
+            srcRow('l1', a, cur, openTo),
+            srcRow('l2', b, cur, openTo),
+            chainRow()
+          ], {scale: 0.9}),
+          stackPanel(),
+          pPills('state', [
+            {k: 'depth', v: frames.length},
+            {k: 'carry in', v: frames.length ? frames[frames.length - 1].carry : 0},
+            {k: 'nodes built', v: chain.length}
+          ])
+        ];
       };
-      const chainPanel = () => chain.length
-        ? pTiles('Chain built so far (ones digit first)', chain, (k) => ({cls: k === 0 ? 'good' : 'in-window'}))
-        : pNote('Chain built so far', 'Nothing. <code>new ListNode(...)</code> on line 20 has not run in any frame yet &mdash; the entire descent only computes digits and carries, and construction happens strictly on the way back up.');
-      const locals = (f) => pPills('', [
-        {k:'depth', v: f.p},
-        {k:'v1', v: f.d1, cls:'hot'},
-        {k:'v2', v: f.d2, cls:'hot'},
-        {k:'carry', v: f.cin},
-        {k:'sum', v: f.sum},
-        {k:'nodeValue', v: f.nd, cls:'good'},
-        {k:'newCarry', v: f.nc, cls:'accent'}
-      ]);
 
-      steps.push({lines:[23,24], msg:'<code>AddTwoNumbers</code> is only a launcher: it calls <code>Add</code> with the two heads and a carry of <b>0</b>. Everything after this is one call per digit column, so the recursion depth will equal the length of the answer.',
-        panels: listPanels(-1).concat([stackPanel(0, -1, '', {text:'about to call ' + label(frames[0]), cls:'hot'}), chainPanel()])});
+      steps.push({lines: [36], msg: 'AddTwoNumbers does nothing itself - it just starts the recursion at column 0 with a carry of <b>0</b>. All the work lives in <code>Add</code>.', panels: panels(0)});
 
-      for (let k = 0; k < N; k++){
-        const f = frames[k];
-        let why;
-        if (f.h1 && f.h2){
-          why = 'both lists still have a node';
-        } else if (f.h1 || f.h2){
-          why = 'one argument is null, so its value reads as <b>0</b> &mdash; the shorter number is padded rather than special-cased';
-        } else {
-          why = 'both arguments are null, but <code>carry</code> is <b>' + f.cin + '</b>, so the base case does not fire and this extra digit gets a frame of its own';
+      const go = (d, carry) => {
+        frames.push({d: d, carry: carry, x: shown(a, d), y: shown(b, d)});
+        freshHead = false;
+        const noA = d >= a.length, noB = d >= b.length;
+        steps.push({lines: [5], msg: 'Base test: l1 is <b>' + shown(a, d) + '</b>, l2 is <b>' + shown(b, d) + '</b>, carry is <b>' + carry + '</b>. Only when all three are exhausted is there nothing left to build - a leftover carry alone still deserves a node.', panels: panels(d)});
+
+        if (noA && noB && carry === 0){
+          steps.push({lines: [7], msg: 'Both lists ended and no carry survived, so this frame returns <b>null</b> - the terminating tail that every node above will eventually point at.', panels: panels(d)});
+          frames.pop();
+          return;
         }
-        steps.push({lines:[3,8,9,11,12,13], msg:'Depth ' + k + ': ' + why + '. <code>sum</code> = ' + f.d1 + ' + ' + f.d2 + ' + ' + f.cin + ' = <b>' + f.sum + '</b>, giving <code>nodeValue</code> = <b>' + f.nd + '</b> and <code>newCarry</code> = <b>' + f.nc + '</b>. The digit is now known, but nothing is built yet &mdash; line 20 needs a tail first.',
-          panels: listPanels(f.p).concat([stackPanel(k + 1, k, 'hot'), locals(f), chainPanel()])});
-        steps.push({lines:[15,16,17,18], msg:'So this frame recurses on the tails of both lists, handing <code>newCarry</code> = <b>' + f.nc + '</b> forward as the next carry-in. It then parks, holding <code>nodeValue</code> = <b>' + f.nd + '</b> in a local until the call below returns. Every column adds one such parked frame, and that is precisely the O(n) space this version spends where the iterative one spends none.',
-          panels: listPanels(f.p + 1 < N ? f.p + 1 : -1).concat([stackPanel(k + 1, k, 'in-window'), locals(f), chainPanel()])});
-      }
 
-      steps.push({lines:[3,5], msg:'Depth ' + N + ': <code>first</code> and <code>second</code> are both null <em>and</em> <code>carry</code> is <b>0</b>, so there is genuinely nothing left to add and the call returns <code>null</code>. That null becomes the terminator of the finished chain. Had the carry been 1 here, the base case would have been skipped and one more node created instead.',
-        panels: listPanels(-1).concat([stackPanel(N, -1, '', {text:'depth ' + N + ': Add(null, null, carry=0) -> null', cls:'hot'}), chainPanel()])});
+        steps.push({lines: [10, 11], msg: 'v1 and v2 default to <b>0</b>. A missing node contributing zero is what lets one code path add lists of different lengths.', panels: panels(d)});
+        const v1 = noA ? 0 : a[d];
+        const v2 = noB ? 0 : b[d];
+        steps.push({lines: [12, 14, 16, 18], msg: 'Each value is only read when its node exists: v1 = <b>' + v1 + '</b>' + (noA ? ' (l1 is null, keeps the default)' : '') + ', v2 = <b>' + v2 + '</b>' + (noB ? ' (l2 is null, keeps the default)' : '') + '.', panels: panels(d)});
 
-      for (let k = N - 1; k >= 0; k--){
-        const f = frames[k];
-        chain.unshift(f.nd);
-        steps.push({lines:[20], msg:'Depth ' + k + ' wakes up with the tail it was waiting for and finally builds <code>new ListNode(' + f.nd + ')</code> pointing at it. Because construction happens while returning, the chain grows <b>backwards</b> &mdash; from the most significant digit toward the ones digit &mdash; which is why no dummy head is needed: each frame already knows what follows its own node.',
-          panels: listPanels(f.p).concat([stackPanel(k, -1, ''), locals(f), chainPanel()])});
-      }
+        const sum = v1 + v2 + carry;
+        const newCarry = Math.floor(sum / 10);
+        const nodeValue = sum % 10;
+        steps.push({lines: [21, 22, 23], msg: 'sum = ' + v1 + ' + ' + v2 + ' + ' + carry + ' = <b>' + sum + '</b>, so this column keeps <b>' + nodeValue + '</b> and passes <b>' + newCarry + '</b> along. The digit is known now, but the node cannot be made yet - it needs a next pointer.', panels: panels(d)});
 
-      steps.push({lines:[24], msg:'The outermost call returns the ones-digit node, so the head is <b>' + chain[0] + '</b> and the list reads ' + chain.join(' -> ') + ' = <b>' + num(chain) + '</b>. Same ' + N + ' columns and the same arithmetic as the loop, but ' + N + ' stack frames were alive at once at the deepest point, so a very long pair of numbers can overflow the stack where the iterative version simply keeps walking.',
-        panels: listPanels(-1).concat([stackPanel(0, -1, ''), chainPanel(),
-          pNote('Cost against the loop', 'Both are O(n) time. The iterative version writes each node as soon as its digit is known and holds O(1) state; this one must reach the end of both lists before a single node exists, holding one frame per digit on the way.')])});
+        steps.push({lines: [25, 26, 27, 28, 29], msg: 'The frame recurses on both tails with carry <b>' + newCarry + '</b> and parks. Everything after this line waits until the whole rest of the number has been added, which is why the answer is assembled back to front.', panels: panels(d)});
+
+        go(d + 1, newCarry);
+
+        chain.unshift(nodeValue);
+        freshHead = true;
+        steps.push({lines: [31], msg: 'The child handed back ' + (chain.length > 1 ? '<b>' + chain.slice(1).join(' → ') + '</b>' : '<b>null</b>') + '. Now the node for digit <b>' + nodeValue + '</b> is created with that as its next, and returned - each unwinding frame prepends its own digit to the front of the chain.', panels: panels(d)});
+        frames.pop();
+      };
+
+      go(0, 0);
+
+      freshHead = false;
+      steps.push({lines: [36], msg: 'The outermost call returns the head of the finished chain: <b>' + chain.join(' → ') + '</b>. Same arithmetic and same O(n + m) time as the loop, but one stack frame per digit column makes it O(n + m) space instead of O(1).', panels: panels(null)});
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

@@ -651,104 +651,129 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Linked List Cycle Detection',
-  note: 'a faster runner on a circular track must eventually lap you',
+  note: 'you cannot see a cycle from any single node - every node looks the same from the inside. What you can do is race two cursors down the same chain at different speeds. If the list ends, the fast one falls off the end and the answer is no. If it loops, the fast one re-enters the loop and closes the gap on the slow one by exactly one node per iteration, so it cannot jump past: it must land on it.',
   inputs: [
-    {id:'v', label:'node values', value:'3,2,0,-4', width:220},
-    {id:'pos', label:'last node links to index (-1 = null)', value:'1', width:120}
+    {id:'vals', label:'node values (head first)', value:'3,2,0,-4', width:220},
+    {id:'pos', label:'tail links back to index (-1 = no cycle)', value:'1', width:220}
   ],
   parse(raw){
-    const v = parseInts(raw.v, 10);
-    if (!v) return {ok:false, msg:'Enter a valid comma-separated list of node values.'};
-    const pos = Number(String(raw.pos).trim());
-    if (!Number.isInteger(pos)) return {ok:false, msg:'The link target must be a whole number.'};
-    if (pos < -1 || pos >= v.length) return {ok:false, msg:'Link target must be -1 (no cycle) or an index 0…' + (v.length - 1) + '.'};
-    return {ok:true, value:{v, pos}, normalized:{v: v.join(','), pos: String(pos)}};
+    const vals = parseInts(raw.vals, 8);
+    const p = parseInts(raw.pos, 1);
+    if (!vals) return {ok:false, msg:'Enter comma-separated node values, e.g. 3,2,0,-4'};
+    if (vals.length > 7) return {ok:false, msg:'Keep the list to 7 nodes or fewer so the whole race stays watchable.'};
+    if (!p || !Number.isInteger(p[0])) return {ok:false, msg:'The cycle index must be a whole number, -1 for no cycle.'};
+    const pos = p[0];
+    if (pos < -1 || pos >= vals.length) return {ok:false, msg:'The cycle index must be -1 or a valid index 0 to ' + (vals.length - 1) + '.'};
+    return {ok:true, value:{vals: vals, pos: pos}, normalized:{vals: vals.join(','), pos: String(pos)}};
   },
   shuffle(){
-    const n = 4 + Math.floor(Math.random() * 4);
+    const n = 4 + Math.floor(Math.random() * 3);
+    const vals = randInts(n, -5, 9);
     const pos = Math.random() < 0.65 ? Math.floor(Math.random() * n) : -1;
-    return {v: randInts(n, -5, 9).join(','), pos: String(pos)};
+    return {vals: vals.join(','), pos: String(pos)};
   },
   solutions: [
   {
-    label: 'Floyd: slow and fast pointers',
-    badge: "O(n) time · O(1) space · two pointers · optimal.cs",
-    blurb: 'Two references walk the same list at different speeds. If the list ends, the fast one runs off it — no cycle. If it loops, fast can never escape, and every iteration it gains exactly <b>one</b> node on slow, so the distance between them around the loop shrinks by one each time and must reach zero. They collide. No hash set, no marking nodes.',
+    label: 'Floyd: slow one step, fast two',
+    badge: 'O(n) time · O(1) space · two-pointer cycle detection · optimal.cs',
+    blurb: 'Both cursors start at the head; each turn slow moves one node and fast moves two, so the gap between them changes by exactly one per turn. Inside a loop that gap must eventually hit zero, which is a meeting. Outside a loop fast runs off the end first, and the guard on fast and fast.next catches that before any null is dereferenced.',
     legend: [
-      {cls:'hot', text:'fast — two nodes per step'},
-      {cls:'win', text:'slow — one node per step'},
-      {cls:'good', text:'they meet → cycle'},
-      {cls:'in-window', text:'nodes inside the loop'}
+      {cls:'hot', text:'fast - moves two nodes per turn'},
+      {cls:'in-window', text:'slow - moves one node per turn'},
+      {cls:'good', text:'both cursors on the same node - a cycle is proven'},
+      {cls:'dim', text:'a node neither cursor is on right now'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'this is a single while loop with two cursors - nothing recurses, so there is no frame stack to draw.'},
     code: [
-      'ListNode slow = head;',
-      'ListNode fast = head;',
-      '',
-      'while (fast != null && fast.next != null)',
+      'public class Solution',
       '{',
-      '    slow = slow.next;       // one node per iteration',
-      '    fast = fast.next.next;  // two nodes per iteration',
-      '    if (fast == slow)',
-      '        return true;',
-      '}',
-      '',
-      'return false;'
+      '    public bool HasCycle(ListNode head)',
+      '    {',
+      '        ListNode slow = head;',
+      '        ListNode fast = head;',
+      '        while (fast != null && fast.next != null)',
+      '        {',
+      '            slow = slow.next;',
+      '            fast = fast.next.next;',
+      '            if (fast == slow)',
+      '                return true;',
+      '        }',
+      '        return false;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const v = input.v, pos = input.pos, n = v.length, steps = [];
-      const next = (i) => (i === null ? null : (i + 1 < n ? i + 1 : (pos >= 0 ? pos : null)));
-      const at = (i) => (i === null ? '<b>null</b>' : 'node ' + i + ' (<b>' + v[i] + '</b>)');
-      const cycLen = pos >= 0 ? n - pos : 0;
-      const inLoop = (i) => pos >= 0 && i !== null && i >= pos;
-      let slow = 0, fast = 0, iter = 0;
+      const vals = input.vals, pos = input.pos, n = vals.length;
+      const nxt = (i) => (i < 0 ? -1 : (i === n - 1 ? pos : i + 1));
+      const at = (i) => (i < 0 ? 'null' : String(vals[i]));
+      const steps = [];
+      let slow = 0, fast = 0, met = false;
 
-      const panels = (sl, fa, meet) => [
-        pTiles('Nodes — node ' + (n - 1) + '.next → ' + (pos >= 0 ? 'node ' + pos : 'null'), v, (k) => ({
-          cls: (meet && k === sl) ? 'good'
-             : k === fa ? 'hot'
-             : k === sl ? 'win'
-             : inLoop(k) ? 'in-window' : ''
-        })),
-        pPills('', [
-          {k:'slow', v: sl === null ? 'null' : 'i' + sl + '=' + v[sl], cls:'win'},
-          {k:'fast', v: fa === null ? 'null' : 'i' + fa + '=' + v[fa], cls:'hot'},
-          {k:'iterations', v: iter},
-          {k:'result', v: meet ? 'true' : '—', cls: meet ? 'good' : ''}
+      const row = () => ({
+        label: pos >= 0 ? 'list - the tail points back at index ' + pos : 'list - the tail ends at null',
+        nodes: vals.map((v, k) => {
+          const isS = k === slow, isF = k === fast;
+          let cls = 'dim', sub = '';
+          if (isS && isF){ cls = met ? 'good' : 'hot'; sub = 'slow + fast'; }
+          else if (isF){ cls = 'hot'; sub = 'fast'; }
+          else if (isS){ cls = 'in-window'; sub = 'slow'; }
+          return {id: 'n' + k, v: v, cls: cls, sub: sub};
+        }),
+        tail: pos < 0,
+        arrows: vals.slice(1).map(() => ''),
+        tags: [
+          {name: 'slow', idx: slow < 0 ? 0 : slow, cls: slow < 0 ? 'dim' : ''},
+          {name: 'fast', idx: fast < 0 ? n - 1 : fast, cls: fast < 0 ? 'dim' : 'accent', below: true}
+        ],
+        cycleTo: pos >= 0 ? pos : undefined
+      });
+
+      const panels = () => [
+        pList('one chain, two cursors at different speeds', [row()], {scale: n > 5 ? 0.85 : 1}),
+        pPills('state', [
+          {k: 'slow', v: at(slow), cls: 'in-window'},
+          {k: 'fast', v: at(fast), cls: fast < 0 ? 'dim' : 'hot'},
+          {k: 'same node', v: (slow >= 0 && slow === fast) ? 'yes' : 'no', cls: (slow >= 0 && slow === fast) ? 'good' : ''}
         ])
       ];
 
-      steps.push({lines:[1,2], msg:'Both pointers start on the head. They are equal <em>now</em>, which is why the equality test lives at the <b>bottom</b> of the loop body — checking before the first move would report a cycle on every list.', panels: panels(slow, fast, false)});
+      steps.push({lines: [5, 6], msg: 'Both cursors start on the head, node <b>' + at(0) + '</b>. They are equal right now, but the check happens only after a move, so this shared start is not mistaken for a meeting.', panels: panels()});
 
-      let guard = 4 * n + 8;
-      while (guard-- > 0){
-        const fnext = fast === null ? null : next(fast);
-        if (fast === null || fnext === null){
-          steps.push({lines:[4], msg:'The guard fails: ' + (fast === null ? '<code>fast</code> is <b>null</b>' : '<code>fast.next</code> is <b>null</b> at ' + at(fast)) + '. A null link is proof the list <b>terminates</b> — a cycle has no ends, so once fast reaches one there is nothing left to loop through. Both halves of the guard are needed because the body dereferences <code>fast.next.next</code>.', panels: panels(slow, fast, false)});
-          steps.push({lines:[12], msg:'Return <b>false</b>. Fast covered the list in about <code>n/2</code> iterations and only two references were ever stored — a visited-set solution would answer the same question with O(n) memory.', panels: panels(slow, fast, false)});
+      let guard = 0;
+      while (guard++ < 40){
+        const fNull = fast < 0;
+        const fNextNull = !fNull && nxt(fast) < 0;
+        if (fNull || fNextNull){
+          steps.push({lines: [7], msg: 'Loop test fails: ' + (fNull ? '<b>fast</b> is null' : '<code>fast.next</code> is null after node <b>' + at(fast) + '</b>') + '. Reaching a null end at all means the chain terminates, so there was never a loop to be caught in.', panels: panels()});
           break;
         }
-        steps.push({lines:[4], msg:'<code>fast</code> is at ' + at(fast) + ' and <code>fast.next</code> is ' + at(fnext) + ' — both non-null, so fast can safely take its two steps.', panels: panels(slow, fast, false)});
+        steps.push({lines: [7], msg: 'Loop test: fast is on <b>' + at(fast) + '</b> and <code>fast.next</code> is <b>' + at(nxt(fast)) + '</b> - both non-null, so it is safe to take two steps. Checking both is what stops <code>fast.next.next</code> from dereferencing a null.', panels: panels()});
 
-        slow = next(slow);
-        fast = next(fnext);
-        iter++;
-        let gapMsg = '';
-        if (inLoop(slow) && inLoop(fast)){
-          const gap = ((slow - fast) % cycLen + cycLen) % cycLen;
-          gapMsg = ' Both are now inside the loop of length <b>' + cycLen + '</b>, and fast is <b>' + gap + '</b> node' + (gap === 1 ? '' : 's') + ' behind slow going forward — that number drops by exactly one per iteration, so it cannot avoid hitting 0.';
-        }
-        steps.push({lines:[6,7], msg:'Advance: slow → ' + at(slow) + ', fast → ' + at(fast) + '. Fast moves twice for every one of slow’s steps, so it closes one node of distance per iteration.' + gapMsg, panels: panels(slow, fast, false)});
+        slow = nxt(slow);
+        steps.push({lines: [9], msg: 'slow takes one step, onto <b>' + at(slow) + '</b>. It is the slow reference point the fast one has to catch.', panels: panels()});
+
+        const mid = nxt(fast);
+        fast = nxt(mid);
+        steps.push({lines: [10], msg: 'fast takes two steps, through <b>' + at(mid) + '</b> and onto <b>' + at(fast) + '</b>. Each turn it gains exactly one node on slow, so inside a loop the gap shrinks by one every time and can never be leapt over.', panels: panels()});
 
         if (fast === slow){
-          steps.push({lines:[8,9], msg:'They landed on the same node — ' + at(slow) + '. Two pointers moving at different speeds can only coincide if the path <b>wrapped around</b>; on a straight list fast is strictly ahead forever. Return <b>true</b> after ' + iter + ' iteration' + (iter === 1 ? '' : 's') + '.', panels: panels(slow, fast, true)});
+          met = true;
+          steps.push({lines: [11, 12], msg: 'fast == slow on node <b>' + at(fast) + '</b>. Two cursors moving at different speeds can only land on the same node if the path bends back on itself, so a cycle exists and <b>true</b> is returned immediately.', panels: panels()});
           break;
         }
-        steps.push({lines:[8], msg:'Different nodes, so no conclusion yet — this only rules out a meeting <em>this</em> iteration, never the existence of a cycle. Loop again.', panels: panels(slow, fast, false)});
+        steps.push({lines: [11], msg: 'fast is on <b>' + at(fast) + '</b>, slow on <b>' + at(slow) + '</b> - not the same node yet, so the loop goes around again.', panels: panels()});
       }
+
+      if (!met){
+        steps.push({lines: [14], msg: 'The walk fell off the end of the list, so there is no cycle and <b>false</b> is returned. Fast visited each node at most once on the way out, giving O(n) time, and only the two cursors were ever stored - O(1) space, unlike a visited-set solution.', panels: panels()});
+      } else {
+        steps.push({lines: [12], msg: 'Answer: <b>true</b>. The meeting happens within one lap of the loop, so the whole run is O(n) time, and the only memory used is two pointers - O(1) space, with no hash set of visited nodes.', panels: panels()});
+      }
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

@@ -651,113 +651,139 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Remove Node From End of Linked List',
-  note: 'a singly linked list cannot count backwards, so let two pointers carry the distance for you',
+  note: 'you cannot count backwards through a singly linked list, so the trick is to turn "nth from the end" into a fixed gap: push one pointer n nodes ahead, then walk both together. When the leading pointer falls off the end, the trailing one is sitting exactly one node before the victim, which is the only place you can stand to unlink it. A dummy node in front of the head means deleting the first node needs no special case.',
   inputs: [
-    {id:'v', label:'list', value:'1,2,3,4,5', width:220},
-    {id:'n', label:'n (from end)', value:'2', width:120}
+    {id:'a', label:'list values', value:'1,2,3,4,5', width:220},
+    {id:'n', label:'n (from the end)', value:'2', width:140}
   ],
   parse(raw){
-    const vals = parseInts(raw.v, 10);
-    if (!vals) return {ok:false, msg:'Enter a valid comma-separated list of node values.'};
-    const nArr = parseInts(raw.n, 1);
-    if (!nArr) return {ok:false, msg:'Enter n as a single whole number.'};
-    const n = nArr[0];
-    if (!Number.isInteger(n)) return {ok:false, msg:'n must be a whole number.'};
-    if (n < 1 || n > vals.length) return {ok:false, msg:'n must be between 1 and ' + vals.length + ' for this list.'};
-    return {ok:true, value:{vals: vals, n: n}, normalized:{v: vals.join(','), n: String(n)}};
+    const a = parseInts(raw.a, 7);
+    if (!a) return {ok:false, msg:'Enter a comma-separated list, e.g. 1,2,3,4,5'};
+    if (a.length > 7) return {ok:false, msg:'Keep the list to 7 nodes or fewer so the whole run stays watchable.'};
+    const n = Number(String(raw.n).trim());
+    if (!Number.isInteger(n) || n < 1 || n > a.length) return {ok:false, msg:'n must be a whole number between 1 and the length of the list (' + a.length + ').'};
+    return {ok:true, value:{a: a, n: n}, normalized:{a: a.join(','), n: String(n)}};
   },
   shuffle(){
-    const len = 4 + Math.floor(Math.random()*4);
-    return {v: randInts(len, 1, 9).join(','), n: String(1 + Math.floor(Math.random()*len))};
+    const len = 4 + Math.floor(Math.random() * 3);
+    return {a: randInts(len, 1, 9).join(','), n: String(1 + Math.floor(Math.random() * len))};
   },
   solutions: [
   {
-    label: 'Dummy head + fixed-gap two pointers',
-    badge: 'O(n) time · O(1) space · two pointers · optimal.cs',
-    blurb: 'You cannot walk backwards, so “n from the end” has to be turned into “<code>fast</code> is null”. Give <code>fast</code> a head start of exactly <b>n</b> nodes, then step both pointers together: the gap is frozen, so the instant fast falls off the end, <code>slow</code> is parked on the node just <em>before</em> the victim — one pass, no length count.',
+    label: 'Two pointers held n apart, behind a dummy head',
+    badge: 'O(n) time · O(1) space · Two-pointer, fast and slow · optimal.cs',
+    blurb: 'Give fast a head start of exactly n nodes, then move slow and fast in lockstep. The gap never changes, so the moment fast runs off the end slow is the node just before the one to delete. Starting slow on a dummy in front of head makes deleting the first node identical to deleting any other.',
     legend: [
-      {cls:'hot', text:'fast'},
-      {cls:'in-window', text:'slow — stays n behind fast.next'},
-      {cls:'dim', text:'unlinked node'},
-      {cls:'good', text:'returned list'}
+      {cls:'hot', text:'a node a pointer is currently on'},
+      {cls:'in-window', text:'inside the n-node gap between slow and fast'},
+      {cls:'done', text:'already walked past by slow'},
+      {cls:'dim', text:'the node being unlinked'}
     ],
+    shapeOverride: {skip: ['call-stack'], reason: 'this version is two flat while loops over three pointers - it never calls itself, so there is no recursion stack to draw.'},
     code: [
-      'ListNode dummy = new ListNode(0, head);',
-      'ListNode slow = dummy;',
-      'ListNode fast = head;',
-      '',
-      'while (n > 0)          // open the gap',
+      'public class Solution',
       '{',
-      '    fast = fast.next;',
-      '    n--;',
-      '}',
+      '    public ListNode RemoveNthFromEnd(ListNode head, int n)',
+      '    {',
+      '        ListNode dummy = new ListNode(0, head);',
+      '        ListNode slow = dummy;',
+      '        ListNode fast = head;',
       '',
-      'while (fast != null)   // move in lockstep',
-      '{',
-      '    slow = slow.next;',
-      '    fast = fast.next;',
-      '}',
+      '        while (n > 0)',
+      '        {',
+      '            fast = fast.next;',
+      '            n--;',
+      '        }',
       '',
-      '// slow is now the (n+1)-th node from the end',
-      'slow.next = slow.next.next;',
-      'return dummy.next;'
+      '        while (fast != null)',
+      '        {',
+      '            slow = slow.next;',
+      '            fast = fast.next;',
+      '        }',
+      '',
+      '        //slow is now n+1 th node from the end.',
+      '        slow.next = slow.next.next;',
+      '        return dummy.next;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const vals = input.vals, n0 = input.n, len = vals.length, steps = [];
-      const disp = ['dummy'].concat(vals.map(String)).concat(['null']);
-      let cut = -1;
-      const at = (i) => i < 0 ? 'dummy' : (i >= len ? 'null' : String(vals[i]));
-      const panels = (sp, fp, nLeft) => [
-        pTiles('dummy → list → null', disp, (k) => {
-          if (cut >= 0 && k === cut + 1) return {cls:'dim'};
-          if (k === fp + 1) return {cls:'hot'};
-          if (k === sp + 1) return {cls:'in-window'};
-          return {};
-        }),
-        pPills('', [
-          {k:'slow', v: at(sp), cls:'in-window'},
-          {k:'fast', v: at(fp), cls:'hot'},
-          {k:'nodes between', v: fp - sp - 1},
-          {k:'n left', v: nLeft}
+      const vals = input.a;
+      const steps = [];
+      const cells = [0].concat(vals);          // index 0 is the dummy, index k is vals[k-1]
+      const len = cells.length;                // an index of len means "null"
+      let slow = 0, fast = 1, nRem = input.n;
+      let removedIdx = -1, cut = false;
+
+      const at = (i) => (i >= len ? 'null' : String(cells[i]));
+
+      const row = () => {
+        const nodes = cells.map((v, k) => {
+          let cls = '';
+          if (k === removedIdx) cls = 'dim';
+          else if (k === slow || k === fast) cls = 'hot';
+          else if (k > slow && k < fast) cls = 'in-window';
+          else if (k < slow) cls = 'done';
+          return {id: 'n' + k, v: v, sub: k === 0 ? 'dummy' : '', cls: cls};
+        });
+        const arrows = cells.slice(1).map((_, k) => {
+          if (cut && (k === slow || k === removedIdx)) return 'ghost';
+          return '';
+        });
+        const tags = [{name: 'slow', idx: slow, cls: 'accent'}];
+        if (fast < len) tags.push({name: 'fast', idx: fast});
+        return {
+          label: 'dummy in front of head - slow and fast walk the same chain',
+          nodes: nodes, tail: true, arrows: arrows, tags: tags
+        };
+      };
+
+      const panels = () => [
+        pList('the list', [row()], {scale: 0.9}),
+        pPills('state', [
+          {k: 'n left to skip', v: nRem, cls: nRem > 0 ? 'hot' : ''},
+          {k: 'slow on', v: at(slow)},
+          {k: 'fast on', v: at(fast), cls: fast >= len ? 'dim' : ''},
+          {k: 'gap', v: fast - slow}
         ])
       ];
 
-      steps.push({lines:[1,2,3], msg:'Removing a node means rewiring its <em>predecessor</em> — and the real head has none. <code>dummy</code> is a throwaway node glued in front, so every node in the list now has a predecessor and the delete stays one uniform line with no special case for “remove the head”. <code>slow</code> starts on the dummy, <code>fast</code> on the head.', panels: panels(-1, 0, n0)});
+      steps.push({lines: [5], msg: 'A throwaway <b>dummy</b> node is placed in front of <b>head</b>. Deleting a node means rewriting its predecessor’s next pointer, and the real head has no predecessor - the dummy gives it one, so removing the first node uses the very same line as removing any other.', panels: panels()});
+      steps.push({lines: [6], msg: '<b>slow</b> starts on the dummy, one step behind head. That one-step offset is deliberate: it is what makes slow land on the node <em>before</em> the victim rather than on the victim itself.', panels: panels()});
+      steps.push({lines: [7], msg: '<b>fast</b> starts on <b>' + at(fast) + '</b>, the real head. The gap between slow and fast is now 1; the first loop will stretch it to exactly n + 1.', panels: panels()});
 
-      let fp = 0, nLeft = n0;
-      while (nLeft > 0){
-        fp++; nLeft--;
-        steps.push({lines:[5,7,8], msg:'<code>n</code> was still positive, so <code>fast</code> takes another one-sided step, landing on <b>' + at(fp) + '</b>, and <code>n</code> drops to <b>' + nLeft + '</b>. <code>slow</code> deliberately does not move — this loop exists only to open the gap.' + (nLeft === 0 ? ' The head start is now complete.' : ''), panels: panels(-1, fp, nLeft)});
+      let guard = 0;
+      while (nRem > 0 && guard++ < 20){
+        steps.push({lines: [9], msg: 'n is <b>' + nRem + '</b>, still above zero, so fast has more of its head start to take.', panels: panels()});
+        fast++;
+        nRem--;
+        steps.push({lines: [11, 12], msg: 'fast moves to <b>' + at(fast) + '</b> and n drops to <b>' + nRem + '</b>. Nothing is compared here - this loop exists purely to open a fixed distance between the two pointers.', panels: panels()});
       }
+      steps.push({lines: [9], msg: 'n has reached <b>0</b>, so the head start is complete. fast is <b>' + input.n + '</b> nodes ahead of head, which means slow and fast are now <b>' + (fast - slow) + '</b> apart - and that distance will stay frozen for the rest of the walk.', panels: panels()});
 
-      steps.push({lines:[5,11], msg:'<code>n</code> hit 0, so the head start ends with <code>slow.next</code> exactly <b>' + n0 + '</b> node' + (n0 === 1 ? '' : 's') + ' behind <code>fast</code>. That distance is the entire algorithm: nothing after this line ever changes it.' + (fp >= len ? ' Note <code>fast</code> is already <code>null</code> — the list is exactly n long, so the victim is the head.' : ''), panels: panels(-1, fp, 0)});
-
-      let sp = -1;
-      while (fp < len){
-        sp++; fp++;
-        steps.push({lines:[11,13,14], msg:'<code>fast</code> is not null yet, so both pointers advance <b>together</b>: slow → <b>' + at(sp) + '</b>, fast → <b>' + at(fp) + '</b>. Stepping in lockstep preserves the gap for free, which is why <code>slow</code> never needs to know how long the list is.', panels: panels(sp, fp, 0)});
+      guard = 0;
+      while (fast < len && guard++ < 20){
+        steps.push({lines: [15], msg: 'fast is on <b>' + at(fast) + '</b>, not null, so the end has not been reached - both pointers take another step together.', panels: panels()});
+        slow++;
+        fast++;
+        steps.push({lines: [17, 18], msg: 'slow moves to <b>' + at(slow) + '</b> and fast to <b>' + at(fast) + '</b>. Moving them in lockstep preserves the gap, so slow stays exactly ' + (fast - slow) + ' behind fast no matter how long the list is.', panels: panels()});
       }
+      steps.push({lines: [15], msg: 'fast is <b>null</b> - it has walked off the end of the list. Because the gap was ' + (fast - slow) + ', slow is now ' + (fast - slow) + ' nodes from that same end, which is the node just before the one to remove.', panels: panels()});
 
-      steps.push({lines:[11,17], msg:'<code>fast</code> has walked off the end, so the loop stops. Because the gap was frozen at <b>' + n0 + '</b>, <code>slow</code> can only be sitting on the node immediately <em>before</em> the ' + n0 + '-from-the-end node — found in a single pass, without ever counting the length.' + (sp < 0 ? ' Here that node is the <code>dummy</code> itself: the victim is the original head, precisely the case that would otherwise need its own branch.' : ''), panels: panels(sp, fp, 0)});
+      steps.push({lines: [21], msg: 'The comment states the invariant the whole walk was engineered for: slow is the (n + 1)th node counting back from the end, i.e. the predecessor of the target. With a singly linked list that predecessor is the only node from which a deletion is possible.', panels: panels()});
 
-      cut = sp + 1;
-      const gone = vals[cut];
-      steps.push({lines:[18], msg:'<code>slow.next = slow.next.next</code> hops the pointer over <b>' + gone + '</b> (index ' + cut + '). The node itself is untouched — it is simply no longer reachable from the list, so nothing else has to be cleaned up.', panels: panels(sp, fp, 0)});
+      removedIdx = slow + 1;
+      cut = true;
+      const survivor = removedIdx + 1 < len ? at(removedIdx + 1) : 'null';
+      steps.push({lines: [22], msg: '<code>slow.next = slow.next.next</code> skips over <b>' + at(removedIdx) + '</b>, wiring <b>' + at(slow) + '</b> straight to <b>' + survivor + '</b>. The unlinked node is now unreachable - no extra pass and no extra memory, just one pointer write.', panels: panels()});
 
-      const out = vals.slice(0, cut).concat(vals.slice(cut + 1));
-      steps.push({lines:[19], msg:'Return <code>dummy.next</code>, never <code>head</code>: if the removed node <em>was</em> the head, <code>head</code> now points at a node outside the list. The dummy always names the current first node' + (out.length ? '' : ', and here that is <code>null</code> — the list is empty') + '. One pass, two pointers, O(1) extra space.', panels: [
-        pTiles('Returned list', out.length ? out.map(String) : ['null'], () => ({cls:'good'})),
-        pPills('', [
-          {k:'removed', v: String(gone), cls:'dim'},
-          {k:'was index', v: cut},
-          {k:'length', v: out.length, cls:'good'}
-        ])
-      ]});
+      const out = vals.filter((_, k) => k + 1 !== removedIdx);
+      steps.push({lines: [23], msg: '<code>dummy.next</code> is returned rather than the original head, because the head itself may have been the node removed. Result: <b>' + (out.length ? out.join(' → ') : 'empty list') + '</b>. Each node was visited at most twice by a single pointer, giving O(n) time with O(1) extra space.', panels: panels()});
 
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

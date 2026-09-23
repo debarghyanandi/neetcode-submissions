@@ -1,13 +1,14 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Fast/slow midpoint, reverse recursively, merge alternately
-// -  [fast-slow-reverse-merge]
+// -  slow-fast pointers, reverse recursively, interleave
+// -  [slow-fast-recursive-reverse-interleave]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  Recursive reversal creates O(n) call stack depth; three linear passes
-// -  produce O(n) time.
+// -  Recursion depth for ReverseList equals second-half length, and all
+// -  three phases (find middle, reverse, interleave) traverse the list
+// -  once.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -62,79 +63,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fast/Slow Split + Reverse Second Half + Weave Merge
+ PATTERN : Linked List - fast/slow split, reverse tail, then weave
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  slow        walker that ends on the last node of the first half
+  fast        walker moving two steps per one of slow; drives the stop
+  second      head of the detached tail, then head of that tail reversed
+  first       cursor walking the first half during the merge
+  firstNext   saved first.next before the pointer is overwritten
+  secondNext  saved second.next before the pointer is overwritten
+  newHead     last node reached by the recursion; the new head of the reversed part
 WHY THIS PATTERN
-  The target order 1, n, 2, n-1, ... pairs the front of the list with the back,
-  but a singly linked list gives no way to walk backwards. Reversing the tail
-  turns "walk from the back" into "walk forward", so two forward pointers, first
-  and second, can be zipped together. The fast/slow scan finds the split point
-  without knowing the length in advance: fast moves two nodes per step, slow
-  one, so slow lands at the end of the first half when fast runs off the end.
+  The target order 0, n-1, 1, n-2, ... pairs the front of the list with the
+  back, but a singly linked list only moves forward, so you cannot walk
+  backwards to get n-1. Reversing the second half turns "walk backwards from the
+  end" into "walk forwards from second". After that the answer is a plain merge
+  of two forward lists, first and second, taking one node from each. The
+  fast/slow scan finds the split point in one pass without counting length
+  first.
 BRUTE FORCE
-  The obvious first attempt is to copy every node reference into a
-  List<ListNode>, then walk two indexes i from the front and j from the back and
-  rewire node[i].next = node[j]. That is also linear time but needs an explicit
-  array of n references, and it throws away the linked structure you were asked
-  to work with. A worse version repeatedly scans to find the current last node,
-  which gives O(n^2) time.
+  Push every node pointer into a List<ListNode> in one pass, then rewire with
+  two indices i from the front and j from the back until they meet. That is also
+  O(n) time but needs an explicit array of n references, and it is the version
+  most people write first. This file avoids that array, though its recursive
+  reverse still spends O(n) stack, so the space win is only on paper.
 INVARIANT
-  After the split, first points at a chain of ceil(n/2) nodes and second at the
-  reversed chain of floor(n/2) nodes, so the first chain is never shorter than
-  the second. Each pass of the merge loop takes exactly one node from each
-  chain, links first -> second -> firstNext, and advances both cursors; the
-  nodes already placed behind first are in final order and the two remaining
-  chains still satisfy the length relation. When second becomes null every node
-  from the back half has been inserted, and the last node of the front half
-  still carries the terminating null that slow.next = null installed.
-THE MERGE LOOP ONLY TESTS SECOND
-  The loop condition is while (second != null) with no null check on first, and
-  that is safe only because of the length relation above. For odd n the front
-  chain has one extra node, which correctly ends up last; for even n both chains
-  are equal and both empty out together. If the split were done the other way,
-  so the back half could be longer, first would be null in the middle of the
-  body and first.next would throw.
+  When the fast/slow loop ends, slow is the last node of the first chunk and
+  slow.next starts the second chunk, and the first chunk is never shorter than
+  the second. After slow.next = null the two lists are disjoint, so reversing
+  second cannot touch the first half. In the merge loop, everything before first
+  is already in final order, and because the first half is at least as long,
+  second runs out first, which is exactly why the loop condition only tests
+  second.
 WATCH OUT
-  head == null crashes: the while loop never runs, slow stays null, and second =
-  slow.next throws a NullReferenceException. There is no guard for it, so an
-  empty list must never reach this method. The comment "slow is at middle" is
-  loose - for even n slow is the last node of the first half, which is one past
-  the true midpoint - but the code is correct as written, the comment just
-  describes it imprecisely. Single node and two nodes are fine: second becomes
-  null and the merge loop is skipped.
+  head == null crashes: the while loop never runs, slow stays null, and
+  slow.next throws NullReferenceException. The comment "slow is at middle" is
+  loose - for an even length like 1,2,3,4 slow lands on node 3, one past the
+  true middle, which is what makes the first half longer and the merge safe, so
+  do not "fix" it by starting fast at head.next. In the merge, first can become
+  null on the final assignment; that is fine only because second becomes null in
+  the same iteration. ReverseList recurses once per node, so a long list can
+  overflow the stack.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. ReverseList is recursive. What breaks on a very long list, and how do you
-  fix it?
-     Recursion depth equals the length of the second half, so a long list can
-     overflow the call stack. Rewrite it as an iterative three-pointer loop
-     (prev, curr, next); that also drops the extra space to O(1) and keeps the
-     same linear time.
-  2. The method returns void. Is the caller's head still valid afterwards?
-     Yes - the original head node stays the first node of the result, because
-     the weave only rewires next pointers and never promotes a different node to
-     the front. If the problem instead asked you to return a new head, you would
-     have to return it explicitly, since C# passes the reference by value.
-  3. What if the list were doubly linked?
-     You could drop the reverse entirely and walk one pointer forward from head
-     and one backward from tail using prev, meeting in the middle. That removes
-     the ReverseList call, though you must fix both next and prev on every
-     rewire.
-  4. How would you produce the reordered sequence without modifying the input
-  list?
-     Push node values into a List<int> or an array, then emit them by
-     alternating indexes from the two ends to build fresh nodes. Same linear
-     time, but you pay O(n) for the buffer and lose the in-place property.
+  1. Make the space O(1).
+     Replace the recursive ReverseList with the iterative three-pointer loop
+     (prev, curr, next). Same time, no stack growth, a few more lines.
+  2. Can you do it without reversing anything?
+     Yes - collect node references into a List<ListNode> and rewire with a head
+     index and a tail index. Simpler to reason about, but it costs an n-sized
+     array of references.
+  3. The problem changes to weave in groups of two (0,1,n-1,n-2,...). What
+  changes?
+     The split and the reverse are identical; only the merge loop changes to
+     move two nodes from first and two from second per round, with a guard for a
+     leftover node.
+  4. The list is doubly linked. Does the approach simplify?
+     Yes - drop the reverse entirely, keep a head pointer and a tail pointer,
+     and alternate while they have not met, fixing both next and prev on each
+     link.
 TRIGGER
-  A linked-list task that needs to pair the front with the back, or reach nodes
-  in reverse order, without an index or a length.
+  A singly linked list task that needs the node k steps from the end paired with
+  the node k from the start.
 C# NOTE
-  The three-line rewire in the merge could be written with tuple assignment,
-  (first.next, second.next) = (second, firstNext), because C# fully evaluates
-  the right side before assigning; here the explicit firstNext and secondNext
-  temporaries are clearer and are needed anyway as the next cursors.
+  A StackOverflowException from the recursive ReverseList cannot be caught in
+  .NET - it kills the process immediately - so the iterative rewrite is a safety
+  fix, not just a style choice.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

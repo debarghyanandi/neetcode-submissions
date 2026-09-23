@@ -651,174 +651,266 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'LRU Cache',
-  note: 'a hash map finds the node, a linked list ranks it — neither can do both alone',
+  note: 'a cache needs two different things at once: find a key instantly, and know which key was used longest ago. A hash map gives the first and a doubly linked list gives the second, so the design keeps both and has them point at the same nodes. Order lives in the list - every touched key is unlinked and re-spliced next to the right sentinel, so the left sentinel always has the least recently used node right after it, ready to evict in O(1).',
   inputs: [
-    {id:'cap', label:'capacity', value:'3', width:90},
-    {id:'ops', label:'operations', value:'put 1 10, put 2 20, put 3 30, get 1, put 4 40, get 2, get 3, put 3 33, get 4', width:430}
+    {id:'cap', label:'capacity', value:'2', width:90},
+    {id:'ops', label:'operations (get k / put k v, comma separated)', value:'put 1 1, put 2 2, get 1, put 3 3, get 2, get 3', width:380}
   ],
   parse(raw){
     const cap = Number(String(raw.cap).trim());
-    if (!Number.isInteger(cap) || cap < 1 || cap > 5) return {ok:false, msg:'Capacity must be a whole number from 1 to 5.'};
-    const parts = String(raw.ops).split(',').map(s => s.trim()).filter(s => s.length).slice(0, 12);
-    if (!parts.length) return {ok:false, msg:'Enter at least one operation, e.g. put 1 10, get 1.'};
+    if (!Number.isInteger(cap) || cap < 1 || cap > 4) return {ok:false, msg:'Capacity must be a whole number from 1 to 4 so the list stays on screen.'};
+    const parts = String(raw.ops).split(',').map(s => s.trim()).filter(s => s.length);
+    if (!parts.length) return {ok:false, msg:'Enter operations like: put 1 1, put 2 2, get 1'};
+    if (parts.length > 8) return {ok:false, msg:'Keep it to 8 operations or fewer so the whole run stays watchable.'};
     const ops = [];
-    for (let i = 0; i < parts.length; i++){
-      const bits = parts[i].split(/\s+/);
-      const kind = (bits[0] || '').toLowerCase();
-      if (kind === 'put' && bits.length === 3){
-        const k = Number(bits[1]), v = Number(bits[2]);
-        if (!Number.isFinite(k) || !Number.isFinite(v)) return {ok:false, msg:'"put" needs two numbers: put key value.'};
-        ops.push({kind:'put', k:k, v:v});
-      } else if (kind === 'get' && bits.length === 2){
-        const k = Number(bits[1]);
-        if (!Number.isFinite(k)) return {ok:false, msg:'"get" needs a numeric key: get key.'};
-        ops.push({kind:'get', k:k});
+    for (const p of parts){
+      const f = p.split(/\s+/);
+      const name = (f[0] || '').toLowerCase();
+      if (name === 'get' && f.length === 2){
+        const k = Number(f[1]);
+        if (!Number.isInteger(k) || k < 0 || k > 99) return {ok:false, msg:'Keys are whole numbers from 0 to 99.'};
+        ops.push({op:'get', key:k});
+      } else if (name === 'put' && f.length === 3){
+        const k = Number(f[1]), v = Number(f[2]);
+        if (!Number.isInteger(k) || k < 0 || k > 99) return {ok:false, msg:'Keys are whole numbers from 0 to 99.'};
+        if (!Number.isInteger(v) || v < 0 || v > 99) return {ok:false, msg:'Values are whole numbers from 0 to 99.'};
+        ops.push({op:'put', key:k, val:v});
       } else {
-        return {ok:false, msg:'Each operation must look like "put 1 10" or "get 1".'};
+        return {ok:false, msg:'Each operation is get k or put k v, separated by commas.'};
       }
     }
-    return {
-      ok: true,
-      value: {cap: cap, ops: ops},
-      normalized: {cap: String(cap), ops: ops.map(o => o.kind === 'put' ? ('put ' + o.k + ' ' + o.v) : ('get ' + o.k)).join(', ')}
-    };
+    return {ok:true, value:{cap: cap, ops: ops}, normalized:{cap: String(cap), ops: ops.map(o => o.op === 'get' ? 'get ' + o.key : 'put ' + o.key + ' ' + o.val).join(', ')}};
   },
   shuffle(){
     const cap = 2 + Math.floor(Math.random() * 2);
-    const ops = [];
-    for (let i = 0; i < 8; i++){
+    const n = 5 + Math.floor(Math.random() * 2);
+    const out = [];
+    for (let i = 0; i < n; i++){
       const k = 1 + Math.floor(Math.random() * 4);
-      if (i < 2 || Math.random() < 0.55) ops.push('put ' + k + ' ' + (k * 10));
-      else ops.push('get ' + k);
+      out.push(Math.random() < 0.55 ? 'put ' + k + ' ' + (10 * k) : 'get ' + k);
     }
-    return {cap: String(cap), ops: ops.join(', ')};
+    out[0] = 'put 1 10';
+    return {cap: String(cap), ops: out.join(', ')};
   },
   solutions: [
   {
-    label: 'Hash map of nodes + doubly linked list',
-    badge: 'O(1) get · O(1) put · O(n) space · optimal.cs',
-    blurb: 'A hash map answers <em>where is key k</em> in O(1); a linked list answers <em>which key is coldest</em> in O(1). Neither alone is enough, so store the <b>node itself</b> in the map — a hit hands you the node and both its neighbours, so unlinking and re-splicing at the hot end costs no scan. The <code>left</code>/<code>right</code> sentinels remove every null check: the victim is always <code>left.next</code>.',
+    label: 'Doubly linked list of nodes plus a hash map to them',
+    badge: 'O(1) time per op · O(k) space · hash map + doubly linked list · optimal.cs',
+    blurb: 'The map answers "where is this key" in O(1); the list answers "what is oldest" in O(1). Two sentinel nodes, left and right, mean Remove and Insert never test for a missing neighbour - every real node always has one on both sides. Touching a key unlinks it and re-splices it before right, so left.next is always the eviction candidate.',
     legend: [
-      {cls:'hot', text:'node being touched'},
-      {cls:'good', text:'just spliced in as most-recent'},
-      {cls:'win', text:'least-recent — about to be evicted'},
-      {cls:'dim', text:'sentinel (never holds real data)'}
+      {cls:'hot', text:'the node or key being touched right now'},
+      {cls:'good', text:'a live entry in the cache'},
+      {cls:'dim', text:'the left and right sentinels - never hold data'},
+      {cls:'ghost', text:'a pointer about to be rewired'}
     ],
     code: [
-      'left  = new Node(0, 0);   // sentinel: coldest end',
-      'right = new Node(0, 0);   // sentinel: hottest end',
-      'left.next = right; right.prev = left;',
-      '',
-      'private void Remove(Node node)',
+      'public class Node',
       '{',
-      '    node.prev.next = node.next;',
-      '    node.next.prev = node.prev;',
-      '}',
+      '    public int key { get; set; }',
+      '    public int val { get; set; }',
+      '    public Node prev { get; set; }',
+      '    public Node next { get; set; }',
       '',
-      'private void Insert(Node node)      // always at the hot end',
-      '{',
-      '    Node prev = right.prev;',
-      '    prev.next = node; node.prev = prev;',
-      '    node.next = right; right.prev = node;',
-      '}',
-      '',
-      'public int Get(int key)',
-      '{',
-      '    if (cache.ContainsKey(key))',
+      '    public Node(int key, int val)',
       '    {',
-      '        Node node = cache[key];',
-      '        Remove(node);',
-      '        Insert(node);               // touched = now hottest',
-      '        return node.val;',
+      '        this.key = key;',
+      '        this.val = val;',
+      '        prev = null;',
+      '        next = null;',
       '    }',
-      '    return -1;',
       '}',
       '',
-      'public void Put(int key, int value)',
+      'public class LRUCache',
       '{',
-      '    if (cache.ContainsKey(key))',
-      '    {',
-      '        Remove(cache[key]);         // unlink the stale node',
-      '    }',
-      '    Node newNode = new Node(key, value);',
-      '    cache[key] = newNode;',
-      '    Insert(newNode);',
+      '    private int cap;',
+      '    private Dictionary<int, Node> cache;',
+      '    private Node left;',
+      '    private Node right;',
       '',
-      '    if (cache.Count > cap)',
+      '    public LRUCache(int capacity)',
       '    {',
-      '        Node lru = left.next;   // coldest real node',
-      '        Remove(lru);',
-      '        cache.Remove(lru.key);',
+      '        cap = capacity;',
+      '        cache = new Dictionary<int, Node>();',
+      '        left = new Node(0, 0);',
+      '        right = new Node(0, 0);',
+      '        left.next = right;',
+      '        right.prev = left;',
+      '    }',
+      '',
+      '    private void Remove(Node node)',
+      '    {',
+      '        Node prev = node.prev;',
+      '        Node nxt = node.next;',
+      '        prev.next = nxt;',
+      '        nxt.prev = prev;',
+      '    }',
+      '',
+      '    private void Insert(Node node)',
+      '    {',
+      '        Node prev = right.prev;',
+      '        prev.next = node;',
+      '        node.prev = prev;',
+      '        node.next = right;',
+      '        right.prev = node;',
+      '    }',
+      '',
+      '    public int Get(int key)',
+      '    {',
+      '        if (cache.ContainsKey(key))',
+      '        {',
+      '            Node node = cache[key];',
+      '            Remove(node);',
+      '            Insert(node);',
+      '            return node.val;',
+      '        }',
+      '        return -1;',
+      '    }',
+      '',
+      '    public void Put(int key, int value)',
+      '    {',
+      '        if (cache.ContainsKey(key))',
+      '        {',
+      '            Remove(cache[key]);',
+      '        }',
+      '        Node newNode = new Node(key, value);',
+      '        cache[key] = newNode;',
+      '        Insert(newNode);',
+      '',
+      '        if (cache.Count > cap)',
+      '        {',
+      '            Node lru = left.next;',
+      '            Remove(lru);',
+      '            cache.Remove(lru.key);',
+      '        }',
       '    }',
       '}'
     ],
     simulate(input){
-      const cap = input.cap, ops = input.ops, steps = [];
-      let order = [];   // coldest (left.next) → hottest (right.prev)
-      const find = (k) => order.findIndex(n => n.k === k);
-      const mapObj = () => {
-        const m = {};
-        order.slice().sort((a, b) => a.k - b.k).forEach(n => { m[n.k] = n.v; });
-        return m;
+      const cap = input.cap, ops = input.ops;
+      const steps = [];
+      let order = [];          // {key, val}, least recently used first
+      const map = {};          // key -> description of the node it points at
+      let hotKey = null, freshKey = null, ghost = [], current = 'constructor', last = '-';
+
+      const idxOf = (key) => order.findIndex(e => e.key === key);
+      const ghostFor = (key) => { const i = idxOf(key); return i < 0 ? [] : [i, i + 1]; };
+
+      const listPanel = () => {
+        const nodes = [{id:'L', v:'L', cls:'dim', sub:'left'}];
+        order.forEach(e => nodes.push({
+          id: 'n' + e.key,
+          v: e.key + ':' + e.val,
+          sub: 'key ' + e.key,
+          cls: e.key === hotKey ? 'hot' : 'good',
+          fresh: e.key === freshKey
+        }));
+        nodes.push({id:'R', v:'R', cls:'dim', sub:'right'});
+        const arrows = nodes.slice(1).map((_, i) => (ghost.indexOf(i) >= 0 ? 'ghost' : ''));
+        const tags = order.length
+          ? [{name:'LRU', idx:1, cls:'accent'}, {name:'MRU', idx:nodes.length - 2}]
+          : [];
+        return pList('doubly linked list - oldest next to left, newest next to right', [{
+          label: 'left sentinel ... right sentinel',
+          nodes: nodes,
+          arrows: arrows,
+          tags: tags
+        }], {scale: 0.85});
       };
-      const panels = (o) => {
-        o = o || {};
-        const slots = [{text:'left', cls:'dim'}];
-        order.forEach(n => {
-          const cls = (o.evict === n.k) ? 'win' : (o.fresh === n.k) ? 'good' : (o.hot === n.k) ? 'hot' : '';
-          slots.push({text: n.k + ':' + n.v, cls: cls});
-        });
-        slots.push({text:'right', cls:'dim'});
-        const hotKey = (o.hot !== undefined) ? String(o.hot) : (o.fresh !== undefined) ? String(o.fresh) : (o.evict !== undefined) ? String(o.evict) : undefined;
-        const chips = order.length ? mapChips(mapObj(), hotKey) : [];
-        return [
-          pSlots('left ⇄ list ⇄ right   (coldest on the left, hottest on the right)', slots),
-          pChips('cache — key → node', [{left:'keys', items: chips, empty:'empty'}]),
-          pPills('', [
-            {k:'operation', v: o.op || '–', cls:'accent'},
-            {k:'cache.Count', v: order.length},
-            {k:'cap', v: cap},
-            {k:'returns', v: (o.ret === undefined ? '–' : String(o.ret)), cls: (o.ret === undefined || o.ret === -1) ? '' : 'good'}
-          ])
-        ];
-      };
-      steps.push({lines:[1,2,3], msg:'Two <b>sentinel</b> nodes are wired together before any data exists. They never hold a key, and they exist purely so that <code>Remove</code> and <code>Insert</code> can dereference <code>node.prev</code> and <code>node.next</code> without ever testing for <code>null</code>. Everything real lives between them: <code>left.next</code> is the least-recently-used node, <code>right.prev</code> is the most recent.', panels: panels({})});
-      for (let i = 0; i < ops.length; i++){
-        const op = ops[i];
-        const label = op.kind === 'put' ? ('put(' + op.k + ', ' + op.v + ')') : ('get(' + op.k + ')');
-        if (op.kind === 'get'){
-          const at = find(op.k);
-          if (at < 0){
-            steps.push({lines:[20,27], msg:'<code>' + label + '</code>: the dictionary lookup fails, so key <b>' + op.k + '</b> is not cached and there is nothing to promote. Return <b>−1</b>. Note the miss costs one hash probe — the list is never walked to prove absence.', panels: panels({op: label, ret: -1})});
+
+      const mapPanel = () => pChips('cache - key to node', [{
+        left: 'Dictionary of int to Node',
+        items: Object.keys(map).map(k => ({text: 'key ' + k, sub: map[k], cls: String(hotKey) === k ? 'hot' : '', fresh: String(freshKey) === k})),
+        empty: 'no keys stored yet'
+      }]);
+
+      const pills = () => pPills('state', [
+        {k: 'capacity', v: cap},
+        {k: 'cache.Count', v: order.length, cls: order.length > cap ? 'hot' : ''},
+        {k: 'operation', v: current},
+        {k: 'last returned', v: last, cls: last === '-1' ? 'dim' : (last === '-' ? '' : 'good')}
+      ]);
+
+      const panels = () => [listPanel(), mapPanel(), pills()];
+      const S = (lines, msg) => { steps.push({lines: lines, msg: msg, panels: panels()}); freshKey = null; ghost = []; };
+
+      S([24], 'The cache is constructed with capacity <b>' + cap + '</b>. Nothing is stored yet - the whole job of this constructor is to make the empty list legal.');
+      S([26, 27], 'cap remembers the limit and <b>cache</b> starts as an empty dictionary. The dictionary will hold key to <em>node reference</em>, not key to value, which is what makes unlinking a node O(1).');
+      S([28, 29, 30, 31], 'Two dummy nodes are made and wired to each other: <b>left</b> and <b>right</b> are sentinels that never hold real data. With them in place, every real node always has a neighbour on both sides, so <code>Remove</code> and <code>Insert</code> never have to test for null.');
+
+      for (const o of ops){
+        if (o.op === 'put'){
+          current = 'Put(' + o.key + ', ' + o.val + ')';
+          hotKey = o.key;
+          S([63], '<b>Put(' + o.key + ', ' + o.val + ')</b> begins. A put both stores a value and counts as a use, so the key must end up at the right end of the list either way.');
+
+          const had = idxOf(o.key) >= 0;
+          if (had){
+            ghost = ghostFor(o.key);
+            S([65], 'Key <b>' + o.key + '</b> is already in the map, so its old node is still sitting somewhere in the list. Leaving it there would give the key two nodes, so it has to come out first - the two dashed pointers are the ones about to be rewired.');
+            ghost = ghostFor(o.key);
+            S([67, 34, 36, 37, 38, 39], '<code>Remove</code> grabs the node’s prev and next and points them at each other, splicing the old node out. Because the list is doubly linked and sentinel-bounded, that is four pointer writes and no search - O(1).');
+            order = order.filter(e => e.key !== o.key);
           } else {
-            const node = order[at];
-            steps.push({lines:[20,22], msg:'<code>' + label + '</code>: the map holds key <b>' + op.k + '</b> and hands back the <em>node object</em>, not just the value. That is the whole trick — from the node we already know its two neighbours, so its position in the list is reachable in O(1) instead of by scanning.', panels: panels({op: label, hot: op.k})});
-            order.splice(at, 1);
-            order.push(node);
-            steps.push({lines:[23,24,25], msg:'Reading a key makes it the most recent. <code>Remove</code> stitches its old neighbours to each other, then <code>Insert</code> splices it back in just before <code>right</code>. Four pointer writes, no shifting. Return <b>' + node.val + '</b>; key <b>' + op.k + '</b> is now the safest key in the cache and <b>' + order[0].k + '</b> is the one on death row.', panels: panels({op: label, fresh: op.k, ret: node.val})});
+            S([65], 'Key <b>' + o.key + '</b> is not in the map yet, so the <code>if</code> body is skipped - there is no stale node to unlink.');
           }
-        } else {
-          const at = find(op.k);
-          if (at >= 0){
-            steps.push({lines:[32,34], msg:'<code>' + label + '</code>: key <b>' + op.k + '</b> is already stored. The code does not edit the old node in place — it <b>unlinks</b> it and will build a fresh one. Skipping this <code>Remove</code> would leave the old node wired into the list forever while the map pointed somewhere else, and the list length would drift away from <code>cache.Count</code>.', panels: panels({op: label, hot: op.k})});
-            order.splice(at, 1);
-          }
-          order.push({k: op.k, v: op.v});
-          steps.push({lines:[36,37,38], msg:'A new node holds <b>both</b> the key and the value — the key is stored inside the node so that an eviction can later delete the right dictionary entry from the list side. It is mapped, then spliced in at the hot end, because writing a key counts as using it.', panels: panels({op: label, fresh: op.k})});
+
+          map[o.key] = 'node ' + o.key + ':' + o.val;
+          freshKey = o.key;
+          S([69, 70], 'A fresh node holding <b>' + o.key + ':' + o.val + '</b> is created and the map entry for key ' + o.key + ' now points at it. The node stores its own <code>key</code> as well as the value - that is what lets an eviction later delete the right map entry.');
+
+          S([71], '<code>Insert</code> is called to splice the new node in at the most recently used end, just before <b>right</b>.');
+          order.push({key: o.key, val: o.val});
+          freshKey = o.key;
+          S([42, 44, 45, 46, 47, 48], 'The old last node and <b>right</b> both let go of each other and take the new node between them. Newest lives next to right, so oldest is always whatever sits next to left.');
+
           if (order.length > cap){
-            const victim = order[0];
-            steps.push({lines:[40,42,43,44], msg:'<code>cache.Count</code> is <b>' + order.length + '</b>, one over <code>cap</code> = ' + cap + '. The victim is <code>left.next</code> = key <b>' + victim.k + '</b>: it has sat next to the cold sentinel longest, so it is by construction the least recently used. It is unlinked and its key removed from the map — both structures stay in step, and finding it took no search at all.', panels: panels({op: label, evict: victim.k})});
-            order.shift();
+            S([73], 'cache.Count is <b>' + order.length + '</b>, past the capacity of ' + cap + ', so one entry has to go.');
+            const lru = order[0];
+            hotKey = lru.key;
+            ghost = ghostFor(lru.key);
+            S([75], '<code>left.next</code> is <b>' + lru.key + ':' + lru.val + '</b> - by construction the least recently used node, found with no scan at all because order is maintained on every touch.');
+            ghost = ghostFor(lru.key);
+            S([76, 34, 36, 37, 38, 39], 'The victim is unlinked from the list in O(1).');
+            order = order.slice(1);
+            delete map[lru.key];
+            S([77], 'The node still knew its own key, so <code>cache.Remove(lru.key)</code> deletes the matching map entry. Without that field the map would be searched for a value, which would cost O(k).');
           } else {
-            steps.push({lines:[40], msg:'<code>cache.Count</code> is <b>' + order.length + '</b>, still within <code>cap</code> = ' + cap + ', so nothing is evicted. The check runs <em>after</em> the insert rather than before, which is what lets an overwrite of an existing key pass through without ever tripping an eviction.', panels: panels({op: label})});
+            S([73], 'cache.Count is <b>' + order.length + '</b>, still within the capacity of ' + cap + ', so nothing is evicted and the put is done.');
           }
+          hotKey = null;
+        } else {
+          current = 'Get(' + o.key + ')';
+          hotKey = o.key;
+          S([51], '<b>Get(' + o.key + ')</b> begins.');
+          const at = idxOf(o.key);
+          if (at < 0){
+            S([53], 'The map has no entry for key <b>' + o.key + '</b>' + (Object.keys(map).length ? ' - it was either never put, or evicted earlier as the least recently used entry' : '') + ', so the <code>if</code> is skipped.');
+            last = '-1';
+            S([60], 'A miss returns <b>-1</b>. Nothing in the list moves, because nothing was used.');
+          } else {
+            const e = order[at];
+            S([53, 55], 'The map finds key <b>' + o.key + '</b> and hands back the node object itself in O(1) - not an index, the node, which is why the reordering that follows needs no traversal.');
+            ghost = ghostFor(o.key);
+            S([56, 34, 36, 37, 38, 39], 'A read counts as a use, so the node is unlinked from its current position first: its neighbours are stitched to each other.');
+            order = order.filter(x => x.key !== o.key);
+            S([57], 'The same node - not a copy - is then handed to <code>Insert</code> to go back in at the recent end.');
+            order.push(e);
+            freshKey = o.key;
+            S([42, 44, 45, 46, 47, 48], 'It is spliced in just before <b>right</b>, so key <b>' + o.key + '</b> is now the most recently used and is the last thing that would ever be evicted.');
+            last = String(e.val);
+            S([58], 'The stored value <b>' + e.val + '</b> is returned. Every part of this get - lookup, unlink, splice - was a constant number of pointer moves.');
+          }
+          hotKey = null;
         }
       }
-      steps.push({lines:[18,30], msg:'Every operation finished in a constant number of pointer writes and one hash probe. The list holds the <b>ordering</b> and the map holds the <b>addresses</b>; recency order is currently ' + order.map(n => n.k).join(' → ') + ' from coldest to hottest, so key <b>' + (order.length ? order[0].k : '–') + '</b> is next to go.', panels: panels({})});
+
+      current = 'done';
+      S([17], 'All operations are done. The list, read left to right, is exactly the usage order from oldest to newest, and the map indexes straight into it - which is why both <code>Get</code> and <code>Put</code> run in O(1) while the structure holds at most <b>' + cap + '</b> entries, O(k) space.');
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.
