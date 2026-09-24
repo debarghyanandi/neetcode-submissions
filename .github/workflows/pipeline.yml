@@ -17,24 +17,6 @@ on:
     branches: [main]
     paths:
       - '**/submission-*'
-  schedule:
-    # Twice a day, morning and evening IST. These are two separate runs, not a
-    # run and a catch-up: whatever the morning one leaves - a folder held back
-    # by a push, a folder whose classify was refused - the evening one picks up,
-    # and vice versa. An idle run finds nothing pending, calls no model, and
-    # costs a runner start.
-    #
-    # Cron here is UTC and IST is UTC+5:30, so subtract 5h30m from the time you
-    # want. Both land on odd minutes on purpose: GitHub queues scheduled
-    # workflows at low priority, and :00, :15, :30 and :45 are where everyone
-    # else's schedules pile up.
-    #
-    # None of this is a promise. GitHub makes no timing guarantee for scheduled
-    # workflows on hosted runners - one of these was once four and a half hours
-    # adrift - and a late run does the same work correctly, only later. Trigger
-    # it by hand if you need it now.
-    - cron: '37 1 * * *'    # 07:07 IST
-    - cron: '39 13 * * *'   # 19:09 IST
   workflow_dispatch:
     # Three boxes, and the third only matters when the first is empty.
     #
@@ -120,8 +102,9 @@ jobs:
       - name: Detect pending submissions
         id: detect
         env:
-          # Empty on cron and manual runs - which is what makes those drain
-          # everything, including the folder a push would have held back.
+          # Empty on a manual run, which is what makes one drain everything,
+          # including a folder a push held back. There is no schedule any more,
+          # so a held-back folder waits for the next push or a manual run.
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
         run: |
           set -euo pipefail

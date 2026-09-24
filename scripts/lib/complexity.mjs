@@ -9,8 +9,16 @@
  */
 export const COMPLEXITY = [
   'O(1)',
+  // Inverse Ackermann - union-find with path compression and union by rank. Below 5 for any
+  // input that fits in memory, but it is not O(1) and the ladder does not pretend it is.
+  'O(alpha(n))',
+  // Below O(log n) for the same reason O(k) sits below O(n): k is bounded by n by the
+  // problem's own definition and may approach it. merge-k-sorted-linked-lists is the case
+  // that found this one - a divide-and-conquer merge recurses log k deep.
+  'O(log k)',
   'O(log n)',
   'O(log(m*n))',  // a matrix treated as one flat sorted array
+  'O(log^2 n)',   // a binary search whose step is itself a binary search
   'O(sqrt n)',
   // A bounded structure - a heap capped at k, a window of k - where k <= n by
   // the problem's own definition. Placed directly below O(n) for the same
@@ -19,18 +27,29 @@ export const COMPLEXITY = [
   // does not make.
   'O(k)',
   'O(n)',
+  'O(n * alpha(n))',  // a union-find pass over the whole input
   'O(n + m)',     // two independent inputs, each scanned once
+  'O(n log log n)', // a sieve - count-primes lives here
+  'O(k log k)',   // sorting the bounded set, not the whole input. k <= n, so below O(n log k).
   'O(n log k)',   // k <= n, so this sits below O(n log n)
   'O(n log n)',
+  // Two independent inputs again: neither O(n log m) nor O(m log n) dominates the other, so
+  // they sit adjacent and the order between THEM is arbitrary, like O(m) beside O(n).
+  'O(n log m)',   // a binary search over a value range, one pass per probe - koko-style
   'O(m log n)',   // a binary search per row - m rows, log n columns
   'O(n * k)',     // n items of length k - the whole input, once
   'O(m * n)',     // every cell of a matrix, or of a two-input DP table
+  'O(m * n * log(m * n))', // a heap over every cell - Dijkstra on a grid
   'O(n * k log k)', // ...and again with a sort per item. anagram-groups lives here.
   'O(n^2)',
   'O(n^2 log n)',
   'O(n^3)',
   'O(2^n)',
+  'O(n * 2^n)',   // every subset, and O(n) to copy each one out
+  'O(n^2 * 2^n)', // bitmask DP over pairs of states - Held-Karp
+  'O(4^n / sqrt n)', // the nth Catalan number - generate-parentheses
   'O(n!)',
+  'O(n * n!)',    // every permutation, and O(n) to copy each one out
   'other',
 ];
 
@@ -51,6 +70,7 @@ export const COMPLEXITY = [
 export const ALIAS = {
   'O(m)': 'O(n)',
   'O(log m)': 'O(log n)',
+  'O(sqrt m)': 'O(sqrt n)',
   'O(m + n)': 'O(n + m)',
   'O(n * m)': 'O(m * n)',
   'O(m log m)': 'O(n log n)',
@@ -60,6 +80,16 @@ export const ALIAS = {
   'O(m^3)': 'O(n^3)',
   'O(2^m)': 'O(2^n)',
   'O(m!)': 'O(n!)',
+  'O(log(n*m))': 'O(log(m*n))',
+  'O((log n)^2)': 'O(log^2 n)',
+  'O(2^n * n)': 'O(n * 2^n)',
+  'O(n! * n)': 'O(n * n!)',
+  // Graph problems are written with V and E as often as with n and m. Capitals are outside
+  // canonical()'s rename set (it only touches single lowercase letters), so they are listed
+  // here rather than resolved.
+  'O(V + E)': 'O(n + m)',
+  'O(E log V)': 'O(m log n)',
+  'O(V + E log V)': 'O(m log n)',
 };
 
 /** What the model may answer: every rung, every alias, and "other" as the last resort. */

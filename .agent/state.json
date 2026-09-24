@@ -62,7 +62,6 @@
           "algorithm": "Iterative linked list traversal with carry",
           "approachKey": "linked-list-carry-iteration",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list"
           ]
@@ -73,7 +72,6 @@
           "algorithm": "Recursive linked list traversal with carry",
           "approachKey": "linked-list-carry-recursion",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "call-stack"
@@ -161,7 +159,6 @@
           "algorithm": "Character frequency signature hashing",
           "approachKey": "frequency-hash",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "string",
@@ -174,7 +171,6 @@
           "algorithm": "Sort each word to canonical form",
           "approachKey": "sort-canonical",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "string",
@@ -241,7 +237,6 @@
           "algorithm": "Post-order DFS with single-pass height computation",
           "approachKey": "recursive-balance-single-pass",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -307,8 +302,7 @@
           "space": "O(log n)",
           "algorithm": "recursive binary search",
           "approachKey": "binary-search-recursive",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -363,7 +357,6 @@
           "algorithm": "Post-order DFS height calculation",
           "approachKey": "dfs-postorder-height",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -375,7 +368,6 @@
           "algorithm": "Post-order DFS height calculation",
           "approachKey": "dfs-postorder-height",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -438,8 +430,7 @@
           "space": "O(1)",
           "algorithm": "one-pass running minimum, greedy",
           "approachKey": "running-min-greedy",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "lint": {
@@ -500,7 +491,6 @@
           "algorithm": "Space-optimized Fibonacci iteration",
           "approachKey": "fibonacci-space-optimized",
           "correct": true,
-          "bruteForce": false,
           "structures": []
         },
         "suboptimal.cs": {
@@ -509,7 +499,6 @@
           "algorithm": "Dynamic programming tabulation",
           "approachKey": "fibonacci-dp",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -574,7 +563,6 @@
           "algorithm": "DFS with memoization",
           "approachKey": "dfs-memoization-clone",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "hash-map",
             "call-stack",
@@ -664,7 +652,6 @@
           "algorithm": "space-optimized rolling array",
           "approachKey": "space-optimized-rolling-array",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -676,7 +663,6 @@
           "algorithm": "recursive memoization",
           "approachKey": "recursive-memoization",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table",
@@ -690,7 +676,6 @@
           "algorithm": "iterative bottom-up tabulation",
           "approachKey": "iterative-tabulation",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table",
@@ -774,7 +759,6 @@
           "algorithm": "Recursive DFS island search",
           "approachKey": "dfs-grid-islands",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "matrix",
             "call-stack"
@@ -786,7 +770,6 @@
           "algorithm": "Iterative BFS island search",
           "approachKey": "bfs-grid-islands",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "matrix",
             "queue"
@@ -865,7 +848,6 @@
           "algorithm": "Kahn's algorithm, BFS topological sort",
           "approachKey": "kahn-bfs-topological",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "queue"
@@ -877,7 +859,6 @@
           "algorithm": "DFS cycle detection, path-visit tracking",
           "approachKey": "dfs-cycle-detection",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "call-stack"
@@ -943,7 +924,6 @@
           "algorithm": "Kahn's algorithm, topological sort BFS",
           "approachKey": "topological-sort-kahn-bfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "queue",
@@ -1006,8 +986,7 @@
           "space": "O(n)",
           "algorithm": "monotonic decreasing stack of indices",
           "approachKey": "monotonic-stack",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1084,7 +1063,6 @@
           "algorithm": "Recursive depth-first search",
           "approachKey": "recursive-dfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -1096,7 +1074,6 @@
           "algorithm": "Iterative breadth-first search",
           "approachKey": "iterative-bfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "queue"
@@ -1173,7 +1150,6 @@
           "algorithm": "HashSet with early exit",
           "approachKey": "hashset-early-exit",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "hash-set"
@@ -1185,7 +1161,6 @@
           "algorithm": "HashSet size comparison",
           "approachKey": "hashset-size-compare",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "hash-set"
@@ -1264,8 +1239,7 @@
           "space": "O(1)",
           "algorithm": "binary search on eating speed, linear feasibility check",
           "approachKey": "binary-search-on-speed",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1331,16 +1305,14 @@
           "space": "O(n)",
           "algorithm": "explicit stack fold with operator dispatch table",
           "approachKey": "stack-eval",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "doubly linked list splicing as implicit stack",
           "approachKey": "linked-list-simulated-stack",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1407,8 +1379,7 @@
           "space": "O(1)",
           "algorithm": "binary search comparing mid to right",
           "approachKey": "binary-search-rotated-min",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1480,16 +1451,14 @@
           "space": "O(1)",
           "algorithm": "single-pass modified binary search, sorted-half detection",
           "approachKey": "rotated-binary-search-single-pass",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "optimal-variant.cs": {
           "time": "O(log n)",
           "space": "O(1)",
           "algorithm": "find pivot via binary search, then binary search correct half",
           "approachKey": "rotated-binary-search-find-pivot-then-search",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1556,7 +1525,6 @@
           "algorithm": "Dynamic programming space optimization",
           "approachKey": "dp-space-optimized",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -1567,7 +1535,6 @@
           "algorithm": "Dynamic programming tabulation",
           "approachKey": "dp-tabulation",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -1632,7 +1599,6 @@
           "algorithm": "Dynamic programming, space-optimized, circular split",
           "approachKey": "dp-space-optimized-circular",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -1693,8 +1659,7 @@
           "space": "O(n)",
           "algorithm": "two stacks, lazy transfer for amortized FIFO",
           "approachKey": "two-stack-queue",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -1790,7 +1755,6 @@
           "algorithm": "Recursive DFS tree inversion",
           "approachKey": "recursive-dfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -1802,7 +1766,6 @@
           "algorithm": "Iterative BFS with queue",
           "approachKey": "iterative-bfs-queue",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "queue"
@@ -1814,7 +1777,6 @@
           "algorithm": "Iterative DFS with explicit stack",
           "approachKey": "iterative-dfs-stack",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "stack"
@@ -1903,7 +1865,6 @@
           "algorithm": "Fixed-size array character balance",
           "approachKey": "array-balance-fixed",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "string"
@@ -1914,8 +1875,7 @@
           "space": "O(n)",
           "algorithm": "hash map frequency count, build then drain",
           "approachKey": "hashmap-frequency-consume",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "optimal-variant.cs": {
           "time": "O(n)",
@@ -1923,7 +1883,6 @@
           "algorithm": "Hash map frequency counting",
           "approachKey": "hash-map-frequency",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "string",
             "hash-map"
@@ -2001,7 +1960,6 @@
           "algorithm": "Two-pointer, converging ends",
           "approachKey": "two-pointer",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "string"
           ]
@@ -2067,7 +2025,6 @@
           "algorithm": "Max heap, maintain K closest",
           "approachKey": "max-heap-k-closest",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "heap"
@@ -2129,7 +2086,6 @@
           "algorithm": "Min-heap of size k",
           "approachKey": "min-heap-kth-largest",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "heap"
           ]
@@ -2189,7 +2145,6 @@
           "algorithm": "In-order traversal with early termination",
           "approachKey": "bst-inorder-early-return",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -2251,7 +2206,6 @@
           "algorithm": "max-heap greedy simulation",
           "approachKey": "max-heap-greedy",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "heap"
@@ -2330,7 +2284,6 @@
           "algorithm": "DFS recursion, pre-order traversal",
           "approachKey": "dfs-recursion",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -2342,7 +2295,6 @@
           "algorithm": "BFS with queue, level-order traversal",
           "approachKey": "bfs-queue",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "queue"
@@ -2412,7 +2364,6 @@
           "algorithm": "Two-pointer cycle detection",
           "approachKey": "two-pointer-cycle-detection",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list"
           ]
@@ -2498,7 +2449,6 @@
           "algorithm": "Space-optimized tabulation, rolling array",
           "approachKey": "space-optimized-lcs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -2509,7 +2459,6 @@
           "algorithm": "Memoization with recursion",
           "approachKey": "memoization-lcs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "dp-table",
             "matrix",
@@ -2522,7 +2471,6 @@
           "algorithm": "Tabulation, bottom-up DP",
           "approachKey": "tabulation-lcs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "dp-table",
             "matrix"
@@ -2590,7 +2538,6 @@
           "algorithm": "Hash set, left-edge counting",
           "approachKey": "hashset-left-edge",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "hash-set"
@@ -2710,7 +2657,6 @@
           "algorithm": "Greedy approach with binary search",
           "approachKey": "greedy-binary-search",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -2721,7 +2667,6 @@
           "algorithm": "Space-optimized bottom-up DP with rolling arrays",
           "approachKey": "pick-not-pick-dp",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -2733,7 +2678,6 @@
           "algorithm": "1D DP with nested iteration over preceding elements",
           "approachKey": "lis-ending-position",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -2745,7 +2689,6 @@
           "algorithm": "Recursive memoization, pick or not pick",
           "approachKey": "pick-not-pick-dp",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table",
@@ -2759,7 +2702,6 @@
           "algorithm": "Bottom-up tabulation, pick or not pick",
           "approachKey": "pick-not-pick-dp",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table",
@@ -2836,7 +2778,6 @@
           "algorithm": "expand around center",
           "approachKey": "expand-around-center",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "string"
           ]
@@ -2906,16 +2847,14 @@
           "space": "O(1)",
           "algorithm": "sliding window, stale monotonic max-frequency",
           "approachKey": "sliding-window-max-freq",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "suboptimal.cs": {
           "time": "O(n * k)",
           "space": "O(1)",
           "algorithm": "sliding window rerun per candidate target character",
           "approachKey": "sliding-window-per-char",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -2991,16 +2930,14 @@
           "space": "O(n)",
           "algorithm": "sliding window, jump left via last-seen index map",
           "approachKey": "sliding-window-jump-index",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "sliding window, HashSet with left shrinking one step at a time",
           "approachKey": "sliding-window-shrink-one",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {},
@@ -3083,7 +3020,6 @@
           "algorithm": "BST traversal, iterative descent",
           "approachKey": "bst-iterative",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree"
           ]
@@ -3094,7 +3030,6 @@
           "algorithm": "BST traversal, recursive descent",
           "approachKey": "bst-recursive",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -3163,7 +3098,6 @@
           "algorithm": "Doubly-linked list with hash map",
           "approachKey": "lru-doubly-linked-list",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "hash-map"
@@ -3227,7 +3161,6 @@
           "algorithm": "DFS island traversal",
           "approachKey": "dfs-island-area",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "matrix",
             "call-stack"
@@ -3287,7 +3220,6 @@
           "algorithm": "two-pointer, shrink shorter",
           "approachKey": "two-pointer-shrink",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -3364,7 +3296,6 @@
           "algorithm": "Kadane's algorithm, space-optimized",
           "approachKey": "kadane-constant-space",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -3375,7 +3306,6 @@
           "algorithm": "Kadane's algorithm with explicit DP table",
           "approachKey": "kadane-explicit-dp",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "dp-table"
@@ -3448,7 +3378,6 @@
           "algorithm": "sort and greedy merge",
           "approachKey": "sort-and-merge",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "interval"
@@ -3529,7 +3458,6 @@
           "algorithm": "Divide and conquer pairwise merge",
           "approachKey": "divide-conquer-merge",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "call-stack"
@@ -3541,7 +3469,6 @@
           "algorithm": "Min-heap priority queue merge",
           "approachKey": "heap-merge-klists",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "heap"
@@ -3611,7 +3538,6 @@
           "algorithm": "Two-pointer merge",
           "approachKey": "two-pointer-merge",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list"
           ]
@@ -3681,16 +3607,14 @@
           "space": "O(1)",
           "algorithm": "sliding window, shrink while valid, running sum",
           "approachKey": "sliding-window-running-sum",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "suboptimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "sliding window, shrink while valid, prefix-sum lookup",
           "approachKey": "sliding-window-prefix-sum",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -3729,8 +3653,7 @@
           "space": "O(n)",
           "algorithm": "auxiliary stack tracking running minimum",
           "approachKey": "min-stack-parallel-stack",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -3782,16 +3705,14 @@
           "space": "O(n)",
           "algorithm": "sliding window, incremental have/required counter",
           "approachKey": "sliding-window-have-required-counter",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "suboptimal.cs": {
           "time": "O(n * k)",
           "space": "O(n)",
           "algorithm": "sliding window, recomputed validity check",
           "approachKey": "sliding-window-recompute-validity",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -3831,7 +3752,6 @@
           "algorithm": "Two-pointer swap in-place",
           "approachKey": "two-pointer-swap",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -3907,16 +3827,14 @@
           "space": "O(1)",
           "algorithm": "sliding window, incremental match counter",
           "approachKey": "sliding-window-incremental-counter",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "suboptimal.cs": {
           "time": "O(n * k)",
           "space": "O(1)",
           "algorithm": "sliding window, full multiset comparison per position",
           "approachKey": "sliding-window-map-compare",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -3956,7 +3874,6 @@
           "algorithm": "Two-pass prefix-suffix products",
           "approachKey": "prefix-suffix-product",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -4022,7 +3939,6 @@
           "algorithm": "two-pointer in-place removal",
           "approachKey": "two-pointer",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -4086,7 +4002,6 @@
           "algorithm": "Two-pointer, fast and slow",
           "approachKey": "two-pointer-linked-list",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list"
           ]
@@ -4150,7 +4065,6 @@
           "algorithm": "slow-fast pointers, reverse recursively, interleave",
           "approachKey": "slow-fast-recursive-reverse-interleave",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "call-stack"
@@ -4233,7 +4147,6 @@
           "algorithm": "iterative pointer reversal",
           "approachKey": "iterative-reverse",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list"
           ]
@@ -4244,7 +4157,6 @@
           "algorithm": "recursive pointer reversal",
           "approachKey": "recursive-reverse",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "linked-list",
             "call-stack"
@@ -4309,7 +4221,6 @@
           "algorithm": "Multi-source BFS with time tracking",
           "approachKey": "multi-source-bfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "matrix",
             "queue",
@@ -4405,7 +4316,6 @@
           "algorithm": "Recursive DFS traversal",
           "approachKey": "recursive-dfs",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -4417,7 +4327,6 @@
           "algorithm": "Iterative DFS with explicit stack",
           "approachKey": "iterative-dfs-stack",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "stack"
@@ -4429,7 +4338,6 @@
           "algorithm": "Iterative BFS level-order traversal",
           "approachKey": "iterative-bfs-level-order",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "queue"
@@ -4521,7 +4429,6 @@
           "algorithm": "Binary search on flattened matrix",
           "approachKey": "flattened-binary-search",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "matrix"
@@ -4533,7 +4440,6 @@
           "algorithm": "Recursive binary search per row",
           "approachKey": "row-wise-binary-search",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "matrix",
@@ -4607,16 +4513,14 @@
           "space": "O(n)",
           "algorithm": "monotonic deque, index-based sliding window max",
           "approachKey": "monotonic-deque-sliding-max",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
           "algorithm": "monotonic deque, index-based sliding window max with explicit l/r pointers",
           "approachKey": "monotonic-deque-sliding-max",
-          "correct": true,
-          "bruteForce": false
+          "correct": true
         }
       },
       "teachSignatures": {}
@@ -4669,7 +4573,6 @@
           "algorithm": "Length-prefix inline encoding",
           "approachKey": "length-prefix-inline",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "string",
             "array"
@@ -4681,7 +4584,6 @@
           "algorithm": "Two-phase encoding with collected metadata",
           "approachKey": "two-phase-encoding",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "string",
             "array"
@@ -4756,7 +4658,6 @@
           "algorithm": "Recursive DFS tree comparison",
           "approachKey": "recursive-dfs-subtree-check",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -4816,7 +4717,6 @@
           "algorithm": "Sorting with two-pointer scan",
           "approachKey": "sort-two-pointer",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -4893,7 +4793,6 @@
           "algorithm": "Frequency buckets, highest-first traversal",
           "approachKey": "bucket-by-frequency",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "hash-map"
@@ -4905,7 +4804,6 @@
           "algorithm": "Min-heap with size-k limit",
           "approachKey": "min-heap-k-limit",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "hash-map",
             "heap"
@@ -4992,7 +4890,6 @@
           "algorithm": "Hash map complement lookup",
           "approachKey": "hashmap-complement",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array",
             "hash-map"
@@ -5058,7 +4955,6 @@
           "algorithm": "Two-pointer shrink while comparing to target",
           "approachKey": "two-pointer-sorted",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "array"
           ]
@@ -5140,7 +5036,6 @@
           "algorithm": "recursive bounds validation with return tuple",
           "approachKey": "recursive-bounds-check",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -5152,7 +5047,6 @@
           "algorithm": "recursive bounds validation with parameters",
           "approachKey": "recursive-bounds-check",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "tree",
             "call-stack"
@@ -5215,7 +5109,6 @@
           "algorithm": "stack-based bracket matching",
           "approachKey": "stack-matching",
           "correct": true,
-          "bruteForce": false,
           "structures": [
             "stack",
             "hash-map"

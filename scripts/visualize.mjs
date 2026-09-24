@@ -350,8 +350,7 @@ let failures = 0, wrote = 0;
 for (const p of targets) {
   group(p.path);
   const cls = state.problems[p.slug]?.classification ?? {};
-  const { chosen, dropped, unclassified } = selectForVisualizer(p.curatedFiles, cls);
-  if (dropped.length) console.log(`  dropped (brute force, real solutions exist): ${dropped.join(', ')}`);
+  const { chosen, unclassified } = selectForVisualizer(p.curatedFiles, cls);
   if (unclassified.length) console.log(`  unclassified, run classify --apply first: ${unclassified.join(', ')}`);
   if (!chosen.length) { console.log('  nothing to visualise'); report('visualize', p.slug, 'failed', unclassified.length ? 'no classification on record' : 'nothing to visualise'); failures++; endGroup(); continue; }
   console.log(`  visualising: ${chosen.join(', ')}`);

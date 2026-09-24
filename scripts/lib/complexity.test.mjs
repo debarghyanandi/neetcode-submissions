@@ -111,10 +111,50 @@ canon('k is left alone, so O(n log k) stays its own rung', 'O(n log k)', 'O(n lo
 canon('and the second input paired with k still resolves', 'O(m log k)', 'O(n log k)');
 
 // The refusal has to survive, or the ladder stops meaning anything.
-canon('a genuinely new shape is not guessed at', 'O(n * 2^n)', null);
+canon('a genuinely new shape is not guessed at', 'O(n^n)', null);
 canon('nor is prose', 'depends on the input', null);
 canon('nor is nothing at all', '', null);
 canon('nor a non-string', undefined, null);
+
+// ---- the rungs added after the ladder kept refusing real answers --------------------
+// Each of these is a complexity a NeetCode solution in this repo actually has. The point of
+// the block is the ORDER: a rung in the wrong place is worse than a missing one, because a
+// missing rung refuses loudly and a misplaced one renames a file wrongly and says nothing.
+
+const below = (label, a, b) => {
+  if (rank(a) < rank(b)) { pass++; console.log(`ok    ${label}`); }
+  else { fail++; console.log(`FAIL  ${label}\n      ${a} (rank ${rank(a)}) should rank better than ${b} (rank ${rank(b)})`); }
+};
+
+// k is bounded by n, so log k is bounded by log n - the same argument that puts O(k) below
+// O(n). merge-k-sorted-linked-lists is the folder that refused twice for want of this.
+below('O(log k) ranks better than O(log n)', 'O(log k)', 'O(log n)');
+below('...and far better than O(k)', 'O(log k)', 'O(k)');
+below('O(alpha(n)) is above O(1)', 'O(1)', 'O(alpha(n))');
+below('...and below O(log n)', 'O(alpha(n))', 'O(log n)');
+below('a union-find pass is just above a plain scan', 'O(n)', 'O(n * alpha(n))');
+below('a sieve beats a sort', 'O(n log log n)', 'O(n log n)');
+below('sorting k things beats sorting n things', 'O(k log k)', 'O(n log k)');
+below('log^2 n is worse than log n', 'O(log n)', 'O(log^2 n)');
+below('...and still better than sqrt n', 'O(log^2 n)', 'O(sqrt n)');
+below('Dijkstra on a grid is worse than one pass over it', 'O(m * n)', 'O(m * n * log(m * n))');
+below('copying every subset out is worse than counting them', 'O(2^n)', 'O(n * 2^n)');
+below('bitmask DP over pairs is worse again', 'O(n * 2^n)', 'O(n^2 * 2^n)');
+below('Catalan grows past 4^n-ish bitmask DP', 'O(n^2 * 2^n)', 'O(4^n / sqrt n)');
+below('...and factorial past Catalan', 'O(4^n / sqrt n)', 'O(n!)');
+below('copying every permutation is the worst rung there is', 'O(n!)', 'O(n * n!)');
+
+// The real merge-k-sorted-linked-lists folder. The divide-and-conquer merge keeps log k
+// stack frames; the heap keeps k nodes. Same time, so space alone decides, and the run that
+// passed only passed because the model happened to spell O(log k) as O(log m).
+names('merge-k-sorted-linked-lists: log k stack beats a k-sized heap',
+  [S('submission-1.cs', 'O(n log k)', 'O(k)', true),
+   S('submission-2.cs', 'O(n log k)', 'O(log k)')],
+  { 'submission-2.cs': 'optimal.cs', 'submission-1.cs': 'suboptimal.cs' });
+
+// Graph problems get written with V and E as often as with n and m.
+canon('V + E is the two-input scan', 'O(V + E)', 'O(n + m)');
+canon('and E log V is the heap-per-edge rung', 'O(E log V)', 'O(m log n)');
 
 // Ranking, not just resolving: an alias must land on exactly its target's rung.
 {
@@ -123,7 +163,7 @@ canon('nor a non-string', undefined, null);
   else { fail++; console.log('FAIL  an alias ranks equal to its target, not one rung off'); }
 }
 {
-  const off = rank('O(n * 2^n)') >= COMPLEXITY.length;
+  const off = rank('O(n^n)') >= COMPLEXITY.length;
   if (off) { pass++; console.log('ok    an unresolvable complexity ranks off the ladder'); }
   else { fail++; console.log('FAIL  an unresolvable complexity ranks off the ladder'); }
 }

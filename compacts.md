@@ -134,7 +134,7 @@ lives here.
 | `fingerprints` / `knownFingerprints` | shape print -> curated file. A resubmission of code you already have is recognised here | apply |
 | `lint` | per file: `{version, codePrint, renames}` or `{version, failed, reason}` | lint |
 | `provenance` | per file: `{selfMarked, evidence, recordedFrom}`. Recorded once from the raw submission's `// my solution` marker and **never re-derived** — the marker does not survive curation | classify |
-| `classification` | per file: time, space, algorithm, approachKey, correct, bruteForce | classify |
+| `classification` | per file: time, space, algorithm, approachKey, correct, structures | classify |
 | `headerSignatures` / `teachSignatures` | a hash of the facts a header/block asserts. Unchanged signature = leave the file alone | classify / teach |
 | `visualizer` | `{files, prints, builtAt}` — the code fingerprints the animation was built from | visualize |
 
@@ -263,13 +263,25 @@ Chronological, so you do not re-litigate settled decisions:
 
 - Teaching block goes **below** the code, header above it.
 - Free-form sections (3–9), no redundant scaffolding.
-- Visualizers only for suboptimal + optimal, never for brute force when a real
-  solution exists; file named `<slug>-visualizer.html`.
+- Visualizers cover every curated, classified solution in the folder; file named
+  `<slug>-visualizer.html`. (The old "never draw a brute force when a real solution
+  exists" rule was reversed — see the 2026-09-25 entries below.)
 - `index.md` is a flat searchable list — **no pattern grouping** (asked for,
   then removed); run links open in a new tab.
 - Comments in the code are his notes to himself. Lint may reword one only when a
   rename made it name a variable that no longer exists. **Deleting one fails the
   whole file.** Nothing a comment says is a reason to skip a file.
-- Cron at 07:07 and 19:09 IST, two independent passes twelve hours apart.
+- ~~Cron at 07:07 and 19:09 IST, two independent passes twelve hours apart.~~
+  **Reversed 2026-09-25: the schedule is gone.** A push drains every pending
+  folder but the one it touched, and that one is one push or one Run click away,
+  so the timer only ever fired into an idle repo and muddied cost measurement.
+  Triggers are now `push` and `workflow_dispatch` only.
 - Three manual inputs, labels are just the names — no explanatory sentences in
   the form.
+- **Reversed 2026-09-25: classify no longer reports `bruteForce`,** and
+  `selectForVisualizer()` no longer drops anything. His words: he does not submit
+  brute force, and if he ever does it is deliberate. Nothing decides on his behalf
+  which of his own solutions is worth drawing. The field is gone from the schema,
+  the prompt and `.agent/state.json`. The teaching block's BRUTE FORCE section
+  stays — that is Claude describing the naive approach *he did not write*, which is
+  revision material, not a judgement on his file.

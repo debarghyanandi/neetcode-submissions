@@ -443,31 +443,24 @@ process.stdout.write(JSON.stringify(out));
 }
 
 /**
- * Which solutions belong in a problem's visualizer.
+ * Which solutions belong in a problem's visualizer: every curated one that has been
+ * classified.
  *
- * Rule, from the repo owner: never visualise a brute force when a real solution
- * exists. Brute force earns its place only when it is all there is.
- *
- * "Brute force" is a recorded classification field, not a guess from the
- * filename or a regex over prose - suboptimal.cs is frequently a genuinely
- * different technique (a prefix-sum scan, a bounded heap) that is worth
- * watching precisely because it is not the naive version.
+ * This used to drop anything classify had flagged as a brute force whenever a real solution
+ * existed in the same folder. That provision is gone, at the repo owner's instruction: a
+ * submission here is a solution the owner chose to keep, and if a naive one is ever kept it
+ * is kept deliberately and is worth watching beside the fast one. Nothing decides on the
+ * owner's behalf which of their own solutions is worth drawing.
  */
 export function selectForVisualizer(curatedFiles, classification) {
-  const known = curatedFiles.filter((f) => classification?.[f]);
+  const chosen = curatedFiles.filter((f) => classification?.[f]);
   const unknown = curatedFiles.filter((f) => !classification?.[f]);
-
-  const brute = known.filter((f) => classification[f].bruteForce);
-  const real = known.filter((f) => !classification[f].bruteForce);
-
-  const chosen = real.length ? real : known;
-  const dropped = real.length ? brute : [];
 
   // Rank best-first so the visualizer's tabs read in the order you revise in.
   const order = (f) => (f.startsWith('optimal.') ? 0 : f.startsWith('optimal-variant') ? 1 : 2);
   chosen.sort((a, b) => order(a) - order(b) || a.localeCompare(b, undefined, { numeric: true }));
 
-  return { chosen, dropped, unclassified: unknown };
+  return { chosen, unclassified: unknown };
 }
 
 /**

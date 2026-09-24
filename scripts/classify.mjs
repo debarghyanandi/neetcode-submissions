@@ -92,10 +92,6 @@ const SCHEMA = {
           space: { type: 'string', enum: CHOICES },
           approachKey: { type: 'string', description: 'short slug for the technique, e.g. "hashmap-complement". Two files sharing a key are the same idea.' },
           correct: { type: 'boolean', description: 'false only if the code is clearly wrong, not merely slow' },
-          bruteForce: {
-            type: 'boolean',
-            description: 'true only for exhaustive enumeration with no insight - nested loops over all pairs, trying every subset, recomputing from scratch. A slower but genuinely different technique (prefix sums, sorting, a heap) is NOT brute force.',
-          },
           note: { type: 'string', description: 'one sentence on the mechanism that makes the complexity what it is' },
           actualComplexity: {
             type: 'string',
@@ -111,7 +107,7 @@ const SCHEMA = {
             description: 'Every structure this code actually builds or walks, from the list. Judge the code, not the problem title.',
           },
         },
-        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'bruteForce', 'note', 'actualComplexity', 'structures'],
+        required: ['file', 'algorithm', 'time', 'space', 'approachKey', 'correct', 'note', 'actualComplexity', 'structures'],
       },
     },
   },
@@ -128,7 +124,6 @@ const INSTRUCTIONS = [
   'Space complexity means auxiliary space, excluding the input and excluding the output where the problem requires building one.',
   'Two files that implement the same idea must share an approachKey. Two files with the same complexity but genuinely different mechanisms must not.',
   'Set correct=false only when the code is actually wrong. Slow is not wrong.',
-  'Set bruteForce=true only for exhaustive enumeration with no idea behind it. Slower-but-different is not brute force.',
   'Ignore all comments when judging - they may be stale or misleading. Judge the code.',
   'Report on every file you are given, exactly once, using the filename exactly as it appears in its banner.',
   '',
@@ -486,18 +481,15 @@ for (const p of targets) {
     }
     rec.provenance = nextProv;
 
-    // The full classification, keyed by final name. Kept out of headerSignature
-    // deliberately: bruteForce changes nothing in the header, and folding it in
-    // would rewrite every header for a field the header never prints.
+    // The full classification, keyed by final name.
     const nextClass = {};
     for (const [origin, finalName] of plan.names) {
       const s = byFile.get(origin);
       nextClass[finalName] = {
         time: s.time, space: s.space, algorithm: s.algorithm,
-        approachKey: s.approachKey, correct: s.correct, bruteForce: !!s.bruteForce,
-        // Kept out of headerSignature on purpose, exactly like bruteForce: the
-        // header never prints it, so folding it in would rewrite every header
-        // in the repo for a field no reader ever sees.
+        approachKey: s.approachKey, correct: s.correct,
+        // Kept out of headerSignature on purpose: the header never prints it, so folding
+        // it in would rewrite every header in the repo for a field no reader ever sees.
         structures: (s.structures ?? []).filter((x) => STRUCTURES.includes(x)),
       };
     }

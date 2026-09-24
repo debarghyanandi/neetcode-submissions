@@ -59,13 +59,10 @@ describe what to run in a YAML file inside `.github/workflows/`. GitHub reads it
 a fresh temporary Linux computer (a "runner"), does what the file says, then throws the
 computer away. It's free for public repos within generous limits.
 
-**A workflow trigger** — the event that starts a run. Ours has three: someone pushes code,
-a scheduled time arrives, or I click a button.
-
-**cron** — the standard way to write a repeating schedule. `37 1 * * *` means
-"minute 37, hour 1, every day of month, every month, every day of week" — i.e. 01:37, daily.
-**Cron in GitHub Actions is always in UTC**, so subtract 5h30m from the IST time you want:
-01:37 UTC is 07:07 in India (UTC+5:30).
+**A workflow trigger** — the event that starts a run. Ours has two: someone pushes code, or
+I click a button. There used to be a third, a twice-daily `cron` schedule; it was removed
+because nothing needed it. A folder held back by a push is picked up by the next push or by
+a manual run, and a timer that fires into an empty repo only costs runner starts.
 
 **Node.js / `.mjs` files** — Node is a program that runs JavaScript outside a browser.
 The pipeline's scripts are JavaScript. The `.mjs` extension just tells Node "this file uses
@@ -97,7 +94,7 @@ Here is the entire pipeline, in order:
 ```
    ┌─────────────────────────────────────────────────────────────┐
    │  TRIGGER                                                    │
-   │  • I push a submission     • 07:07 / 19:09 IST  • I click Run │
+   │  • I push a submission              • I click Run           │
    └───────────────────────────┬─────────────────────────────────┘
                                ▼
    1. DETECT      Which folders have submission-N.cs files that
@@ -107,7 +104,7 @@ Here is the entire pipeline, in order:
                   could hijack the model.               (no AI, instant)
                                ▼
    3. CLASSIFY    Read each solution. What's its time and space
-                  complexity? Is it brute force?        (AI — Haiku) 
+                  complexity, and what is it made of?   (AI — Haiku) 
                                ▼
    4. RANK        Given those complexities, decide the filenames:
                   optimal.cs / optimal-variant.cs /
@@ -244,11 +241,12 @@ node scripts/detect.mjs
 
 Why skip the folder I just pushed to? Because I might not be finished. If I submit three
 times in a row to the same problem, I don't want the pipeline curating attempt one while
-I'm still writing attempt two. The nightly run picks it up later, once it's gone quiet.
+I'm still writing attempt two. My next push picks it up, once it's gone quiet - or I click
+Run and drain everything.
 
-Originally this was going to be two separate scripts — "process the previous problem" on
-push, and "process the leftover" on cron. Two scripts means two sets of bugs. One script
-with one flag does both, and the flag falls out of the trigger naturally.
+Originally this was going to be two separate scripts - "process the previous problem" on
+push, and "process the leftover" on a schedule. Two scripts means two sets of bugs. One
+script with one flag does both, and the flag falls out of the trigger naturally.
 
 ### `scripts/classify.mjs` — the reading step
 
@@ -515,7 +513,7 @@ A single JSON file, committed to the repo, recording per problem:
 | `fingerprints` | Hashes of solutions seen before, for duplicate detection |
 | `provenance` | **Who wrote each file** — see Part 7 |
 | `headerSignatures` | What the header was generated from |
-| `classification` | Complexity, algorithm, and whether it's brute force |
+| `classification` | Complexity, algorithm, approach key, and what the code is made of |
 
 ### Why `headerSignatures` exists — the churn problem
 
@@ -672,10 +670,10 @@ outranks the subscription token and would silently switch to paid billing.
 ### It cannot cost more than expected
 
 - Every AI step is capped with `--limit`, so a runaway backfill can't process 23 folders.
-- The nightly run only processes genuinely unprocessed submissions. On a quiet night it
-  detects nothing, installs nothing, calls no model, and commits nothing.
-- Backfill is manual only. `push` and `schedule` events carry no `inputs` object at all, so
-  the backfill flag is structurally impossible to set from them. Not a guard — an impossibility.
+- A run only processes genuinely unprocessed submissions. With nothing pending it detects
+  nothing, installs nothing, calls no model, and commits nothing.
+- Backfill is manual only. A `push` event carries no `inputs` object at all, so the backfill
+  flag is structurally impossible to set from it. Not a guard — an impossibility.
 
 ---
 
@@ -687,13 +685,13 @@ Nothing. Solve problems on NeetCode. The pipeline handles the rest.
 
 - **When I push a submission:** every *other* pending folder gets processed. The one I just
   touched is left alone in case I'm still working on it.
-- **07:07 and 19:09 IST, daily:** everything left over gets processed, including that folder.
+- **When I push the next one, or click Run:** the folder that was left alone is picked up.
 
-Two runs, twelve hours apart — not a run and a backup. Whatever the morning one leaves, the
-evening one picks up, and vice versa. Both sit outside 23:00–06:00, when I study, so neither
-competes with me for the same subscription usage. The odd minutes are deliberate too: GitHub
-queues scheduled workflows at low priority, and :00, :15, :30 and :45 are where everyone
-else's schedules pile up.
+There is no schedule. There was one — twice a day, 07:07 and 19:09 IST — and it was removed
+because it earned nothing. A push already drains everything except the folder being worked
+on, and that folder is one push or one click away. A timer firing into an idle repo costs a
+runner start and buys nothing, and it made every cost measurement ask "was that me or the
+cron?" Anything genuinely stuck waits for a click, which is the honest signal anyway.
 
 ### Running it by hand
 

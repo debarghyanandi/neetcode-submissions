@@ -513,8 +513,10 @@ Indentation is ignored and stopping early is allowed; inventing a comment,
 rewording one, or splitting a statement across two lines is not. Part 8 explains
 why that check had to be added.
 
-`selectForVisualizer()` drops the brute force when a real solution exists — you
-asked for that explicitly.
+`selectForVisualizer()` returns every curated file that has been classified, best
+first. It used to drop anything classify had flagged as a brute force; that rule is
+gone, at your instruction — a file in this repo is one you chose to keep, and if a
+naive one is kept it is kept deliberately.
 
 `renameInVisualizer()` follows a rename into the badge each panel shows. One pass
 with the old names longest-first, so a straight swap between two names cannot be
@@ -665,15 +667,13 @@ indentation-based: nesting is meaning, and a stray space is a syntax error.
 on:
   push:
     paths: ['**/submission-*']       # only when a submission file changes
-  schedule:
-    - cron: '37 1 * * *'             # 07:07 IST
   workflow_dispatch:                 # the Run workflow button
 ```
 
-`cron` is `minute hour day month weekday`, **in UTC**. IST is UTC+5:30, so
-subtract 5h30m from the time you want. The odd minutes are deliberate: GitHub
-queues scheduled workflows at low priority and `:00`/`:15`/`:30`/`:45` are where
-everyone else's pile up.
+Two triggers, and no timer. There was a `schedule:` block firing twice a day; it
+was removed. A push already drains every pending folder except the one it just
+touched, and that one is picked up by the next push or by the Run button. A timer
+firing into an idle repo costs a runner start and buys nothing.
 
 ```yaml
 concurrency:
