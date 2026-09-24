@@ -10,20 +10,26 @@
  * }
  */
 
-public class Solution {
-    public ListNode MergeKLists(ListNode[] lists) {
+public class Solution
+{
+    public ListNode MergeKLists(ListNode[] lists)
+    {
         //Not solved..
-        if (lists == null || lists.Length == 0) {
+        if (lists == null || lists.Length == 0)
+        {
             return null;
         }
         return Divide(lists, 0, lists.Length - 1);
     }
 
-    private ListNode Divide(ListNode[] lists, int l, int r) {
-        if (l > r) {
+    private ListNode Divide(ListNode[] lists, int l, int r)
+    {
+        if (l > r)
+        {
             return null;
         }
-        if (l == r) {
+        if (l == r)
+        {
             return lists[l];
         }
 
@@ -34,24 +40,32 @@ public class Solution {
         return Conquer(left, right);
     }
 
-    private ListNode Conquer(ListNode l1, ListNode l2) {
+    private ListNode Conquer(ListNode l1, ListNode l2)
+    {
         ListNode dummy = new ListNode(0);
         ListNode curr = dummy;
 
-        while (l1 != null && l2 != null) {
-            if (l1.val <= l2.val) {
+        while (l1 != null && l2 != null)
+        {
+            if (l1.val <= l2.val)
+            {
                 curr.next = l1;
                 l1 = l1.next;
-            } else {
+            }
+            else
+            {
                 curr.next = l2;
                 l2 = l2.next;
             }
             curr = curr.next;
         }
 
-        if (l1 != null) {
+        if (l1 != null)
+        {
             curr.next = l1;
-        } else {
+        }
+        else
+        {
             curr.next = l2;
         }
 
