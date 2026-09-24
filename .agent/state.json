@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-24T18:30:49.828Z",
+  "updatedAt": "2026-09-24T18:54:46.813Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3436,8 +3436,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log m)\",\"algorithm\":\"Divide and conquer pairwise merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-merge-klists\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log m) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log k)\",\"algorithm\":\"Divide and conquer merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-priority-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log k) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3454,8 +3454,8 @@
       "classification": {
         "optimal.cs": {
           "time": "O(n log k)",
-          "space": "O(log m)",
-          "algorithm": "Divide and conquer pairwise merge",
+          "space": "O(log k)",
+          "algorithm": "Divide and conquer merge",
           "approachKey": "divide-conquer-merge",
           "correct": true,
           "structures": [
@@ -3467,7 +3467,7 @@
           "time": "O(n log k)",
           "space": "O(k)",
           "algorithm": "Min-heap priority queue merge",
-          "approachKey": "heap-merge-klists",
+          "approachKey": "heap-priority-queue",
           "correct": true,
           "structures": [
             "linked-list",
@@ -3476,8 +3476,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log m)\",\"algorithm\":\"Divide and conquer pairwise merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-merge-klists\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log m) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log k)\",\"algorithm\":\"Divide and conquer merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-priority-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log k) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -3494,7 +3494,7 @@
           "call-stack",
           "heap"
         ],
-        "builtAt": "2026-09-24T18:30:49.524Z"
+        "builtAt": "2026-09-24T18:54:46.810Z"
       }
     },
     "merge-two-sorted-linked-lists": {
