@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-24T06:40:24.798Z",
+  "updatedAt": "2026-09-24T18:30:49.828Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3481,24 +3481,93 @@
     },
     "merge-k-sorted-linked-lists": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs",
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {},
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "c8db2954a9cca0038979ad65a3b431df3345363e3913f90147a1f3fbbdcce706": "optimal.cs",
+        "c30ad16dbbe5d79b6ef13a78bd913c03fca66520621aa44f341464e6d7c472d3": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "c8db2954a9cca0038979ad65a3b431df3345363e3913f90147a1f3fbbdcce706": "optimal.cs",
+        "c30ad16dbbe5d79b6ef13a78bd913c03fca66520621aa44f341464e6d7c472d3": "suboptimal.cs"
+      },
       "lint": {
-        "submission-1.cs": {
-          "version": 2,
-          "codePrint": "f6fd640c8c4d"
-        },
-        "submission-2.cs": {
+        "optimal.cs": {
           "version": 2,
           "codePrint": "e06392c2ad28"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "f6fd640c8c4d"
         }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log m)\",\"algorithm\":\"Divide and conquer pairwise merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-merge-klists\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log m) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log k)",
+          "space": "O(log m)",
+          "algorithm": "Divide and conquer pairwise merge",
+          "approachKey": "divide-conquer-merge",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "linked-list",
+            "call-stack"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n log k)",
+          "space": "O(k)",
+          "algorithm": "Min-heap priority queue merge",
+          "approachKey": "heap-merge-klists",
+          "correct": true,
+          "bruteForce": false,
+          "structures": [
+            "linked-list",
+            "heap"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log m)\",\"algorithm\":\"Divide and conquer pairwise merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-merge-klists\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log m) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "e06392c2ad28",
+          "suboptimal.cs": "f6fd640c8c4d"
+        },
+        "structures": [
+          "linked-list",
+          "call-stack",
+          "heap"
+        ],
+        "builtAt": "2026-09-24T18:30:49.524Z"
       }
     },
     "merge-two-sorted-linked-lists": {
@@ -4874,6 +4943,17 @@
         ],
         "builtAt": "2026-09-23T06:14:33.386Z"
       }
+    },
+    "trapping-rain-water": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "two-integer-sum": {
       "topic": "Data Structures & Algorithms",
