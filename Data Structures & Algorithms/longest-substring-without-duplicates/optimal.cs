@@ -1,13 +1,12 @@
 // ##########################################################################
-// #  optimal.cs            O(n) time / O(n) space
-// #  sliding window, jump left via last-seen index map
-// #  [sliding-window-jump-index]
-// #  ties with optimal-variant.cs on O(n) time / O(n) space
+// #  optimal.cs            O(n) time / O(1) space
+// #  sliding window, hash-map position jump   [hashmap-lastindex]
+// #  ties with optimal-variant.cs on O(n) time / O(1) space
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  Dictionary of last-seen index lets left pointer jump directly past a
-// #  duplicate in O(1) per step instead of scanning.
+// #  Single pass with O(1) dictionary lookups; left pointer jumps directly
+// #  past previous duplicate occurrence.
 // ##########################################################################
 
 public class Solution
@@ -42,57 +41,80 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding window - jump left past the last duplicate
+ PATTERN : Sliding Window - jump left past last duplicate
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  lastSeenIndex   lastSeenIndex[c] = last index where char c appeared
+  left            start of the current duplicate-free window
+  longest         best window length found so far
+  current         s[right], the character entering the window
+  previousIndex   the stored last index of current, may be stale
+WHY THIS PATTERN
+  The answer is a contiguous run of characters with no repeats, so every
+  candidate is a window [left, right]. Growing right by one can only break the
+  rule in one way: the new character current already sits inside the window.
+  Storing lastSeenIndex lets you fix that in one move - push left to
+  previousIndex + 1 - instead of shrinking one step at a time. Each index is
+  visited once by right and left never goes back.
+BRUTE FORCE
+  Take every start i, walk forward with a HashSet, and stop when a character
+  repeats; keep the longest run. That is O(n^2) time and correct, but it
+  re-scans the same prefix for every start. The dictionary of last positions
+  removes the rescan because a repeat tells you exactly where the next legal
+  window begins.
 INVARIANT
-  After the left update and before longest is recomputed, the window
-  s[left..right] contains no repeated character, and left is the SMALLEST index
-  for which that is true. lastSeenIndex maps each character seen so far to the
-  largest index where it occurred; at the moment of the TryGetValue call,
-  previousIndex is the last occurrence of current strictly before right. If that
-  occurrence sits inside the window, the only way to restore uniqueness is to
-  push left to previousIndex + 1 - one index past the offender, never further.
-WHY LEFT NEVER MOVES BACKWARD
-  The map is never pruned, so it holds indices of characters that have already
-  fallen out of the window. Those entries are stale and Math.Max is the guard
-  that neutralizes them. Trace "abba": right=2 sees b at previousIndex=1, so
-  left = max(0, 2) = 2. right=3 sees a at previousIndex=0, and previousIndex + 1
-  = 1 is BEHIND left. Assigning left = 1 unconditionally would re-admit the
-  window "bba" and return 3; the correct answer is 2. Keeping stale entries is
-  what buys the single forward pass - there is no inner loop deleting characters
-  one at a time.
-WHY THE ANSWER IS MAXIMAL
-  Each iteration measures right - left + 1, which by the invariant is the
-  longest duplicate-free substring ENDING at index right. The optimal substring
-  ends at some index r, and on iteration right = r the window is exactly that
-  substring, so longest picks it up. Taking the max over every right therefore
-  cannot miss it. The empty string needs no special case: the loop body never
-  runs and longest stays 0.
-ORDER OF THE TWO WRITES
-  lastSeenIndex[current] = right must come AFTER the left update. Write it first
-  and TryGetValue returns right itself, giving left = right + 1 and a window
-  length of right - (right + 1) + 1 = 0 on every repeat. The length formula is
-  inclusive on both ends, which is why it is +1 and not right - left.
+  At the top of each iteration, s[left..right-1] contains no repeated character,
+  and lastSeenIndex holds the newest index of every character seen so far in the
+  whole string. After the Math.Max, left is past any earlier copy of current, so
+  s[left..right] is also repeat-free, and its length right - left + 1 is
+  compared against longest. Since every valid window ends at some right, and at
+  that right the code holds the longest valid window ending there, the maximum
+  over all right is the answer.
+WHY THE STALE ENTRY IS SAFE
+  Entries are never deleted when left moves forward, so lastSeenIndex can name a
+  position before left. The Math.Max clamp is what makes that harmless: a
+  previousIndex below left produces a smaller candidate and is ignored. The
+  alternative design - removing characters from a HashSet as left advances -
+  needs a loop per step and gives no speed win.
+WATCH OUT
+  The O(1) space figure rests on the key type being char, so the dictionary
+  holds at most one entry per distinct character in s; it is not constant in n
+  in a literal sense, and stale entries are never pruned, so the dictionary only
+  grows. An empty string returns 0 correctly because the loop body never runs
+  and longest stays 0. If you ever change left = Math.Max(left, previousIndex +
+  1) to a bare left = previousIndex + 1, the window silently moves backward on a
+  stale hit and longest becomes too large - that single Math.Max is the whole
+  correctness of the jump.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The input is ASCII only. Can you drop the Dictionary?
+     Use an int[128] array of last-seen indexes filled with -1, and index it by
+     current. Same logic, no hashing and no allocation per distinct char, but it
+     hard-codes the alphabet.
+  2. Return the substring itself, not just its length.
+     Record bestLeft = left whenever right - left + 1 beats longest, then return
+     s.Substring(bestLeft, longest) at the end. One extra int, no change to the
+     loop.
+  3. Allow at most k repeats of any character instead of zero.
+     Switch lastSeenIndex to a count map and shrink left in a while loop while
+     the count of current exceeds k. The single jump no longer works, because
+     the fix point depends on counts, not on one previous index.
+  4. The input arrives as a stream you cannot index.
+     The algorithm still works if you keep a running position counter instead of
+     right, since it only ever reads the current character and past positions;
+     you just cannot recover the substring text without buffering from left
+     onward.
 TRIGGER
-  Reach for the jump variant when the window predicate is broken by exactly one
-  identifiable position and you can compute the new left in O(1) from a stored
-  index. Uniqueness qualifies: the duplicate's previous index tells you
-  precisely where the window must restart. The plain HashSet version - while the
-  set contains current, remove s[left] and advance left - returns the same
-  answer but walks left forward one character at a time instead of jumping.
-FOLLOW-UPS AN INTERVIEWER WILL ASK
-  1. Return the substring, not the length: record bestLeft = left whenever
-  longest grows, then s.Substring(bestLeft, longest).
-  2. Input restricted to ASCII: replace the Dictionary with int[128] filled with
-  -1, indexed by current; same logic, fixed-size table, no hashing.
-  3. At most k distinct characters instead of zero repeats: the jump trick
-  breaks, because one stored index no longer tells you how far left must travel.
-  You fall back to a count map plus a while loop that shrinks from the left
-  until the distinct count is back to k.
+  Longest or shortest contiguous run under a rule that a single arriving element
+  can break, where the last position of that element tells you exactly where the
+  next legal window starts.
+C# NOTE
+  TryGetValue with the out int previousIndex pattern does one hash lookup and
+  gives both the presence check and the value; ContainsKey followed by an
+  indexer read would hash current twice.
 COMPLEXITY
   Time  : O(n)
-  Space : O(n)
+  Space : O(1)
 ================================================================================
 */

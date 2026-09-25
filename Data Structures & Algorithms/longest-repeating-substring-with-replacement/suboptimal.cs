@@ -1,14 +1,12 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n * k) time / O(1) space
-// #  sliding window rerun per candidate target character
-// #  [sliding-window-per-char]
+// #  Sliding window per distinct character   [sliding-window-per-char]
 // #  ranks below optimal.cs (O(n) time / O(1) space)
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  reruns a full linear sliding-window pass once per distinct character
-// #  in the alphabet (bounded constant), multiplying the single-pass cost
-// #  by alphabet size, not by k
+// #  Runs a separate sliding window for each of k distinct characters in
+// #  the input; k ≤ 26 for lowercase English.
 // ##########################################################################
 
 public class Solution
@@ -49,84 +47,79 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Per-target sliding window - fix the kept char first
+ PATTERN : Sliding Window - one pass per candidate kept character
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  longest             best valid window length seen across all passes
+  distinctCharacters  the set of characters that actually occur in s
+  targetChar          the character this pass keeps; everything else in the window is replaced
+  left                left edge of the current window
+  targetCount         how many characters equal to targetChar sit inside [left, right]
 WHY THIS PATTERN
-  The hard part of this problem is that the window's validity depends on a
-  quantity you do not know in advance: which character survives. Fixing
-  targetChar up front deletes that unknown. Once targetChar is fixed, the cost
-  of a window is exactly (right - left + 1) - targetCount, the count of
-  characters that are not targetChar and therefore must be paid for out of k.
-  That cost is monotone in the usual two-pointer sense: moving right rightward
-  never decreases it, moving left rightward never increases it. Monotone cost is
-  precisely the precondition for a shrinking window, so the outer foreach buys
-  you a textbook inner loop.
-CORRECTNESS
-  Two claims carry the proof.
-  1. For a fixed targetChar, the inner loop reports the longest valid window
-  ending at each right, so its maximum over all right is the best answer for
-  that target. Standard, because left is never moved back.
-  2. Enumerating only distinctCharacters is enough to cover the true optimum.
-  Take any optimal answer window W. The cheapest final character for W is one
-  that already occurs most often inside W, so it occurs in W, so it occurs in s,
-  so it is in distinctCharacters and gets its own pass. Even the degenerate case
-  where W is short enough to be fully rewritten (length <= k) is covered: for
-  any target, the deficit is at most the window length, which is at most k, so
-  every pass finds that window valid anyway.
-  Empty s gives an empty HashSet, the foreach body never runs, and longest stays
-  0.
+  The problem asks for the longest substring that becomes one repeated character
+  after at most k replacements. A substring is valid exactly when (length -
+  count of the most common character) <= k, so the cost only depends on which
+  character you decide to keep. Fixing that decision as targetChar turns the
+  question into a plain "longest window with at most k bad characters" problem,
+  which a two-pointer window solves: grow right, and while (right - left + 1) -
+  targetCount > k, push left forward. Trying every character in
+  distinctCharacters guarantees the true best keeper is tried.
+BETTER APPROACH
+  The better solution is a single pass with one frequency table instead of one
+  pass per character. Keep count[c] for the whole window and maxCount = the
+  largest frequency seen so far; the window is valid when (right - left + 1) -
+  maxCount <= k, and left only ever moves forward. That answers in one sweep of
+  s, while this file sweeps s once for every entry in distinctCharacters, so the
+  work multiplies by the alphabet size actually present in the string.
 INVARIANT
-  At the point where longest is updated, three things hold: targetCount equals
-  the number of occurrences of targetChar in s[left..right]; (right - left + 1)
-  - targetCount <= k, i.e. the window is affordable; and left is the smallest
-  index for which that is true given this right. The measurement sits after the
-  while loop precisely so it only ever sees a restored, legal window.
-  Note that longest is declared outside the foreach and is deliberately never
-  reset - the answer is the max over all target choices, so each pass only ever
-  raises the shared high-water mark. left and targetCount, by contrast, are
-  re-declared per pass; carrying either across targets would be a bug.
-WHY WHILE AND NOT IF
-  It is tempting to reason that each new right adds at most one unit of deficit,
-  so one shrink step suffices, and to write if instead of while. That is false
-  here. Dropping a character equal to targetChar decrements both the window size
-  and targetCount, leaving the deficit unchanged - the shrink made no progress.
-  Trace s = "aab", k = 0, targetChar = 'a'. At right = 2 the window is "aab"
-  with deficit 1. Shrinking past s[0] = 'a' gives "ab", still deficit 1.
-  Shrinking past s[1] = 'a' gives "b", still deficit 1. Only the third step,
-  which drops the non-target 'b', restores deficit 0. The while ran three times
-  for one right. It always terminates because an empty window has deficit 0 <=
-  k.
-WHY THIS LOSES
-  The optimal version is one pass, not one pass per distinct character. Keep an
-  int[26] frequency table for the window plus maxFreq, and call the window valid
-  when (right - left + 1) - maxFreq <= k. The subtlety interviewers probe is
-  that maxFreq is never decremented when left advances, which leaves it stale
-  and possibly too large. That is safe because longest can only increase when
-  maxFreq genuinely increases; a stale maxFreq makes the window look valid, but
-  such a window is never longer than the one that legitimately set maxFreq, so
-  it cannot produce a wrong answer, only a wrong intermediate. That gives O(n)
-  time with a fixed-size table.
-  This file instead re-scans the whole string once per distinct character. For a
-  lowercase-only input that is a bounded constant factor, but on an
-  unconstrained alphabet a string of n pairwise-distinct characters triggers n
-  full passes, i.e. quadratic behaviour on an input the single-pass version
-  handles linearly.
+  After the while loop on each iteration of right, the window [left, right]
+  satisfies (right - left + 1) - targetCount <= k, and targetCount is the exact
+  number of targetChar in that window. So every value fed into Math.Max is a
+  genuinely achievable length for this targetChar. left never moves backward
+  inside a pass, so no valid window is skipped: for each right, left sits at the
+  smallest index that keeps the window valid. The optimal answer keeps some
+  character, and that character is in distinctCharacters, so one pass finds it.
+EXACT COUNT INSTEAD OF STALE MAX
+  The famous one-pass version never decreases maxCount even when characters
+  leave the window, which makes people doubt it. This file avoids that argument
+  entirely: targetCount is decremented in the shrink loop, so it is always the
+  true count for the current window and every measured length is really valid.
+  The price for that clarity is the outer loop over distinctCharacters.
 WATCH OUT
-  The two k's are different quantities. In the code, k is the replacement budget
-  from the problem statement. In the complexity line above, k is the number of
-  distinct characters, that is distinctCharacters.Count - the number of outer
-  passes. They are unrelated; do not conflate them when reciting the analysis.
-  Inside the shrink step, the targetCount-- test must read s[left] before left++
-  executes. Swapping those two lines silently decrements based on the wrong
-  character and corrupts the invariant.
-  The shrink loop can push left to right + 1, making the window size 0. That is
-  fine and is in fact the natural terminating state for a target that does not
-  appear near right; Math.Max just ignores it. It relies on k >= 0, which the
-  problem guarantees.
-  HashSet iteration order is unspecified and irrelevant here - longest is
-  order-independent because it is a max over independent passes.
+  There is no guard on k. If k is negative, the while condition stays true even
+  after left passes right, and left keeps incrementing until s[left] throws
+  IndexOutOfRangeException. For empty s, distinctCharacters is empty, the
+  foreach body never runs, and 0 is returned, which is correct. Note also that
+  the k in the complexity line is the number of distinct characters, not the k
+  parameter of this method - two different things with the same name.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Rewrite it as a single pass.
+     Replace distinctCharacters and targetChar with an int[26] count array plus
+     a maxCount that only grows; shrink with (right - left + 1) - maxCount > k.
+     One sweep of s, and maxCount can be stale without breaking the answer
+     because a stale value can never report a window longer than one already
+     seen.
+  2. Return the actual substring, not just its length.
+     Store bestLeft alongside longest whenever Math.Max would increase it, then
+     return s.Substring(bestLeft, longest). Same cost, one extra int.
+  3. The input arrives as a stream you can only read once.
+     This version fails, because it re-reads s once per candidate character.
+     Only the single-pass frequency version works, since it touches each
+     character exactly once.
+  4. What if the alphabet is full Unicode instead of a small letter set?
+     The outer loop then runs once per distinct code point, which can approach
+     the length of s. Switch to the single-pass form with a Dictionary<char,int>
+     for counts.
+TRIGGER
+  A "longest substring after at most k edits/replacements" question, where
+  validity depends on which single character you decide to keep.
+C# NOTE
+  new HashSet<char>(s) works because string implements IEnumerable<char>, but it
+  allocates a set and gives no defined iteration order; if the input is known to
+  be uppercase letters, a bool[26] seen array filled by one scan does the same
+  job with no hashing.
 COMPLEXITY
   Time  : O(n * k)
   Space : O(1)

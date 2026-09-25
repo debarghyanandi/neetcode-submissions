@@ -651,186 +651,208 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Longest Substring Without Duplicates',
-  note: 'the left edge only ever moves forward — that is the whole reason one pass is enough',
-  inputs: [{id:'s', label:'s', value:'abcbadac', width:260}],
+  note: 'a window that never contains the same character twice',
+  inputs: [{id:'s', label:'s', value:'abcabcbb', width:260}],
   parse(raw){
-    const s = String(raw.s).replace(/\s+/g, '');
-    if (!s.length) return {ok:false, msg:'Enter a non-empty string.'};
-    if (s.length > 14) return {ok:false, msg:'Keep it to 14 characters or fewer so the whole run stays watchable.'};
-    return {ok:true, value:{s}, normalized:{s}};
+    const t = String(raw.s).replace(/[\s,"']/g, '');
+    if (!t.length) return {ok:false, msg:'Enter a non-empty string.'};
+    if (/[^\x21-\x7e]/.test(t)) return {ok:false, msg:'Use printable ASCII characters only.'};
+    const v = t.slice(0, 14);
+    return {ok:true, value:{s: v}, normalized:{s: v}};
   },
-  shuffle(){ return {s: randWord(7 + Math.floor(Math.random()*2), 'abcd')}; },
+  shuffle(){ return {s: randWord(7 + Math.floor(Math.random()*3), 'abcd')}; },
   solutions: [
   {
-    label: 'Jump the left edge with a last-seen map',
-    badge: 'O(n) time · O(n) space · sliding window · optimal.cs',
-    blurb: 'If <code>s[right]</code> was last seen at index <b>p</b>, then <em>no</em> duplicate-free window ending at <code>right</code> can start at or before <b>p</b>. Remembering each character’s last index lets <code>left</code> jump straight to <code>p + 1</code> in one assignment, so neither pointer ever walks backward.',
+    label: 'Sliding window with last-seen index map',
+    badge: 'O(n) time · O(1) space · sliding window · hash-map position jump · optimal.cs',
+    blurb: 'A window is valid exactly when no character repeats inside it. When <code>right</code> lands on a character last seen at <b>p</b>, every window containing both copies is dead, so <code>left</code> jumps straight to <code>p + 1</code> — one assignment instead of shrinking step by step. <code>Math.Max</code> guards the case where <b>p</b> is already behind <code>left</code> and therefore stale.',
     legend: [
-      {cls:'hot', text:'right — character entering the window'},
-      {cls:'win', text:'rest of the current window'},
-      {cls:'good', text:'longest duplicate-free window found'},
+      {cls:'hot', text:'right — the character just read'},
+      {cls:'in-window', text:'inside the current window'},
+      {cls:'done', text:'left behind by left'},
+      {cls:'good', text:'longest window found so far'},
       {cls:'dim', text:'not yet reached'}
     ],
     code: [
-      'var lastSeenIndex = new Dictionary<char, int>();  // char -> LAST index',
-      '',
-      'int left = 0;',
-      'int longest = 0;',
-      '',
-      'for (int right = 0; right < s.Length; right++)',
+      'public class Solution',
       '{',
-      '    char current = s[right];',
-      '',
-      '    if (lastSeenIndex.TryGetValue(current, out int previousIndex))',
+      '    public int LengthOfLongestSubstring(string s)',
       '    {',
-      '        // the previous sighting may be OUTSIDE the window,',
-      '        // in which case it is stale and left must NOT move backward',
-      '        left = Math.Max(left, previousIndex + 1);',
+      '        // character -> the LAST index at which it was seen',
+      '        var lastSeenIndex = new Dictionary<char, int>();',
+      '',
+      '        int left = 0;',
+      '        int longest = 0;',
+      '',
+      '        for (int right = 0; right < s.Length; right++)',
+      '        {',
+      '            char current = s[right];',
+      '',
+      '            if (lastSeenIndex.TryGetValue(current, out int previousIndex))',
+      '            {',
+      '                // Math.Max is doing real work here, not defensive coding:',
+      '                // the previous sighting may be OUTSIDE the current window,',
+      '                // in which case it is stale and left must NOT move backward.',
+      '                left = Math.Max(left, previousIndex + 1);',
+      '            }',
+      '',
+      '            lastSeenIndex[current] = right;',
+      '            longest = Math.Max(longest, right - left + 1);',
+      '        }',
+      '',
+      '        return longest;',
       '    }',
-      '',
-      '    lastSeenIndex[current] = right;',
-      '    longest = Math.Max(longest, right - left + 1);',
-      '}',
-      '',
-      'return longest;'
+      '}'
     ],
     simulate(input){
-      const chars = input.s.split('');
-      const steps = [];
-      const last = {};
-      let left = 0, best = 0, bl = -1, br = -1;
-      const panels = (right, mode) => {
-        const tiles = pTiles('s — current window', chars, (k) => {
-          if (mode === 'final') return {cls: (best > 0 && k >= bl && k <= br) ? 'good' : 'dim'};
-          if (right < 0) return {cls:'dim'};
-          if (k === right) return {cls:'hot'};
-          if (k >= left && k < right) return {cls:'in-window'};
-          if (k > right) return {cls:'dim'};
-          return {};
-        });
-        const cur = right >= 0 ? chars[right] : null;
+      const s = input.s, ch = s.split(''), steps = [];
+      const map = {};
+      let left = 0, longest = 0, bL = 0, bR = -1;
+      const cls = (i, right) => {
+        if (right < 0 || i > right) return 'dim';
+        if (i === right) return 'hot';
+        if (i >= left) return 'in-window';
+        return 'done';
+      };
+      const panels = (right, hotKey, prev) => {
+        const extra = {ptrs: [
+          {name:'left', idx: left},
+          {name:'right', idx: right < 0 ? 0 : right, cls:'accent'}
+        ]};
+        if (right >= 0) extra.bracket = {from: left, to: right};
+        const best = bR >= bL ? s.slice(bL, bR + 1).split('').map(c => ({text: c, cls:'good'})) : [{text:''}];
         return [
-          tiles,
-          pChips('lastSeenIndex (char → last index)', [{items: mapChips(last, cur), empty:'nothing recorded yet'}]),
-          pPills('', [
-            {k:'left', v: left, cls:'accent'},
-            {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
-            {k:'window length', v: right >= 0 ? (right - left + 1) : '–'},
-            {k:'longest', v: best, cls:'good'}
+          pTiles('s', ch, (i) => ({cls: cls(i, right)}), extra),
+          pChips('lastSeenIndex', [{left:'char -> last index', items: mapChips(map, hotKey), empty:'empty'}]),
+          pPills('state', [
+            {k:'left', v: left},
+            {k:'right', v: right < 0 ? '–' : right},
+            {k:'current', v: right < 0 ? '–' : ch[right], cls:'hot'},
+            {k:'previousIndex', v: prev === undefined || prev === null ? '–' : prev},
+            {k:'window length', v: right < 0 ? 0 : right - left + 1},
+            {k:'longest', v: longest, cls:'good'}
           ]),
-          pSlots('longest so far', best > 0 ? chars.slice(bl, br + 1).map(c => ({text: c, cls:'good'})) : [{text:'–', cls:'dim'}])
+          pSlots('longest window so far', best)
         ];
       };
-      steps.push({lines:[1,3,4], msg:'<code>left</code> is the first index of the current duplicate-free window and <code>longest</code> the best length seen. The dictionary keeps, per character, only its <b>most recent</b> index — that single number is all the window needs, because excluding an earlier copy just means starting after it.', panels: panels(-1)});
-      for (let r = 0; r < chars.length; r++){
-        const c = chars[r];
-        const seen = Object.prototype.hasOwnProperty.call(last, c);
-        const p = seen ? last[c] : -1;
-        const before = left;
-        let kind = 'new';
-        if (seen && p + 1 > left){ left = p + 1; kind = 'jump'; }
-        else if (seen){ kind = 'stale'; }
-        last[c] = r;
-        const len = r - left + 1;
-        const better = len > best;
-        if (better){ best = len; bl = left; br = r; }
-        const tail = ' The window is now <code>' + chars.slice(left, r + 1).join('') + '</code>, length <b>' + len + '</b>' + (better ? ' — a new longest.' : '; longest stays ' + best + '.');
-        let msg;
-        if (kind === 'new'){
-          msg = 'Index ' + r + ' holds <code>' + c + '</code>, which the dictionary has never recorded, so it cannot clash with anything inside the window and <code>left</code> stays at ' + left + '. Record <code>lastSeenIndex[' + c + '] = ' + r + '</code>.' + tail;
-        } else if (kind === 'jump'){
-          msg = '<code>' + c + '</code> was last seen at index ' + p + ', which is <b>inside</b> the window (index ' + p + ' ≥ left ' + before + '), so that copy is a genuine duplicate. Every duplicate-free window ending at ' + r + ' must start at ' + (p + 1) + ' or later, so <code>left</code> jumps from ' + before + ' straight to ' + (p + 1) + ' — one assignment instead of shrinking step by step.' + tail;
-        } else {
-          msg = '<code>' + c + '</code> was last seen at index ' + p + ', but the window already starts at ' + before + ', so that sighting is <b>stale</b> — it was evicted by an earlier jump and is not in the window at all. <code>previousIndex + 1 = ' + (p + 1) + '</code> lies behind <code>left</code>, and <code>Math.Max</code> keeps <code>left</code> at ' + before + '; moving it there would drag the window <em>backward</em> and re-admit characters already discarded.' + tail;
+      steps.push({lines:[6,8,9], msg:'The map remembers, for each character, the <b>last</b> index it appeared at — that is all the history needed to place <code>left</code> in one jump. The window <code>[left, right]</code> starts empty and <code>longest</code> at <b>0</b>.', panels: panels(-1, null, null)});
+      for (let r = 0; r < ch.length; r++){
+        const c = ch[r];
+        const has = Object.prototype.hasOwnProperty.call(map, c);
+        const prev = has ? map[c] : null;
+        steps.push({lines:[13,15], msg:'<code>right</code> = <b>' + r + '</b>, <code>current</code> = <b>' + c + '</b>. ' + (has ? 'The map says it was last seen at index <b>' + prev + '</b>, so the <code>if</code> body runs.' : 'It is not in the map at all, so it cannot duplicate anything and the window may simply grow.'), panels: panels(r, has ? c : null, prev)});
+        if (has){
+          const inside = prev + 1 > left;
+          const before = left;
+          if (inside) left = prev + 1;
+          steps.push({lines:[20], msg: inside
+            ? 'Index <b>' + prev + '</b> is inside the window, so every window holding both copies of <b>' + c + '</b> is invalid. Skip them all at once: <code>left</code> jumps from <b>' + before + '</b> to <b>' + left + '</b>, just past the old sighting.'
+            : 'Index <b>' + prev + '</b> is already <em>behind</em> <code>left</code> = <b>' + left + '</b>, so that sighting is stale — the duplicate is not in the window. <code>Math.Max</code> keeps <code>left</code> where it is; moving it back would re-admit characters already discarded.',
+            panels: panels(r, c, prev)});
         }
-        steps.push({lines: kind === 'new' ? [8,10,17,18] : [10,14,17,18], msg: msg, panels: panels(r)});
+        map[c] = r;
+        const len = r - left + 1;
+        const better = len > longest;
+        if (better){ longest = len; bL = left; bR = r; }
+        steps.push({lines:[23,24], msg:'Record <code>lastSeenIndex[' + c + '] = ' + r + '</code>, overwriting any older sighting — only the newest one can ever constrain <code>left</code>. The window <code>[' + left + ', ' + r + ']</code> is duplicate-free with length <b>' + len + '</b>' + (better ? ', a new <code>longest</code>.' : '; <code>longest</code> stays ' + longest + '.'), panels: panels(r, c, prev)});
       }
-      steps.push({lines:[21], msg:'<code>right</code> advanced ' + chars.length + ' times and <code>left</code> only ever moved forward, so each index is visited a bounded number of times — one pass. The answer is <b>' + best + '</b>' + (best > 0 ? ' (<code>' + chars.slice(bl, br + 1).join('') + '</code>, indices ' + bl + '…' + br + ')' : '') + '.', panels: panels(-1, 'final')});
+      steps.push({lines:[27], msg:'One pass, and <code>right</code> and <code>left</code> each moved forward only — never back. Answer <b>' + longest + '</b>' + (bR >= bL ? ' from the window “' + s.slice(bL, bR + 1) + '” at indices ' + bL + '..' + bR + '.' : '.'), panels: panels(-1, null, null)});
       return steps;
     }
   },
   {
-    label: 'Shrink the window one character at a time',
-    badge: 'O(n) time · O(n) space · sliding window · optimal-variant.cs',
-    blurb: 'A <code>HashSet</code> stores exactly the characters between <code>left</code> and <code>right</code>, so a hit means the duplicate is definitely inside the window. The set does not say <em>where</em>, so <code>left</code> drops characters one by one until it is gone — still linear, since each character is added once and removed at most once.',
+    label: 'Sliding window with a set, shrinking one step at a time',
+    badge: 'O(n) time · O(1) space · sliding window · hash-set incremental shrink · optimal-variant.cs',
+    blurb: 'Instead of remembering positions, keep the exact <b>set</b> of characters in the window. If the new character is already present, drop characters off the left one by one until it is gone — the loop is guaranteed to stop, because the duplicate itself is inside the window. <code>left</code> still only ever advances, so the whole run is O(n).',
     legend: [
-      {cls:'hot', text:'right — character entering the window'},
-      {cls:'win', text:'characters currently in the set'},
-      {cls:'good', text:'longest duplicate-free window found'},
+      {cls:'hot', text:'right / the character being removed'},
+      {cls:'in-window', text:'inside the window, mirrored by the set'},
+      {cls:'done', text:'evicted from the window'},
+      {cls:'good', text:'longest window found so far'},
       {cls:'dim', text:'not yet reached'}
     ],
     code: [
-      'var windowChars = new HashSet<char>();  // exactly what is in the window',
-      '',
-      'int left = 0;',
-      'int longest = 0;',
-      '',
-      'for (int right = 0; right < s.Length; right++)',
+      'public class Solution',
       '{',
-      '    // shrink from the left ONE STEP AT A TIME until the duplicate is gone',
-      '    while (windowChars.Contains(s[right]))',
+      '    public int LengthOfLongestSubstring(string s)',
       '    {',
-      '        windowChars.Remove(s[left]);',
-      '        left++;',
+      '        // The exact set of characters currently inside the window.',
+      '        var windowChars = new HashSet<char>();',
+      '',
+      '        int left = 0;',
+      '        int longest = 0;',
+      '',
+      '        for (int right = 0; right < s.Length; right++)',
+      '        {',
+      '            // Shrink from the left ONE STEP AT A TIME until the duplicate is gone.',
+      '            while (windowChars.Contains(s[right]))',
+      '            {',
+      '                windowChars.Remove(s[left]);',
+      '                left++;',
+      '            }',
+      '',
+      '            windowChars.Add(s[right]);',
+      '            longest = Math.Max(longest, right - left + 1);',
+      '        }',
+      '',
+      '        return longest;',
       '    }',
-      '',
-      '    windowChars.Add(s[right]);',
-      '    longest = Math.Max(longest, right - left + 1);',
-      '}',
-      '',
-      'return longest;'
+      '}'
     ],
     simulate(input){
-      const chars = input.s.split('');
-      const steps = [];
-      let left = 0, best = 0, bl = -1, br = -1;
-      const panels = (right, setEnd, mode) => {
-        const tiles = pTiles('s — current window', chars, (k) => {
-          if (mode === 'final') return {cls: (best > 0 && k >= bl && k <= br) ? 'good' : 'dim'};
-          if (right < 0) return {cls:'dim'};
-          if (k === right) return {cls:'hot'};
-          if (k >= left && k < setEnd) return {cls:'in-window'};
-          if (k > right) return {cls:'dim'};
-          return {};
-        });
-        const inside = right < 0 ? [] : chars.slice(left, setEnd);
+      const s = input.s, ch = s.split(''), steps = [];
+      const win = [];
+      let left = 0, longest = 0, bL = 0, bR = -1;
+      const cls = (i, right, dropping) => {
+        if (i === dropping) return 'hot';
+        if (right < 0 || i > right) return 'dim';
+        if (i === right) return 'hot';
+        if (i >= left) return 'in-window';
+        return 'done';
+      };
+      const panels = (right, hotKey, dropping) => {
+        const extra = {ptrs: [
+          {name:'left', idx: left},
+          {name:'right', idx: right < 0 ? 0 : right, cls:'accent'}
+        ]};
+        if (right >= 0) extra.bracket = {from: left, to: right};
+        const best = bR >= bL ? s.slice(bL, bR + 1).split('').map(c => ({text: c, cls:'good'})) : [{text:''}];
         return [
-          tiles,
-          pChips('windowChars', [{items: inside.map(c => ({text: c, cls: (right >= 0 && setEnd > right && c === chars[right]) ? 'head' : ''})), empty:'empty'}]),
-          pPills('', [
-            {k:'left', v: left, cls:'accent'},
-            {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
-            {k:'set size', v: right >= 0 ? (setEnd - left) : 0},
-            {k:'longest', v: best, cls:'good'}
+          pTiles('s', ch, (i) => ({cls: cls(i, right, dropping)}), extra),
+          pChips('windowChars', [{left:'set', items: win.map(c => ({text: c, cls: c === hotKey ? 'hot' : 'in-window'})), empty:'empty'}]),
+          pPills('state', [
+            {k:'left', v: left},
+            {k:'right', v: right < 0 ? '–' : right},
+            {k:'s[right]', v: right < 0 ? '–' : ch[right], cls:'hot'},
+            {k:'set size', v: win.length},
+            {k:'window length', v: right < 0 ? 0 : right - left + 1},
+            {k:'longest', v: longest, cls:'good'}
           ]),
-          pSlots('longest so far', best > 0 ? chars.slice(bl, br + 1).map(c => ({text: c, cls:'good'})) : [{text:'–', cls:'dim'}])
+          pSlots('longest window so far', best)
         ];
       };
-      steps.push({lines:[1,3,4], msg:'No indices are stored this time — the set holds the <b>membership</b> of the window <code>[left, right]</code> and nothing else. That is enough to detect a duplicate, which is all the loop condition needs to ask.', panels: panels(-1, 0)});
-      for (let r = 0; r < chars.length; r++){
-        const c = chars[r];
-        let removals = 0;
-        while (chars.slice(left, r).indexOf(c) !== -1){
-          const gone = chars[left];
+      steps.push({lines:[6,8,9], msg:'This version stores no indices — <code>windowChars</code> is simply a mirror of the characters sitting in <code>[left, right]</code>. Membership in that set <em>is</em> the validity test.', panels: panels(-1, null, null)});
+      for (let r = 0; r < ch.length; r++){
+        const c = ch[r];
+        const dup = win.indexOf(c) !== -1;
+        steps.push({lines:[14], msg:'<code>right</code> = <b>' + r + '</b>, <code>s[right]</code> = <b>' + c + '</b>. ' + (dup ? 'The set already contains it, so the window is about to become invalid — enter the shrink loop.' : 'The set does not contain it, so the <code>while</code> condition is false immediately and nothing is evicted.'), panels: panels(r, dup ? c : null, null)});
+        while (win.indexOf(c) !== -1){
+          const gone = ch[left];
+          steps.push({lines:[16,17], msg:'Remove <b>' + gone + '</b> at index <b>' + left + '</b> from the set and advance <code>left</code> to <b>' + (left + 1) + '</b>. Only one character leaves per iteration — unlike the map version there is no shortcut, but the loop must end, because the earlier <b>' + c + '</b> is itself inside the window and will eventually be the one removed.', panels: panels(r, gone, left)});
+          win.splice(win.indexOf(gone), 1);
           left++;
-          removals++;
-          steps.push({lines:[9,11,12], msg:'The set still contains <code>' + c + '</code>, so the duplicate is inside the window — but the set cannot say <em>where</em>, so the only safe move is to give up the leftmost character <code>' + gone + '</code> (index ' + (left - 1) + ') and test again. <code>left</code> is now ' + left + '.', panels: panels(r, r)});
         }
+        win.push(c);
         const len = r - left + 1;
-        const better = len > best;
-        if (better){ best = len; bl = left; br = r; }
-        const tail = ' Window <code>' + chars.slice(left, r + 1).join('') + '</code> has length <b>' + len + '</b>' + (better ? ' — a new longest.' : '; longest stays ' + best + '.');
-        if (removals === 0){
-          steps.push({lines:[9,15,16], msg:'<code>' + c + '</code> at index ' + r + ' is not in the set, so the <code>while</code> body never runs and <code>left</code> holds at ' + left + '. Add it and the window simply grows by one.' + tail, panels: panels(r, r + 1)});
-        } else {
-          steps.push({lines:[15,16], msg:'After ' + removals + ' removal' + (removals === 1 ? '' : 's') + ' the set no longer contains <code>' + c + '</code>, so index ' + r + ' can join it. Those removals are not wasted work overall: <code>left</code> never rewinds, so across the whole string each character is removed at most once — ' + chars.length + ' adds and at most ' + chars.length + ' removes.' + tail, panels: panels(r, r + 1)});
-        }
+        const better = len > longest;
+        if (better){ longest = len; bL = left; bR = r; }
+        steps.push({lines:[20,21], msg:'The set no longer holds <b>' + c + '</b>, so add it: the window <code>[' + left + ', ' + r + ']</code> is duplicate-free with length <b>' + len + '</b>' + (better ? ', a new <code>longest</code>.' : '; <code>longest</code> stays ' + longest + '.') + ' The set and the window always agree, which is why the test is a single lookup.', panels: panels(r, c, null)});
       }
-      steps.push({lines:[19], msg:'Same answer as the map version, <b>' + best + '</b>' + (best > 0 ? ' (<code>' + chars.slice(bl, br + 1).join('') + '</code>)' : '') + '. The difference is only in how <code>left</code> travels: here it creeps one index per removal, whereas the last-seen map teleports it — both amortise to O(n), and this one trades the index bookkeeping for a simpler invariant.', panels: panels(-1, 0, 'final')});
+      steps.push({lines:[24], msg:'Done. <code>left</code> only ever moved forward, so across the whole run at most n removals happen — the inner <code>while</code> does not make this quadratic. Answer <b>' + longest + '</b>' + (bR >= bL ? ' from “' + s.slice(bL, bR + 1) + '”.' : '.'), panels: panels(-1, null, null)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

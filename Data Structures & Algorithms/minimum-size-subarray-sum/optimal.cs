@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  sliding window, shrink while valid, running sum
-// #  [sliding-window-running-sum]
+// #  sliding window, shrink while valid   [two-pointer-shrink]
 // #  ranks above suboptimal.cs (O(n) time / O(n) space)
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  maintains the window sum incrementally via add/subtract as pointers
-// #  move, so left advances at most n times total with only scalar state
+// #  Each element is added and removed from the sum at most once as the two
+// #  pointers traverse the array.
 // ##########################################################################
 
 public class Solution
@@ -38,83 +37,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Variable-size sliding window - shrink while valid
+ PATTERN : Sliding Window - shrink while the sum still qualifies
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  sum      sum of nums[left..right]
+  left     left edge of the current window
+  result   shortest qualifying length seen so far
 WHY THIS PATTERN
-  You want the shortest contiguous run whose sum reaches target. Because every
-  entry of nums is a positive integer, the window sum is monotone in the window:
-  extending right can only raise sum, shrinking from left can only lower it.
-  That monotonicity is exactly what lets one pointer chase the other in a single
-  pass instead of re-examining pairs. The moment a problem gives you
-  "contiguous" plus "positive values" plus "minimize/maximize length under a
-  threshold", this two-pointer window is the intended shape.
+  The problem asks for the shortest contiguous block whose sum reaches target,
+  and all values are positive. Positive values mean sum grows when right
+  advances and shrinks when left advances, so the window length and the sum move
+  in opposite directions in a predictable way. That lets left move forward only,
+  never back: once sum drops below target we know nothing shorter ending at this
+  right can work. So each index enters and leaves the window once.
 BRUTE FORCE
-  Fix each start index, walk right accumulating until the running sum reaches
-  target, record the length, restart from the next start. That is n^2 work, and
-  its wasted effort is concrete: after finishing the window starting at left, it
-  throws away the sum and recomputes almost the same numbers for left+1. The
-  window keeps that sum alive across starts - sum - nums[left] is the answer for
-  the next start, already computed.
+  Fix every start i, walk j forward adding nums[j], and stop at the first j
+  where the running sum reaches target; keep the smallest j - i + 1. That is
+  O(n^2) time and correct, but it recomputes sums that overlap heavily between
+  consecutive starts. The window version reuses the same sum and never re-adds
+  an element.
 INVARIANT
-  At the top of every iteration of the outer for loop, sum equals the total of
-  nums[left..right-1] and that segment is strictly below target (the inner while
-  ran until it failed, or never qualified). result holds the smallest qualifying
-  length seen among all windows ending at index right-1 or earlier. sum = sum +
-  nums[right] restores sum to nums[left..right], and the while loop
-  re-establishes the "below target" half of the invariant before the next
-  iteration.
-WHY SHRINKING IS SAFE
-  The concern is that advancing left discards a window you might still need. It
-  cannot: any window you drop, say nums[left..r] for some r > right, is strictly
-  longer than nums[left..right], which you already measured and folded into
-  result. So the discarded candidates are all worse than one you have already
-  counted. Conversely you never miss a candidate you have not seen, because for
-  each right the loop measures the shortest qualifying window ending at right -
-  it stops the instant sum falls below target, and the comment in the code names
-  the reason: once nums[left..right] is too small, every shorter window ending
-  at right is too small too. Every right gets its best answer, and the true
-  optimum ends at some right, so result is that optimum.
-WHY WHILE, NOT IF
-  One admitted element can enable several shrinks, so an if here is a real bug,
-  not a stylistic choice. Take target = 4, nums = [1, 4, 4]. At right = 1, sum =
-  5 >= 4: record length 2, evict nums[0] = 1, sum = 4, which still qualifies -
-  record length 1. An if would have stopped after recording 2 and never found
-  the single-element answer.
+  At the top of each right iteration, sum equals the total of nums[left..right]
+  exactly, because every add is paired with a matching subtract before left
+  moves. The inner while exits only when sum < target, so after it runs, left is
+  the largest start for which the window ending at right still reaches target.
+  Since result took Math.Min at every qualifying length, and every right is
+  visited, the minimum over all valid windows is recorded.
+MEASURE BEFORE EVICT
+  Inside the while, result is updated first, then nums[left] is subtracted and
+  left incremented. The order matters: right - left + 1 must be read while the
+  window is still the qualifying one. If left were advanced before the Math.Min,
+  the recorded length would be one too small and the answer could be wrong by
+  one.
 WATCH OUT
-  Order inside the while body: result is updated before the eviction, because
-  [left, right] is the window that currently qualifies - swap those two lines
-  and you measure a window you have already broken. The eviction and the
-  increment must also stay paired in that order, sum - nums[left] then left++;
-  incrementing first subtracts the wrong element.
-
-  result = int.MaxValue is a sentinel, not a length. The final ternary turns
-  "the while loop never fired once" into 0, the required answer when no subarray
-  reaches target. If you ever add arithmetic on result inside the loop, remember
-  it may still be int.MaxValue.
-
-  sum is an int accumulating a prefix of nums; it stays bounded by the largest
-  qualifying window plus one element, but if the inputs are large enough that a
-  single window can exceed int range, widen sum to long.
+  This relies on all nums being positive; with a zero or a negative value the
+  inner loop's assumption breaks, because shrinking no longer reliably lowers
+  sum and left could need to move back. sum is an int, so a long array of large
+  values can overflow before target is ever compared - a long sum removes that
+  risk. The final ternary on int.MaxValue is what distinguishes "no window
+  qualifies" from a real answer, so returning result directly would return
+  int.MaxValue on an array whose total is below target.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if nums can contain negative numbers?
+     Sliding window fails. Use prefix sums with a sorted structure or monotonic
+     deque over prefix values to find the shortest range with sum >= target,
+     which costs O(n log n) time and O(n) space.
+  2. What if you must return the subarray itself, not its length?
+     Store bestLeft = left alongside each Math.Min improvement, then slice with
+     a range or Array.Copy at the end. Same time, plus O(k) for the copy.
+  3. The array is huge and arrives as a stream you cannot index twice.
+     The logic already works in one pass, but you must buffer the current window
+     to evict from its left end - a Queue<int> of the in-window values replaces
+     nums[left], and memory becomes proportional to the longest window, not the
+     whole stream.
+  4. Longest subarray with sum <= target instead?
+     Same two pointers, but shrink while sum > target and record right - left +
+     1 after the while, not inside it, because the valid window is the one that
+     exists once the violation is gone.
 TRIGGER
-  Reach for this when the array is all non-negative, the target is a lower bound
-  on a sum, and you want the extreme length. If negatives are allowed, the
-  monotonicity dies - adding an element can shrink sum, so a failed window may
-  still succeed after extending, and shrinking from the left can raise sum. That
-  variant (shortest subarray with sum at least k) needs prefix sums plus a
-  monotonic deque instead; do not try to patch this loop into handling it.
-FOLLOW-UP
-  "Your loop is nested - isn't that quadratic?" No: left is initialized once
-  outside the for loop and only ever increases, so across the whole run the
-  inner while body executes at most nums.Length times total. Each index is
-  admitted by right exactly once and evicted by left at most once. Amortized,
-  not per-iteration - that is the argument to say out loud.
-
-  A second likely follow-up: return the window itself, not just its length.
-  Store the pair (left, right) alongside each improvement to result rather than
-  trying to reconstruct it afterward - the pointers have moved past it by the
-  time the loop ends.
+  Shortest or longest contiguous run under a threshold on non-negative values,
+  where extending one end always pushes the metric one way.
+C# NOTE
+  int.MaxValue as the "not found" sentinel works only because Math.Min never
+  returns something larger, so the single ternary at the end is enough; int?
+  result with null checks would cost a comparison per update for no gain here.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

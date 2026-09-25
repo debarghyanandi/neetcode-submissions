@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  one-pass running minimum, greedy   [running-min-greedy]
+// #  Single pass with minimum tracking   [single-pass-min-tracking]
 // #  the only solution in this folder
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  single forward scan tracks minimum price so far and updates max profit
-// #  against it in O(1) per step
+// #  One pass through prices tracks minimum and computes maximum profit in
+// #  constant auxiliary space.
 // ##########################################################################
 
 public class Solution
@@ -38,93 +38,76 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Running minimum - fix the sell day, greedy buy day
+ PATTERN : Single-pass Greedy - running minimum, best sell today
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
-CORE IDEA
-  Do not search over pairs. Fix the sell day sellIndex and ask: what is the best
-  buy day for it? Answer: the cheapest day strictly before it. So the answer is
-  max over every sellIndex of (prices[sellIndex] - min of
-  prices[0..sellIndex-1]). The loop is exhaustive over sell days and greedy over
-  buy days, which is why one pass suffices - buyIndex carries the whole prefix
-  minimum in a single int.
+VARIABLES
+  buyIndex    index of the cheapest price seen in prices[0..sellIndex-1]
+  maxProfit   best prices[s] - prices[b] found so far, with b < s
+  sellIndex   the day we try to sell on this iteration
+WHY THIS PATTERN
+  The problem asks for one buy and one later sell, so the buy day must come
+  strictly before the sell day. That ordering means you never need to look
+  ahead: for each sellIndex, the best partner is simply the smallest price to
+  its left, which is exactly what buyIndex points at. So one left-to-right pass
+  that keeps the running minimum and the running best difference answers the
+  whole question.
+BRUTE FORCE
+  The first thing most people write is two nested loops: for every buy day b,
+  try every sell day s > b and keep the largest prices[s] - prices[b]. That is
+  correct but O(n^2) time. It loses because it recomputes the minimum of the
+  prefix over and over, when one variable (buyIndex) can carry it forward for
+  free.
 INVARIANT
-  At the top of every iteration: (1) buyIndex is the index of a minimum of
-  prices[0..sellIndex-1], and (2) buyIndex < sellIndex.
-
-  (1) holds on entry because prices[0..0] has minimum at index 0. It is
-  preserved by the two branches: if prices[sellIndex] > prices[buyIndex] the new
-  element cannot lower the minimum, so keeping buyIndex is right; otherwise
-  prices[sellIndex] <= prices[buyIndex] and sellIndex is a valid new minimum
-  index.
-
-  (2) holds because buyIndex is only ever assigned the current sellIndex, and
-  sellIndex increments before the next read. That is the entire proof that this
-  never sells before it buys - there is no separate ordering check anywhere in
-  the code.
-WHY THE IF AND ELSE ARE EXHAUSTIVE
-  The two branches are not 'profit case' and 'unrelated case'. They are the
-  complement of each other on the same comparison: either prices[sellIndex]
-  beats the running minimum (record profit) or it does not, and 'does not' is
-  exactly the definition of a new minimum. That is why nothing is lost by
-  skipping the Math.Max in the else branch - the difference there is <= 0, and
-  maxProfit already starts at 0 and only grows.
-
-  Equivalent branchless form, useful if an interviewer asks you to restructure
-  it: always take maxProfit = Max(maxProfit, prices[sellIndex] -
-  prices[buyIndex]), then separately update buyIndex when prices[sellIndex] <
-  prices[buyIndex].
+  At the top of each iteration, buyIndex is the index of the minimum value in
+  prices[0 .. sellIndex-1], and maxProfit is the best profit over all pairs that
+  end at or before sellIndex-1. The if branch extends the second half of the
+  invariant by testing the one new pair (buyIndex, sellIndex), which is the best
+  pair ending at sellIndex. The else branch restores the first half, since
+  prices[sellIndex] is now no larger than any earlier price. maxProfit starts at
+  0, so if prices only falls, the "do not trade" answer survives.
+THE TWO BRANCHES ARE EXCLUSIVE AND THAT IS FINE
+  When prices[sellIndex] is a new minimum, no profit can be recorded on that day
+  anyway, because selling at a price at or below the current minimum gives at
+  most 0, and maxProfit is already at least 0. So skipping the Math.Max call in
+  the else branch loses nothing. The code is equivalent to the common version
+  that updates the minimum first and then computes the profit unconditionally.
 WATCH OUT
-  1. The Math.Max is load-bearing. Assigning maxProfit = prices[sellIndex] -
-  prices[buyIndex] instead breaks on [1,10,2,3]: the pair (1,10) gives 9, then
-  (2,3) would overwrite it with 1. The running minimum can move forward while
-  the best profit stays behind it.
-
-  2. The buy day moves on a new all-time low, not on a local dip. The comparison
-  is against prices[buyIndex], never against prices[sellIndex - 1]. Comparing to
-  the previous day is the classic wrong rewrite: on [5,1,4,3,9] it would abandon
-  the buy at 1 when the price falls from 4 to 3 and miss the 8.
-
-  3. The else branch also fires on ties (prices[sellIndex] == prices[buyIndex]).
-  Harmless - it swaps one minimum index for a later one of equal value, and
-  later is never worse since it leaves more room to the right.
-EDGE CASES
-  Empty or single-element prices: sellIndex starts at 1, so the loop body never
-  runs and 0 is returned. buyIndex = 0 is never dereferenced, so prices.Length
-  == 0 does not throw - there is no explicit guard because the loop bound is the
-  guard.
-
-  Strictly decreasing prices: the if never fires, buyIndex walks to the last
-  index, and maxProfit stays at its initial 0. That initial 0 is a real answer,
-  not a sentinel - it encodes the always-legal choice of never trading, which is
-  why the code never needs to handle 'no profitable pair' separately.
+  The comment says "A new all-time low", but the else branch also runs when
+  prices[sellIndex] equals prices[buyIndex], which is not lower. That is
+  harmless here (the minimum value is unchanged, only the index moves), but the
+  comment and the code do not match, and if you later change the code to also
+  report the buy date you will get the latest tied cheap day, not the earliest.
+  Also note the return type is int: on a very wide price range the subtraction
+  prices[sellIndex] - prices[buyIndex] is an int subtraction and could overflow
+  if prices ever held values near int.MaxValue and int.MinValue. Empty and
+  single-element arrays are safe, since the loop starts at sellIndex = 1 and
+  prices is never indexed outside it.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if you may buy and sell as many times as you like?
+     Sum every positive step: add prices[i] - prices[i-1] whenever it is
+     positive. Still one pass, and buyIndex is no longer needed at all.
+  2. What if you must report the actual buy and sell days, not just the profit?
+     Keep two extra ints, bestBuy and bestSell, and write them inside the if
+     branch at the same moment maxProfit is updated. Cost is two more variables
+     and nothing else.
+  3. What if prices arrive as a stream and you cannot hold the array?
+     The algorithm already works online. Replace buyIndex with an int minPrice,
+     update it from each incoming value, and maxProfit is correct after every
+     element.
+  4. What if at most k transactions are allowed?
+     The greedy no longer works; you need dynamic programming over (day,
+     transactions used, holding or not), which costs O(n*k) time and O(k) space
+     with rolling rows.
 TRIGGER
-  Reach for this shape when the answer is a max or min over pairs (i, j) with i
-  < j, and the best partner for a fixed j depends only on a single aggregate of
-  the prefix before j. Collapse the prefix into one variable and sweep j once.
-  Here the aggregate is a minimum; the same skeleton with a running maximum
-  solves 'largest drop', and with a running max of prices[i] - somethingElse it
-  extends to the multi-transaction variants.
-FOLLOW-UPS TO EXPECT
-  Which days? buyIndex holds an index rather than a value, so this is one step
-  from returning the trade: record buyIndex and sellIndex alongside maxProfit at
-  the moment the Math.Max actually increases it. Note the live buyIndex at
-  return time is the running minimum, not necessarily the winning buy day - it
-  can have moved past it.
-
-  Relation to Kadane: build d[i] = prices[i] - prices[i-1]; the profit of buying
-  at i and selling at j is the sum of d over (i, j], so this problem is maximum
-  subarray on d, and the running minimum here is the mirror of Kadane's 'reset
-  when the prefix goes negative'.
-
-  Unlimited transactions: sum every positive d[i] - the greedy changes
-  completely because the buy day is no longer unique. At most k transactions or
-  a cooldown day: the single-variable trick dies and you need DP over (day,
-  transactions used, holding).
-
-  Streaming input: nothing in the loop reads backwards, so this works verbatim
-  on prices arriving one at a time with only buyIndex and maxProfit retained.
+  You need the best pair (i, j) with i < j under a difference or ratio, and the
+  best left-hand partner for every j is just one running extreme.
+C# NOTE
+  Storing the value instead of the index (int minPrice) would cut each iteration
+  from two array reads to one, since prices[buyIndex] is re-read every time; the
+  index is only worth keeping if you later need the day number. Math.Max here
+  resolves to the int overload, so there is no boxing or comparer call.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

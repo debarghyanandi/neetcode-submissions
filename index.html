@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">57</span> / 69</b></div>
-      <div class="bar"><span id="bar" style="width:82.6%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">64</span> / 69</b></div>
+      <div class="bar"><span id="bar" style="width:92.8%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -322,78 +322,78 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Sliding Window">
   <div class="group-head">
     <h2>Sliding Window</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>7</b> at standard</span>
+    <span class="group-count"><b class="gdone">7</b> / <b>7</b> at standard</span>
   </div>
   <p class="group-note">A range that grows on the right and shrinks on the left, never restarting.</p>
   <ul>
-    <li data-hay="buy and sell crypto buy-and-sell-crypto sliding window running minimum - fix the sell day, greedy buy day  needs rebuilt" data-status="rebuild">
+    <li data-hay="buy and sell crypto buy-and-sell-crypto sliding window single-pass greedy - running minimum, best sell today array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/buy-and-sell-crypto" target="_blank" rel="noopener noreferrer">Buy And Sell Crypto</a>
-        <span class="why">Running minimum - fix the sell day, greedy buy day</span>
+        <span class="why">Single-pass Greedy - running minimum, best sell today</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/buy-and-sell-crypto/buy-and-sell-crypto-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest repeating substring with replacement longest-repeating-substring-with-replacement sliding window sliding window with a never-decreasing max frequency  needs rebuilt" data-status="rebuild">
+    <li data-hay="longest repeating substring with replacement longest-repeating-substring-with-replacement sliding window sliding window - never-shrinking max frequency count string hash-map hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-repeating-substring-with-replacement" target="_blank" rel="noopener noreferrer">Longest Repeating Substring With Replacement</a>
-        <span class="why">Sliding window with a never-decreasing max frequency</span>
+        <span class="why">Sliding Window - never-shrinking max frequency count</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/longest-repeating-substring-with-replacement-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest substring without duplicates longest-substring-without-duplicates sliding window sliding window - jump left past the last duplicate  needs rebuilt" data-status="rebuild">
+    <li data-hay="longest substring without duplicates longest-substring-without-duplicates sliding window sliding window - jump left past last duplicate string hash-map hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-substring-without-duplicates" target="_blank" rel="noopener noreferrer">Longest Substring Without Duplicates</a>
-        <span class="why">Sliding window - jump left past the last duplicate</span>
+        <span class="why">Sliding Window - jump left past last duplicate</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/longest-substring-without-duplicates-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/longest-substring-without-duplicates-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="minimum size subarray sum minimum-size-subarray-sum sliding window variable-size sliding window - shrink while valid  needs rebuilt" data-status="rebuild">
+    <li data-hay="minimum size subarray sum minimum-size-subarray-sum sliding window sliding window - shrink while the sum still qualifies array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/minimum-size-subarray-sum" target="_blank" rel="noopener noreferrer">Minimum Size Subarray Sum</a>
-        <span class="why">Variable-size sliding window - shrink while valid</span>
+        <span class="why">Sliding Window - shrink while the sum still qualifies</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-size-subarray-sum/minimum-size-subarray-sum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="minimum window with characters minimum-window-with-characters sliding window sliding window - expand right, shrink left while valid  needs rebuilt" data-status="rebuild">
+    <li data-hay="minimum window with characters minimum-window-with-characters sliding window sliding window - expand right, shrink left on a match counter string hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/minimum-window-with-characters" target="_blank" rel="noopener noreferrer">Minimum Window With Characters</a>
-        <span class="why">Sliding Window - expand right, shrink left while valid</span>
+        <span class="why">Sliding Window - expand right, shrink left on a match counter</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/minimum-window-with-characters-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n + m) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/minimum-window-with-characters/minimum-window-with-characters-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="permutation string permutation-string sliding window fixed-size sliding window + matched-letter counter  needs rebuilt" data-status="rebuild">
+    <li data-hay="permutation string permutation-string sliding window fixed-size sliding window - compare two char multisets hash-map string array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/permutation-string" target="_blank" rel="noopener noreferrer">Permutation String</a>
-        <span class="why">Fixed-size sliding window + matched-letter counter</span>
+        <span class="why">Fixed-Size Sliding Window - compare two char multisets</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/permutation-string/permutation-string-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n + m) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/permutation-string/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/permutation-string/permutation-string-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="sliding window maximum sliding-window-maximum sliding window monotonic deque of indices - front is the window max  needs rebuilt" data-status="rebuild">
+    <li data-hay="sliding window maximum sliding-window-maximum sliding window monotonic deque - sliding window maximum in one pass array deque current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/sliding-window-maximum" target="_blank" rel="noopener noreferrer">Sliding Window Maximum</a>
-        <span class="why">Monotonic deque of indices - front is the window max</span>
+        <span class="why">Monotonic Deque - sliding window maximum in one pass</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/sliding-window-maximum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
+        <span class="cx" title="time / space">O(n) &middot; O(k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/sliding-window-maximum/sliding-window-maximum-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>

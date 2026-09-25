@@ -651,229 +651,254 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Longest Repeating Substring With Replacement',
-  note: 'a window is fixable when everything except its most common character fits inside k',
+  note: 'a window is legal when everything except the most common character fits in k edits',
   inputs: [
     {id:'s', label:'s', value:'AABABBA', width:200},
-    {id:'k', label:'k', value:'1', width:80}
+    {id:'k', label:'k', value:'1', width:70}
   ],
   parse(raw){
-    const s = String(raw.s).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 14);
-    if (!s.length) return {ok:false, msg:'Enter a non-empty string of letters.'};
+    const s = String(raw.s).trim().toUpperCase();
+    if (!s.length) return {ok:false, msg:'Enter a non-empty string.'};
+    if (!/^[A-Z]+$/.test(s)) return {ok:false, msg:'Use letters A-Z only.'};
+    if (s.length > 14) return {ok:false, msg:'Keep the string to 14 characters so the run stays watchable.'};
     const k = Number(String(raw.k).trim());
-    if (!Number.isFinite(k) || k < 0 || Math.floor(k) !== k) return {ok:false, msg:'k must be a whole number ≥ 0.'};
-    if (k > s.length) return {ok:false, msg:'k larger than the string replaces everything — pick a smaller k.'};
-    return {ok:true, value:{s: s, k: k}, normalized:{s: s, k: String(k)}};
+    if (!Number.isInteger(k) || k < 0) return {ok:false, msg:'k must be a non-negative integer.'};
+    if (k > s.length) return {ok:false, msg:'k cannot exceed the length of s.'};
+    return {ok:true, value:{s, k}, normalized:{s: s, k: String(k)}};
   },
   shuffle(){
-    return {s: randWord(7 + Math.floor(Math.random()*2), 'AAB'), k: String(1 + Math.floor(Math.random()*2))};
+    const s = randWord(7 + Math.floor(Math.random()*3), 'AABBC');
+    return {s: s, k: String(1 + Math.floor(Math.random()*2))};
   },
   solutions: [
   {
-    label: 'One window, never-decreasing maxFrequency',
+    label: 'One window, frequency of the most common character',
     badge: 'O(n) time · O(1) space · sliding window · optimal.cs',
-    blurb: 'A window of size <b>w</b> is fixable when <code>w − (count of its most common character) ≤ k</code>. The trick: <code>maxFrequency</code> is never recounted when a character leaves. A stale value can only stop the window from growing, never let it grow too far — and <code>longest</code> already banked the size that earned it.',
+    blurb: 'A window is legal when <code>size − (count of its most common character) ≤ k</code>, because every other character can be overwritten. The answer only ever grows, so <code>maxFrequency</code> is never decreased: a stale, too-high value can only make the window look legal, and a window that big was already recorded earlier.',
     legend: [
       {cls:'hot', text:'right — character just added'},
-      {cls:'in-window', text:'inside the window [left..right]'},
-      {cls:'good', text:'best window found'},
-      {cls:'dim', text:'not yet reached / dropped'}
+      {cls:'in-window', text:'inside [left, right]'},
+      {cls:'dim', text:'already shrunk past'},
+      {cls:'ghost', text:'not yet reached'}
     ],
     code: [
-      'var windowCounts = new Dictionary<char, int>();',
-      '',
-      'int left = 0;',
-      'int longest = 0;',
-      '',
-      '// Highest single-character frequency seen in ANY window',
-      '// so far. Deliberately never decreased.',
-      'int maxFrequency = 0;',
-      '',
-      'for (int right = 0; right < s.Length; right++)',
+      'public class Solution',
       '{',
-      '    windowCounts.TryGetValue(s[right], out int count);',
-      '    windowCounts[s[right]] = count + 1;',
-      '',
-      '    maxFrequency = Math.Max(maxFrequency, count + 1);',
-      '',
-      '    // Replacements needed = window size - most common char.',
-      '    while ((right - left + 1) - maxFrequency > k)',
+      '    public int CharacterReplacement(string s, int k)',
       '    {',
-      '        windowCounts[s[left]]--;',
-      '        left++;',
+      '        var windowCounts = new Dictionary<char, int>();',
+      '',
+      '        int left = 0;',
+      '        int longest = 0;',
+      '',
+      '        // Highest single-character frequency seen in ANY window so far.',
+      '        // Deliberately never decreased - see the note below.',
+      '        int maxFrequency = 0;',
+      '',
+      '        for (int right = 0; right < s.Length; right++)',
+      '        {',
+      '            windowCounts.TryGetValue(s[right], out int count);',
+      '            windowCounts[s[right]] = count + 1;',
+      '',
+      '            maxFrequency = Math.Max(maxFrequency, count + 1);',
+      '',
+      '            // Replacements needed = window size - the most common character.',
+      '            while ((right - left + 1) - maxFrequency > k)',
+      '            {',
+      '                windowCounts[s[left]]--;',
+      '                left++;',
+      '            }',
+      '',
+      '            longest = Math.Max(longest, right - left + 1);',
+      '        }',
+      '',
+      '        return longest;',
       '    }',
-      '',
-      '    longest = Math.Max(longest, right - left + 1);',
-      '}',
-      '',
-      'return longest;'
+      '}'
     ],
     simulate(input){
-      const s = input.s, k = input.k, steps = [];
-      const chars = s.split('');
-      const counts = {};
-      let left = 0, longest = 0, maxF = 0, bestL = -1, bestR = -1;
-      const panels = (right, hot, best) => [
-        pTiles('s', chars, (i) => ({
-          cls: best ? ((i >= bestL && i <= bestR) ? 'good' : 'dim')
-             : i === right ? 'hot'
-             : (i >= left && i < right) ? 'in-window'
-             : (i > right) ? 'dim' : ''
-        })),
-        pChips('windowCounts', [{items: mapChips(counts, hot || null)}]),
-        pPills('', [
-          {k:'left', v: left},
-          {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
-          {k:'window', v: right >= 0 ? (right - left + 1) : 0},
-          {k:'maxFrequency', v: maxF, cls:'accent'},
-          {k:'need', v: right >= 0 ? (right - left + 1) - maxF : 0},
-          {k:'k', v: k},
-          {k:'longest', v: longest, cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1,3,4,8], msg:'The window <code>[left..right]</code> can be turned into one repeated character when <code>size − (count of its most common character) ≤ k</code> — you keep the winner and pay a replacement for every other slot. <code>maxFrequency</code> holds the best single-character count seen in <b>any</b> window so far, and the loop below never lowers it.',
-        panels: panels(-1, null, false)});
-      for (let r = 0; r < chars.length; r++){
-        const ch = chars[r];
-        const prev = counts[ch] || 0;
-        counts[ch] = prev + 1;
-        const grew = prev + 1 > maxF;
-        if (grew) maxF = prev + 1;
-        const size = r - left + 1;
+      const s = input.s, k = input.k, n = s.length, chars = s.split('');
+      const steps = [], counts = {};
+      let left = 0, longest = 0, maxF = 0;
+      const panels = (right, hotKey) => {
+        const extra = {ptrs: [{name:'left', idx: left}, {name:'right', idx: right < 0 ? 0 : right, cls:'accent'}]};
+        if (right >= 0) extra.bracket = {from: left, to: right};
+        const size = right < 0 ? 0 : right - left + 1;
+        return [
+          pTiles('s', chars, (i) => ({cls:
+            right < 0 ? 'ghost'
+            : i > right ? 'ghost'
+            : i === right ? 'hot'
+            : i >= left ? 'in-window'
+            : 'dim'}), extra),
+          pChips('windowCounts   char -> count inside [left, right]', [
+            {left:'map', items: mapChips(counts, hotKey), empty:'empty'}
+          ]),
+          pPills('state', [
+            {k:'left', v: left},
+            {k:'right', v: right < 0 ? '-' : right},
+            {k:'window size', v: size},
+            {k:'maxFrequency', v: maxF, cls:'hot'},
+            {k:'replacements needed', v: right < 0 ? '-' : size - maxF},
+            {k:'k', v: k},
+            {k:'longest', v: longest, cls:'good'}
+          ]),
+          pNote('why maxFrequency is never lowered', 'It is the best count ever seen, which may belong to an older window. If it is stale and too high, the while test under-counts the replacements and the window is allowed to stay wide - but it can only be as wide as the window that produced that count, which <code>longest</code> already recorded. So the answer is never inflated, and dropping the bookkeeping keeps the pass O(n).')
+        ];
+      };
+      steps.push({lines:[5,7,8,12], msg:'One window, one map. <code>windowCounts</code> holds how many of each character sit inside <code>[left, right]</code>; <code>maxFrequency</code> is the largest single-character count seen in <em>any</em> window so far. Both start empty/zero.', panels: panels(-1)});
+      for (let right = 0; right < n; right++){
+        const ch = chars[right];
+        const count = counts[ch] || 0;
+        counts[ch] = count + 1;
+        const grew = count + 1 > maxF;
+        if (grew) maxF = count + 1;
+        let size = right - left + 1;
         const need = size - maxF;
-        steps.push({lines:[12,13,15], msg:'Right edge reaches ' + r + ': <code>' + ch + '</code> now appears <b>' + (prev + 1) + '×</b> in the window. ' +
-          (grew ? '<code>maxFrequency</code> rises to <b>' + maxF + '</b> — a longer answer just became conceivable.'
-                : '<code>maxFrequency</code> stays <b>' + maxF + '</b>.') +
-          ' Window ' + size + ' − ' + maxF + ' = <b>' + need + '</b> replacement' + (need === 1 ? '' : 's') + ' needed, against k = ' + k + '.',
-          panels: panels(r, ch, false)});
+        let shrank = false;
         if (need > k){
-          const dropped = [];
-          while ((r - left + 1) - maxF > k){ counts[chars[left]]--; dropped.push(chars[left]); left++; }
-          steps.push({lines:[18,20,21], msg:'<b>' + need + '</b> replacements is more than k = ' + k + ', so this window is not fixable. Drop <code>' + dropped.join('') + '</code> off the left (its count goes down, the key stays in the dictionary) and <code>left</code> becomes ' + left + '. One character entered and ' + dropped.length + ' left, so the window <em>slid</em> rather than shrank — it can never fall below the best length already recorded.',
-            panels: panels(r, null, false)});
+          steps.push({lines:[16,17,19,22], msg:'Add <b>' + ch + '</b> at index ' + right + ': its count becomes <b>' + (count + 1) + '</b>' + (grew ? ', a new <code>maxFrequency</code> of ' + maxF + '.' : '; <code>maxFrequency</code> stays ' + maxF + '.') + ' Window size ' + size + ' minus ' + maxF + ' = <b>' + need + '</b> characters would have to be rewritten, and that is more than k = ' + k + '. The window is illegal, so <code>left</code> must move.', panels: panels(right, ch)});
+          shrank = true;
         }
-        const size2 = r - left + 1;
-        const actual = Math.max.apply(null, Object.keys(counts).map(c => counts[c]));
-        const stale = maxF > actual;
-        const better = size2 > longest;
-        if (better){ longest = size2; bestL = left; bestR = r; }
-        steps.push({lines:[24], msg:'Window <code>[' + left + '..' + r + ']</code> = <code>' + s.slice(left, r + 1) + '</code>, length <b>' + size2 + '</b>. ' +
-          (better ? '<code>longest</code> improves to <b>' + longest + '</b>.' : '<code>longest</code> stays <b>' + longest + '</b>.') +
-          (stale ? ' Its true best count is only ' + actual + ', so by the stale <code>maxFrequency</code> = ' + maxF + ' this exact window may not be fixable — but an <em>earlier</em> window of the same length was, and that length is all the answer records.' : ''),
-          panels: panels(r, null, false)});
+        while ((right - left + 1) - maxF > k){
+          const out = chars[left];
+          counts[out] = counts[out] - 1;
+          left++;
+          size = right - left + 1;
+          steps.push({lines:[22,24,25,28], msg:'Drop <b>' + out + '</b> at index ' + (left - 1) + ' from the counts (the entry stays in the map at ' + counts[out] + ' - a zero is still a key) and advance <code>left</code> to ' + left + '. Window size ' + size + ' − ' + maxF + ' = ' + (size - maxF) + (size - maxF > k ? ', still over k; shrink again.' : ' ≤ k, so this window is legal again.') + (size - maxF > k ? '' : ' <code>longest</code> = max(' + longest + ', ' + size + ') → <b>' + Math.max(longest, size) + '</b>.'), panels: panels(right, out)});
+        }
+        size = right - left + 1;
+        if (!shrank){
+          const better = size > longest;
+          longest = Math.max(longest, size);
+          steps.push({lines:[16,17,19,28], msg:'Add <b>' + ch + '</b> at index ' + right + ': count <b>' + (count + 1) + '</b>' + (grew ? ', raising <code>maxFrequency</code> to ' + maxF + '.' : '; <code>maxFrequency</code> stays ' + maxF + '.') + ' Only ' + (size - maxF) + ' of the ' + size + ' characters differ from the most common one, and ' + (size - maxF) + ' ≤ k = ' + k + ', so the window is already legal. <code>longest</code> ' + (better ? 'grows to <b>' + longest + '</b>.' : 'stays ' + longest + '.'), panels: panels(right, ch)});
+        } else {
+          longest = Math.max(longest, size);
+        }
       }
-      steps.push({lines:[27], msg:'Answer <b>' + longest + '</b>' + (bestL >= 0 ? ' — window <code>[' + bestL + '..' + bestR + ']</code> = <code>' + s.slice(bestL, bestR + 1) + '</code>' : '') + '. Each index entered and left the window at most once: one pass, one dictionary of at most 26 keys.',
-        panels: panels(-1, null, true)});
+      steps.push({lines:[31], msg:'The scan ends with <code>longest</code> = <b>' + longest + '</b>. <code>right</code> moved n times and <code>left</code> only ever moved forward, so each index is touched at most twice: O(n) time, and the map holds at most one entry per distinct letter — O(1) space for a fixed alphabet.', panels: panels(-1)});
       return steps;
     }
   },
   {
-    label: 'One window per candidate final character',
-    badge: 'O(n · k) time, k = distinct chars · O(1) space · window per target · suboptimal.cs',
-    blurb: 'Decide up front which character survives. Then the count that matters is exact — <code>window size − occurrences of targetChar ≤ k</code> — and all max-frequency bookkeeping disappears. One clean window pass per distinct character, best of them wins; correct, but the string is walked once per letter.',
+    label: 'A separate window per distinct character',
+    badge: 'O(n * k) time · O(1) space · window per letter · suboptimal.cs',
+    blurb: 'Fix which character the final substring is made of. Then the rule is exact: inside a window, everything that is not <code>targetChar</code> must be replaced, so the window is legal while <code>size − targetCount ≤ k</code>. Run that clean two-pointer scan once per distinct character and take the best — no stale counter to reason about, but one pass per letter.',
     legend: [
       {cls:'hot', text:'right — character just added'},
-      {cls:'good', text:'matches targetChar (kept free)'},
-      {cls:'in-window', text:'in window, must be replaced'},
-      {cls:'dim', text:'outside the window'}
+      {cls:'good', text:'a kept targetChar inside the window'},
+      {cls:'in-window', text:'inside the window, will be replaced'},
+      {cls:'dim', text:'shrunk past'},
+      {cls:'ghost', text:'not yet reached'}
     ],
     code: [
-      'int longest = 0;',
-      'var distinctCharacters = new HashSet<char>(s);',
-      '',
-      '// Run a separate sliding window for each candidate',
-      '// "final" character.',
-      'foreach (char targetChar in distinctCharacters)',
+      'public class Solution',
       '{',
-      '    int left = 0;',
-      '    int targetCount = 0;',
-      '',
-      '    for (int right = 0; right < s.Length; right++)',
+      '    public int CharacterReplacement(string s, int k)',
       '    {',
-      '        if (s[right] == targetChar)',
-      '            targetCount++;',
+      '        int longest = 0;',
+      '        var distinctCharacters = new HashSet<char>(s);',
       '',
-      '        // Replacements = window size - kept characters.',
-      '        while ((right - left + 1) - targetCount > k)',
+      '        // Run a separate sliding window for each candidate "final" character.',
+      '        // Inside one pass, everything that is NOT targetChar must be replaced.',
+      '        foreach (char targetChar in distinctCharacters)',
       '        {',
-      '            if (s[left] == targetChar)',
-      '                targetCount--;',
+      '            int left = 0;',
+      '            int targetCount = 0;',
       '',
-      '            left++;',
+      '            for (int right = 0; right < s.Length; right++)',
+      '            {',
+      '                if (s[right] == targetChar)',
+      '                    targetCount++;',
+      '',
+      '                // Replacements needed = window size minus the kept characters.',
+      '                while ((right - left + 1) - targetCount > k)',
+      '                {',
+      '                    if (s[left] == targetChar)',
+      '                        targetCount--;',
+      '',
+      '                    left++;',
+      '                }',
+      '',
+      '                longest = Math.Max(longest, right - left + 1);',
+      '            }',
       '        }',
       '',
-      '        longest = Math.Max(longest, right - left + 1);',
+      '        return longest;',
       '    }',
-      '}',
-      '',
-      'return longest;'
+      '}'
     ],
     simulate(input){
-      const s = input.s, k = input.k, steps = [];
-      const chars = s.split('');
-      const targets = Array.from(new Set(chars));
-      let longest = 0, bestL = -1, bestR = -1, bestT = '';
-      let left = 0, tc = 0, target = '';
-      const panels = (right, best) => [
-        pTiles('s', chars, (i) => ({
-          cls: best ? ((i >= bestL && i <= bestR) ? 'good' : 'dim')
-             : i === right ? 'hot'
-             : (i >= left && i < right) ? (chars[i] === target ? 'good' : 'in-window')
-             : 'dim'
-        })),
-        pSlots('candidate final characters', targets.map(c => ({text: c, cls: c === (best ? bestT : target) ? 'hot' : 'dim'}))),
-        pPills('', [
-          {k:'targetChar', v: best ? (bestT || '–') : (target || '–'), cls:'accent'},
-          {k:'left', v: left},
-          {k:'right', v: right >= 0 ? right : '–', cls:'hot'},
-          {k:'window', v: right >= 0 ? (right - left + 1) : 0},
-          {k:'targetCount', v: tc},
-          {k:'need', v: right >= 0 ? (right - left + 1) - tc : 0},
-          {k:'k', v: k},
-          {k:'longest', v: longest, cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'The hard part of this problem is not knowing which character the final substring is made of. So don\'t guess: the distinct characters of <code>s</code> are <code>' + targets.join('</code>, <code>') + '</code>, and each one gets its own full window pass. Whichever pass reports the longest window is the answer.',
-        panels: panels(-1, false)});
-      for (let t = 0; t < targets.length; t++){
-        target = targets[t]; left = 0; tc = 0;
-        steps.push({lines:[6,8,9], msg:'Pass ' + (t + 1) + ' of ' + targets.length + ': <code>targetChar = ' + target + '</code>. Pointers reset to the start. Inside this pass every character that is <b>not</b> <code>' + target + '</code> costs one replacement, so <code>targetCount</code> alone decides whether a window is legal — nothing stale, nothing approximate.',
-          panels: panels(-1, false)});
-        for (let r = 0; r < chars.length; r++){
-          const ch = chars[r];
-          const match = ch === target;
-          if (match) tc++;
-          const size = r - left + 1;
-          const need = size - tc;
-          steps.push({lines: match ? [13,14] : [13], msg:'Right edge reaches ' + r + ': <code>' + ch + '</code> ' +
-            (match ? 'is the target, so it is kept for free — <code>targetCount</code> = <b>' + tc + '</b>.' : 'is not <code>' + target + '</code>, so it would have to be replaced — <code>targetCount</code> stays <b>' + tc + '</b>.') +
-            ' Window ' + size + ' − ' + tc + ' = <b>' + need + '</b> replacement' + (need === 1 ? '' : 's') + ' needed, against k = ' + k + '.',
-            panels: panels(r, false)});
+      const s = input.s, k = input.k, n = s.length, chars = s.split('');
+      const distinct = [];
+      for (const c of chars) if (distinct.indexOf(c) < 0) distinct.push(c);
+      const steps = [];
+      let longest = 0, target = null, left = 0, cnt = 0;
+      const panels = (right) => {
+        const extra = {ptrs: [{name:'left', idx: left}, {name:'right', idx: right < 0 ? 0 : right, cls:'accent'}]};
+        if (right >= 0) extra.bracket = {from: left, to: right};
+        const size = right < 0 ? 0 : right - left + 1;
+        return [
+          pTiles('s', chars, (i, v) => ({cls:
+            (right < 0 || i > right) ? 'ghost'
+            : i === right ? 'hot'
+            : i < left ? 'dim'
+            : v === target ? 'good'
+            : 'in-window'}), extra),
+          pChips('distinctCharacters   HashSet<char> built from s', [
+            {left:'set', items: distinct.map(c => ({text: c, cls: c === target ? 'hot' : ''}))}
+          ]),
+          pPills('state', [
+            {k:'targetChar', v: target === null ? '-' : target, cls:'hot'},
+            {k:'left', v: left},
+            {k:'right', v: right < 0 ? '-' : right},
+            {k:'window size', v: size},
+            {k:'targetCount', v: cnt, cls:'good'},
+            {k:'replacements needed', v: right < 0 ? '-' : size - cnt},
+            {k:'k', v: k},
+            {k:'longest', v: longest, cls:'good'}
+          ])
+        ];
+      };
+      steps.push({lines:[5,6], msg:'A <code>HashSet&lt;char&gt;</code> over s collapses the string to its distinct characters: ' + distinct.join(', ') + '. Each of them is a candidate for what the final all-same substring is made of, and the set means each candidate is tried exactly once no matter how often it repeats.', panels: panels(-1)});
+      for (const t of distinct){
+        target = t; left = 0; cnt = 0;
+        steps.push({lines:[10,12,13], msg:'New pass with <code>targetChar</code> = <b>' + t + '</b>. Both pointers reset to the start and <code>targetCount</code> to 0: inside this pass every character that is not <b>' + t + '</b> is something we would have to pay a replacement for.', panels: panels(-1)});
+        for (let right = 0; right < n; right++){
+          const ch = chars[right];
+          if (ch === t) cnt++;
+          let size = right - left + 1;
+          const need = size - cnt;
+          let shrank = false;
           if (need > k){
-            const dropped = [];
-            let lost = 0;
-            while ((r - left + 1) - tc > k){
-              if (chars[left] === target){ tc--; lost++; }
-              dropped.push(chars[left]);
-              left++;
-            }
-            steps.push({lines:[17,19,20,22], msg:'<b>' + need + '</b> replacements exceeds k = ' + k + '. Slide <code>left</code> past <code>' + dropped.join('') + '</code> until the window is legal again' +
-              (lost ? ' — ' + lost + ' of those were targets, so <code>targetCount</code> drops with them to <b>' + tc + '</b>' : ' — none of them were targets, so <code>targetCount</code> is untouched') +
-              '. Unlike the optimal version, this count is exact, so the loop can take several bites at once.',
-              panels: panels(r, false)});
+            steps.push({lines:[17,18,21], msg:'Index ' + right + ' holds <b>' + ch + '</b>' + (ch === t ? ', a match, so <code>targetCount</code> rises to ' + cnt + '.' : ', not the target, so <code>targetCount</code> stays ' + cnt + '.') + ' Window size ' + size + ' − ' + cnt + ' = <b>' + need + '</b> replacements, above k = ' + k + '. Shrink from the left.', panels: panels(right)});
+            shrank = true;
           }
-          const size2 = r - left + 1;
-          const better = size2 > longest;
-          if (better){ longest = size2; bestL = left; bestR = r; bestT = target; }
-          steps.push({lines:[25], msg:'Window <code>[' + left + '..' + r + ']</code> = <code>' + s.slice(left, r + 1) + '</code> is genuinely fixable: ' + (size2 - tc) + ' non-<code>' + target + '</code> character' + ((size2 - tc) === 1 ? '' : 's') + ' ≤ k. Length <b>' + size2 + '</b>, so <code>longest</code> ' + (better ? 'improves to <b>' + longest + '</b>.' : 'stays <b>' + longest + '</b>.'),
-            panels: panels(r, false)});
+          while ((right - left + 1) - cnt > k){
+            const out = chars[left];
+            const wasTarget = out === t;
+            if (wasTarget) cnt--;
+            left++;
+            size = right - left + 1;
+            const nowOk = size - cnt <= k;
+            steps.push({lines: wasTarget ? [23,24,26] : [23,26], msg:'Leaving index ' + (left - 1) + ' (<b>' + out + '</b>) ' + (wasTarget ? 'removes a kept target, so <code>targetCount</code> drops to ' + cnt + '.' : 'costs nothing — it was a character we were paying to replace.') + ' Now ' + size + ' − ' + cnt + ' = ' + (size - cnt) + (nowOk ? ' ≤ k, legal again. <code>longest</code> = max(' + longest + ', ' + size + ') → <b>' + Math.max(longest, size) + '</b>.' : ', still too many; shrink again.'), panels: panels(right)});
+          }
+          size = right - left + 1;
+          if (!shrank){
+            const better = size > longest;
+            longest = Math.max(longest, size);
+            steps.push({lines:[17,18,29], msg:'Index ' + right + ' holds <b>' + ch + '</b>' + (ch === t ? ', a match: <code>targetCount</code> = ' + cnt + '.' : ': not a target, it will be one of the replaced ones.') + ' Only ' + (size - cnt) + ' of ' + size + ' characters need rewriting and ' + (size - cnt) + ' ≤ k = ' + k + ', so the whole window is reachable. <code>longest</code> ' + (better ? 'grows to <b>' + longest + '</b>.' : 'stays ' + longest + '.'), panels: panels(right)});
+          } else {
+            longest = Math.max(longest, size);
+          }
         }
       }
-      steps.push({lines:[29], msg:'Best across all ' + targets.length + ' passes: <b>' + longest + '</b>' + (bestL >= 0 ? ' — <code>' + s.slice(bestL, bestR + 1) + '</code> at <code>[' + bestL + '..' + bestR + ']</code>, kept as <code>' + bestT + '</code>' : '') + '. Same answer as the single-pass version, but the string was walked ' + targets.length + ' times — O(n · k), and up to 26× on real input.',
-        panels: panels(-1, true)});
+      target = null;
+      steps.push({lines:[33], msg:'Every candidate character has had its own clean scan; the best window over all of them is <b>' + longest + '</b>. Correct and easy to trust, but the string is walked once per distinct character — O(n · k) for an alphabet of size k, where the single-window version needs just one pass.', panels: panels(-1)});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

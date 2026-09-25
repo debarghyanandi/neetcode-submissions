@@ -1,14 +1,13 @@
 // ##########################################################################
-// #  suboptimal.cs         O(n * k) time / O(n) space
-// #  sliding window, recomputed validity check
-// #  [sliding-window-recompute-validity]
-// #  ranks below optimal.cs (O(n) time / O(n) space)
+// #  suboptimal.cs         O(n * k) time / O(1) space
+// #  Sliding window with dictionary scan validation
+// #  [sliding-window-dictionary-scan]
+// #  ranks below optimal.cs (O(n + m) time / O(1) space)
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  Same linear two-pointer window movement, but IsMatch() re-walks all
-// #  distinct characters of t on every iteration of both loops, multiplying
-// #  the O(n) scan by O(|t| distinct) work per step.
+// #  IsMatch() scans all k distinct characters in t on each iteration,
+// #  adding a k-factor to the sliding window baseline.
 // ##########################################################################
 
 public class Solution
@@ -91,80 +90,76 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - shrink while valid, rescan to check
+ PATTERN : Sliding Window - expand right, shrink left while valid
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  need         need[c] = how many copies of c the answer must contain
+  window       window[c] = count of c inside s[left..right]
+  minLength    length of the best valid window found so far
+  minIndices   minIndices[0] = start, minIndices[1] = end of that best window
+  IsMatch      local function: true when window covers every count in need
 WHY THIS PATTERN
-  Validity is monotone under growth: if s[left..right] already covers the
-  multiset of t, so does every window that contains it. That monotonicity is the
-  whole license for two pointers - for a fixed right there is one threshold
-  start position beyond which the window breaks, so the smallest valid window
-  ending at right is found by pushing left forward until validity dies, and left
-  never has to move backward. Strip the monotonicity away and you are back to
-  checking all pairs.
+  The task asks for the shortest substring of s that contains every character of
+  t with multiplicity, and substrings are contiguous, so a window with two
+  moving ends can visit every candidate. Growing right can only make a window
+  valid, and shrinking left can only make it invalid, so each end moves forward
+  only. need fixes the target counts once; window tracks the current contents;
+  minLength and minIndices remember the best seen.
+BETTER APPROACH
+  The better solution keeps two integers instead of rescanning: a counter have
+  of how many distinct characters already reach their required count, and
+  required = need.Count. Increment have when window[c] hits need[c] after an
+  add, decrement when it drops below after a removal, and validity is just have
+  == required, checked in constant time. That gives O(|s| + |t|) overall. This
+  file instead calls IsMatch on every add and on every shrink step, and IsMatch
+  walks all distinct characters of t, which is where the extra factor k comes
+  from.
 INVARIANT
-  After the add at the top of the outer loop, window is the exact character
-  count of s[left..right] - every insertion goes through the ContainsKey /
-  add-or-increment pair and every deletion through the (count > 1 ? decrement :
-  Remove) pair, so a key is present if and only if its count is at least 1.
-
-  The inner while exits only when the window is no longer valid, which means the
-  previous left was the last valid start for this right. minLength and
-  minIndices were already updated on that final valid iteration, before the
-  character at left was evicted. So at every point minLength is the length of
-  the best window seen so far and minIndices delimits it.
-WHY THIS LOSES
-  IsMatch re-walks every entry of need through LINQ All, and it is called once
-  per outer step plus once per shrink step. It recomputes a whole answer when
-  exactly one character changed - that is the defect, not the loop nesting.
-
-  The fix is incremental bookkeeping: keep required = need.Count and have =
-  number of distinct required characters currently satisfied. When incrementing
-  window[c], if c is in need and window[c] just reached need[c], have++. When
-  decrementing, if c is in need and the count just fell below need[c], have--.
-  Validity is then have == required, one integer comparison, with no extra
-  storage. Same pointer motion, the per-step scan of need disappears.
-WHY THE NESTED LOOP IS NOT QUADRATIC
-  Interviewers push on this. right advances at most s.Length times and adds one
-  character each time; left only ever increases and is never reset, so the total
-  number of shrink-loop iterations over the entire run is bounded by s.Length.
-  Each index enters window once and leaves at most once. The extra factor in
-  this solution comes from IsMatch alone - say that explicitly, because the
-  nested while invites the wrong guess.
+  At the top of the outer loop body, window holds the exact character counts of
+  s[left..right], and no valid window starting before left exists for any
+  earlier right. The inner loop records the candidate before removing s[left],
+  so every recorded window is valid at the moment it is measured, and it stops
+  at the first left where validity breaks, so the recorded window is the
+  shortest one ending at right. Taking the minimum over all right therefore
+  gives the global minimum.
 WATCH OUT
-  1. The comparison is count >= pair.Value, not ==. For t = "AABC" the window
-  may hold three A's and must still count as valid; == would reject valid
-  windows and stall the shrink.
-
-  2. window records every character of s in range, not just the ones in t.
-  Harmless for correctness since IsMatch only reads keys drawn from need, but
-  the dictionary grows with the distinct characters of s, not of t.
-
-  3. Empty t is a crash, not a wrong answer. need is empty, All over an empty
-  sequence is vacuously true, so the shrink loop keeps going until left = right
-  + 1 with window emptied, and window[s[left]] throws KeyNotFoundException. If
-  the constraints allow t to be empty, guard it next to the s.Length < t.Length
-  check.
-
-  4. minIndices starts as {0,0}, which decodes to the single character s[0]. The
-  only thing keeping that sentinel from being returned as a real answer is the
-  minLength == int.MaxValue test at the end - do not remove it. Two ints would
-  carry the same information as this two-element List<int>.
-RECONSTRUCTION
-  Storing indices instead of the substring is the right call: an improvement is
-  recorded with two int writes rather than materializing a new string each time
-  a shorter window is found. The final StringBuilder loop over
-  minIndices[0]..minIndices[1] is just s.Substring(minIndices[0], minLength)
-  spelled out.
+  If t is the empty string and s is not, need is empty and need.All(...) is true
+  by definition, so the inner loop never stops: left walks past right, window is
+  emptied, and window[s[left]] on an unseen character throws
+  KeyNotFoundException. minIndices starts as {0, 0}, which would name the
+  substring s[0..0]; that is only harmless because the minLength == int.MaxValue
+  check returns early, so do not remove that guard. Note also that IsMatch reads
+  need and window by closure, so any later change to how window is emptied
+  silently changes what IsMatch reports.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. s and t are ASCII only - can you drop both dictionaries?
+     Use int[128] for need and window and an int for the number of distinct
+     required characters. Lookups become array indexing with no hashing, at the
+     cost of a fixed 128-entry allocation per call.
+  2. What if you must return all minimum-length windows, not just one?
+     Keep a List<int> of start indices; clear it when currentLength < minLength,
+     append when currentLength == minLength. Same time, extra space proportional
+     to the number of ties.
+  3. What if t may contain characters absent from s?
+     The code already handles it: IsMatch never becomes true, minLength stays
+     int.MaxValue, and the method returns string.Empty. No extra check is
+     needed.
+  4. The window must contain the characters of t in order, as a subsequence?
+     That is a different problem; the two-pointer shrink no longer works because
+     validity is not preserved under removal. Use dynamic programming over
+     positions of s and t, O(|s| * |t|).
 TRIGGER
-  "Shortest contiguous window satisfying a containment or count condition",
-  where the condition survives growing the window - reach for the variable-width
-  window with an explicit shrink phase and a counter-based validity test.
-  Contrast the fixed-width case (permutation in a string), where left moves in
-  lockstep with right and there is no inner loop at all.
+  A question asking for the shortest or longest contiguous stretch that
+  satisfies a counting condition, where extending one end helps and trimming the
+  other end hurts.
+C# NOTE
+  The StringBuilder loop at the end can be one call: s.Substring(minIndices[0],
+  minLength). With that, minIndices can be two plain int fields instead of a
+  List<int>, since its length is fixed at two.
 COMPLEXITY
   Time  : O(n * k)
-  Space : O(n)
+  Space : O(1)
 ================================================================================
 */

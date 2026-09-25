@@ -1,14 +1,12 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n) time / O(n) space
-// #  sliding window, shrink while valid, prefix-sum lookup
-// #  [sliding-window-prefix-sum]
+// #  sliding window with prefix sum   [sliding-window-prefix-sum]
 // #  ranks below optimal.cs (O(n) time / O(1) space)
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  same two-pointer shrink logic but fetches each window sum via an
-// #  O(n)-sized prefix array instead of tracking a running total, costing
-// #  linear auxiliary space
+// #  Prefix array precomputation uses O(n) space to enable O(1) range sum
+// #  queries, unlike the running sum approach.
 // ##########################################################################
 
 public class Solution
@@ -43,74 +41,80 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding window over a prefix-sum array (array redundant)
+ PATTERN : Sliding Window over a prefix-sum array - shrink from the left
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
+VARIABLES
+  prefix   prefix[i] = sum of nums[0..i-1], so sum of nums[left..right] = prefix[right+1] - prefix[left]
+  left     start of the current window; only ever moves forward
+  right    end of the current window, driven by the outer loop
+  result   shortest qualifying window length seen so far, int.MaxValue = none found yet
 WHY THIS PATTERN
-  Every nums[i] is positive, so prefix is strictly increasing and the window sum
-  prefix[right+1] - prefix[left] moves in a known direction with each pointer:
-  it grows when right advances, shrinks when left advances. That monotonicity is
-  the entire license for a two-pointer scan. Without it you would have to
-  consider all O(n^2) (left, right) pairs, because a longer window would no
-  longer be guaranteed to have a larger sum.
+  The task asks for the shortest contiguous run whose sum reaches target. With
+  non-negative numbers, extending the window at right can only raise the sum and
+  moving left forward can only lower it, so the sum is monotonic in both ends.
+  That lets one pass with two pointers find, for each right, the largest left
+  that still qualifies, instead of testing every pair. The prefix array is only
+  there to read any window sum in constant time.
+BETTER APPROACH
+  The better version of this same idea keeps one running int windowSum: add
+  nums[right] on entry, subtract nums[left] before left++. That is the same time
+  but O(1) extra space, so this file loses purely on the prefix array of
+  nums.Length + 1 ints. The prefix array buys nothing here, because the window
+  sum is always read at the current left and right and never at an arbitrary
+  earlier index.
 INVARIANT
-  Two things hold at the top of every right iteration:
-  1. sum(nums[left..right-1]) < target - the previous iteration's while loop ran
-  until the window stopped qualifying, so left already sits past every start
-  index that could pair with an earlier right.
-  2. result is the minimum length over all qualifying subarrays that end at
-  index right-1 or earlier.
-  Also left <= right + 1 at all times. left == right + 1 means an empty window
-  whose sum is 0, and the while condition 0 >= target is false for any target >=
-  1, so left can never run past right + 1.
-CORRECTNESS ARGUMENT
-  The follow-up an interviewer will ask: why is it safe that left never rewinds?
-  Suppose some l < left would qualify with a later right, i.e.
-  sum(nums[l..right]) >= target. left only got past l because at some earlier
-  index r <= right the window [l..r] already hit target, and at that moment the
-  code recorded length r - l + 1. Since r <= right, that recorded length is <=
-  right - l + 1. So the skipped candidate can never be shorter than something
-  result already absorbed. Nothing is lost by discarding it, and because left
-  only ever increments it advances at most nums.Length times across the whole
-  run even though the while sits inside the for.
-WHY THIS LOSES
-  The prefix array is dead weight here. The window sum is only ever read as
-  prefix[right+1] - prefix[left], and both endpoints move forward one step at a
-  time, so a single running int would track it exactly: add nums[right] at the
-  top of the for, subtract nums[left] just before left++. That is the same
-  algorithm in one pass with O(1) extra space instead of a full n+1 array plus a
-  separate build loop.
-
-  A prefix array is the right data structure for the other solution to this
-  problem - for each right, binary search the monotone prefix for the largest
-  left with prefix[left] <= prefix[right+1] - target, giving O(n log n) time.
-  This file pays that solution's memory cost while running the two-pointer scan
-  that already beats it, so it gets no return on the array.
+  At the top of each outer iteration, left is the smallest index such that
+  prefix[right+1] - prefix[left] is still below target for the previous right,
+  meaning every window ending earlier that qualified has already been measured
+  into result. The while loop records the length before each left++, so for
+  every right the shortest qualifying window ending at right is compared. Since
+  left never moves backward, the total work across both loops is linear, and
+  result ends as the global minimum.
+MEASURING INSIDE THE SHRINK LOOP
+  result is updated on every iteration of the while loop, not once after it.
+  That is harmless but does extra Math.Min calls: only the last window before
+  the loop exits is the shortest for this right. Moving the update to just after
+  the while loop, using right - left + 1 with the new left, gives the same
+  answer with one comparison per right.
 WATCH OUT
-  - The recording happens before left++, inside the loop, not after it. Each
-  pass records the current window and then shrinks, so every qualifying window
-  ending at right is measured; Math.Min keeps the last and shortest. Moving the
-  Math.Min after the while would measure a window that no longer qualifies.
-  - int.MaxValue is the "never qualified" sentinel and must be mapped back to 0
-  on return. Returning result raw is the classic wrong answer when no subarray
-  reaches target.
-  - prefix stays inside int only because n * max(nums) is about 1e5 * 1e4 = 1e9,
-  just under int.MaxValue. Widen the constraint at all and prefix needs long.
-  The running-sum version has the same ceiling but only over the live window, so
-  it is harder to overflow.
-  - Zeros are harmless (prefix stays non-decreasing), but a single negative
-  value kills the shrink logic: the sum is no longer monotone in left, so
-  dropping a prefix can raise the window sum back over target. That variant (LC
-  862) needs a monotonic deque over the prefix array - which is where an
-  explicit prefix array actually earns its space.
+  prefix is int[], so a long array of large values can overflow the running sum
+  silently and make comparisons against target wrong; long[] prefix would fix
+  it. The whole monotonic argument dies if nums may contain negative numbers -
+  shrinking could then raise the sum, and left would skip valid windows. Also
+  note left can reach right + 1 (when a single element alone reaches target);
+  the difference prefix[right+1] - prefix[right+1] is 0, so the loop exits
+  safely, but there is no guard if someone later assumes left <= right. Empty
+  nums returns 0 through the sentinel branch, which is correct but only by
+  accident of result never being set.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Drop the extra array entirely.
+     Keep int windowSum, add nums[right] each outer step and subtract nums[left]
+     inside the shrink loop; same linear time, constant space, and no overflow
+     risk beyond the single running sum.
+  2. What if nums can hold negative values?
+     Two pointers no longer work. Build the prefix array (now it earns its
+     keep), and for each right find the largest left with prefix[left] <=
+     prefix[right+1] - target using a monotonic increasing deque of indices,
+     still linear; a simpler O(n log n) option is a sorted structure over prefix
+     values.
+  3. Return the subarray itself, not its length.
+     Store bestLeft and bestRight whenever result is improved, then slice nums
+     with that range; cost is two extra ints.
+  4. Longest subarray with sum at most target instead?
+     Same two pointers, but shrink while the sum exceeds target and record right
+     - left + 1 after the shrink, taking Math.Max; the monotonicity requirement
+     on non-negative values is unchanged.
 TRIGGER
-  Reach for the two-pointer form when the ask is a shortest or longest
-  contiguous run under a threshold AND the per-element contribution has one
-  sign, so extending helps and shrinking hurts in a fixed direction. Keep only a
-  running sum. Reach for a materialized prefix array instead when you need
-  random access to arbitrary (l, r) pairs, an exact-sum count via a hash map, or
-  a monotonic deque because signs are mixed.
+  Shortest or longest contiguous run meeting a sum threshold, with all values
+  non-negative, so growing and shrinking the window move the sum in opposite
+  directions.
+C# NOTE
+  new int[nums.Length + 1] is zero-filled by the runtime, which is why prefix[0]
+  is never assigned explicitly - worth remembering if the code is ported to a
+  language without that guarantee. The int.MaxValue sentinel plus the final
+  ternary avoids a nullable int and keeps Math.Min working on plain ints.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
