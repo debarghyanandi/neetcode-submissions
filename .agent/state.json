@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-25T23:07:09.016Z",
+  "updatedAt": "2026-09-25T23:22:18.445Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1007,7 +1007,7 @@
         "78deb0263cc2b06a57a9ef834f698a01304cd053b8fe9d96be4ed44f51a9dbfb": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"monotonic decreasing stack of indices\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1020,27 +1020,37 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "monotonic decreasing stack of indices",
+          "algorithm": "Monotonic stack, pop while warmer",
           "approachKey": "monotonic-stack",
-          "correct": true
+          "correct": true,
+          "structures": [
+            "array",
+            "stack"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "618bc1836acb"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "618bc1836acb"
         },
-        "builtAt": "2026-09-06T08:54:45.863Z",
-        "v": 1
+        "structures": [
+          "array",
+          "stack"
+        ],
+        "builtAt": "2026-09-25T23:16:48.490Z"
       }
     },
     "depth-of-binary-tree": {
@@ -1327,8 +1337,8 @@
         "e75d7d26be22d9090e46d1aac75a38c06583d3d23f3f778c63fb7af9dd326b40": "optimal-variant.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"explicit stack fold with operator dispatch table\",\"approachKey\":\"stack-eval\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"doubly linked list splicing as implicit stack\",\"approachKey\":\"linked-list-simulated-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1346,40 +1356,56 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "explicit stack fold with operator dispatch table",
-          "approachKey": "stack-eval",
-          "correct": true
+          "algorithm": "Stack-based RPN evaluation",
+          "approachKey": "stack-rpn",
+          "correct": true,
+          "structures": [
+            "stack",
+            "array"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "doubly linked list splicing as implicit stack",
-          "approachKey": "linked-list-simulated-stack",
-          "correct": true
+          "algorithm": "Doubly linked list with pointer rewiring",
+          "approachKey": "doubly-linked-list-rpn",
+          "correct": true,
+          "structures": [
+            "linked-list",
+            "array"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "8705b4e06944"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "3424e5a4dc18"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
-          "optimal-variant.cs",
-          "optimal.cs"
+          "optimal.cs",
+          "optimal-variant.cs"
         ],
         "prints": {
           "optimal.cs": "8705b4e06944",
           "optimal-variant.cs": "3424e5a4dc18"
         },
-        "builtAt": "2026-09-06T12:22:01.106Z",
-        "v": 1
+        "structures": [
+          "stack",
+          "array",
+          "linked-list"
+        ],
+        "builtAt": "2026-09-25T23:19:26.319Z"
       }
     },
     "find-minimum-in-rotated-sorted-array": {
@@ -1707,7 +1733,7 @@
         "1c66d694702212d24c5daf74b8c15efc33d668dc7dab475511d71cb6a98474f0": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"two stacks, lazy transfer for amortized FIFO\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1720,27 +1746,35 @@
         "optimal.cs": {
           "time": "O(n)",
           "space": "O(n)",
-          "algorithm": "two stacks, lazy transfer for amortized FIFO",
+          "algorithm": "Two-stack FIFO queue",
           "approachKey": "two-stack-queue",
-          "correct": true
+          "correct": true,
+          "structures": [
+            "stack"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "fe742774dbb5"
         }
       },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "fe742774dbb5"
         },
-        "builtAt": "2026-09-06T12:24:31.660Z",
-        "v": 1
+        "structures": [
+          "stack"
+        ],
+        "builtAt": "2026-09-25T23:20:45.767Z"
       }
     },
     "invert-a-binary-tree": {
@@ -3770,18 +3804,42 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":2,\"name\":\"optimal.cs\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"auxiliary stack tracking running minimum\",\"approachKey\":\"min-stack-parallel-stack\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"edabe91e9859\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"parallel stack tracking minimum\",\"approachKey\":\"parallel-stack-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
           "time": "O(1)",
           "space": "O(n)",
-          "algorithm": "auxiliary stack tracking running minimum",
-          "approachKey": "min-stack-parallel-stack",
-          "correct": true
+          "algorithm": "parallel stack tracking minimum",
+          "approachKey": "parallel-stack-min",
+          "correct": true,
+          "structures": [
+            "stack"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"edabe91e9859\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"parallel stack tracking minimum\",\"approachKey\":\"parallel-stack-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "edabe91e9859"
+        }
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "edabe91e9859"
+        },
+        "structures": [
+          "stack"
+        ],
+        "builtAt": "2026-09-25T23:22:18.441Z"
+      }
     },
     "minimum-window-with-characters": {
       "topic": "Data Structures & Algorithms",

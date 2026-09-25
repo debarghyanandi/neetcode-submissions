@@ -651,101 +651,113 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Daily Temperatures',
-  note: 'a day stays unanswered only until the first warmer day — so keep the unanswered days stacked',
-  inputs: [{id:'t', label:'temperatures', value:'73,74,75,71,69,72,76,73', width:280}],
+  note: 'a day is still waiting for its answer only while every day since has been colder or equal',
+  inputs: [{id:'t', label:'temperatures', value:'73,74,75,71,69,72,76,73', width:320}],
   parse(raw){
-    const t = parseInts(raw.t, 12);
-    if (!t) return {ok:false, msg:'Enter a valid comma-separated list of temperatures.'};
-    if (t.length < 2) return {ok:false, msg:'Needs at least two days.'};
-    if (t.some(v => v < 0 || v > 200)) return {ok:false, msg:'Temperatures must be between 0 and 200.'};
-    return {ok:true, value:{t}, normalized:{t: t.join(',')}};
+    const nums = parseInts(raw.t);
+    if (!nums) return {ok:false, msg:'Enter comma-separated temperatures, e.g. 73,74,75,71,69,72,76,73.'};
+    if (nums.some(n => !Number.isInteger(n))) return {ok:false, msg:'Temperatures must be whole numbers.'};
+    if (nums.length > 10) return {ok:false, msg:'Keep it to 10 days or fewer so the walk stays watchable.'};
+    if (nums.some(n => n < -50 || n > 150)) return {ok:false, msg:'Keep temperatures between -50 and 150 so the bars stay readable.'};
+    return {ok:true, value:{t: nums}, normalized:{t: nums.join(',')}};
   },
-  shuffle(){ return {t: randInts(7 + Math.floor(Math.random()*3), 68, 78).join(',')}; },
+  shuffle(){
+    return {t: randInts(7 + Math.floor(Math.random()*2), 62, 88).join(',')};
+  },
   solutions: [
   {
-    label: 'Monotonic decreasing stack of indices',
-    badge: 'O(n) time · O(n) space · monotonic stack · optimal.cs',
-    blurb: 'A day is answered by the <b>first</b> later day that is warmer, so unanswered days pile up. Stack their indices: since each new day pops everything colder than it, the stack always runs warm-to-cold bottom-to-top. Today clears that whole run of colder days at once, each with distance <code>i − index</code>, and every index is pushed and popped just once.',
+    label: 'Monotonic stack of waiting days',
+    badge: 'O(n) time · O(n) space · Monotonic stack, pop while warmer · optimal.cs',
+    blurb: 'The stack holds the <em>indices</em> of days that have not met a warmer day yet, and because each new day pops everything it beats, those temperatures are always non-increasing from bottom to top. So today only has to pop while it is strictly warmer than the top: the answer for a popped day is <code>i - val</code>, the gap to the first warmer day, and days never popped keep <code>0</code>.',
     legend: [
-      {cls:'hot', text:'today, day i'},
-      {cls:'in-window', text:'on the stack — still waiting'},
-      {cls:'good', text:'answer just written'},
-      {cls:'dim', text:'not yet reached'}
+      {cls:'hot', text:'day i — the temperature being read'},
+      {cls:'good', text:'just answered — popped this step'},
+      {cls:'in-window', text:'index still on the stack, waiting'},
+      {cls:'dim', text:'not read yet'}
     ],
     code: [
-      'int[] result = new int[temperatures.Length];',
-      'var stack = new Stack<int>();   // indices',
-      '',
-      'for (int i = 0; i < temperatures.Length; i++)',
+      'public int[] DailyTemperatures(int[] temperatures)',
       '{',
-      '    int curr = temperatures[i];',
-      '    while (stack.Count > 0 &&',
-      '           curr > temperatures[stack.Peek()])',
-      '    {',
-      '        int index = stack.Pop();',
-      '        result[index] = i - index;',
-      '    }',
-      '    stack.Push(i);',
-      '}',
+      '    int[] res = new int[temperatures.Length];',
+      '    var stack = new Stack<int>(); //indices',
       '',
-      'return result;'
+      '    for (int i = 0; i < temperatures.Length; i++)',
+      '    {',
+      '        int curr = temperatures[i];',
+      '        while (stack.Count > 0 && curr > temperatures[stack.Peek()])',
+      '        {',
+      '            int val = stack.Pop();',
+      '            res[val] = i - val;',
+      '        }',
+      '        stack.Push(i);',
+      '    }',
+      '    return res;',
+      '}'
     ],
     simulate(input){
       const t = input.t, n = t.length, steps = [];
-      const res = new Array(n).fill(0);
+      const res = t.map(() => 0);
+      const answered = t.map(() => false);
       const stack = [];
-      const panels = (i, done) => [
-        pBars('Temperatures by day', t, (k) => ({
-          cls: k === i ? 'hot'
-             : k === done ? 'good'
-             : stack.indexOf(k) >= 0 ? 'in-window'
-             : k > i ? 'dim' : ''
-        })),
-        pSlots('Stack of waiting days (bottom → top)',
-          stack.length
-            ? stack.map(k => ({text: 'day ' + k + ' · ' + t[k], cls: k === stack[stack.length-1] ? 'accent' : ''}))
-            : [{text: '(empty)', cls:'dim'}]),
-        pTiles('result — days to wait', res, (k) => ({
-          cls: k === done ? 'good'
-             : res[k] > 0 ? 'win'
-             : stack.indexOf(k) >= 0 ? 'in-window'
-             : k > i ? 'dim' : ''
-        })),
-        pPills('', [
-          {k:'i', v: i >= 0 && i < n ? i : '–', cls:'hot'},
-          {k:'curr', v: i >= 0 && i < n ? t[i] : '–'},
-          {k:'stack size', v: stack.length},
-          {k:'top of stack', v: stack.length ? 'day ' + stack[stack.length-1] + ' (' + t[stack[stack.length-1]] + ')' : '–', cls:'accent'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'<code>result</code> starts as all zeros, and zero is already the correct answer for a day that never warms up — so no cleanup is needed at the end for whatever is left on the stack. The stack holds <b>indices</b>, not temperatures, because the answer is a <em>distance</em>: we have to remember how far back the waiting day sat.', panels: panels(-1, -1)});
+      let justPopped = -1, val = '–', curr = '–';
+      const panels = (i, msgTop) => {
+        const onStack = {};
+        stack.forEach(k => { onStack[k] = true; });
+        const bars = pBars('temperatures', t, (k) => ({
+          cls: k === justPopped ? 'good'
+             : k === i ? 'hot'
+             : onStack[k] ? 'in-window'
+             : (i >= 0 && k > i) ? 'dim' : ''
+        }), {ptrs: [{name:'i', idx: (i >= 0 && i < n) ? i : n - 1}]});
+        const items = stack.map((k, j) => ({
+          text: 'idx ' + k,
+          sub: t[k] + '°',
+          cls: j === stack.length - 1 ? 'hot' : 'in-window'
+        }));
+        if (justPopped >= 0) items.push({text:'idx ' + justPopped, sub: t[justPopped] + '°', cls:'good', popped:true});
+        return [
+          bars,
+          pStack('stack — indices of days still waiting (temperatures fall bottom → top)', [{
+            label:'bottom → top', items: items, empty:'empty', mode:'stack',
+            foot: msgTop || ''
+          }]),
+          pSlots('res', res.map((v, k) => ({text: String(v), cls: k === justPopped ? 'good' : answered[k] ? 'done' : ''}))),
+          pPills('', [
+            {k:'i', v: (i >= 0 && i < n) ? i : '–', cls:'hot'},
+            {k:'curr', v: curr},
+            {k:'stack.Peek()', v: stack.length ? stack[stack.length-1] : '–'},
+            {k:'temperatures[Peek()]', v: stack.length ? t[stack[stack.length-1]] : '–'},
+            {k:'val', v: val},
+            {k:'stack size', v: stack.length}
+          ])
+        ];
+      };
+      steps.push({lines:[1,3,4], msg:'<code>res</code> starts as all zeros, which is already the right answer for any day that never meets a warmer one — no special case is needed at the end. The stack stores <b>indices</b>, not temperatures: the distance <code>i - val</code> is the whole point of the problem, and you cannot subtract positions you did not keep.', panels: panels(-1, 'nothing waiting yet')});
       for (let i = 0; i < n; i++){
-        let popped = 0;
+        curr = t[i]; val = '–'; justPopped = -1;
+        steps.push({lines:[6,8,9], msg:'Day <b>' + i + '</b> reads <code>curr = ' + t[i] + '</code>. Compare it against the temperature at the top index' + (stack.length ? ' (<code>temperatures[' + stack[stack.length-1] + '] = ' + t[stack[stack.length-1]] + '</code>)' : ' — but the stack is empty, so there is nothing to answer') + '. Only the <em>top</em> needs checking: the stack is non-increasing downwards, so if today cannot beat the top it cannot beat anything under it.', panels: panels(i, 'checking the top against ' + t[i] + '°')});
         while (stack.length && t[i] > t[stack[stack.length-1]]){
-          const j = stack.pop();
-          res[j] = i - j;
-          popped++;
-          steps.push({lines:[7,8,10,11], msg:'Day ' + i + ' at <b>' + t[i] + '</b> beats day ' + j + ' at ' + t[j] + ' on top of the stack — and it is the <b>first</b> day that does, because any warmer day in between would have popped day ' + j + ' already. So <code>result[' + j + '] = ' + i + ' − ' + j + ' = <b>' + res[j] + '</b></code>. Day ' + j + ' is settled forever and leaves the stack.',
-            panels: panels(i, j)});
+          const v = stack.pop();
+          val = v;
+          res[v] = i - v;
+          answered[v] = true;
+          justPopped = v;
+          steps.push({lines:[9,11,12], msg:'<code>' + t[i] + ' &gt; ' + t[v] + '</code>, so day <b>' + v + '</b> has finally found a warmer day — and it is the <em>first</em> one, because day ' + v + ' survived every day in between. Its answer is <code>i - val = ' + i + ' - ' + v + ' = <b>' + (i - v) + '</b></code>. It is popped for good: once a day is answered it can never be asked again.', panels: panels(i, 'popped index ' + v)});
+          justPopped = -1;
         }
-        const peek = stack.length ? stack[stack.length-1] : -1;
-        if (popped){
-          steps.push({lines:[13], msg:'The while loop stops: ' + (peek < 0 ? 'the stack is empty — day ' + i + ' was warmer than everything waiting.' : 'day ' + peek + ' at ' + t[peek] + ' is not colder than ' + t[i] + ', and everything below it is warmer still, so nothing further can be popped.') + ' Now day ' + i + ' is itself unanswered, so push it. The stack stays warm-to-cold from bottom to top.',
-            panels: panels(i, -1)});
-        } else {
-          stack.push(i);
-          steps.push({lines:[7,8,13], msg: (peek < 0 ? 'The stack is empty, so the while condition fails at once' : 'Day ' + i + ' at <b>' + t[i] + '</b> is not warmer than day ' + peek + ' at ' + t[peek] + ' on top, so the while condition fails at once') + ' — and that single comparison is enough, since the stack is sorted warm-to-cold and everything deeper is even warmer. Push day ' + i + ' to wait its turn.',
-            panels: panels(i, -1)});
-          continue;
+        if (stack.length && !(t[i] > t[stack[stack.length-1]])){
+          steps.push({lines:[9,14], msg:'<code>' + t[i] + '</code> is not strictly greater than <code>temperatures[' + stack[stack.length-1] + '] = ' + t[stack[stack.length-1]] + '</code>, so the while loop stops. A tie does not count as warmer, which is exactly why the test is <code>&gt;</code> and not <code>&gt;=</code>. Day ' + i + ' now joins the waiting list on top.', panels: panels(i, 'while loop stops here')});
         }
         stack.push(i);
+        val = '–';
+        steps.push({lines:[14], msg:'Push <code>' + i + '</code>. Day ' + i + ' has no answer yet, so it waits — and it sits above everything left because everything left is at least as warm, keeping the stack non-increasing bottom → top. Each index is pushed once and popped at most once, which is why the nested loop is still O(n) overall.', panels: panels(i, 'pushed index ' + i)});
       }
-      steps.push({lines:[16], msg:'Done: <code>[' + res.join(', ') + ']</code>. ' + (stack.length ? 'Days ' + stack.join(', ') + ' are still on the stack — no later day was ever warmer, and their zeros were right from the start. ' : 'The stack emptied out — every day found a warmer one. ') + 'Each index was pushed once and popped at most once, so the nested while loop still totals <b>O(n)</b> work.',
-        panels: panels(n, -1)});
+      curr = '–';
+      steps.push({lines:[16], msg:'All days read. Whatever is still on the stack — ' + (stack.length ? stack.join(', ') : 'nothing') + ' — never met a warmer day, and their <code>res</code> entries are the zeros they were initialised with. Return <code>res</code>.', panels: panels(n, 'these never found a warmer day')});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

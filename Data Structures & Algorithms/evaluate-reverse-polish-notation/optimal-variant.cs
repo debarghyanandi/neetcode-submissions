@@ -1,14 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  doubly linked list splicing as implicit stack
-// -  [linked-list-simulated-stack]
+// -  Doubly linked list with pointer rewiring   [doubly-linked-list-rpn]
 // -  ties with optimal.cs on O(n) time / O(n) space
 // -
-// -  Reference solution - not one you solved yourself (was optimal.cs)
+// -  Reference solution - not one you solved yourself
 // -
-// -  walks tokens as linked nodes, recycling operator nodes into results
-// -  and relinking prev pointers to pop two operands and push one, in a
-// -  single forward sweep
+// -  Single traversal through n nodes; operator nodes store results and
+// -  update prev pointers to skip consumed operands.
 // --------------------------------------------------------------------------
 
 public class DoublyLinkedList
@@ -80,110 +78,92 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Stack as a prev-chain, folded in place over the tokens
+ PATTERN : Stack eval of RPN - linked list used as the stack
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
-MENTAL MODEL
-  Read this as a stack machine where the stack is spelled with prev pointers
-  instead of a Stack<int>.
-
-  First loop just copies tokens into a doubly linked chain: head is tokens[0],
-  curr walks forward, every new node gets prev = curr. Nothing is evaluated yet.
-
-  Second loop is the evaluator. Walk forward with head. At any moment, head.prev
-  is the top of the operand stack, head.prev.prev is the one below it, and head
-  itself is the token being read. Pushing is free - it already happened when the
-  chain was built - so the only real work is popping, which is a prev rewire.
+VARIABLES
+  head    moving cursor over the token nodes, not a fixed list head; also the write target for each result
+  curr    tail pointer used only while building the node chain from tokens
+  l       left operand, taken from head.prev.prev.val
+  r       right operand, taken from head.prev.val
+  res     result of one operation, written back into head.val as a string
+  ans     value of the last node visited; after the loop this is the answer
+WHY THIS PATTERN
+  In reverse Polish notation an operator always applies to the two most recent
+  unconsumed values to its left, so the natural structure is last-in-first-out.
+  This file makes the prev chain play that role: when head.val is one of "+-*
+  /", the two pending operands are exactly head.prev and head.prev.prev. Writing
+  res back into head.val and then setting head.prev to head.prev.prev.prev is a
+  pop-pop-push done by pointer surgery instead of a container.
+BRUTE FORCE
+  The first thing most people write without a stack is a repeated scan: find the
+  leftmost operator, evaluate it with the two tokens before it, and splice those
+  three entries into one inside a List<string>. That is correct but each splice
+  shifts the tail, so it is O(n^2) time for O(n) rewrites. The stack idea gets
+  the same answer in one pass because each token is touched once.
 INVARIANT
-  When the loop reaches node head, every node reachable by following prev from
-  head is an already-evaluated operand, in stack order, top first. Operators
-  that have been processed are no longer in that prev chain; they were rewritten
-  into their own numeric result and spliced in as the new top.
-
-  The forward chain (next) is never rewritten in a way the loop reads. It stays
-  the original token order and is purely the input cursor.
-ALGORITHM
-  1. Build the chain, head = tokens[0], each later node linked both ways.
-  2. Walk head forward. If head.val is not an operator, it is an operand and
-  needs no action - it is already on the stack by virtue of being in the prev
-  chain.
-  3. If head.val is an operator, pop two: left = head.prev.prev.val, right =
-  head.prev.val.
-  4. Compute, then overwrite head.val with result.ToString(). The operator node
-  becomes the result node.
-  5. Splice the two operands out: head.prev = head.prev.prev.prev, and if that
-  is not null, patch its next.
-  6. ans = int.Parse(head.val) on every node; advance head = head.next.
-WHY THE ANSWER IS THE LAST NODE
-  ans is reassigned at every node, so what is returned is whatever the final
-  node parsed to. That is correct for two reasons.
-
-  A valid RPN expression of length > 1 ends in an operator, and by step 4 that
-  operator node holds the fully folded result by the time ans reads it. For the
-  single-token input like ["5"], the loop runs once, the branch is skipped, and
-  ans is that number - the same code path covers it with no special case.
-
-  The int.Parse on operand nodes is pure waste: those values get consumed later
-  and their parse result is thrown away. It is harmless only because every node
-  holds a valid integer string at the moment it is visited - operators are
-  rewritten one statement earlier.
+  When the loop reaches a node, every node still reachable backwards through
+  prev holds a plain number, and those numbers are exactly the operands not yet
+  consumed, in left-to-right order. So head.prev is always the second operand
+  and head.prev.prev the first. Each operator node replaces those two entries
+  with one, which keeps the property true for the next node, and after the final
+  token exactly one number remains - the value the last iteration stored in ans.
+THE OPERATOR NODE BECOMES THE RESULT
+  No node is ever deleted or allocated during evaluation. The operator node is
+  reused as the result cell (head.val = res.ToString()), and the two operand
+  nodes simply stop being reachable through prev. That is why head.prev =
+  head.prev.prev.prev jumps three links: past the two operands, to whatever was
+  pending before them.
+THE NEXT REPAIR IS DEAD WORK
+  Forward movement always uses head = head.next, and no node's next is ever
+  changed for the node being visited, so traversal only ever follows the
+  original chain. The block "if (head.prev != null) head.prev.next = head;"
+  repairs a pointer that is never read again. The algorithm only needs prev to
+  be correct, so the list could have been built singly linked in the prev
+  direction.
 WATCH OUT
-  Operand order. left is head.prev.prev, right is head.prev - the deeper node is
-  the left operand. Swap them and + and * still pass while - and / silently
-  invert. This is the first thing to check when the tests fail on a mixed
-  expression.
-
-  Integer division. left / right on int truncates toward zero in C#, which is
-  exactly what RPN evaluation asks for. Do not "fix" it with Math.Floor - that
-  turns -7 / 2 from -3 into -4.
-
-  The null guard. head.prev.prev.prev is null precisely when the two operands
-  consumed were the bottom of the stack. head.prev = null is then correct (empty
-  stack below the new top) and the if is there only to avoid dereferencing null
-  for the next patch.
-
-  "+-* /".Contains(head.val) is substring matching, not set membership. It
-  happens to work because no numeric token in valid input is a substring of "+-*
-  /", but the empty string would match, and a two-char token like "* /" would
-  too. head.val.Length == 1 && "+-* /".Contains(head.val[0]) says what you
-  meant.
-
-  No guard on tokens.Length before tokens[0], and no guard that head.prev.prev
-  exists before an operator. Malformed input throws rather than reporting.
-THE DEAD WRITE
-  head.prev.next = head is never read by this algorithm. The node it patches
-  sits strictly earlier in the original token order, so the loop already visited
-  it and already consumed its next on the way here. The only forward read
-  remaining is head.next on the current node, which that line does not touch.
-
-  It is there to keep the doubly linked list honest, not because the evaluation
-  needs it. Notice what that implies: the next pointers are only ever the input
-  array read in order. Drop them and you are left with a for loop over tokens
-  plus a prev-chain stack - which is the plain Stack<int> solution.
-
-  That is the honest cost comparison for this file. Same work, but every result
-  makes an int -> string -> int round trip through result.ToString() and
-  int.Parse, and each node carries two references the algorithm does not need.
-INTERVIEWER FOLLOW-UP
-  "Your stack is a linked list - what breaks if I hand you a huge expression?"
-  Nothing about correctness; the recursion-free forward walk is fine. The answer
-  they want is that this allocates a node per token up front whether or not the
-  token is ever on the stack, whereas a stack only ever holds unconsumed
-  operands.
-
-  "Why is one pass enough?" Because RPN needs no lookahead: an operator's
-  operands are always the two most recently completed values, and step 5 keeps
-  that guarantee by making the result node the new top before moving on.
-
-  "Make it handle overflow / doubles." The weak point is storing values back as
-  strings in head.val. Committing to a typed stack removes the parse round trip
-  and makes the element type a one-line change.
+  tokens[0] is read before any length check, so an empty array throws
+  IndexOutOfRangeException. "+-* /".Contains(head.val) is a substring test, not
+  an equality test; it happens to work only because no number token is a
+  substring of "+-* /", but a stray token such as "+-" would be treated as an
+  operator and then fall into the else branch and be evaluated as division.
+  Malformed input where an operator appears before two numbers exist
+  dereferences head.prev.prev and throws NullReferenceException. int.MinValue /
+  -1 overflows silently in this unchecked arithmetic, and a "0" divisor throws
+  DivideByZeroException. Every node value is parsed with int.Parse on each visit
+  and results are converted back with ToString, so numbers make a full string
+  round trip even though they are only ever used as ints.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How would you rewrite this with less memory?
+     Use Stack<int>: push parsed numbers, and on an operator pop r then l and
+     push the result. It drops n node allocations and the string round trip, and
+     the stack holds only the pending operands rather than every token.
+  2. Can you get O(1) extra space?
+     Yes, if you may modify tokens. Keep a write index top into the same array
+     and use tokens[0..top) as the stack; each operator writes its result at
+     top-2 and decreases top by one. The trade-off is that the caller's array is
+     destroyed.
+  3. What if the expression arrives in normal infix form with parentheses?
+     Run shunting-yard first to convert infix to RPN with an operator stack and
+     precedence rules, then feed the output into this same evaluation loop
+     unchanged.
+  4. What if values can exceed int range or be decimal?
+     Switch the operand type to long or decimal and parse accordingly. With
+     decimal or double you lose the truncating division that RPN specifies, so
+     you must apply the rounding rule explicitly.
+TRIGGER
+  A token sequence where each operator or action refers to the most recent
+  unconsumed items before it - that "most recent first" wording means a stack.
+C# NOTE
+  int / int in C# truncates toward zero, which is exactly the RPN rule, so the
+  else branch needs no Math.Truncate or cast - but the same expression would
+  silently change meaning if l and r ever became double. Replacing the if/else
+  chain with a switch on head.val is both clearer and closer to the equality
+  test the code actually intends.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  explicit stack fold with operator dispatch table   [stack-eval]
+// #  Stack-based RPN evaluation   [stack-rpn]
 // #  ties with optimal-variant.cs on O(n) time / O(n) space
 // #
-// #  YOU SOLVED THIS YOURSELF (was optimal-variant.cs)
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  single pass pushing operands and popping two per operator via a
-// #  dictionary of lambdas, worst-case stack depth O(n)
+// #  Single pass iterates through tokens; stack stores operands, each
+// #  operation is O(1).
 // ##########################################################################
 
 public class Solution
@@ -40,73 +40,79 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Stack - operator pops the two most recent values
+ PATTERN : Stack - evaluate Reverse Polish Notation
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  stack        operands seen so far, top is the most recent value
+  operations   maps token "+","-","*","/" to a Func<int,int,int>
+  b            right operand, popped first
+  a            left operand, popped second
 WHY THIS PATTERN
-  Postfix notation has no parentheses and no precedence rules, because position
-  already encodes grouping: an operator always applies to the two most recently
-  completed values to its left. "Most recently completed, taken first" is the
-  definition of a stack, so a single left-to-right pass over tokens is enough.
-  No tokenizer pass, no precedence table, no recursion.
+  In postfix notation an operator always applies to the two values that came
+  right before it, so the most recent operands are the first ones needed. That
+  is exactly last-in-first-out, which is what a stack gives. Each token in
+  tokens either pushes a number or replaces the top two entries with one result,
+  so one pass is enough. The dictionary operations turns the four-way branch on
+  the token into a single lookup plus a call.
+BRUTE FORCE
+  Without a stack you would scan the array repeatedly: find the first operator
+  that has two numbers in front of it, compute it, then build a new shorter
+  array and start again. That is a fresh scan and a fresh copy per operator, so
+  O(n^2) time. It is correct but it redoes work the stack keeps for free.
 INVARIANT
-  After processing any prefix of tokens, stack holds - bottom to top, in
-  left-to-right order - the value of every complete subexpression seen so far.
-
-  An operand c pushes one value (+1 depth). An operator c pops two and
-  pushes one (net -1 depth). A well-formed RPN string guarantees depth is at
-  least 2 whenever an operator arrives and is exactly 1 after the last c.
-  That guarantee is why the code never inspects stack.Count and why the trailing
-  stack.Pop() is the answer rather than a leftover.
-POP ORDER IS THE WHOLE BUG SURFACE
-  right is popped first and left second, because the top of the stack is the
-  operand that appeared later in the input. Only then is operations[c](left,
-  right) applied.
-
-  Swap those two Pop lines and "+" and "*" still pass every test while "-" and
-  "/" quietly compute left-right reversed. This is the single most likely place
-  to lose the problem.
-
-  The comment "Prev result is this" on left is loose - left is whatever
-  subexpression finished immediately before right, which is often a raw operand.
-  In ["2","1","+"], left is 2, not a prior result.
-WHY THE CONTAINSKEY TEST COMES FIRST
-  Dispatch is exact string equality against the four keys "+", "-", "*", "/". A
-  c like "-11" is not one of those keys, so it falls through to int.Parse,
-  which consumes the leading minus itself.
-
-  That ordering is the only thing separating an operator from a negative
-  operand. Classifying by first character instead (char.IsDigit(c[0]), or
-  c == "-" checked after a digit test) is where negative literals break.
+  After processing any prefix of tokens, stack holds exactly the values of the
+  complete sub-expressions in that prefix, in left-to-right order. A number
+  pushes a new one-token sub-expression; an operator consumes the last two
+  finished sub-expressions and pushes the single value they combine into, so the
+  invariant survives. For a valid RPN input the whole array is one expression,
+  so at the end the stack holds exactly one value, and that final Pop is the
+  answer.
+POP ORDER IS THE WHOLE CORRECTNESS OF MINUS AND DIVIDE
+  The first Pop gives the right operand and the second gives the left, because
+  the right operand was pushed later. Calling operations[c](a, b) with a first
+  preserves that. Swapping them still passes every test built only from "+" and
+  "*" and then silently gives wrong answers for "-" and "/", which is the
+  classic bug in this problem.
 WATCH OUT
-  1. int division in C# truncates toward zero: -7 / 2 is -3, not -4. That
-  matches what the problem asks for, so do not reach for Math.Floor or double.
-  2. operations[c] is a second hash lookup after ContainsKey already did
-  one; TryGetValue collapses them into one. Correctness is unchanged - this is a
-  tidiness note.
-  3. The Dictionary of Func<int,int,int> is constructed fresh on every EvalRPN
-  call even though the lambdas capture nothing. Hoisting it to a static readonly
-  field is the natural cleanup.
-  4. There is no guard for division by zero, a malformed c, or an empty
-  stack; each would throw (DivideByZeroException, FormatException,
-  InvalidOperationException). Acceptable under the problem's validity guarantee,
-  but say that out loud rather than letting an interviewer find it.
+  The comments on the two pops are wrong and misleading: b is not "current num"
+  and a is not "Prev result" - both are just the two most recent operand values,
+  and either can be a raw number or an earlier result. int division in C#
+  truncates toward zero, which happens to match the usual requirement for this
+  problem, but it is a behavior to state out loud rather than assume. Division
+  by zero throws DivideByZeroException; there is no guard. Any malformed input -
+  an operator with fewer than two values below it, or leftover values at the end
+  - is not detected: Pop throws on the first case and the second case silently
+  returns the wrong element.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The values can overflow int during intermediate multiplication. What
+  changes?
+     Switch stack to Stack<long>, parse with long.Parse, and change the Func to
+     Func<long,long,long>. The structure is identical; only the numeric type
+     widens, at the cost of more memory per entry.
+  2. Can you avoid the Dictionary of delegates?
+     Yes - a switch on c with the arithmetic inline. You lose the neat table and
+     gain a direct branch with no delegate invocation and no dictionary
+     allocation per call to EvalRPN.
+  3. The input arrives as a stream of tokens instead of an array. Does the code
+  still work?
+     Yes, unchanged in spirit - the foreach never looks ahead or back, so it can
+     read from an IEnumerable<string> one token at a time. Only the stack has to
+     be kept in memory.
+  4. How would you handle infix input like "3 + 4 * 2" instead?
+     Convert to RPN first with the shunting-yard algorithm, which uses a second
+     stack for operators and pops by precedence, then feed the result into this
+     exact evaluator.
 TRIGGER
-  Reach for this shape whenever the answer depends on the most recent unresolved
-  item: postfix or prefix evaluation, bracket matching, undo histories,
-  nested-structure decoding.
-
-  The natural follow-up is infix input, where position no longer encodes
-  grouping - that needs shunting-yard, or two stacks (values and operators) with
-  a precedence comparison on push. A second follow-up is operands or
-  intermediate results exceeding 32 bits, which is a Stack<long> and long
-  arithmetic, nothing structural.
+  When each new item must be combined with the most recently produced items and
+  then collapses into one, reach for a stack.
+C# NOTE
+  ContainsKey followed by operations[c] hashes the token twice; TryGetValue(c,
+  out var fn) does it once and returns the delegate in the same call.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

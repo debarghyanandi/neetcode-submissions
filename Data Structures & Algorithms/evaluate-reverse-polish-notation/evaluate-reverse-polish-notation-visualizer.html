@@ -651,248 +651,385 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Evaluate Reverse Polish Notation',
-  note: 'the operands an operator needs are always the two values sitting immediately behind it',
-  inputs: [{id:'t', label:'tokens', value:'8,2,/,3,+,4,2,-,*', width:300}],
+  note: 'postfix notation puts each operator after the two values it acts on, which means the token you are reading always applies to the two most recently produced values - and "most recently produced" is exactly what a stack hands back. Numbers go on, an operator takes two off, and the result it produces goes back on as a value in its own right, so a whole nested expression collapses into one number in a single left-to-right pass.',
+  inputs: [
+    {id:'tokens', label:'tokens (numbers and + - * /)', value:'2,1,+,3,*', width:280}
+  ],
   parse(raw){
-    const parts = String(raw.t).split(',').map(s => s.trim()).filter(s => s.length);
-    if (!parts.length) return {ok:false, msg:'Enter comma-separated RPN tokens, e.g. 2,1,+,3,*.'};
-    if (parts.length > 13) return {ok:false, msg:'Keep it to 13 tokens or fewer so the walk stays watchable.'};
+    const parts = String(raw.tokens).split(',').map(s => s.trim()).filter(s => s.length);
+    if (!parts.length) return {ok:false, msg:'Enter comma-separated RPN tokens, e.g. 2,1,+,3,*'};
+    if (parts.length > 9) return {ok:false, msg:'Keep it to 9 tokens or fewer so the whole run stays watchable.'};
+    const isOp = (s) => s === '+' || s === '-' || s === '*' || s === '/';
     const st = [];
-    for (let i = 0; i < parts.length; i++){
-      const tk = parts[i];
-      if (tk === '+' || tk === '-' || tk === '*' || tk === '/'){
-        if (st.length < 2) return {ok:false, msg:'Operator "' + tk + '" at position ' + i + ' has fewer than two operands before it.'};
-        const r = st.pop(), l = st.pop();
-        if (tk === '/' && r === 0) return {ok:false, msg:'That expression divides by zero.'};
-        st.push(tk === '+' ? l + r : tk === '-' ? l - r : tk === '*' ? l * r : Math.trunc(l / r));
+    for (const p of parts){
+      if (isOp(p)){
+        if (st.length < 2) return {ok:false, msg:'Operator ' + p + ' has fewer than two values waiting - that is not a valid postfix expression.'};
+        const b = st.pop(), a = st.pop();
+        if (p === '/' && b === 0) return {ok:false, msg:'That expression divides by zero.'};
+        st.push(p === '+' ? a + b : p === '-' ? a - b : p === '*' ? a * b : Math.trunc(a / b));
       } else {
-        if (!/^-?\d+$/.test(tk)) return {ok:false, msg:'"' + tk + '" is neither an integer nor one of + - * /.'};
-        st.push(parseInt(tk, 10));
+        const v = Number(p);
+        if (!Number.isInteger(v) || Math.abs(v) > 99) return {ok:false, msg:'Each token must be a whole number from -99 to 99, or one of + - * /'};
+        st.push(v);
       }
     }
-    if (st.length !== 1) return {ok:false, msg:'The tokens must reduce to exactly one value (' + st.length + ' left over).'};
-    return {ok:true, value:{t: parts}, normalized:{t: parts.join(',')}};
+    if (st.length !== 1) return {ok:false, msg:'A valid postfix expression ends with exactly one value left; this one leaves ' + st.length + '.'};
+    return {ok:true, value:{tokens: parts}, normalized:{tokens: parts.join(',')}};
   },
   shuffle(){
-    const ops = ['+','-','*','/'];
-    let numsLeft = 3 + Math.floor(Math.random()*2);
-    let opsLeft = numsLeft - 1;
-    const out = [], st = [];
-    while (numsLeft > 0 || opsLeft > 0){
-      const canOp = st.length >= 2 && opsLeft > 0;
-      if (canOp && (numsLeft === 0 || Math.random() < 0.45)){
-        let op = ops[Math.floor(Math.random()*ops.length)];
-        const r = st.pop(), l = st.pop();
-        if (op === '/' && (r === 0 || l % r !== 0)) op = '+';
-        st.push(op === '+' ? l + r : op === '-' ? l - r : op === '*' ? l * r : l / r);
-        out.push(op); opsLeft--;
-      } else {
-        const v = 1 + Math.floor(Math.random()*9);
-        st.push(v); out.push(String(v)); numsLeft--;
-      }
-    }
-    return {t: out.join(',')};
+    const n = () => String(1 + Math.floor(Math.random() * 9));
+    const op = () => ['+', '-', '*'][Math.floor(Math.random() * 3)];
+    const tpl = Math.random() < 0.5 ? [n(), n(), op(), n(), op()] : [n(), n(), n(), op(), op()];
+    return {tokens: tpl.join(',')};
   },
   solutions: [
   {
-    label: 'Doubly linked tokens, spliced in place',
-    badge: 'O(n) time · O(n) space · list as implicit stack · optimal-variant.cs',
-    blurb: 'A doubly linked list of the tokens <em>already is</em> the stack: everything reachable backwards from the current node is exactly the operands still waiting. So an operator reads <code>prev.prev</code> and <code>prev</code>, overwrites itself with the result, then jumps its own <code>prev</code> back past both — the two operands drop out of the chain and no stack object is ever allocated.',
+    label: 'One pass with an operand stack and a lambda table',
+    badge: 'O(n) time · O(n) space · stack of operands, dictionary of operators · optimal.cs',
+    blurb: 'Every token is either a value or an instruction. A value is pushed. An operator pops the two newest values, and because postfix puts the operator after its operands, those two are always the right ones - order matters, so the first pop is the right-hand side. The result is pushed back as a value, and after the last token exactly one number is left.',
     legend: [
-      {cls:'hot', text:'head — the node being read'},
-      {cls:'in-window', text:'behind head and still linked — the pending operands'},
-      {cls:'good', text:'node just overwritten with its result'},
-      {cls:'dim', text:'spliced out — consumed'}
+      {cls:'hot', text:'the token being read, and the live top of the stack'},
+      {cls:'done', text:'already consumed'},
+      {cls:'dim', text:'a value just popped off, or a token not reached yet'},
+      {cls:'good', text:'a freshly pushed result'}
     ],
+    shapeOverride: {skip: ['linked-list'], reason: 'this version keeps its operands in a Stack<int> over the token array - no nodes are ever allocated, so there is no linked list to draw.'},
     code: [
-      'DoublyLinkedList head = new DoublyLinkedList(tokens[0]);',
-      'DoublyLinkedList curr = head;',
-      '',
-      'for (int i = 1; i < tokens.Length; i++)',
+      'public class Solution',
       '{',
-      '    curr.next = new DoublyLinkedList(tokens[i], null, curr);',
-      '    curr = curr.next;          // every node keeps a prev link',
-      '}',
-      '',
-      'int ans = 0;',
-      'while (head != null)',
-      '{',
-      '    if ("+-*/".Contains(head.val))',
+      '    public int EvalRPN(string[] tokens)',
       '    {',
-      '        int left = int.Parse(head.prev.prev.val);',
-      '        int right = int.Parse(head.prev.val);',
-      '        int result = 0;',
-      '        if (head.val == "+")       result = left + right;',
-      '        else if (head.val == "-")  result = left - right;',
-      '        else if (head.val == "*")  result = left * right;',
-      '        else                       result = left / right;',
-      '',
-      '        head.val = result.ToString();',
-      '        head.prev = head.prev.prev.prev;',
-      '        if (head.prev != null)',
+      '        // My Solution',
+      '        var stack = new Stack<int>();',
+      '        var operations = new Dictionary<string, Func<int, int, int>>',
       '        {',
-      '            head.prev.next = head;',
+      '            ["+"] = (a, b) => a + b,',
+      '            ["-"] = (a, b) => a - b,',
+      '            ["*"] = (a, b) => a * b,',
+      '            ["/"] = (a, b) => a / b',
+      '        };',
+      '',
+      '        foreach (string c in tokens)',
+      '        {',
+      '            if (operations.ContainsKey(c))',
+      '            {',
+      '                int b = stack.Pop(); // current num',
+      '                int a = stack.Pop(); // Prev result is this.',
+      '                int op = operations[c](a, b);',
+      '                stack.Push(op);',
+      '            }',
+      '            else',
+      '                stack.Push(int.Parse(c));',
       '        }',
+      '',
+      '        return stack.Pop();',
       '    }',
-      '',
-      '    ans = int.Parse(head.val);',
-      '    head = head.next;',
-      '}',
-      '',
-      'return ans;'
+      '}'
     ],
     simulate(input){
-      const t = input.t, n = t.length, steps = [];
-      const vals = t.slice();
-      const prev = t.map((_, i) => i - 1);
-      const gone = t.map(() => false);
-      const isOp = (s) => s === '+' || s === '-' || s === '*' || s === '/';
-      const opLine = {'+':18, '-':19, '*':20, '/':21};
-      let ans = 0, mark = -1, L = '–', R = '–', RES = '–';
-      const chainOf = (hi) => {
-        const out = [];
-        if (hi < 0) return out;
-        let c = (hi >= n) ? n - 1 : prev[hi];
-        while (c >= 0){ out.push(c); c = prev[c]; }
-        return out.reverse();
-      };
-      const panels = (hi) => {
-        const live = chainOf(hi);
-        const slots = live.map(k => ({text: vals[k], cls: k === mark ? 'good' : ''}));
-        if (!slots.length) slots.push({text:'—', cls:'dim'});
-        return [
-          pTiles('Nodes, in original c order', vals, (k) => ({
-            cls: k === mark ? 'good'
-               : k === hi ? 'hot'
-               : gone[k] ? 'dim'
-               : (hi >= 0 && k < hi) ? 'in-window' : ''
-          })),
-          pSlots('Reachable backwards from head — the implicit stack', slots),
-          pPills('', [
-            {k:'head', v: (hi >= 0 && hi < n) ? vals[hi] : '–', cls:'hot'},
-            {k:'left', v: L},
-            {k:'right', v: R},
-            {k:'result', v: RES},
-            {k:'ans', v: ans, cls:'good'}
-          ])
-        ];
-      };
-      steps.push({lines:[1,2], msg:'Every c becomes a node holding its text. <code>head</code> is the first c; <code>curr</code> is only a tail pointer used while building.', panels: panels(-1)});
-      steps.push({lines:[4,6,7], msg:'Each new node is constructed with <code>prev = curr</code>, so the list is linked in both directions. That backward chain is the entire trick: from any node, following <code>prev</code> visits the earlier tokens most-recent-first — exactly what popping a stack gives you. No <code>Stack&lt;int&gt;</code> is ever allocated.', panels: panels(-1)});
-      steps.push({lines:[10,11], msg:'Now walk forward from <code>head</code>. Note that <code>ans</code> is reassigned at <em>every</em> node, not only at operators — it just means “the last value seen”, and for a well-formed expression the last node ends up holding the answer.', panels: panels(-1)});
-      for (let i = 0; i < n; i++){
-        const tk = vals[i];
-        if (isOp(tk)){
-          const p1 = prev[i], p2 = prev[p1];
-          const left = parseInt(vals[p2], 10), right = parseInt(vals[p1], 10);
-          const res = tk === '+' ? left + right
-                    : tk === '-' ? left - right
-                    : tk === '*' ? left * right
-                    : Math.trunc(left / right);
-          L = left; R = right; RES = res;
-          steps.push({lines:[13,15,16,opLine[tk]], msg:'head is on <code>' + tk + '</code>. Its operands must be the two most recent values not yet consumed, and those are the two nodes still linked behind it: <code>head.prev</code> → right = <b>' + right + '</b>, <code>head.prev.prev</code> → left = <b>' + left + '</b>. The <em>nearer</em> node is the right operand — reading them the other way round still passes on <code>+</code> and <code>*</code> and quietly breaks <code>-</code> and <code>/</code>. So this computes <code>' + left + ' ' + tk + ' ' + right + '</code> = <b>' + res + '</b>.', panels: panels(i)});
-          vals[i] = String(res);
-          gone[p1] = true; gone[p2] = true;
-          prev[i] = prev[p2];
-          const repaired = prev[i] >= 0;
-          mark = i;
-          ans = res;
-          steps.push({lines: repaired ? [23,24,25,27,31,32] : [23,24,25,31,32],
-            msg:'The operator node overwrites its own <code>val</code> with <b>' + res + '</b> — it stops being an operator and becomes the value of the sub-expression it just closed, which is precisely what a push would have stored. Then a single assignment, <code>head.prev = head.prev.prev.prev</code>, hops back over both operands at once so neither can ever be reached again.' + (repaired ? ' <code>head.prev.next = head</code> re-links the survivor forward; the walk only ever reads <code>next</code> from the node it is standing on, so this is bookkeeping rather than something the loop depends on.' : ' The chain behind is now empty, so the null check skips the forward repair.') + ' <code>head.next</code> is never touched, which is why the walk still visits every original c.',
-            panels: panels(i)});
-          mark = -1;
+      const tokens = input.tokens;
+      const steps = [];
+      const stack = [];
+      const ops = {'+': 'a + b', '-': 'a - b', '*': 'a * b', '/': 'a / b'};
+      let i = -1, pend = [], fresh = false, hotOp = null;
+
+      const isOp = (s) => Object.prototype.hasOwnProperty.call(ops, s);
+
+      const stackItems = () => stack.map((v, k) => ({
+        text: String(v),
+        cls: k === stack.length - 1 ? (fresh ? 'good' : 'hot') : 'done',
+        fresh: fresh && k === stack.length - 1
+      })).concat(pend.map((v) => ({text: String(v), sub: 'popped', cls: 'dim', popped: true})));
+
+      const panels = () => [
+        pTiles('tokens, read left to right', tokens, (k) => ({
+          cls: k === i ? 'hot' : (k < i ? 'done' : 'dim')
+        }), {ptrs: i >= 0 && i < tokens.length ? [{name: 'c', idx: i, cls: 'accent'}] : []}),
+        pStack('operand stack', [{
+          label: 'Stack<int>',
+          items: stackItems(),
+          mode: 'stack',
+          empty: 'empty - no values read yet',
+          top: 'top - the next Pop comes from here',
+          foot: 'bottom'
+        }], {scale: 0.9}),
+        pChips('operations - one lambda per operator token', [{
+          left: 'token -> (a, b) =>',
+          items: Object.keys(ops).map((k) => ({text: k, sub: ops[k], cls: k === hotOp ? 'hot' : ''}))
+        }]),
+        pPills('state', [
+          {k: 'tokens read', v: i + 1},
+          {k: 'stack depth', v: stack.length},
+          {k: 'top', v: stack.length ? stack[stack.length - 1] : 'empty'}
+        ])
+      ];
+
+      steps.push({lines: [6], msg: 'An empty stack of integers is the whole working memory. It holds <em>values that have been produced but not yet used</em> - which is precisely the set an operator needs to reach into.', panels: panels()});
+      steps.push({lines: [7, 8, 9, 10, 11, 12, 13], msg: 'The four operators are stored as lambdas keyed by their token. This turns the later "which operator is this" question into one dictionary lookup instead of a chain of string comparisons, and it doubles as the test for "is this token an operator at all".', panels: panels()});
+
+      for (let k = 0; k < tokens.length; k++){
+        i = k;
+        fresh = false;
+        pend = [];
+        const c = tokens[k];
+        hotOp = null;
+        steps.push({lines: [15], msg: 'The loop takes the next token, <b>' + c + '</b>. Postfix needs no lookahead and no brackets: each token can be handled the moment it is seen.', panels: panels()});
+
+        if (isOp(c)){
+          hotOp = c;
+          steps.push({lines: [17], msg: 'The dictionary contains the key <b>' + c + '</b>, so this token is an instruction rather than a value. Its two operands are already on the stack - postfix guarantees they were produced before it.', panels: panels()});
+
+          const b = stack.pop();
+          pend = [b];
+          steps.push({lines: [19], msg: 'The first Pop gives <b>' + b + '</b>. The newest value on the stack is the <em>right</em>-hand operand, because it is the one written last in the expression. Getting this order wrong would break <code>-</code> and <code>/</code>.', panels: panels()});
+
+          const a = stack.pop();
+          pend = [b, a];
+          steps.push({lines: [20], msg: 'The second Pop gives <b>' + a + '</b>, the left-hand operand - often the result of an earlier operator, which is why a nested expression needs no extra machinery.', panels: panels()});
+
+          const res = c === '+' ? a + b : c === '-' ? a - b : c === '*' ? a * b : Math.trunc(a / b);
+          steps.push({lines: [21], msg: 'The lambda for <b>' + c + '</b> runs: ' + a + ' ' + c + ' ' + b + ' = <b>' + res + '</b>.' + (c === '/' ? ' Integer division truncates toward zero, which is what the problem asks for.' : ''), panels: panels()});
+
+          pend = [];
+          stack.push(res);
+          fresh = true;
+          steps.push({lines: [22], msg: 'The result is pushed back. Two values became one, so the stack shrank by one - that is how a whole expression of ' + tokens.length + ' tokens collapses to a single number.', panels: panels()});
         } else {
-          L = '–'; R = '–'; RES = '–';
-          ans = parseInt(tk, 10);
-          steps.push({lines:[13,31,32], msg:'<code>' + tk + '</code> is not in <code>"+-*/"</code>, so the whole <code>if</code> is skipped and the node is left exactly where it is. Leaving it linked <em>is</em> the push — some later operator will reach it through <code>prev</code>. <code>ans</code> becomes ' + tk + ' and <code>head</code> steps forward.', panels: panels(i)});
+          const v = Number(c);
+          stack.push(v);
+          fresh = true;
+          steps.push({lines: [24, 25], msg: 'Not a key in the dictionary, so <b>' + c + '</b> is a number: parse it and push it. Nothing can be computed with it yet - it waits until some operator claims it.', panels: panels()});
         }
       }
-      mark = n - 1;
-      steps.push({lines:[35], msg:'<code>head</code> ran off the end. The last node was rewritten to <b>' + ans + '</b>, and because <code>ans</code> was reassigned at every node it is holding exactly that. One pass to build the list, one pass to fold it — and the “stack” was never anything but the <code>prev</code> pointers already there.', panels: panels(n)});
+
+      i = tokens.length;
+      fresh = false;
+      hotOp = null;
+      steps.push({lines: [15], msg: 'Every token has been consumed, so the loop ends with exactly one value on the stack - the guarantee a well-formed postfix expression gives you.', panels: panels()});
+
+      const out = stack[stack.length - 1];
+      steps.push({lines: [28], msg: 'That last value is popped and returned: <b>' + out + '</b>. Each token was touched once and the stack never holds more entries than there are tokens, giving O(n) time and O(n) space.', panels: panels()});
+
       return steps;
     }
   },
   {
-    label: 'Explicit stack with a dictionary of operators',
-    badge: 'O(n) time · O(n) space · Stack + Func table · optimal.cs',
-    blurb: 'Scan left to right. A number means nothing until its operator arrives, so it waits on the stack; an operator\'s operands are always the two most recent values, which is exactly what two <code>Pop</code>s return — first pop is the <b>right</b> operand. A dictionary of <code>Func&lt;int,int,int&gt;</code> makes <code>ContainsKey</code> the “is this an operator?” test and collapses the four-way branch into one lookup.',
+    label: 'Doubly linked list, collapsed in place by rewiring prev',
+    badge: 'O(n) time · O(n) space · node chain with pointer surgery · optimal-variant.cs',
+    blurb: 'The tokens are first strung into a doubly linked list, then walked once. When head lands on an operator it reads its two operands through prev and prev.prev, overwrites its own val with the result, and re-points prev three nodes back - splicing the used operands out. The prev chain behind head is the operand stack, made of pointers.',
     legend: [
-      {cls:'hot', text:'c being processed'},
-      {cls:'good', text:'top of the stack'},
-      {cls:'head', text:'operator selected from the dictionary'},
-      {cls:'dim', text:'not read yet'}
+      {cls:'hot', text:'head - the node being processed'},
+      {cls:'in-window', text:'the two operand nodes reached through prev'},
+      {cls:'dim', text:'a node spliced out of the prev chain, or not built yet'},
+      {cls:'done', text:'behind head and still linked'},
+      {cls:'good', text:'a node whose val was overwritten with a result'}
     ],
+    shapeOverride: {skip: ['stack'], reason: 'no Stack object is ever created here - the prev pointers of the node chain play that role, so the stack is drawn as the second row of the list panel instead.'},
     code: [
-      'var stack = new Stack<int>();',
-      'var operations = new Dictionary<string, Func<int, int, int>>',
+      'public class DoublyLinkedList',
       '{',
-      '    ["+"] = (left, right) => left + right,',
-      '    ["-"] = (left, right) => left - right,',
-      '    ["*"] = (left, right) => left * right,',
-      '    ["/"] = (left, right) => left / right',
-      '};',
+      '    public string val;',
+      '    public DoublyLinkedList next;',
+      '    public DoublyLinkedList prev;',
       '',
-      'foreach (string c in tokens)',
-      '{',
-      '    if (operations.ContainsKey(c))',
+      '    public DoublyLinkedList(string val, DoublyLinkedList next = null,',
+      '                            DoublyLinkedList prev = null)',
       '    {',
-      '        int right = stack.Pop();   // the newer value',
-      '        int left = stack.Pop();    // the older one, under it',
-      '        int result = operations[c](left, right);',
-      '        stack.Push(result);',
+      '        this.val = val;',
+      '        this.next = next;',
+      '        this.prev = prev;',
       '    }',
-      '    else',
-      '        stack.Push(int.Parse(c));',
       '}',
       '',
-      'return stack.Pop();'
+      'public class Solution',
+      '{',
+      '    public int EvalRPN(string[] tokens)',
+      '    {',
+      '        DoublyLinkedList head = new DoublyLinkedList(tokens[0]);',
+      '        DoublyLinkedList curr = head;',
+      '',
+      '        for (int i = 1; i < tokens.Length; i++)',
+      '        {',
+      '            curr.next = new DoublyLinkedList(tokens[i], null, curr);',
+      '            curr = curr.next;',
+      '        }',
+      '',
+      '        int ans = 0;',
+      '        while (head != null)',
+      '        {',
+      '            if ("+-*/".Contains(head.val))',
+      '            {',
+      '                int l = int.Parse(head.prev.prev.val);',
+      '                int r = int.Parse(head.prev.val);',
+      '                int res = 0;',
+      '                if (head.val == "+")',
+      '                {',
+      '                    res = l + r;',
+      '                }',
+      '                else if (head.val == "-")',
+      '                {',
+      '                    res = l - r;',
+      '                }',
+      '                else if (head.val == "*")',
+      '                {',
+      '                    res = l * r;',
+      '                }',
+      '                else',
+      '                {',
+      '                    res = l / r;',
+      '                }',
+      '',
+      '                head.val = res.ToString();',
+      '                head.prev = head.prev.prev.prev;',
+      '                if (head.prev != null)',
+      '                {',
+      '                    head.prev.next = head;',
+      '                }',
+      '            }',
+      '',
+      '            ans = int.Parse(head.val);',
+      '            head = head.next;',
+      '        }',
+      '',
+      '        return ans;',
+      '    }',
+      '}'
     ],
     simulate(input){
-      const t = input.t, n = t.length, steps = [];
-      const stack = [];
+      const tokens = input.tokens;
+      const n = tokens.length;
+      const val = tokens.slice();
+      const prev = [], next = [];
+      const steps = [];
+      const consumed = new Set();
+      const results = new Set();
+      const opLines = {'+': [37, 39], '-': [41, 43], '*': [45, 47], '/': [49, 51]};
+
+      let built = 1, headIdx = 0, curIdx = 0, ans = 0, phase = 'build';
+      let lIdx = -1, rIdx = -1, freshIdx = -1;
+      prev[0] = null; next[0] = null;
+
       const isOp = (s) => s === '+' || s === '-' || s === '*' || s === '/';
-      const table = {'+':'left + right', '-':'left - right', '*':'left * right', '/':'left / right'};
-      let L = '–', R = '–', RES = '–';
-      const panels = (i, hotOp) => {
-        const slots = stack.map((v, j) => ({text: String(v), cls: j === stack.length - 1 ? 'good' : ''}));
-        if (!slots.length) slots.push({text:'empty', cls:'dim'});
-        return [
-          pTiles('Tokens', t, (k) => ({cls: k === i ? 'hot' : (i >= 0 && k > i) ? 'dim' : ''})),
-          pChips('operations — one lookup instead of four branches', [{items: mapChips(table, hotOp)}]),
-          pSlots('stack (bottom → top)', slots),
-          pPills('', [
-            {k:'c', v: (i >= 0 && i < n) ? t[i] : '–', cls:'hot'},
-            {k:'right (1st pop)', v: R},
-            {k:'left (2nd pop)', v: L},
-            {k:'result', v: RES, cls:'good'},
-            {k:'stack size', v: stack.length}
-          ])
-        ];
+
+      const cellCls = (k) => {
+        if (k >= built) return 'ghost';
+        if (consumed.has(k)) return 'dim';
+        if (phase !== 'build' && k === headIdx) return 'hot';
+        if (k === lIdx || k === rIdx) return 'in-window';
+        if (results.has(k)) return 'good';
+        if (phase !== 'build' && k < headIdx) return 'done';
+        return '';
       };
-      steps.push({lines:[1,2,3,4,5,6,7,8], msg:'The stack holds <code>int</code>s only — operator symbols never live on it, they are consumed the instant they are read. The dictionary maps each symbol to a <code>Func&lt;int,int,int&gt;</code>, so membership in it <em>is</em> the “is this an operator?” test, and dispatch is a lookup rather than an if/else chain.', panels: panels(-1, null)});
-      for (let i = 0; i < n; i++){
-        const tk = t[i];
-        if (isOp(tk)){
-          const right = stack.pop(), left = stack.pop();
-          const res = tk === '+' ? left + right
-                    : tk === '-' ? left - right
-                    : tk === '*' ? left * right
-                    : Math.trunc(left / right);
-          L = left; R = right; RES = res;
-          stack.push(res);
-          steps.push({lines:[12,14,15,16,17], msg:'<code>' + tk + '</code> is a key in <code>operations</code>, so it needs the two most recent values. The <b>first</b> pop is the <b>right</b> operand — it was pushed last, so it is on top; the second pop is the left one underneath. Applying the lambda gives <code>' + left + ' ' + tk + ' ' + right + '</code> = <b>' + res + '</b>, pushed back as a single value, which makes the finished sub-expression indistinguishable from a literal to everything that follows.', panels: panels(i, tk)});
-        } else {
-          L = '–'; R = '–'; RES = '–';
-          stack.push(parseInt(tk, 10));
-          steps.push({lines:[12,19,20], msg:'<code>' + tk + '</code> is not a key, so it is a number. On its own it carries no meaning yet — the operator that will use it has not been read — so it is parsed and pushed to wait. Push order is the only thing that records which values are “most recent”.', panels: panels(i, null)});
-        }
+
+      const mainRow = () => ({
+        label: 'the tokens as a doubly linked list - next pointers run left to right',
+        nodes: val.map((v, k) => ({id: 'n' + k, v: v, cls: cellCls(k), fresh: k === freshIdx})),
+        tail: true,
+        arrows: val.slice(1).map((_, k) => {
+          if (k + 1 >= built) return 'ghost';
+          if (next[k] !== k + 1) return 'ghost';
+          return k + 1 <= headIdx ? 'done' : '';
+        }),
+        tags: phase === 'build'
+          ? [{name: 'curr', idx: curIdx, cls: 'accent'}]
+          : [{name: 'head', idx: Math.min(headIdx, n - 1), cls: 'accent'}]
+      });
+
+      const prevChain = () => {
+        const out = [];
+        let p = headIdx < n ? prev[headIdx] : null;
+        let guard = 0;
+        while (p !== null && p !== undefined && guard++ < 30){ out.unshift(p); p = prev[p]; }
+        return out;
+      };
+
+      const stackRow = () => {
+        const chain = prevChain();
+        return {
+          label: 'walking back from head.prev - these are the values still waiting, newest on the right',
+          nodes: chain.map((k) => ({id: 's' + k, v: val[k], cls: (k === lIdx || k === rIdx) ? 'in-window' : 'done'})),
+          arrows: chain.slice(1).map(() => 'back'),
+          empty: 'head.prev is null - nothing is waiting behind head'
+        };
+      };
+
+      const panels = () => [
+        pTiles('input array', tokens, (k) => ({cls: k === headIdx && phase !== 'build' ? 'hot' : (k < built ? 'done' : 'dim')}), {narrow: true}),
+        pList('the chain, and the prev chain that acts as the stack', phase === 'build' ? [mainRow()] : [mainRow(), stackRow()], {scale: 0.85}),
+        pPills('state', [
+          {k: 'nodes built', v: built},
+          {k: 'head.val', v: headIdx < n ? val[headIdx] : 'null'},
+          {k: 'head.prev', v: (headIdx < n && prev[headIdx] !== null && prev[headIdx] !== undefined) ? val[prev[headIdx]] : 'null'},
+          {k: 'ans', v: ans}
+        ])
+      ];
+
+      steps.push({lines: [20, 21], msg: 'The first token becomes the head node, and <b>curr</b> starts there. Values are kept as strings for now, since a node may hold either a number or an operator.', panels: panels()});
+
+      for (let i = 1; i < n; i++){
+        built = i + 1;
+        prev[i] = i - 1;
+        next[i] = null;
+        next[i - 1] = i;
+        curIdx = i;
+        freshIdx = i;
+        steps.push({lines: [23, 25, 26], msg: 'Node <b>' + val[i] + '</b> is appended with its <code>prev</code> set to <b>' + val[i - 1] + '</b>, and curr walks onto it. Both directions are wired now, which is what later lets the evaluation look <em>backwards</em> from an operator.', panels: panels()});
       }
-      const out = stack[stack.length - 1];
-      steps.push({lines:[23], msg:'Tokens exhausted. Each operator removed two values and put back one, and a well-formed RPN expression has exactly enough operators to drain everything down to a single number: <b>' + out + '</b>. Anything else left on the stack would mean the input was malformed.', panels: panels(n, null)});
+
+      freshIdx = -1;
+      phase = 'walk';
+      steps.push({lines: [29], msg: 'The chain mirrors the array exactly. <b>ans</b> starts at 0 and the second pass begins - this time head marches forward and does the arithmetic.', panels: panels()});
+
+      let guard = 0;
+      while (headIdx < n && guard++ < 60){
+        const c = val[headIdx];
+        lIdx = -1; rIdx = -1;
+        steps.push({lines: [30, 32], msg: 'head is on <b>' + c + '</b>. The test asks whether that string is one of the four operators' + (isOp(c) ? ' - it is, so two operands behind it must be folded together.' : ' - it is not, so this node is just a value and is left alone.'), panels: panels()});
+
+        if (isOp(c)){
+          const pIdx = prev[headIdx];
+          const ppIdx = prev[pIdx];
+          lIdx = ppIdx; rIdx = pIdx;
+          const l = Number(val[ppIdx]);
+          const r = Number(val[pIdx]);
+          steps.push({lines: [34, 35], msg: 'The operands are read through the prev pointers: <code>head.prev.prev</code> holds <b>' + val[ppIdx] + '</b> (left) and <code>head.prev</code> holds <b>' + val[pIdx] + '</b> (right). Two hops back is the pointer version of two pops - and the nearer node is the right-hand side.', panels: panels()});
+
+          const res = c === '+' ? l + r : c === '-' ? l - r : c === '*' ? l * r : Math.trunc(l / r);
+          steps.push({lines: [36].concat(opLines[c]), msg: 'The if/else chain compares head.val against each operator until <b>' + c + '</b> matches: ' + l + ' ' + c + ' ' + r + ' = <b>' + res + '</b>.' + (c === '/' ? ' C# integer division truncates toward zero.' : ''), panels: panels()});
+
+          val[headIdx] = String(res);
+          results.add(headIdx);
+          freshIdx = headIdx;
+          steps.push({lines: [54], msg: 'The operator node <em>becomes</em> its own answer: head.val is overwritten with <b>' + res + '</b>. No node is allocated for the result - the instruction is reused as the value it produced.', panels: panels()});
+
+          freshIdx = -1;
+          const newPrev = prev[ppIdx];
+          prev[headIdx] = newPrev === undefined ? null : newPrev;
+          consumed.add(pIdx);
+          consumed.add(ppIdx);
+          lIdx = -1; rIdx = -1;
+          steps.push({lines: [55], msg: 'head.prev jumps three nodes back, past both operands and the operator slot they sat behind. The two consumed nodes drop out of the prev chain, exactly as two pops shrink a stack.', panels: panels()});
+
+          if (prev[headIdx] !== null){
+            next[prev[headIdx]] = headIdx;
+            steps.push({lines: [56, 58], msg: 'The node now behind head still points forward at an operand that no longer counts, so its <code>next</code> is re-aimed at head. The two directions agree again, and the spliced-out nodes are unreachable.', panels: panels()});
+          } else {
+            steps.push({lines: [56], msg: 'head.prev is null - the result is now the only value left behind head, so there is no backward neighbour whose <code>next</code> needs fixing.', panels: panels()});
+          }
+        }
+
+        ans = Number(val[headIdx]);
+        headIdx = next[headIdx] === undefined || next[headIdx] === null ? n : next[headIdx];
+        steps.push({lines: [62, 63], msg: 'Whatever head holds is recorded in <b>ans</b> (=' + ans + ') and head advances along <code>next</code>' + (headIdx >= n ? ' - which is null, so the walk is over.' : ' to <b>' + val[headIdx] + '</b>.') + ' The last node visited is the whole expression, so this running assignment leaves the right value behind.', panels: panels()});
+      }
+
+      steps.push({lines: [30], msg: 'head is null: every token node has been visited once.', panels: panels()});
+      steps.push({lines: [66], msg: 'The value of the final node is returned: <b>' + ans + '</b>. Same single left-to-right sweep and same O(n) time as the stack version, with the O(n) space spent on n nodes instead of a stack array.', panels: panels()});
+
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

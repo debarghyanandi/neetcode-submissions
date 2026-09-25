@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(1) time / O(n) space
-// #  auxiliary stack tracking running minimum   [min-stack-parallel-stack]
+// #  parallel stack tracking minimum   [parallel-stack-min]
 // #  the only solution in this folder
 // #
 // #  YOU SOLVED THIS YOURSELF
 // #
-// #  a parallel stack pushes/pops in lockstep with the main stack, each
-// #  slot holding the min seen up to that depth, giving O(1) GetMin at the
-// #  cost of one extra int per element
+// #  Each operation (push, pop, top, getMin) performs constant work by
+// #  delegating to synchronized stack operations.
 // ##########################################################################
 
 public class MinStack
@@ -54,71 +53,72 @@ public class MinStack
 
 /*
 ================================================================================
- PATTERN : Auxiliary stack - push the running minimum in parallel
+ PATTERN : Two parallel stacks - store the min alongside each value
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  stack      every pushed value, in push order
+  minStack   minStack top = minimum of all values now in stack; same height as stack
 WHY THIS PATTERN
-  GetMin has to answer in constant time, but the set of live values changes on
-  every Push and Pop, so scanning is out. The saving observation is that a stack
-  only ever mutates at the top: the contents after any sequence of operations
-  are always some prefix of the push history. So the minimum for a given state
-  can be computed once, at the moment that state is created, and stored with the
-  element that created it. minStack is exactly that - one precomputed answer per
-  element.
+  The problem asks for push, pop, top and GetMin all in constant time. A single
+  stack cannot answer GetMin without scanning, and a heap cannot be popped in
+  stack order. Because the minimum only depends on the values currently present,
+  we can freeze the answer at push time: minStack records, for each depth, the
+  min of everything at or below that depth. Popping a value throws away exactly
+  the one minStack entry that was created with it, so the old answer is restored
+  for free.
+BRUTE FORCE
+  Keep only stack and make GetMin loop over its items with foreach, returning
+  the smallest. Push, Pop and Top stay O(1) but GetMin becomes O(n) per call, so
+  a run of n GetMin calls costs O(n^2). This file trades one extra int per
+  element for a constant-time GetMin.
 INVARIANT
-  Two things hold before and after every public operation:
-  1. stack.Count == minStack.Count. Push does exactly one Push on each, Pop does
-  exactly one Pop on each; nothing else touches them.
-  2. minStack.Peek() == the minimum of everything currently in stack.
-  Invariant 1 is what makes the bare minStack.Pop() in Pop legal with no
-  emptiness check - if stack.Pop() did not throw, minStack is non-empty too.
-WHY POP NEEDS NO RECOMPUTATION
-  The correctness argument an interviewer wants. If the pushes so far are
-  v1..vk, then the i-th entry of minStack is min(v1..vi). Popping stack returns
-  the structure to the state it held after v1..v(k-1) - a state that literally
-  existed earlier - and the minStack entry now exposed, min(v1..v(k-1)), is the
-  answer computed for precisely that state. Contrast the tempting single-int
-  approach: one `min` field answers GetMin fine, but once you pop the element
-  that was the minimum you have no way to recover the previous one without an
-  O(n) rescan.
+  After every operation, stack.Count == minStack.Count, and minStack.Peek()
+  equals the minimum of all values in stack. Push keeps it by pushing
+  Math.Min(val, old top), which is by definition the min of the new contents.
+  Pop keeps it by removing one entry from each, which returns both stacks to the
+  exact state they had one push earlier. So GetMin can just read the top.
+DUPLICATE MINIMA ARE SAFE
+  Repeated values are handled without any special case because minStack stores a
+  value per element, not per distinct minimum. Pushing 5, 5 stores 5 twice, so
+  popping one 5 still leaves 5 as the reported minimum, which is correct. A
+  space-saving variant that only pushes when val <= current min would need that
+  <= exactly, not <, or the second 5 would be lost.
 WATCH OUT
-  Push reassigns the parameter val before pushing it onto minStack, so the order
-  of the two lines is load-bearing: stack.Push(val) must run first, while val
-  still holds the caller's value. Move it below the Math.Min line and you would
-  silently store running minima into the real stack, and Top() would start
-  lying.
-
-  The ternary minStack.Count == 0 ? val : minStack.Peek() guards Peek on an
-  empty stack. The common alternative is seeding minStack with int.MaxValue,
-  which removes the branch but leaves a sentinel that GetMin would return on an
-  empty structure. The check here has no such hole.
-
-  Top, Pop and GetMin all throw InvalidOperationException on an empty stack.
-  That is the problem's guarantee (calls are valid), not a property of this
-  code.
-THE FOLLOW-UP: SHRINKING MINSTACK
-  Expect "can you use less than one extra entry per element?" Yes: push onto
-  minStack only when val <= minStack.Peek(), and on Pop, pop minStack only if
-  the value popped from stack equals minStack.Peek().
-
-  The trap is <= versus <. With pushes 2 then 2, strict < stores the 2 only
-  once; the first Pop sees a popped value equal to minStack.Peek() and removes
-  it, leaving the surviving 2 with no min entry - GetMin then reports a stale or
-  wrong answer. Using <= stores both duplicates and keeps the counts aligned.
-  The variant that avoids duplicate storage entirely is a stack of (value,
-  count) pairs, incrementing the count on a repeat of the current minimum.
-
-  Neither variant improves the worst case: a strictly decreasing input pushes an
-  entry every time. This file trades that constant factor for code with no
-  conditional in Pop at all.
+  Pop, Top and GetMin all call Peek or Pop with no emptiness check, so calling
+  any of them on an empty MinStack throws InvalidOperationException. Push reuses
+  the parameter val as scratch for the computed minimum; after that line the
+  original argument is gone, which is fine here since stack.Push(val) already
+  happened, but any later edit that needs the raw value will silently read the
+  min instead. Both fields are public, so outside code could push to stack alone
+  and break the equal-height invariant that Pop relies on.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you cut the memory used by minStack?
+     Push onto minStack only when val <= minStack.Peek(), and in Pop only pop
+     minStack when stack.Pop() returned a value equal to minStack.Peek(). Best
+     case it stores one entry; worst case (strictly decreasing input) it is the
+     same size, and the code gets more branches.
+  2. Can you do it with one stack and no extra stack at all?
+     Keep a single min field and push the encoded value 2*val - min when a new
+     minimum arrives, restoring the old min on pop. It works but needs a long to
+     avoid overflow, and it is much harder to read than this version.
+  3. What if you also need GetMax?
+     Add a third parallel stack built the same way with Math.Max. The invariant
+     and the equal-height argument carry over unchanged.
+  4. How does this change if it must be a queue instead of a stack (min at
+  front, pop from front)?
+     The freeze-at-push trick fails because the oldest element leaves first. Use
+     two stacks to simulate the queue, each with its own min stack, and take the
+     min of the two tops, giving amortized O(1).
 TRIGGER
-  Reach for a parallel stack whenever a LIFO structure must also report an
-  aggregate in O(1). The aggregate has to be foldable as a prefix - computable
-  from (previous aggregate, new value) alone, which is why min here is just
-  Math.Min(val, previous). Max is the same code with Math.Max. Median or "second
-  smallest" do not qualify: they cannot be reconstructed from the prior answer
-  plus the new element, and need a heap or ordered structure instead.
+  A data structure must report an aggregate (min, max, count) in O(1) while
+  elements leave in the exact reverse order they arrived.
+C# NOTE
+  System.Collections.Generic.Stack<int> is the right choice here: it is an
+  array-backed stack of value types, so no per-node allocation and no boxing.
+  Making stack and minStack private readonly (or exposing only the five methods)
+  would stop callers from desynchronising the two heights.
 COMPLEXITY
   Time  : O(1)
   Space : O(n)
