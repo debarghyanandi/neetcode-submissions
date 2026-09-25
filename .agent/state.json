@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-25T22:54:19.843Z",
+  "updatedAt": "2026-09-25T23:07:09.016Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4677,14 +4677,68 @@
     },
     "search-for-word-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "c79bca29949358647c0aa15fa96894b1a23de725b6db0e7eb9cdbcd3fb03ecaa": "optimal.cs"
+      },
+      "fingerprints": {
+        "c79bca29949358647c0aa15fa96894b1a23de725b6db0e7eb9cdbcd3fb03ecaa": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2233829b72dd"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2233829b72dd\",\"time\":\"O(m * n * 4^L)\",\"space\":\"O(m * n)\",\"algorithm\":\"Trie with DFS backtracking\",\"approachKey\":\"trie-dfs-backtrack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n * 4^L)",
+          "space": "O(m * n)",
+          "algorithm": "Trie with DFS backtracking",
+          "approachKey": "trie-dfs-backtrack",
+          "correct": true,
+          "structures": [
+            "matrix",
+            "trie",
+            "hash-map",
+            "call-stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2233829b72dd\",\"time\":\"O(m * n * 4^L)\",\"space\":\"O(m * n)\",\"algorithm\":\"Trie with DFS backtracking\",\"approachKey\":\"trie-dfs-backtrack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2233829b72dd"
+        },
+        "structures": [
+          "matrix",
+          "trie",
+          "hash-map",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-25T23:07:08.714Z"
+      }
     },
     "sliding-window-maximum": {
       "topic": "Data Structures & Algorithms",
