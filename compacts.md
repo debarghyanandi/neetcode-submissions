@@ -278,6 +278,14 @@ Chronological, so you do not re-litigate settled decisions:
   Triggers are now `push` and `workflow_dispatch` only.
 - Three manual inputs, labels are just the names — no explanatory sentences in
   the form.
+- **2026-09-26: the ladder holds the exotic shapes, and stops refusing what it
+  cannot rank.** Twelve exponential/grid rungs added (`O(m * n * 4 * 3^(L - 1))`
+  and friends), plus aliases for capital-letter lengths and for `·`/`−`
+  typography. Two rules changed with them: a **one-solution folder is never
+  ranked**, because there is no sibling to compare it against; and the word
+  **`other` never reaches a file**, it is always replaced by what the model wrote,
+  even when nothing can rank it. `O(n^n)` is the canary that must stay
+  unresolvable — do not add it as a rung.
 - **Reversed 2026-09-25: classify no longer reports `bruteForce`,** and
   `selectForVisualizer()` no longer drops anything. His words: he does not submit
   brute force, and if he ever does it is deliberate. Nothing decides on his behalf

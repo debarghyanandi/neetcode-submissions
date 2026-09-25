@@ -170,10 +170,17 @@ live in `scripts/lib/complexity.mjs` and never change:
 4. Everything else is `suboptimal.cs`.
 5. A file already called `optimal.cs` that's still best **keeps its name** — otherwise the
    git history churns for no reason.
-6. If any complexity came back as `other`, **refuse to name anything** and leave the folder
-   for a human — unless the written-in value is an existing tier under a different letter
-   (`O(m)` is `O(n)` for the other input), in which case it is adopted and ranks as that
-   tier. Renaming a variable is not guessing at a magnitude; `O(n * 2^n)` still refuses.
+6. A folder with **one** solution is not ranked at all — there is no sibling to compare it
+   with, so it is `optimal.cs` whatever its complexity. Ranking only ever decides between
+   siblings.
+7. With two or more, if any complexity cannot be placed on the ladder, **refuse to name
+   anything** and leave the folder for a human — unless the written-in value is an existing
+   tier under a different letter (`O(m)` is `O(n)` for the other input), in which case it is
+   adopted and ranks as that tier. Renaming a variable is not guessing at a magnitude;
+   `O(n^n)` still refuses.
+8. Either way the word `other` never reaches a file. It is a word about the ladder, not about
+   the code, so it is replaced by whatever the model actually wrote down — even when nothing
+   can rank that. `search-for-word-ii` reads `O(m * n * 4 * 3^(L - 1))`, not "other".
 
 Rule 6 matters more than it looks. When the classifier met a bounded min-heap, the honest
 answer was O(n log k), which wasn't on the list at the time. It answered `other` and the

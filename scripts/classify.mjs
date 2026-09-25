@@ -375,25 +375,37 @@ for (const p of targets) {
     if (verbose) console.log(`        ${s.note}`);
   }
 
-  // An "other" whose written-in value is an existing tier under a different letter is
-  // ADOPTED rather than refused. The enum already offers the common renames, so this is the
-  // second net: it catches a letter nobody thought to list. canonical() resolves by variable
-  // rename only - it never moves a magnitude - so a genuinely new shape still falls through
-  // to the refusal below, which is the outcome that should stop a run. The written value is
-  // kept verbatim for display, because the header should print the letters the code uses.
-  const adopted = [];
+  // An "other" is replaced by the value the model actually wrote, ALWAYS - whether or not
+  // the ladder can place it. Two different things follow from that, and they used to be
+  // tangled together:
+  //
+  //   Can it be RANKED?   canonical() answers that, by variable rename only, never by moving
+  //                       a magnitude. Unresolved means assignNames still refuses - but only
+  //                       when there are siblings to put in an order.
+  //   Can it be PRINTED?  Always. "other" is a word about the ladder, not about the code, and
+  //                       a header that says "other space" tells the reader nothing. The
+  //                       written value goes in even when nothing can rank it, so a
+  //                       one-solution folder like word-search reads
+  //                       O(m * n * 4 * 3^(L - 1)) rather than "other".
+  const adopted = [], offLadder = [];
   for (const s of res.solutions) {
     for (const axis of ['time', 'space']) {
       if (s[axis] !== 'other') continue;
-      const canon = canonical(s.actualComplexity);
-      if (!canon) continue;
-      s[axis] = s.actualComplexity.trim().replace(/\s+/g, ' ');
-      adopted.push(`${s.file} ${axis}: ${s[axis]} ranks as ${canon}`);
+      const written = (s.actualComplexity ?? '').trim().replace(/\s+/g, ' ');
+      if (!written) continue;   // nothing written down, so there is nothing to print either
+      const canon = canonical(written);
+      s[axis] = written;
+      if (canon) adopted.push(`${s.file} ${axis}: ${written} ranks as ${canon}`);
+      else offLadder.push({ file: s.file, axis, written });
     }
   }
   if (adopted.length) {
     console.log('  off the ladder, resolved by variable rename:');
     for (const a of adopted) console.log(`    ${a}`);
+  }
+  if (offLadder.length) {
+    console.log('  off the ladder, kept verbatim and unrankable:');
+    for (const g of offLadder) console.log(`    ${g.file} ${g.axis}: ${g.written}`);
   }
 
   // assignNames breaks a tie in your favour, so it has to be told which are
@@ -408,13 +420,12 @@ for (const p of targets) {
     // nothing to work from and failed for reasons that looked unrelated.
     console.log(`    REFUSED - ${plan.reason}. Left untouched for you to decide.`);
     console.log(`      complexities returned: ${res.solutions.map((s) => `${s.file}=${s.time}/${s.space}`).join(', ')}`);
-    const gaps = res.solutions.filter((s) => s.actualComplexity && (s.time === 'other' || s.space === 'other'));
-    if (gaps.length) {
+    if (offLadder.length) {
       console.log('      the ladder has no rung for:');
-      for (const g of gaps) console.log(`        ${g.file}: ${g.actualComplexity}  <- add this to lib/complexity.mjs`);
+      for (const g of offLadder) console.log(`        ${g.file} ${g.axis}: ${g.written}  <- add this to lib/complexity.mjs`);
     }
     console.log(`  est. cost $${res.cost}  ·  turns used: ${res.turns ?? '?'}  ·  ${usageLine(res.usage)}\n`);
-    report('classify', p.slug, 'refused', gaps.length ? `ladder missing: ${gaps.map((g)=>g.actualComplexity).join(', ')}` : plan.reason);
+    report('classify', p.slug, 'refused', offLadder.length ? `ladder missing: ${offLadder.map((g) => g.written).join(', ')}` : plan.reason);
     failures++;
     endGroup();
     continue;

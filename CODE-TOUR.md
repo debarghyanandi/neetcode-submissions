@@ -429,6 +429,21 @@ for classification**: the model must pick a rung from this exact list, and the
 A complexity the ladder has no rung for is refused, not guessed — and the run
 prints what it was so a rung can be added.
 
+Two limits on that refusal, both learned the hard way. **A folder with one
+solution is never ranked**, so an unrankable complexity is not a reason to refuse
+it — there is no sibling to compare it against, and the file is `optimal.cs`
+either way. And **the word `other` never reaches a file**: it describes the
+ladder, not the code, so it is always replaced by what the model actually wrote,
+even when nothing can rank that. `search-for-word-ii` reads
+`O(m * n * 4 * 3^(L - 1))` rather than "other".
+
+The tail of the ladder is the **exponential band**, and its order is honestly
+approximate: `3^L` over a grid, `9^m` over blank cells and `4^n` over a decision
+tree use different bases *and* different variables, so which dominates depends on
+how those variables relate in the problem. That costs nothing, because a folder
+holding two different exponential shapes has never existed here — and if one ever
+does, the two will be ranked by base, which is the best a single list can do.
+
 Two things sit between "not on the ladder" and that refusal, because a *tier*
 the ladder spells with another letter is not a new tier:
 
@@ -441,8 +456,10 @@ export function canonical(text) { /* rename single-letter variables onto n and m
 the header prints the letter the code actually uses, while `rank` returns the
 target's position — **equal to `O(n)`, not one rung worse.** `canonical` is the
 second net, for a letter nobody listed: it resolves by variable rename only, so
-`O(a * b)` becomes `O(m * n)` and `O(n * 2^n)` still resolves to nothing and is
-still refused. No rename ever moves a magnitude.
+`O(a * b)` becomes `O(m * n)` and `O(n^n)` still resolves to nothing. No rename
+ever moves a magnitude. `key()` also flattens typography before it looks anything
+up, so a complexity pasted out of a write-up — `O(M·N·4·3^(L−1))`, with middle
+dots and a real minus sign — finds the rung a keyboard would have typed.
 
 This exists because `longest-common-subsequence` took a run down. Its rolling
 two-row DP is `O(m)` space — a tier the ladder already had, under the letter

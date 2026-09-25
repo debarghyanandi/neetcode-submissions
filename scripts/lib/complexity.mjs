@@ -44,10 +44,29 @@ export const COMPLEXITY = [
   'O(n^2)',
   'O(n^2 log n)',
   'O(n^3)',
+  // ---- the exponential band ---------------------------------------------------------
+  // Read the ordering inside this band as approximate. These rungs use different bases AND
+  // different variables - 3^L over a grid, 9^m over blank cells, 4^n over a decision tree -
+  // and which of two actually dominates depends on how those variables relate in the problem
+  // at hand, which a single list cannot know. They are ordered by base and by dominant term,
+  // which is the best a total order can do.
+  //
+  // That costs nothing in practice. Ranking only ever decides between SIBLINGS in one folder,
+  // a folder holding two different exponential shapes has never existed here, and a
+  // one-solution folder is not ranked at all - see assignNames.
   'O(2^n)',
   'O(n * 2^n)',   // every subset, and O(n) to copy each one out
   'O(n^2 * 2^n)', // bitmask DP over pairs of states - Held-Karp
+  'O(3^n)',       // three choices per step - letter-combinations-of-a-phone-number
   'O(4^n / sqrt n)', // the nth Catalan number - generate-parentheses
+  'O(4^n)',       // four choices per step, unbounded depth
+  // Grid backtracking. L is the length of the word being spelled: m * n starting cells, four
+  // first steps, then three at every step after (you never walk back onto the cell you came
+  // from). All three spellings appear in the wild, so all three are rungs.
+  'O(m * n * 3^L)',
+  'O(m * n * 4 * 3^(L - 1))',  // word-search, written out exactly
+  'O(m * n * 4^L)',            // the looser form, ignoring the no-backtrack factor
+  'O(9^m)',       // nine digits per blank cell - sudoku-solver
   'O(n!)',
   'O(n * n!)',    // every permutation, and O(n) to copy each one out
   'other',
@@ -90,6 +109,15 @@ export const ALIAS = {
   'O(V + E)': 'O(n + m)',
   'O(E log V)': 'O(m log n)',
   'O(V + E log V)': 'O(m log n)',
+  // Word and string lengths get capital letters, which canonical() will not rename, so the
+  // capitals are listed. The lowercase forms - O(s), O(w), O(l) - already resolve to O(n) by
+  // rename, and these agree with that: a length is linear in its own input, nothing more.
+  'O(L)': 'O(n)',
+  'O(W)': 'O(n)',
+  'O(n * L)': 'O(n * k)',      // n words of length L
+  'O(w * L)': 'O(n * k)',      // building a trie from w words of length L
+  'O(log(min(m, n)))': 'O(log k)',       // median-of-two-sorted-arrays
+  'O(n log n + m log m)': 'O(n log n)',  // sorting two independent inputs
 };
 
 /** What the model may answer: every rung, every alias, and "other" as the last resort. */
@@ -99,8 +127,18 @@ export const CHOICES = [
   'other',
 ];
 
-/** Spacing and case are not meaning: "O(m*n)", "O(m * n)" and "o(M * N)" are one answer. */
-const key = (s) => String(s).replace(/\s+/g, '').toLowerCase();
+/**
+ * Spacing and case are not meaning: "O(m*n)", "O(m * n)" and "o(M * N)" are one answer.
+ *
+ * Nor is typography. A complexity pasted out of a write-up arrives with middle dots for
+ * multiplication and a real minus sign, so "O(M·N·4·3^(L−1))" has to key the same as
+ * "O(m * n * 4 * 3^(L - 1))" or the second is a rung the first can never reach.
+ */
+const key = (s) => String(s)
+  .replace(/[\u00B7\u2219\u22C5\u00D7\u2217]/g, '*')   // middle dot, bullet operator, dot operator, times, asterisk operator
+  .replace(/[\u2212\u2013\u2014]/g, '-')                 // minus sign, en dash, em dash
+  .replace(/\s+/g, '')
+  .toLowerCase();
 const BY_KEY = new Map();
 for (const c of COMPLEXITY) BY_KEY.set(key(c), c);
 for (const [a, target] of Object.entries(ALIAS)) BY_KEY.set(key(a), target);
@@ -197,6 +235,14 @@ const slot = (file) => {
  *      an optimal one must not displace it. Ranking is by complexity only.
  */
 export function assignNames(solutions) {
+  // A folder with one solution has nothing to rank, so an unrankable complexity is not a
+  // reason to refuse it: that file is optimal.cs whatever its complexity turns out to be.
+  // It used to refuse anyway, so an exotic but perfectly honest answer - word-search's
+  // O(m * n * 4 * 3^(L - 1)) - blocked a folder over a comparison that never happened. The
+  // refusal below still stands the moment there are two files to put in an order.
+  if (solutions.length === 1) {
+    return { ok: true, reason: null, names: new Map([[solutions[0].file, 'optimal.cs']]) };
+  }
   if (solutions.some((s) => isUnrankable(s.time) || isUnrankable(s.space))) {
     return { ok: false, reason: 'at least one solution has an unrankable complexity', names: null };
   }

@@ -156,6 +156,57 @@ names('merge-k-sorted-linked-lists: log k stack beats a k-sized heap',
 canon('V + E is the two-input scan', 'O(V + E)', 'O(n + m)');
 canon('and E log V is the heap-per-edge rung', 'O(E log V)', 'O(m log n)');
 
+// ---- the exotic end: grid backtracking, tries, and folders with one file -------------
+// These are the complexities that have no tidy tier. The ladder holds them so they can be
+// PRINTED honestly; the order between them is approximate and the tests below only pin the
+// comparisons that are actually defensible.
+
+below('three choices per step is worse than two', 'O(2^n)', 'O(3^n)');
+below('...and four worse than three', 'O(3^n)', 'O(4^n)');
+below('Catalan sits under a full 4^n', 'O(4^n / sqrt n)', 'O(4^n)');
+below('grid backtracking is past a plain decision tree', 'O(4^n)', 'O(m * n * 3^L)');
+below('the exact word-search bound sits beside the loose one', 'O(m * n * 3^L)', 'O(m * n * 4 * 3^(L - 1))');
+below('...and the 4^L form is looser still', 'O(m * n * 4 * 3^(L - 1))', 'O(m * n * 4^L)');
+below('nine digits a cell is past four directions', 'O(m * n * 4^L)', 'O(9^m)');
+below('and factorial is past all of it', 'O(9^m)', 'O(n!)');
+
+// word-search, exactly as it gets written. The typography has to stop mattering: a
+// complexity pasted out of a write-up carries middle dots and a real minus sign.
+canon('the exact word-search bound is a rung', 'O(m * n * 4 * 3^(L - 1))', 'O(m * n * 4 * 3^(L - 1))');
+canon('middle dots and a unicode minus are the same answer', 'O(M\u00B7N\u00B74\u00B73^(L\u22121))', 'O(m * n * 4 * 3^(L - 1))');
+canon('and so is it with no spaces and a lowercase L', 'O(m*n*4*3^(l-1))', 'O(m * n * 4 * 3^(L - 1))');
+
+// A length is linear in its own input, whatever letter it is given. The lowercase forms
+// already resolve by rename; the capitals need listing because rename skips capitals.
+canon('a capital word length is the O(n) tier', 'O(L)', 'O(n)');
+canon('and so is a lowercase string length', 'O(s)', 'O(n)');
+canon('a trie built from w words of length L', 'O(w * L)', 'O(n * k)');
+canon('the smaller of two inputs, inside a log', 'O(log(min(m, n)))', 'O(log k)');
+canon('two independent sorts', 'O(n log n + m log m)', 'O(n log n)');
+
+// THE RULE THAT STOPS THIS RECURRING. word-search has one solution, so there is no sibling
+// to rank it against and no reason to refuse the folder over a comparison nobody asked for.
+// It is optimal.cs whatever its complexity, and the header prints the real thing.
+names('one solution is never ranked, however exotic its complexity',
+  [S('submission-0.cs', 'O(m * n * 4 * 3^(L - 1))', 'O(L)')],
+  { 'submission-0.cs': 'optimal.cs' });
+names('...even when nothing at all could be written down',
+  [S('submission-0.cs', 'other', 'other')],
+  { 'submission-0.cs': 'optimal.cs' });
+
+// But the moment there are two files to put in an order, an unrankable answer still refuses.
+// This is the half of the old rule that was worth keeping.
+{
+  const r = assignNames([S('a.cs', 'other', 'O(n)'), S('b.cs', 'O(n)', 'O(n)')]);
+  if (!r.ok && r.names === null) { pass++; console.log('ok    two files with an unrankable complexity still refuse'); }
+  else { fail++; console.log('FAIL  two files with an unrankable complexity still refuse'); }
+}
+{
+  const r = assignNames([S('a.cs', 'O(m * n * 4 * 3^(L - 1))', 'O(n)'), S('b.cs', 'O(n)', 'O(n)')]);
+  if (r.ok) { pass++; console.log('ok    ...but two files both on the ladder rank fine, exotic or not'); }
+  else { fail++; console.log(`FAIL  ...but two files both on the ladder rank fine, exotic or not (${r.reason})`); }
+}
+
 // Ranking, not just resolving: an alias must land on exactly its target's rung.
 {
   const same = rank('O(m)') === rank('O(n)') && rank('O(n * m)') === rank('O(m * n)');
