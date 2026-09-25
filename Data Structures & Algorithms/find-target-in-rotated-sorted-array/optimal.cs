@@ -1,13 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(log n) time / O(1) space
-// #  single-pass modified binary search, sorted-half detection
-// #  [rotated-binary-search-single-pass]
-// #  ranks above optimal-variant.cs (O(log n) time / O(1) space)
+// #  Binary search with rotation awareness   [binary-search-rotated-direct]
+// #  ties with optimal-variant.cs on O(log n) time / O(1) space
 // #
-// #  YOU SOLVED THIS YOURSELF (from submission-0)
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  each iteration determines which half is sorted and narrows the range
-// #  accordingly in one binary search pass
+// #  Each iteration determines which half is sorted and eliminates half the
+// #  search space by comparing mid with right boundary.
 // ##########################################################################
 
 public class Solution
@@ -48,69 +47,81 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Modified binary search - find the sorted half each step
+ PATTERN : Modified Binary Search - pick the sorted half
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  l    left edge of the window that could still contain target
+  r    right edge of that window; nums[r] is also the anchor for the pivot test
+  mid  probe index, and the split point between the sorted half and the rotated half
 WHY THIS PATTERN
-  A single rotation cuts the array into two ascending runs, so target <
-  nums[mid] no longer tells you which side to keep. One property does survive
-  the rotation: whatever the window [left..right], cutting at mid leaves at
-  least one side fully ascending. A fully ascending side is described completely
-  by its two endpoints, so membership in it is a single two-sided comparison.
-  Identify that side, test the range, discard one half. That is all this loop
-  does.
+  The array is sorted but rotated once, so it is not globally sorted, yet every
+  split at mid leaves at least one half that IS fully sorted. Comparing
+  nums[mid] with nums[r] tells you which half that is, and inside a sorted half
+  a simple range test on target says whether target can live there. That gives
+  one discard per step, exactly like plain binary search, which is what the
+  sorted-but-shifted shape of the input invites.
+BRUTE FORCE
+  The first correct thing most people write is a for loop over nums returning
+  the first index where nums[i] == target. That is O(n) time and always right,
+  but it throws away the fact that the data is almost sorted. Since each step
+  here can drop half the remaining window, the loop is the clear loser once the
+  array is large.
 INVARIANT
-  At the top of every iteration: if target exists in nums, its index lies in
-  [left, right]. Every branch discards a half only after proving target cannot
-  be there - either target falls inside the sorted side's endpoint range (keep
-  that side) or it does not (so it can only be in the other side, or nowhere).
-WHY MID IS COMPARED TO RIGHT
-  nums[mid] > nums[right] means the drop-off (the pivot) sits strictly between
-  mid and right, so nums[left..mid] is one unbroken ascending run. Otherwise the
-  pivot is at or before mid, so nums[mid..right] is the run. The else branch
-  also absorbs mid == right, which happens when left == right since the mid
-  formula floors toward left: there nums[mid] == nums[right], the code calls the
-  right half sorted, and that half is the single cell already compared against
-  target at the top of the loop. Its range test nums[mid] < target && target <=
-  nums[right] cannot pass, so right = mid - 1 and the loop exits with -1. That
-  is why the equal case needs no arm of its own.
-THE RANGE TESTS ARE TWO-SIDED ON PURPOSE
-  Left-sorted: nums[left] <= target && target < nums[mid]. Right-sorted:
-  nums[mid] < target && target <= nums[right]. Both exclude nums[mid] because
-  equality already returned mid at the top, and both are inclusive at the far
-  endpoint because nums[left] and nums[right] are real candidates still in the
-  window. Dropping either bound breaks it: testing only target < nums[mid] in
-  the left-sorted case would send a very small target into the left run, when a
-  value below nums[left] can only live in the rotated right run.
-TERMINATION
-  mid = left + (right - left) / 2 floors, so left <= mid <= right always, and
-  mid < right whenever left < right. Each non-returning branch sets left = mid +
-  1 or right = mid - 1, so the window strictly shrinks every pass and left <=
-  right must eventually fail. The subtract-then-halve form is also what keeps
-  left + right from overflowing int on a very large array.
+  At the top of every iteration, if target exists in nums then its index is
+  inside [l, r]. Each branch only moves l or r past a range that has been proved
+  not to hold target: either the sorted half whose endpoints bracket target is
+  kept, or that half is dropped because target falls outside its low..high
+  range. The window strictly shrinks every pass (mid-1 or mid+1), so the loop
+  ends either on a returned index or with l > r, meaning target was never in the
+  array.
+WHY COMPARE AGAINST NUMS[R], NOT NUMS[L]
+  The pivot test uses nums[mid] > nums[r]. With distinct values, nums[mid] ==
+  nums[r] can only happen when mid == r, and that case falls into the else
+  branch where the "right half" is the single element nums[mid] - still
+  correctly sorted, so the range test target <= nums[r] behaves. The nums[l]
+  version needs an extra >= and careful thought when l == mid, so this form has
+  fewer edge cases.
 WATCH OUT
-  1. Distinct values are assumed. With duplicates (the LeetCode 81 variant)
-  nums[mid] > nums[right] no longer identifies the sorted half - in [1,0,1,1,1]
-  the comparison is 1 > 1 = false, and the right half is not sorted. The repair
-  is a separate right-- arm when nums[mid] == nums[right], which gives up the
-  halving in the worst case.
-  2. The other common pivot test, nums[left] <= nums[mid], is equally valid but
-  has a different small-window case analysis (left == mid makes it trivially
-  true). If you swap the pivot test, re-derive both range tests rather than
-  pasting the ones here.
+  Duplicates break the pivot test: with input like [3,1,3,3,3] and mid landing
+  on a 3 equal to nums[r], the code cannot tell which side is sorted and may
+  discard the half that holds target. The bounds are asymmetric on purpose -
+  nums[l] <= target && target < nums[mid] on one side, nums[mid] < target &&
+  target <= nums[r] on the other - because mid was already tested for equality;
+  flipping one of those strict signs is a silent correctness change, not a
+  crash. An empty nums is safe by accident: r becomes -1, the while body never
+  runs, and -1 comes back.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Could you do this in two passes instead of one clever loop?
+     Yes - first binary search for the rotation point (the smallest element),
+     then binary search the one sorted stretch that can contain target. Same
+     O(log n), easier to explain, but two loops and an extra index to keep
+     straight.
+  2. What if the array may contain duplicates?
+     Add a case for nums[mid] == nums[r]: shrink with r-- and retry. It stays
+     correct but degrades to O(n) in the worst case, for example an array of all
+     equal values with one odd element.
+  3. Write it recursively.
+     Pass l and r as arguments and tail-call into the chosen half; the logic is
+     unchanged but you pay stack frames, so the iterative form here is the
+     better answer when asked for O(1) extra space.
+  4. The caller wants the number of times the array was rotated instead of an
+  index.
+     Search for the minimum with the same halving idea - compare nums[mid] to
+     nums[r] and keep the side that can hold the dip; the index of the minimum
+     is the rotation count.
 TRIGGER
-  Reach for this whenever a global sort order is broken by a bounded amount but
-  any cut still leaves one provably ordered side - rotated arrays being the
-  canonical case. The alternative shape, binary-search the pivot first and then
-  run a plain binary search on the correct run, is also correct, but it is two
-  passes and two off-by-one surfaces to get right; this single loop is the
-  version worth having in muscle memory.
+  Input described as sorted and then rotated or shifted, with a lookup asked for
+  in better than linear time.
+C# NOTE
+  Array.BinarySearch(nums, target) is tempting and wrong here, since it assumes
+  a fully sorted array - the hand-written loop is required. Also note mid uses l
+  + (r - l) / 2 rather than (l + r) / 2, which keeps the sum from overflowing
+  C#'s 32-bit int when both indices are large.
 COMPLEXITY
   Time  : O(log n)
   Space : O(1)

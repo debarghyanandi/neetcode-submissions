@@ -651,100 +651,103 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Find Minimum in Rotated Sorted Array',
-  note: 'compare against the right end, never the left one',
-  inputs: [{id:'a', label:'nums', value:'4,5,6,7,0,1,2', width:260}],
+  note: 'the pivot is the one place where the array steps down',
+  inputs: [{id:'n', label:'nums', value:'4,5,6,7,0,1,2', width:260}],
   parse(raw){
-    const a = parseInts(raw.a, 12);
-    if (!a) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
-    if (a.length < 2) return {ok:false, msg:'Needs at least two elements.'};
-    if (new Set(a).size !== a.length) return {ok:false, msg:'Values must be distinct — this binary search assumes no duplicates.'};
+    const n = parseInts(raw.n, 16);
+    if (!n) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
+    if (n.length < 1) return {ok:false, msg:'Needs at least one element.'};
+    if (new Set(n).size !== n.length) return {ok:false, msg:'Values must be distinct.'};
     let drops = 0;
-    for (let i = 0; i < a.length; i++){ if (a[i] > a[(i + 1) % a.length]) drops++; }
-    if (drops > 1) return {ok:false, msg:'Must be a sorted array rotated some number of times (only one drop point allowed).'};
-    return {ok:true, value:{a}, normalized:{a: a.join(',')}};
+    for (let i = 1; i < n.length; i++) if (n[i] < n[i-1]) drops++;
+    if (drops > 1) return {ok:false, msg:'Must be a sorted array rotated once: at most one step down.'};
+    return {ok:true, value:{n}, normalized:{n: n.join(',')}};
   },
   shuffle(){
-    const n = 6 + Math.floor(Math.random() * 3);
-    const set = new Set();
-    while (set.size < n) set.add(1 + Math.floor(Math.random() * 30));
-    const sorted = Array.from(set).sort((x, y) => x - y);
-    const k = Math.floor(Math.random() * n);
-    return {a: sorted.slice(k).concat(sorted.slice(0, k)).join(',')};
+    const len = 6 + Math.floor(Math.random()*3);
+    const vals = Array.from(new Set(randInts(len + 4, 0, 40))).slice(0, len).sort((a,b) => a-b);
+    const k = Math.floor(Math.random() * vals.length);
+    return {n: vals.slice(k).concat(vals.slice(0, k)).join(',')};
   },
   solutions: [
   {
-    label: 'Binary search against the right end',
+    label: 'Binary search for the step down',
     badge: 'O(log n) time · O(1) space · binary search · optimal.cs',
-    blurb: 'A rotated array is two ascending runs, and the answer is the first element of the low run. Comparing <code>nums[mid]</code> with <code>nums[right]</code> says which run <b>mid</b> fell into: bigger means mid is in the high run and the minimum is strictly past it; otherwise mid..right is already in order, so the minimum is at mid or before — hence <code>right = mid</code>, never <code>mid - 1</code>.',
+    blurb: 'A rotated sorted array is two ascending runs, and every value in the left run is larger than every value in the right run. So comparing <code>nums[mid]</code> with <code>nums[r]</code> says which run <b>mid</b> sits in: bigger means mid is in the high left run and the minimum is strictly after it; otherwise mid is in the run that contains the minimum, so mid itself is still a candidate.',
     legend: [
       {cls:'hot', text:'mid — the probe'},
-      {cls:'in-window', text:'left / right, the live range'},
-      {cls:'dim', text:'eliminated'},
-      {cls:'good', text:'the minimum'}
+      {cls:'in-window', text:'[l, r] still possible'},
+      {cls:'good', text:'answer'},
+      {cls:'dim', text:'discarded'}
     ],
     code: [
-      'int left = 0;',
-      'int right = nums.Length - 1;',
-      '',
-      'while (left < right)',
+      'public int FindMin(int[] nums)',
       '{',
-      '    int mid = left + (right - left) / 2;',
-      '    if (nums[mid] > nums[right])',
+      '    //My Solution',
+      '    int l = 0;',
+      '    int r = nums.Length - 1;',
+      '    while (l < r)',
       '    {',
-      '        left = mid + 1;   // min is strictly past mid',
+      '        int mid = l + (r - l) / 2;',
+      '        if (nums[mid] > nums[r])',
+      '        {',
+      '            l = mid + 1;',
+      '        }',
+      '        else',
+      '            r = mid;',
       '    }',
-      '    else',
-      '    {',
-      '        right = mid;      // mid may be the min itself',
-      '    }',
-      '}',
-      '',
-      'return nums[left];'
+      '    return nums[l];',
+      '}'
     ],
     simulate(input){
-      const a = input.a, steps = [];
-      let left = 0, right = a.length - 1, probes = 0;
-      const panels = (mid, done) => [
-        pBars('nums (rotated)', a, (k) => ({
-          cls: done ? (k === left ? 'good' : 'dim')
-             : k === mid ? 'hot'
-             : (k < left || k > right) ? 'dim'
-             : (k === left || k === right) ? 'in-window' : ''
-        })),
-        pPills('', [
-          {k:'left', v: left, cls:'accent'},
-          {k:'right', v: right, cls:'accent'},
-          {k:'mid', v: mid >= 0 ? mid : '–', cls:'hot'},
-          {k:'nums[mid]', v: mid >= 0 ? a[mid] : '–'},
-          {k:'nums[right]', v: a[right]},
-          {k:'range size', v: right - left + 1}
-        ])
+      const a = input.n, steps = [];
+      let l = 0, r = a.length - 1, mid = -1, done = false;
+      const panels = () => [
+        pTiles('nums', a, (i) => ({
+          cls: done && i === l ? 'good'
+             : i === mid ? 'hot'
+             : (i >= l && i <= r) ? 'in-window' : 'dim'
+        }), {
+          ptrs: mid >= 0 && !done
+            ? [{name:'l', idx:l}, {name:'mid', idx:mid, cls:'accent'}, {name:'r', idx:r}]
+            : [{name:'l', idx:l}, {name:'r', idx:r}],
+          bracket: {from: l, to: r, dashed: true},
+          scale: a.length > 10 ? 0.85 : 1
+        }),
+        pPills('state', [
+          {k:'l', v: l},
+          {k:'r', v: r},
+          {k:'mid', v: mid >= 0 && !done ? mid : '–', cls:'hot'},
+          {k:'nums[mid]', v: mid >= 0 && !done ? a[mid] : '–'},
+          {k:'nums[r]', v: a[r]},
+          {k:'width', v: r - l + 1}
+        ]),
+        pNote('the invariant', 'The minimum is always inside <code>[l, r]</code>. <code>nums[r]</code> is the yardstick because the right end always lies in the run that owns the minimum — a rotation can never put the pivot to the right of <code>r</code> once <code>r</code> has only ever moved onto candidates.')
       ];
-      steps.push({lines:[1,2], msg:'The whole array is in play, so <code>left</code> and <code>right</code> span it. The invariant that makes everything work: <b>the minimum is always inside <code>[left, right]</code></b>. That means <code>nums[right]</code> always belongs to the ascending run that <em>starts</em> at the minimum — which is why it is a trustworthy thing to compare against, while <code>nums[left]</code> is not.',
-        panels: panels(-1)});
-      while (left < right){
-        const mid = left + Math.floor((right - left) / 2);
-        probes++;
-        steps.push({lines:[4,6], msg:'The range still holds more than one index, so probe the middle: <code>mid = ' + left + ' + (' + right + ' − ' + left + ')/2 = <b>' + mid + '</b></code>, value <b>' + a[mid] + '</b>. Written as <code>left + (right − left)/2</code> rather than <code>(left + right)/2</code> so the sum can never overflow. Now ask one question: is <code>nums[mid]</code> above <code>nums[right]</code> = ' + a[right] + '?',
-          panels: panels(mid)});
-        if (a[mid] > a[right]){
-          const oldLeft = left;
-          left = mid + 1;
-          steps.push({lines:[7,9], msg:'<b>' + a[mid] + ' &gt; ' + a[right] + '</b> — the values dip somewhere between mid and right, so the wrap point is to the <em>right</em> of mid and mid is sitting in the high run. Every index from ' + oldLeft + ' through ' + mid + ' is therefore above the minimum, so <code>left = mid + 1</code> discards mid <b>along with</b> the whole left half in one move.',
-            panels: panels(-1)});
-        } else {
-          const oldRight = right;
-          right = mid;
-          steps.push({lines:[7,13], msg:'<b>' + a[mid] + ' ≤ ' + a[oldRight] + '</b> — the stretch from mid to ' + oldRight + ' rises without wrapping, so the drop point is at mid or before it. Everything after mid is out. It is <code>right = mid</code> and not <code>mid − 1</code> because mid may be the minimum itself; discarding it here would lose the answer for good.',
-            panels: panels(-1)});
-        }
+      steps.push({lines:[4,5], msg:'Search the whole array: <code>l = 0</code>, <code>r = ' + r + '</code>. There is no target value to look for here — the comparison is between two cells of the array itself, which is what makes binary search work without a sorted whole.', panels: panels()});
+      if (l >= r){
+        steps.push({lines:[6], msg:'The window is already a single cell, so the loop never runs — one element is its own minimum.', panels: panels()});
       }
-      steps.push({lines:[4,17], msg:'<code>left == right == ' + left + '</code>, so the range has collapsed to a single index — and by the invariant the minimum never left it. Answer <b>' + a[left] + '</b>, found in ' + probes + ' comparison' + (probes === 1 ? '' : 's') + ' instead of scanning all ' + a.length + ' values. Note the loop is <code>left &lt; right</code>, not <code>&lt;=</code>: with <code>&lt;=</code> and <code>right = mid</code> it would spin forever.',
-        panels: panels(-1, true)});
+      let guard = 0;
+      while (l < r && guard++ < 40){
+        mid = l + Math.floor((r - l) / 2);
+        steps.push({lines:[6,8], msg:'<code>l = ' + l + ' &lt; r = ' + r + '</code>, so at least two candidates remain. Probe the middle: <code>mid = ' + mid + '</code>, <code>nums[mid] = ' + a[mid] + '</code>. Written as <code>l + (r - l) / 2</code> rather than <code>(l + r) / 2</code> so the sum can never overflow.', panels: panels()});
+        if (a[mid] > a[r]){
+          steps.push({lines:[9,11], msg:'<code>nums[' + mid + '] = ' + a[mid] + ' &gt; nums[' + r + '] = ' + a[r] + '</code>. In an ascending run mid could never be above its right end, so the step down lies strictly <b>between</b> mid and r. That rules out mid and everything left of it: <code>l = ' + (mid + 1) + '</code>.', panels: panels()});
+          l = mid + 1;
+        } else {
+          steps.push({lines:[9,13,14], msg:'<code>nums[' + mid + '] = ' + a[mid] + ' &lt; nums[' + r + '] = ' + a[r] + '</code>, so mid already sits in the same ascending run as <code>r</code> — the run that ends at the array\'s largest visible tail, meaning the minimum is at mid or left of it. Move <code>r = ' + mid + '</code>, keeping mid itself as a candidate; this is why <code>r</code> is not <code>mid - 1</code>.', panels: panels()});
+          r = mid;
+        }
+        mid = -1;
+        steps.push({lines:[6], msg:'Window is now <code>[' + l + ', ' + r + ']</code>, ' + (r - l + 1) + ' cell' + (r - l + 1 === 1 ? '' : 's') + '. Each turn halves it, so this finishes in about log n probes.', panels: panels()});
+      }
+      done = true; mid = -1;
+      steps.push({lines:[16], msg:'<code>l == r == ' + l + '</code>: the window has collapsed onto one cell, and the invariant says the minimum was never allowed to leave it. Return <b>' + a[l] + '</b>.', panels: panels()});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

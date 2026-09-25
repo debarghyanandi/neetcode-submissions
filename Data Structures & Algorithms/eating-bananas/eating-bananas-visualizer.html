@@ -651,128 +651,148 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Eating Bananas',
-  note: 'when the input will not sort, sort the answer space instead',
+  note: 'you cannot search the piles, so search the answer instead',
   inputs: [
-    {id:'p', label:'piles', value:'3,6,7,11', width:200},
-    {id:'h', label:'h (hours)', value:'8', width:110}
+    {id:'piles', label:'piles', value:'3,6,7,11', width:200},
+    {id:'h', label:'hoursLimit', value:'8', width:90}
   ],
   parse(raw){
-    const p = parseInts(raw.p, 8);
-    if (!p) return {ok:false, msg:'Enter a valid comma-separated list of pile sizes.'};
-    if (p.some(v => !Number.isInteger(v) || v < 1)) return {ok:false, msg:'Every pile must be a positive whole number.'};
-    if (p.some(v => v > 20)) return {ok:false, msg:'Keep piles at 20 or below so the speed axis stays watchable.'};
-    const h = Number(String(raw.h).trim());
-    if (!Number.isInteger(h)) return {ok:false, msg:'h must be a whole number of hours.'};
-    if (h < p.length) return {ok:false, msg:'h must be at least the number of piles — one pile per hour is the floor, so anything less is impossible.'};
-    return {ok:true, value:{p:p, h:h}, normalized:{p: p.join(','), h: String(h)}};
+    const piles = parseInts(raw.piles, 8);
+    if (!piles) return {ok:false, msg:'Enter a valid comma-separated list of pile sizes.'};
+    if (piles.some(v => v < 1 || v !== Math.floor(v))) return {ok:false, msg:'Each pile must be a whole number of at least 1.'};
+    if (piles.length > 8) return {ok:false, msg:'Keep it to eight piles so the run stays watchable.'};
+    const H = Number(String(raw.h).trim());
+    if (!Number.isFinite(H) || H !== Math.floor(H)) return {ok:false, msg:'hoursLimit must be a whole number.'};
+    if (H < piles.length) return {ok:false, msg:'hoursLimit must be at least the number of piles — one pile per hour is the floor.'};
+    return {ok:true, value:{piles: piles, H: H}, normalized:{piles: piles.join(','), h: String(H)}};
   },
   shuffle(){
-    const n = 4 + Math.floor(Math.random()*2);
-    const p = randInts(n, 2, 14);
-    return {p: p.join(','), h: String(n + Math.floor(Math.random() * (2*n)))};
+    const n = 4 + Math.floor(Math.random() * 2);
+    const piles = randInts(n, 2, 18);
+    const sum = piles.reduce((a, b) => a + b, 0);
+    const H = n + Math.floor(Math.random() * Math.max(1, sum - n));
+    return {piles: piles.join(','), h: String(H)};
   },
   solutions: [
   {
-    label: 'Binary search the eating speed',
-    badge: 'O(n log k) time · O(1) space · binary search on the answer · optimal.cs',
-    blurb: 'The piles cannot be binary-searched — they are unsorted, and their order is irrelevant. What <em>is</em> sorted is the answer axis: if speed <code>s</code> finishes in time then so does every speed above it, so the legal speeds are one unbroken block at the top of <code>1…max(piles)</code>. Binary search that block for its first element, using an O(n) hour count as the yes/no test.',
+    label: 'Binary search on the eating speed',
+    badge: 'O(n log k) time · O(1) space · binary search on answer · optimal.cs',
+    blurb: 'The piles are unsorted, but the <em>answers</em> are: if speed <b>k</b> finishes in time then so does every speed above it. That monotone yes/no line is what binary search needs. Probe a speed, spend O(n) totalling the hours, and throw away half the speed range each time.',
     legend: [
       {cls:'hot', text:'mid — the speed being tested'},
-      {cls:'in-window', text:'[low, high] — still possible'},
-      {cls:'dim', text:'eliminated'},
-      {cls:'good', text:'hour budget h'}
+      {cls:'in-window', text:'speeds still in [low, high]'},
+      {cls:'good', text:'settled answer'},
+      {cls:'dim', text:'ruled out'}
     ],
     code: [
-      'int low = 1;                       // speed 0 never finishes',
-      'int high = 1;',
-      'foreach (int pile in piles)',
+      'public class Solution',
       '{',
-      '    high = Math.Max(high, pile);   // biggest pile in one hour',
-      '}',
+      '    public int MinEatingSpeed(int[] piles, int hoursLimit)',
+      '    {',
+      '        // low and high is the range of speed',
+      '        int low = 1; // speed cant be 0;',
+      '        int high = 1;',
+      '        foreach (int pile in piles)',
+      '        {',
+      '            // (highest size takes lowest time.)',
+      '            high = Math.Max(high, pile); // high is the highest size.',
+      '        }',
       '',
-      'while (low < high)',
-      '{',
-      '    int mid = low + (high - low) / 2;',
-      '    if (CanFinish(piles, mid, hoursLimit))',
-      '    {',
-      '        high = mid;      // mid works, so nothing above mid is needed',
+      '        while (low < high)',
+      '        {',
+      '            int mid = low + (high - low) / 2;',
+      '            //calcualte time required for thas mid value',
+      '            if (CanFinish(piles, mid, hoursLimit))',
+      '            {',
+      '                high = mid;',
+      '            }',
+      '            else',
+      '            {',
+      '                low = mid + 1;',
+      '            }',
+      '        }',
+      '        return low;',
       '    }',
-      '    else',
-      '    {',
-      '        low = mid + 1;   // mid is too slow, and so is everything below',
-      '    }',
-      '}',
-      'return low;',
       '',
-      'bool CanFinish(int[] piles, int speed, int targetHour)',
-      '{',
-      '    int hour = 0;',
-      '    foreach (int pile in piles)',
+      '    private bool CanFinish(int[] piles, int speed, int targetHour)',
       '    {',
-      '        hour += (int)Math.Ceiling((double)pile / speed);',
+      '        int hour = 0;',
+      '        foreach (int pile in piles)',
+      '        {',
+      '            hour += (int)Math.Ceiling((double)pile / speed);',
+      '            //  hour += (pile + speed - 1) / speed; ',
+      '        }',
+      '        return hour <= targetHour;',
       '    }',
-      '    return hour <= targetHour;',
       '}'
     ],
     simulate(input){
-      const P = input.p, H = input.h, steps = [];
-      let low = 1, high = 1;
-      for (let i = 0; i < P.length; i++) high = Math.max(high, P[i]);
-      const cap = high;
-      const axis = Array.from({length: cap}, (_, i) => i + 1);
-      let mid = -1, pileIdx = -1, running = 0;
-      let hoursArr = P.map(() => '–');
-      const panels = () => [
-        pTiles('Candidate speeds 1…' + cap, axis, (k, v) => ({
-          cls: v === mid ? 'hot' : (v >= low && v <= high) ? 'in-window' : 'dim'
-        })),
-        pBars('Piles', P, (k) => ({cls: k === pileIdx ? 'hot' : ''})),
-        pTiles('Hours at speed ' + (mid > 0 ? mid : '–'), hoursArr, (k) => ({
-          cls: k === pileIdx ? 'hot' : (hoursArr[k] === '–' ? 'dim' : '')
-        })),
-        pPills('', [
-          {k:'low', v: low, cls:'accent'},
-          {k:'high', v: high, cls:'accent'},
-          {k:'mid', v: mid > 0 ? mid : '–', cls:'hot'},
-          {k:'hours', v: running},
-          {k:'limit h', v: H, cls:'good'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'Speed <b>1</b> is the slowest legal guess — 0 bananas an hour empties nothing — so <code>low</code> starts there. Note what is being searched: not the piles, but the <em>answer</em>. Hours only ever fall as speed rises, so the speeds that fit in ' + H + ' h form one unbroken block, and a block like that can be bisected.', panels: panels()});
-      steps.push({lines:[3,5], msg:'<code>high</code> becomes the largest pile, <b>' + cap + '</b>. Eating faster than that is wasted: a pile still costs a whole hour however much capacity is left over, so speed ' + cap + ' already finishes in ' + P.length + ' h — and ' + H + ' ≥ ' + P.length + ', so it is legal. The answer is somewhere in [1, ' + cap + '].', panels: panels()});
-      while (low < high){
+      const piles = input.piles, H = input.H, steps = [];
+      const maxPile = piles.reduce((a, b) => Math.max(a, b), 1);
+      const speeds = Array.from({length: maxPile}, (_, i) => i + 1);
+      let low = 1, high = 1, mid = null, cur = -1, hour = 0, chips = null, verdict = null, settled = false;
+      const scale = maxPile > 12 ? 0.8 : 1;
+      function panels(){
+        const ptrs = [{name:'low', idx: low - 1}, {name:'high', idx: high - 1}];
+        if (mid !== null) ptrs.push({name:'mid', idx: mid - 1, cls:'accent'});
+        return [
+          pTiles('candidate speeds 1..' + maxPile, speeds, (i) => {
+            const s = i + 1;
+            if (settled && s === low) return {cls:'good'};
+            if (mid !== null && s === mid) return {cls:'hot'};
+            if (s < low || s > high) return {cls:'dim'};
+            return {cls:'in-window'};
+          }, {ptrs: ptrs, scale: scale}),
+          pBars('piles', piles, (i) => ({cls: i === cur ? 'hot' : (cur >= 0 && i < cur) ? 'done' : ''})),
+          pChips('hours at speed ' + (mid === null ? '–' : mid), [
+            chips && chips.length
+              ? {left:'pile -> hours', items: chips}
+              : {left:'pile -> hours', items: [], empty:'no speed probed yet'}
+          ]),
+          pPills('state', [
+            {k:'low', v: low},
+            {k:'high', v: high},
+            {k:'mid', v: mid === null ? '–' : mid, cls:'hot'},
+            {k:'hour', v: hour},
+            {k:'hoursLimit', v: H},
+            {k:'verdict', v: verdict === null ? '–' : verdict, cls: verdict === 'fits' ? 'good' : (verdict === null ? '' : 'dim')}
+          ])
+        ];
+      }
+      steps.push({lines:[6,7], msg:'A speed of <b>0</b> never finishes, so the slowest speed worth considering is <b>1</b>. <code>high</code> starts at 1 and will be raised to the largest pile.', panels: panels()});
+      for (let i = 0; i < piles.length; i++) high = Math.max(high, piles[i]);
+      steps.push({lines:[8,11], msg:'One pass sets <code>high</code> to the biggest pile, <b>' + maxPile + '</b>. Eating faster than that is pointless — Koko never takes more than one hour on any single pile, so every speed above ' + maxPile + ' costs exactly the same <b>' + piles.length + '</b> hours. The answer must lie in <b>[1, ' + maxPile + ']</b>.', panels: panels()});
+      let guard = 0;
+      while (low < high && guard++ < 40){
         mid = low + Math.floor((high - low) / 2);
-        steps.push({lines:[8,10], msg:'[' + low + ', ' + high + '] still holds more than one candidate, so test the middle speed <b>' + mid + '</b>. Either verdict throws away half the remaining speeds without ever counting hours for them.', panels: panels()});
-        hoursArr = P.map(() => '–');
-        running = 0;
-        for (let i = 0; i < P.length; i++){
-          pileIdx = i;
-          const t = Math.ceil(P[i] / mid);
-          running += t;
-          hoursArr[i] = t;
-          steps.push({lines:[25,27], msg:'Pile of <b>' + P[i] + '</b> at speed ' + mid + ' costs <code>ceil(' + P[i] + '/' + mid + ')</code> = <b>' + t + '</b> h. The ceiling is the whole rule of the problem — ' + (P[i] % mid === 0 ? 'here it divides evenly, so no hour is wasted' : 'the leftover ' + (P[i] % mid) + ' still burns a full hour, because Koko will not start the next pile early') + '. Running total <b>' + running + '</b>.', panels: panels()});
+        chips = null; hour = 0; verdict = null; cur = -1;
+        steps.push({lines:[14,16], msg:'Range <b>[' + low + ', ' + high + ']</b> still holds more than one candidate, so probe the middle: <code>mid = ' + mid + '</code>. Written as <code>low + (high - low) / 2</code> to avoid an overflow that <code>(low + high) / 2</code> could hit.', panels: panels()});
+        steps.push({lines:[18,31,32], msg:'Call <code>CanFinish</code> with speed <b>' + mid + '</b>: total the hours pile by pile and compare against <code>hoursLimit = ' + H + '</code>. <code>hour</code> starts at 0.', panels: panels()});
+        chips = [];
+        for (let i = 0; i < piles.length; i++){
+          cur = i;
+          const need = Math.ceil(piles[i] / mid);
+          hour += need;
+          chips.push({text: String(piles[i]), sub: need + ' h', cls:'hot', fresh: true});
+          for (let j = 0; j < chips.length - 1; j++){ chips[j].cls = ''; chips[j].fresh = false; }
+          steps.push({lines:[35], msg:'Pile <b>' + piles[i] + '</b> at speed ' + mid + ' takes <code>ceil(' + piles[i] + ' / ' + mid + ') = ' + need + '</code> hours. The ceiling matters: Koko eats from one pile per hour and never carries leftover time to the next pile, so a partial hour still costs a whole hour. Running total <b>' + hour + '</b>.', panels: panels()});
         }
-        pileIdx = -1;
-        const ok = running <= H;
-        steps.push({lines:[29], msg:'Speed ' + mid + ' needs <b>' + running + '</b> h against a limit of ' + H + ' → <b>' + (ok ? 'it fits' : 'too slow') + '</b>. One linear sweep settles a yes/no question that decides an entire half of the range.', panels: panels()});
+        cur = -1;
+        const ok = hour <= H;
+        verdict = ok ? 'fits' : 'too slow';
+        steps.push({lines:[38], msg:'Speed ' + mid + ' needs <b>' + hour + '</b> hours versus a limit of ' + H + ' → <b>' + (ok ? 'it fits' : 'too slow') + '</b>.', panels: panels()});
         if (ok){
-          const m = 'Because ' + mid + ' fits, every speed above it fits as well — going faster can never take longer — so all of [' + (mid + 1) + ', ' + high + '] is redundant. <code>high = mid</code> and <em>not</em> <code>mid - 1</code>: ' + mid + ' is still the best answer known, so it has to stay in the range.';
-          high = mid;
-          steps.push({lines:[11,13], msg:m, panels: panels()});
+          steps.push({lines:[18,20], msg:'Since ' + mid + ' works, every speed above it works too — faster eating can only cut hours. So nothing to the right of ' + mid + ' can be the <em>minimum</em>: set <code>high = ' + mid + '</code>, keeping ' + mid + ' itself as a live candidate.', panels: (function(){ high = mid; return panels(); })()});
         } else {
-          const m = 'Because ' + mid + ' misses the deadline, every speed below it misses it too — slower only adds hours — so all of [' + low + ', ' + mid + '] dies at once. <code>low = mid + 1</code> steps past the failure.';
-          low = mid + 1;
-          steps.push({lines:[11,17], msg:m, panels: panels()});
+          steps.push({lines:[18,24], msg:'Since ' + mid + ' is too slow, so is every speed below it — slower eating only adds hours. Discard the whole lower half with <code>low = ' + (mid + 1) + '</code>.', panels: (function(){ low = mid + 1; return panels(); })()});
         }
       }
-      mid = low;
-      hoursArr = P.map(v => Math.ceil(v / low));
-      running = hoursArr.reduce((a, v) => a + v, 0);
-      steps.push({lines:[20], msg:'<code>low</code> and <code>high</code> have met at <b>' + low + '</b>, so the range holds exactly one speed — every slower speed was ruled out by a check that actually failed, every faster one by a check that succeeded lower down. It finishes in ' + running + ' h ≤ ' + H + '. About log₂(' + cap + ') feasibility checks instead of ' + cap + '.', panels: panels()});
+      mid = null; chips = chips; settled = true; verdict = null;
+      steps.push({lines:[14,27], msg:'<code>low</code> and <code>high</code> have met at <b>' + low + '</b>, so one candidate remains and the loop ends. Every speed below it was proved too slow and every speed above it was never cheaper, so <b>' + low + '</b> is the minimum eating speed. Roughly log2(' + maxPile + ') probes, each an O(n) sweep.', panels: panels()});
       return steps;
     }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

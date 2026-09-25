@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-25T19:27:46.593Z",
+  "updatedAt": "2026-09-25T22:18:20.896Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -281,13 +281,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "6a2357968a06",
-          "renames": []
+          "version": 2,
+          "codePrint": "6a2357968a06"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -300,12 +299,32 @@
         "optimal.cs": {
           "time": "O(log n)",
           "space": "O(log n)",
-          "algorithm": "recursive binary search",
+          "algorithm": "Binary search, recursive",
           "approachKey": "binary-search-recursive",
-          "correct": true
+          "correct": true,
+          "structures": [
+            "array",
+            "call-stack"
+          ]
         }
       },
-      "teachSignatures": {}
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "6a2357968a06"
+        },
+        "structures": [
+          "array",
+          "call-stack"
+        ],
+        "builtAt": "2026-09-25T22:12:42.194Z"
+      }
     },
     "binary-tree-diameter": {
       "topic": "Data Structures & Algorithms",
@@ -1218,13 +1237,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "a6ef6f5741d5",
-          "renames": []
+          "version": 2,
+          "codePrint": "a6ef6f5741d5"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on eating speed, linear feasibility check\",\"approachKey\":\"binary-search-on-speed\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1237,21 +1255,29 @@
         "optimal.cs": {
           "time": "O(n log k)",
           "space": "O(1)",
-          "algorithm": "binary search on eating speed, linear feasibility check",
-          "approachKey": "binary-search-on-speed",
-          "correct": true
+          "algorithm": "binary search on answer",
+          "approachKey": "binary-search-answer",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "a6ef6f5741d5"
         },
-        "builtAt": "2026-09-06T12:16:24.367Z",
-        "v": 1
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-25T22:13:51.505Z"
       }
     },
     "evaluate-reverse-polish-notation": {
@@ -1359,12 +1385,12 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "d9a525f26493"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"binary search comparing mid to right\",\"approachKey\":\"binary-search-rotated-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1377,21 +1403,29 @@
         "optimal.cs": {
           "time": "O(log n)",
           "space": "O(1)",
-          "algorithm": "binary search comparing mid to right",
-          "approachKey": "binary-search-rotated-min",
-          "correct": true
+          "algorithm": "Binary search on rotated array",
+          "approachKey": "binary-search-rotated-array",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs"
         ],
         "prints": {
           "optimal.cs": "d9a525f26493"
         },
-        "builtAt": "2026-09-04T09:54:45.665Z",
-        "v": 1
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-25T22:14:26.743Z"
       }
     },
     "find-target-in-rotated-sorted-array": {
@@ -1421,17 +1455,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "5e9a14979a64"
         },
         "optimal-variant.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "42ca10874282"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"single-pass modified binary search, sorted-half detection\",\"approachKey\":\"rotated-binary-search-single-pass\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above optimal-variant.cs (O(log n) time / O(1) space)\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"find pivot via binary search, then binary search correct half\",\"approachKey\":\"rotated-binary-search-find-pivot-then-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1449,20 +1483,30 @@
         "optimal.cs": {
           "time": "O(log n)",
           "space": "O(1)",
-          "algorithm": "single-pass modified binary search, sorted-half detection",
-          "approachKey": "rotated-binary-search-single-pass",
-          "correct": true
+          "algorithm": "Binary search with rotation awareness",
+          "approachKey": "binary-search-rotated-direct",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
         },
         "optimal-variant.cs": {
           "time": "O(log n)",
           "space": "O(1)",
-          "algorithm": "find pivot via binary search, then binary search correct half",
-          "approachKey": "rotated-binary-search-find-pivot-then-search",
-          "correct": true
+          "algorithm": "Find pivot point, then binary search",
+          "approachKey": "find-pivot-binary-search",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+      },
       "visualizer": {
+        "v": 2,
         "files": [
           "optimal.cs",
           "optimal-variant.cs"
@@ -1471,8 +1515,10 @@
           "optimal.cs": "5e9a14979a64",
           "optimal-variant.cs": "42ca10874282"
         },
-        "builtAt": "2026-09-05T18:09:28.495Z",
-        "v": 1
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-25T22:16:15.658Z"
       }
     },
     "house-robber": {
@@ -4397,18 +4443,17 @@
       },
       "lint": {
         "optimal.cs": {
-          "version": 1,
-          "codePrint": "1fe0243b4ec5",
-          "renames": []
+          "version": 2,
+          "codePrint": "1fe0243b4ec5"
         },
         "suboptimal.cs": {
-          "version": 1,
+          "version": 2,
           "codePrint": "10e131c67162"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on flattened matrix\",\"approachKey\":\"flattened-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Recursive binary search per row\",\"approachKey\":\"row-wise-binary-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, flatten matrix to 1D\",\"approachKey\":\"binary-search-flattened-matrix\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"binary-search-per-row-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4426,30 +4471,33 @@
         "optimal.cs": {
           "time": "O(log(m*n))",
           "space": "O(1)",
-          "algorithm": "Binary search on flattened matrix",
-          "approachKey": "flattened-binary-search",
+          "algorithm": "binary search, flatten matrix to 1D",
+          "approachKey": "binary-search-flattened-matrix",
           "correct": true,
           "structures": [
-            "array",
-            "matrix"
+            "matrix",
+            "array"
           ]
         },
         "suboptimal.cs": {
           "time": "O(m log n)",
           "space": "O(log n)",
-          "algorithm": "Recursive binary search per row",
-          "approachKey": "row-wise-binary-search",
+          "algorithm": "recursive binary search per row",
+          "approachKey": "binary-search-per-row-recursive",
           "correct": true,
           "structures": [
-            "array",
             "matrix",
+            "array",
             "call-stack"
           ]
         }
       },
-      "teachSignatures": {},
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, flatten matrix to 1D\",\"approachKey\":\"binary-search-flattened-matrix\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"binary-search-per-row-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+      },
       "visualizer": {
-        "v": 1,
+        "v": 2,
         "files": [
           "optimal.cs",
           "suboptimal.cs"
@@ -4459,11 +4507,11 @@
           "suboptimal.cs": "10e131c67162"
         },
         "structures": [
-          "array",
           "matrix",
+          "array",
           "call-stack"
         ],
-        "builtAt": "2026-09-17T04:15:28.831Z"
+        "builtAt": "2026-09-25T22:18:20.894Z"
       }
     },
     "search-for-word-ii": {

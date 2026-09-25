@@ -91,7 +91,7 @@ button.primary:hover{background:#F7B85F;}
 
 /* ---------- legend ---------- */
 .legend{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:16px;color:var(--pencil);margin-bottom:18px;}
-.legend span{display:inline-flex;align-items:m;gap:9px;}
+.legend span{display:inline-flex;align-items:center;gap:9px;}
 .swatch{width:15px;height:15px;border:2px solid var(--ink);border-radius:var(--sk-sm);display:inline-block;background:var(--paper);}
 .swatch.win{background:var(--orange-soft);}
 .swatch.hot{background:var(--orange);}
@@ -99,7 +99,7 @@ button.primary:hover{background:#F7B85F;}
 .swatch.good{background:var(--green);}
 .swatch.dim{opacity:.42;}
 .swatch.rem{background:var(--paper);border-color:var(--red);position:relative;}
-.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:m;font-family:var(--hand);}
+.swatch.rem::after{content:'✕';position:absolute;inset:0;color:var(--red);font-size:11px;line-height:14px;text-align:center;font-family:var(--hand);}
 
 /* ---------- stage ---------- */
 .stage{display:grid;grid-template-columns:minmax(0, 1.25fr) minmax(430px, 1fr);gap:20px;align-items:start;}
@@ -107,7 +107,7 @@ button.primary:hover{background:#F7B85F;}
 @media (max-width: 1200px){ .stage{grid-template-columns:1fr;} }
 
 .panel{background:var(--paper);border:2px solid var(--ink);border-radius:var(--sk-lg);padding:22px 24px;}
-.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left m;}
+.panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
 
 /* ---------- tiles ---------- */
 .array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
@@ -116,7 +116,7 @@ button.primary:hover{background:#F7B85F;}
 .tile{
   min-width:var(--tile);height:var(--tile);padding:0 6px;
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
-  display:flex;flex-direction:column;align-items:m;justify-content:m;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
   transition:background .25s ease, border-color .25s ease, transform .2s ease, color .25s ease;
 }
 .tile .idx{position:absolute;top:4px;right:8px;font-size:12px;line-height:1;color:var(--pencil);}
@@ -133,7 +133,7 @@ button.primary:hover{background:#F7B85F;}
 .tile.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
 .tile.just-popped{animation:pop-fade .55s ease;}
 .tile.just-popped::after{
-  content:'✕';position:absolute;inset:0;display:flex;align-items:m;justify-content:m;
+  content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-size:42px;color:var(--red);animation:x-fade .55s ease forwards;
 }
 @keyframes pop-fade{0%{border-color:var(--red);transform:scale(1.06);}100%{border-color:var(--ink);}}
@@ -149,7 +149,7 @@ button.primary:hover{background:#F7B85F;}
 
 .ptr-marker{
   position:absolute;bottom:0;transform:translateX(-50%);
-  font-size:19px;font-weight:700;line-height:1;text-align:m;pointer-events:none;
+  font-size:19px;font-weight:700;line-height:1;text-align:center;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;white-space:nowrap;
 }
 .ptr-marker.visible{opacity:1;}
@@ -160,10 +160,10 @@ button.primary:hover{background:#F7B85F;}
 .ptr-marker.red::before{color:var(--red);}
 
 /* ---------- chip rows ---------- */
-.chip-row{display:flex;align-items:m;gap:12px;flex-wrap:wrap;}
+.chip-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .chip-row + .chip-row{margin-top:12px;padding-top:12px;border-top:2px dashed var(--pencil-light);}
 .row-label{font-size:16px;color:var(--pencil);white-space:nowrap;}
-.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:m;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;min-height:44px;align-items:center;}
 .chip{
   font-size:18px;font-weight:600;line-height:1;background:var(--paper);
   border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 11px 9px;white-space:nowrap;
@@ -184,7 +184,7 @@ button.primary:hover{background:#F7B85F;}
 .slot-row{display:flex;gap:10px;flex-wrap:wrap;}
 .slot{
   min-width:58px;height:58px;padding:0 8px;border:2px dashed var(--pencil-light);border-radius:var(--sk-md);
-  background:var(--paper);display:flex;align-items:m;justify-content:m;
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
   font-size:21px;font-weight:700;color:var(--pencil-light);white-space:nowrap;
   transition:background .3s ease, color .3s ease, border-color .3s;
 }
@@ -194,7 +194,7 @@ button.primary:hover{background:#F7B85F;}
 
 /* ---------- bars ---------- */
 .bars{display:flex;align-items:flex-end;gap:10px;height:230px;position:relative;padding-bottom:26px;}
-.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:m;height:100%;position:relative;min-width:34px;flex:1;}
+.bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;min-width:34px;flex:1;}
 .bar{
   width:100%;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
   transition:height .3s ease, background .25s ease;
@@ -215,7 +215,7 @@ button.primary:hover{background:#F7B85F;}
 .range-line{position:relative;height:34px;}
 .range-bar{
   position:absolute;top:0;height:34px;border:2px solid var(--ink);border-radius:var(--sk-sm);
-  background:var(--paper);display:flex;align-items:m;justify-content:m;
+  background:var(--paper);display:flex;align-items:center;justify-content:center;
   font-size:15px;line-height:1;white-space:nowrap;
   transition:left .3s ease, width .3s ease, background .25s ease;
 }
@@ -248,7 +248,7 @@ button.primary:hover{background:#F7B85F;}
   position:absolute;box-sizing:border-box;
   min-width:calc(54px * var(--pscale));height:calc(54px * var(--pscale));padding:0 calc(6px * var(--pscale));
   border:2px solid var(--ink);border-radius:50%;background:var(--paper);
-  display:flex;flex-direction:column;align-items:m;justify-content:m;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transform:translate(-50%,-50%);
   transition:left .32s ease, top .32s ease, background .25s ease, color .25s ease, border-color .25s ease;
@@ -297,12 +297,12 @@ button.primary:hover{background:#F7B85F;}
 /* ---------- linked list ---------- */
 .list-row-wrap + .list-row-wrap{margin-top:8px;padding-top:10px;border-top:2px dashed var(--pencil-light);}
 .list-scroll{overflow-x:auto;scrollbar-width:thin;}
-.list-row{position:relative;display:flex;align-items:m;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
+.list-row{position:relative;display:flex;align-items:center;gap:0;width:max-content;padding:calc(30px * var(--pscale)) 0 calc(34px * var(--pscale));}
 .list-label{font-size:16px;color:var(--pencil);margin-bottom:2px;}
 .list-cell{
   min-width:calc(58px * var(--pscale));height:calc(52px * var(--pscale));padding:0 calc(8px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
-  display:flex;flex-direction:column;align-items:m;justify-content:m;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-size:calc(21px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transition:background .25s ease, color .25s ease, border-color .25s ease, transform .2s ease;
 }
@@ -317,7 +317,7 @@ button.primary:hover{background:#F7B85F;}
 .list-cell.is-current{transform:translateY(-3px);box-shadow:3px 3px 0 var(--ink);}
 .list-cell.fresh{animation:fill-flash .5s ease;}
 .list-arrow{
-  flex:none;width:calc(30px * var(--pscale));text-align:m;font-size:calc(19px * var(--pscale));
+  flex:none;width:calc(30px * var(--pscale));text-align:center;font-size:calc(19px * var(--pscale));
   line-height:1;color:var(--ink);transition:color .25s ease, transform .3s ease;
 }
 .list-arrow.back{transform:scaleX(-1);}
@@ -329,7 +329,7 @@ button.primary:hover{background:#F7B85F;}
 }
 .list-tag{
   position:absolute;transform:translateX(-50%);font-size:calc(15px * var(--pscale));font-weight:700;
-  line-height:1;text-align:m;white-space:nowrap;pointer-events:none;
+  line-height:1;text-align:center;white-space:nowrap;pointer-events:none;
   transition:left .3s ease, opacity .2s ease;opacity:0;
 }
 .list-tag.visible{opacity:1;}
@@ -349,9 +349,9 @@ button.primary:hover{background:#F7B85F;}
    their labels up along the top and their floors up along the bottom. Stacked
    as a plain flex column they drifted against each other and the panel read as
    three unrelated drawings. */
-.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:m;gap:8px;min-width:calc(96px * var(--pscale));}
-.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:m;}
-.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:m;}
+.bucket{display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:8px;min-width:calc(96px * var(--pscale));}
+.bucket-label{font-size:16px;color:var(--pencil);line-height:1.2;text-align:center;}
+.bucket-foot{font-size:13px;color:var(--pencil);line-height:1.2;text-align:center;}
 /* three sides only: the top is open, because that is the whole point of a bucket */
 .bucket-box{
   align-self:end;
@@ -366,13 +366,13 @@ button.primary:hover{background:#F7B85F;}
 .bucket-box::before{left:-2px;}
 .bucket-box::after{right:-2px;}
 .bucket.queue .bucket-box{
-  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:m;
+  flex-direction:row;min-height:0;height:calc(76px * var(--pscale));align-items:center;
   border:2px solid var(--ink);border-left:none;border-right:none;border-radius:0;
 }
 .cell{
   border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);
   padding:calc(7px * var(--pscale)) calc(11px * var(--pscale)) calc(9px * var(--pscale));
-  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:m;white-space:nowrap;
+  font-size:calc(18px * var(--pscale));font-weight:600;line-height:1;text-align:center;white-space:nowrap;
   transition:background .25s ease, color .25s ease;
 }
 .cell small{font-family:var(--mono);font-size:calc(11px * var(--pscale));color:var(--pencil);}
@@ -388,7 +388,7 @@ button.primary:hover{background:#F7B85F;}
 .cell.popped{animation:pop-fade .55s ease;}
 .bucket-empty{
   position:absolute;left:0;right:0;bottom:calc(12px * var(--pscale));
-  text-align:m;font-size:15px;color:var(--pencil);
+  text-align:center;font-size:15px;color:var(--pencil);
 }
 .bucket.queue .bucket-empty{bottom:auto;top:50%;transform:translateY(-50%);}
 /* A normal flex child, appended last, so column-reverse lands it directly above
@@ -398,7 +398,7 @@ button.primary:hover{background:#F7B85F;}
   align-self:flex-start;font-size:14px;color:var(--pencil);white-space:nowrap;
   line-height:1;padding:0 2px calc(2px * var(--pscale));
 }
-.bucket.queue .bucket-top{align-self:m;padding:0 0 0 calc(4px * var(--pscale));}
+.bucket.queue .bucket-top{align-self:center;padding:0 0 0 calc(4px * var(--pscale));}
 
 /* ---------- grid / matrix ---------- */
 .grid-scroll{overflow-x:auto;scrollbar-width:thin;}
@@ -411,7 +411,7 @@ button.primary:hover{background:#F7B85F;}
 .grid-cell{
   min-width:calc(50px * var(--pscale));height:calc(50px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
-  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:m;
+  font-size:calc(19px * var(--pscale));font-weight:700;line-height:1;text-align:center;
   vertical-align:middle;white-space:nowrap;position:relative;
   transition:background .25s ease, color .25s ease, border-color .25s ease;
 }
@@ -439,7 +439,7 @@ button.primary:hover{background:#F7B85F;}
 .heap-slot{
   min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
-  display:flex;align-items:m;justify-content:m;
+  display:flex;align-items:center;justify-content:center;
   font-size:calc(18px * var(--pscale));font-weight:700;line-height:1;white-space:nowrap;
   transition:background .25s ease, color .25s ease;
 }
@@ -470,7 +470,7 @@ button.primary:hover{background:#F7B85F;}
    already showing. */
 .code-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px;}
 .code-head .panel-title{margin:0;}
-.code-head-right{display:flex;align-items:m;gap:12px;}
+.code-head-right{display:flex;align-items:center;gap:12px;}
 .layer-crumb{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
 .layer-crumb b{color:var(--ink);}
 .code-toggle{
@@ -501,11 +501,11 @@ button.primary:hover{background:#F7B85F;}
 /* Pinned to the bottom of the viewport. It used to sit under the whole stage,
    so its distance from the panels was set by whichever column was taller - on a
    long solution that put Play a screen and a half below the thing it drives. */
-.transport{display:flex;align-items:m;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
+.transport{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 20px;border:2px solid var(--ink);border-radius:var(--sk-lg);
   position:sticky;bottom:14px;z-index:30;background:var(--paper);box-shadow:0 3px 0 0 var(--ink);}
-.transport button{width:42px;height:42px;padding:0;display:flex;align-items:m;justify-content:m;font-size:17px;font-family:var(--mono);}
+.transport button{width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-family:var(--mono);}
 #playBtn{width:52px;height:52px;background:var(--orange);font-size:19px;}
-.speed{display:flex;align-items:m;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
+.speed{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--pencil);margin-left:8px;}
 .speed input{accent-color:var(--orange);}
 .speed .hint{font-size:13px;}
 .progress{margin-left:auto;font-size:17px;color:var(--pencil);}
@@ -651,244 +651,292 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Find Target in Rotated Sorted Array',
-  note: 'cut anywhere you like — at least one of the two halves is still perfectly sorted',
+  note: 'a rotated array is still two sorted runs, and a midpoint always lands inside one of them',
   inputs: [
-    {id:'nums', label:'nums (rotated, distinct)', value:'8,9,10,12,1,3,5,6', width:260},
-    {id:'target', label:'target', value:'6', width:90}
+    {id:'nums', label:'nums (rotated, distinct)', value:'4,5,6,7,0,1,2', width:240},
+    {id:'target', label:'target', value:'0', width:90}
   ],
   parse(raw){
-    const nums = parseInts(raw.nums, 12);
-    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of numbers.'};
-    if (new Set(nums).size !== nums.length) return {ok:false, msg:'Values must be distinct — the halving test needs a strict order.'};
-    let drops = 0;
-    for (let i = 1; i < nums.length; i++) if (nums[i] < nums[i-1]) drops++;
-    if (drops > 1 || (drops === 1 && nums[nums.length - 1] > nums[0]))
-      return {ok:false, msg:'nums must be an ascending array rotated some number of times, e.g. 8,9,10,12,1,3,5,6.'};
-    const target = Number(String(raw.target).trim());
-    if (!Number.isFinite(target)) return {ok:false, msg:'Target must be a single number.'};
-    return {ok:true, value:{nums: nums, target: target}, normalized:{nums: nums.join(','), target: String(target)}};
+    const nums = parseInts(raw.nums, 14);
+    if (!nums) return {ok:false, msg:'Enter a valid comma-separated list of integers.'};
+    if (nums.length < 1) return {ok:false, msg:'Needs at least one element.'};
+    if (new Set(nums).size !== nums.length) return {ok:false, msg:'Values must be distinct — duplicates break the "which half is sorted" test.'};
+    let breaks = 0;
+    for (let i = 1; i < nums.length; i++) if (nums[i] < nums[i-1]) breaks++;
+    if (nums.length > 1 && nums[nums.length-1] > nums[0]) breaks = breaks;
+    if (breaks > 1) return {ok:false, msg:'This must be a sorted array rotated once: at most one drop from one element to the next.'};
+    const t = Number(String(raw.target).trim());
+    if (!Number.isFinite(t)) return {ok:false, msg:'Target must be a number.'};
+    return {ok:true, value:{nums: nums, target: t}, normalized:{nums: nums.join(','), target: String(t)}};
   },
   shuffle(){
-    const n = 7 + Math.floor(Math.random() * 2);
+    const n = 6 + Math.floor(Math.random()*3);
     const sorted = [];
-    let v = Math.floor(Math.random() * 4);
-    for (let i = 0; i < n; i++){ sorted.push(v); v += 1 + Math.floor(Math.random() * 4); }
-    const k = 1 + Math.floor(Math.random() * (n - 1));
-    const arr = sorted.slice(k).concat(sorted.slice(0, k));
-    const target = Math.random() < 0.8 ? arr[Math.floor(Math.random() * n)] : sorted[0] - 1;
-    return {nums: arr.join(','), target: String(target)};
+    let v = -3 + Math.floor(Math.random()*6);
+    for (let i = 0; i < n; i++){ sorted.push(v); v += 1 + Math.floor(Math.random()*4); }
+    const k = Math.floor(Math.random()*n);
+    const rot = sorted.slice(k).concat(sorted.slice(0, k));
+    const hit = Math.random() < 0.8;
+    const t = hit ? rot[Math.floor(Math.random()*n)] : (sorted[n-1] + 1 + Math.floor(Math.random()*3));
+    return {nums: rot.join(','), target: String(t)};
   },
   solutions: [
   {
-    label: 'One pass — keep the sorted half',
-    badge: 'O(log n) time · O(1) space · modified binary search · optimal.cs',
-    blurb: 'Halve the array and at least one side is guaranteed to be a plain ascending run — <code>nums[mid] &gt; nums[right]</code> says it is the left one. Two comparisons then decide whether the target could fit inside that run: if it fits, keep it; if not, the answer can only be in the half that swallowed the rotation point.',
+    label: 'One binary search, rotation-aware',
+    badge: 'O(log n) time · O(1) space · binary search · optimal.cs',
+    blurb: 'Cutting a rotated array in half always leaves at least one half fully sorted — the pivot can only sit in one of them. Comparing <code>nums[mid]</code> with <code>nums[r]</code> names the sorted half; inside a sorted half, two comparisons decide whether the target can live there. Whichever way it goes, half the array is thrown away per step.',
     legend: [
-      {cls:'hot', text:'mid — the probe'},
-      {cls:'win', text:'left / right bounds'},
-      {cls:'good', text:'target found'},
-      {cls:'dim', text:'ruled out'}
+      {cls:'hot', text:'mid — the element being tested'},
+      {cls:'in-window', text:'still live: [l, r]'},
+      {cls:'dim', text:'discarded'},
+      {cls:'good', text:'found'}
     ],
     code: [
-      'int left = 0;',
-      'int right = nums.Length - 1;',
-      '',
-      'while (left <= right)',
+      'public int Search(int[] nums, int target)',
       '{',
-      '    int mid = left + (right - left) / 2;',
-      '    if (target == nums[mid]) return mid;',
-      '',
-      '    if (nums[mid] > nums[right])   // left half is sorted',
+      '    // my solution',
+      '    int l = 0;',
+      '    int r = nums.Length - 1;',
+      '    while (l <= r)',
       '    {',
-      '        if (nums[left] <= target && target < nums[mid])',
-      '            right = mid - 1;',
+      '        int mid = l + (r - l) / 2;',
+      '        if (target == nums[mid])',
+      '        {',
+      '            return mid;',
+      '        }',
+      '        //which part is sorted.',
+      '        if (nums[mid] > nums[r])',
+      '        {',
+      '            //left is sorted',
+      '            if (nums[l] <= target && target < nums[mid])',
+      '                r = mid - 1;',
+      '            else',
+      '                l = mid + 1;',
+      '        }',
+      '',
       '        else',
-      '            left = mid + 1;',
-      '    }',
-      '    else                           // right half is sorted',
-      '    {',
-      '        if (nums[mid] < target && target <= nums[right])',
-      '            left = mid + 1;',
-      '        else',
-      '            right = mid - 1;',
-      '    }',
-      '}',
+      '        {',
+      '            // right half is sorted',
+      '            if (nums[mid] < target && target <= nums[r])',
+      '                l = mid + 1;',
+      '            else',
+      '                r = mid - 1;',
+      '        }',
       '',
-      'return -1;'
-    ],
-    simulate(input){
-      const a = input.nums, t = input.target, steps = [];
-      let left = 0, right = a.length - 1, found = -1, mid = -1, half = '';
-      const panels = () => [
-        pTiles('nums', a, (k) => ({
-          cls: k === found ? 'good'
-             : k === mid ? 'hot'
-             : (k === left || k === right) ? 'win'
-             : (k < left || k > right) ? 'dim' : ''
-        })),
-        pPills('', [
-          {k:'left', v: left, cls:'win'},
-          {k:'right', v: right, cls:'win'},
-          {k:'mid', v: mid >= 0 ? mid : '–', cls:'hot'},
-          {k:'nums[mid]', v: mid >= 0 ? a[mid] : '–'},
-          {k:'target', v: t, cls:'accent'},
-          {k:'sorted half', v: half || '–'}
-        ])
-      ];
-      steps.push({lines:[1,2], msg:'<code>left</code> and <code>right</code> span the whole array. The array is ascending everywhere <em>except</em> at one hidden wrap-around drop, so plain binary search would be lost — but only for the half that contains that drop. The trick is to find out, in one comparison, which half is the clean one.', panels: panels()});
-      while (left <= right){
-        const lo0 = left, hi0 = right;
-        mid = left + Math.floor((right - left) / 2);
-        if (a[mid] === t){
-          found = mid;
-          half = '';
-          steps.push({lines:[4,6,7], msg:'Probe the middle of <code>[' + lo0 + ', ' + hi0 + ']</code>: <code>mid = ' + mid + '</code>, <code>nums[mid] = ' + a[mid] + '</code> — that <b>is</b> the target, so return index <b>' + mid + '</b> without caring which half was sorted.', panels: panels()});
-          break;
-        }
-        steps.push({lines:[4,6,7], msg:'Window <code>[' + lo0 + ', ' + hi0 + ']</code> is still non-empty, so probe its middle: <code>mid = ' + mid + '</code>, <code>nums[mid] = ' + a[mid] + '</code>. Not the target <b>' + t + '</b>, so mid is discarded and the only question left is which side to keep.', panels: panels()});
-        if (a[mid] > a[hi0]){
-          half = 'nums[' + lo0 + '..' + mid + ']';
-          const inRun = a[lo0] <= t && t < a[mid];
-          const why = '<code>nums[mid] = ' + a[mid] + '</code> is greater than <code>nums[right] = ' + a[hi0] + '</code>. Values only fall at the single rotation point, so that drop must sit somewhere after mid — which makes <b>' + half + '</b> a clean ascending run from ' + a[lo0] + ' to ' + a[mid] + '. ';
-          if (inRun){
-            right = mid - 1;
-            steps.push({lines:[9,11,12], msg: why + 'Target <b>' + t + '</b> lies inside that run&rsquo;s range, and a sorted run holds every value it could hold — so if the target exists it is there. <code>right = mid - 1</code>.', panels: panels()});
-          } else {
-            left = mid + 1;
-            steps.push({lines:[9,11,14], msg: why + 'Target <b>' + t + '</b> is outside <code>[' + a[lo0] + ', ' + a[mid] + ')</code>, so it is definitely <em>not</em> in the sorted run — throw the whole left side away with <code>left = mid + 1</code> and keep the messy half that contains the rotation.', panels: panels()});
-          }
-        } else {
-          half = 'nums[' + mid + '..' + hi0 + ']';
-          const inRun = a[mid] < t && t <= a[hi0];
-          const why = '<code>nums[mid] = ' + a[mid] + '</code> is <em>not</em> greater than <code>nums[right] = ' + a[hi0] + '</code>, so there is no drop between them — this time <b>' + half + '</b> is the ascending run. ';
-          if (inRun){
-            left = mid + 1;
-            steps.push({lines:[16,18,19], msg: why + 'Target <b>' + t + '</b> lies in <code>(' + a[mid] + ', ' + a[hi0] + ']</code>, inside that run, so search there: <code>left = mid + 1</code>.', panels: panels()});
-          } else {
-            right = mid - 1;
-            steps.push({lines:[16,18,21], msg: why + 'Target <b>' + t + '</b> is outside <code>(' + a[mid] + ', ' + a[hi0] + ']</code>, so the sorted right side cannot hold it — <code>right = mid - 1</code> keeps the half with the rotation point. Half the array dies on every comparison, which is why this stays O(log n).', panels: panels()});
-          }
-        }
-      }
-      if (found < 0){
-        mid = -1; half = '';
-        steps.push({lines:[25], msg:'<code>left</code> has passed <code>right</code>: the window is empty. Every element was either probed or lived inside a sorted run that provably excluded <b>' + t + '</b>, so the answer is <b>-1</b>.', panels: panels()});
-      }
-      return steps;
-    }
-  },
-  {
-    label: 'Find the pivot, then search a normal half',
-    badge: 'O(log n) time · O(1) space · pivot + plain binary search · optimal-variant.cs',
-    blurb: 'Split the job in two. One binary search ignores the target entirely and walks toward whichever side is smaller (<code>nums[m] &gt; nums[high]</code> means the minimum is further right) until it lands on the rotation point. That leaves two ordinary ascending runs, and a textbook binary search handles each.',
-    legend: [
-      {cls:'hot', text:'m / mid — the probe'},
-      {cls:'win', text:'active bounds'},
-      {cls:'good', text:'pivot (smallest) / match'},
-      {cls:'dim', text:'outside the active range'}
-    ],
-    code: [
-      'int low = 0, high = nums.Length - 1;',
-      '',
-      'while (low < high)              // hunt the pivot',
-      '{',
-      '    int m = (low + high) / 2;',
-      '    if (nums[m] > nums[high])',
-      '        low = m + 1;       // drop is to the right',
-      '    else',
-      '        high = m;          // m may be the min',
-      '}',
-      'int pivot = low;                // index of smallest value',
-      '',
-      'int result = BinarySearch(nums, target, 0, pivot - 1);',
-      'if (result != -1) return result;',
-      'return BinarySearch(nums, target, pivot, nums.Length - 1);',
-      '',
-      'int BinarySearch(int[] nums, int target, int left, int right)',
-      '{',
-      '    while (left <= right)',
-      '    {',
-      '        int mid = (left + right) / 2;',
-      '        if (nums[mid] == target) return mid;',
-      '        else if (nums[mid] < target) left = mid + 1;',
-      '        else right = mid - 1;',
       '    }',
       '    return -1;',
       '}'
     ],
     simulate(input){
-      const a = input.nums, t = input.target, steps = [];
-      let L = 0, R = a.length - 1, M = -1, pivot = -1, found = -1;
-      const panels = (labels) => [
-        pTiles('nums', a, (k) => ({
-          cls: k === found ? 'good'
-             : k === M ? 'hot'
-             : (pivot >= 0 && k === pivot) ? 'good'
-             : (k === L || k === R) ? 'win'
-             : (k < L || k > R) ? 'dim' : ''
-        })),
-        pPills('', [
-          {k: labels[0], v: L, cls:'win'},
-          {k: labels[1], v: R, cls:'win'},
-          {k: labels[2], v: M >= 0 ? M : '–', cls:'hot'},
-          {k: 'nums[' + labels[2] + ']', v: M >= 0 ? a[M] : '–'},
-          {k: 'target', v: t, cls:'accent'},
-          {k: 'pivot', v: pivot >= 0 ? pivot : '–', cls:'good'}
-        ])
-      ];
-      const PIV = ['low','high','m'], SRC = ['left','right','mid'];
-      steps.push({lines:[1], msg:'The first loop never looks at <code>target</code> at all — it is hunting the <b>pivot</b>, the index of the smallest value, which is exactly where the array wraps. Find it and the rotation stops mattering.', panels: panels(PIV)});
-      while (L < R){
-        const hi0 = R;
-        M = Math.floor((L + R) / 2);
-        if (a[M] > a[hi0]){
-          L = M + 1;
-          steps.push({lines:[3,5,6,7], msg:'<code>nums[m] = ' + a[M] + '</code> is greater than <code>nums[high] = ' + a[hi0] + '</code>. A sorted run can never do that, so the wrap must happen strictly after m — m itself cannot be the minimum. <code>low = m + 1</code>.', panels: panels(PIV)});
+      const nums = input.nums, t = input.target, steps = [];
+      let l = 0, r = nums.length - 1, mid = -1, found = -1;
+      const panels = (note) => {
+        const extra = {ptrs: []};
+        if (l >= 0 && l < nums.length) extra.ptrs.push({name:'l', idx:l, cls:'accent'});
+        if (r >= 0 && r < nums.length) extra.ptrs.push({name:'r', idx:r, cls:'accent'});
+        if (mid >= 0) extra.ptrs.push({name:'mid', idx:mid, cls:'hot'});
+        if (l <= r) extra.bracket = {from:l, to:r, dashed:true};
+        return [
+          pTiles('nums', nums, (i) => ({cls: i === found ? 'good' : i === mid ? 'hot' : (i < l || i > r) ? 'dim' : 'in-window'}), extra),
+          pPills('state', [
+            {k:'target', v: t, cls:'accent'},
+            {k:'l', v: l},
+            {k:'r', v: r},
+            {k:'mid', v: mid >= 0 ? mid : '-', cls:'hot'},
+            {k:'nums[mid]', v: mid >= 0 ? nums[mid] : '-'},
+            {k:'live', v: Math.max(0, r - l + 1)}
+          ]),
+          pNote('why', note)
+        ];
+      };
+      steps.push({lines:[4,5], msg:'The whole array is live: <code>l = 0</code>, <code>r = ' + (nums.length-1) + '</code>. The array is sorted but rotated, so a plain binary search would be lost — the one extra fact this loop leans on is that <b>a rotated sorted array cut in half leaves at least one half in perfect order</b>.', panels: panels('There is exactly one drop in the array (the pivot). A midpoint splits it into two halves, and the pivot can fall in only one of them — so the other half is ordinary sorted data.')});
+      let guard = 0;
+      while (l <= r && guard++ < 40){
+        mid = l + Math.floor((r - l) / 2);
+        steps.push({lines:[8,9], msg:'<code>mid = l + (r - l) / 2 = ' + mid + '</code>, holding <b>' + nums[mid] + '</b>. Written this way rather than <code>(l + r) / 2</code> so the sum can never overflow. Compare it with the target <b>' + t + '</b> first — a hit ends everything.', panels: panels('Test the midpoint before reasoning about halves: if it is the target, no further work is needed.')});
+        if (t === nums[mid]){
+          found = mid;
+          steps.push({lines:[11], msg:'<code>nums[' + mid + '] == ' + t + '</code> — return index <b>' + mid + '</b>.', panels: panels('Found in ' + guard + ' probe' + (guard === 1 ? '' : 's') + ' instead of scanning from the left.')});
+          break;
+        }
+        if (nums[mid] > nums[r]){
+          const inLeft = nums[l] <= t && t < nums[mid];
+          if (inLeft){
+            steps.push({lines:[14,17,18], msg:'<code>nums[mid] = ' + nums[mid] + ' > nums[r] = ' + nums[r] + '</code>, so the drop lies to the <b>right</b> of mid and the left half <code>[' + l + ', ' + mid + ']</code> is sorted. Inside a sorted run one range test is enough: <code>' + nums[l] + ' &lt;= ' + t + ' &lt; ' + nums[mid] + '</code> holds, so the target must be there. <code>r = mid - 1</code>.', panels: panels('Only a sorted half can be range-tested. Here the target falls inside it, so everything from mid rightwards is dead.')});
+            r = mid - 1;
+          } else {
+            steps.push({lines:[14,17,20], msg:'<code>nums[mid] = ' + nums[mid] + ' > nums[r] = ' + nums[r] + '</code>, so the left half <code>[' + l + ', ' + mid + ']</code> is the sorted one — it runs ' + nums[l] + ' .. ' + nums[mid] + '. The target <b>' + t + '</b> is not inside that range, so it cannot be there at all. Jump past it with <code>l = mid + 1</code>.', panels: panels('Ruling a half out is as decisive as ruling it in — the target is elsewhere by exclusion, not by guesswork.')});
+            l = mid + 1;
+          }
         } else {
-          R = M;
-          steps.push({lines:[3,5,8,9], msg:'<code>nums[m] = ' + a[M] + '</code> is not greater than <code>nums[high] = ' + a[hi0] + '</code>, so m..high is already ascending and the minimum is at m <em>or</em> to its left. <code>high = m</code> keeps m in play — that is why the loop tests <code>low &lt; high</code> and never writes <code>m - 1</code>, which could step over the answer.', panels: panels(PIV)});
+          const inRight = nums[mid] < t && t <= nums[r];
+          if (inRight){
+            steps.push({lines:[23,26,27], msg:'<code>nums[mid] = ' + nums[mid] + ' &lt;= nums[r] = ' + nums[r] + '</code>, so no drop between mid and r: the <b>right</b> half <code>[' + mid + ', ' + r + ']</code> is sorted, running ' + nums[mid] + ' .. ' + nums[r] + '. The target <b>' + t + '</b> sits inside that range, so <code>l = mid + 1</code>.', panels: panels('mid itself was already rejected above, so the new window starts at mid + 1.')});
+            l = mid + 1;
+          } else {
+            steps.push({lines:[23,26,29], msg:'<code>nums[mid] = ' + nums[mid] + ' &lt;= nums[r] = ' + nums[r] + '</code> → the right half <code>[' + mid + ', ' + r + ']</code> is sorted, ' + nums[mid] + ' .. ' + nums[r] + '. The target <b>' + t + '</b> is outside that range, so it can only be in the messy left side. <code>r = mid - 1</code>.', panels: panels('The half containing the pivot is the one still worth searching — and it gets tested the same way next round.')});
+            r = mid - 1;
+          }
         }
       }
-      pivot = L; M = -1;
-      steps.push({lines:[11], msg:'<code>low</code> and <code>high</code> have met, so <code>pivot = ' + pivot + '</code>, holding the smallest value <b>' + a[pivot] + '</b>. The array is now understood as two ordinary ascending runs: <code>nums[0..' + (pivot - 1) + ']</code> and <code>nums[' + pivot + '..' + (a.length - 1) + ']</code>.', panels: panels(PIV)});
-      const runSearch = (lo, hi, headLines, headMsg, tailLines, tailMsg) => {
-        L = lo; R = hi; M = -1;
-        steps.push({lines: headLines, msg: headMsg, panels: panels(SRC)});
-        while (L <= R){
-          M = Math.floor((L + R) / 2);
-          if (a[M] === t){
-            found = M;
-            steps.push({lines:[21,22], msg:'<code>mid = ' + M + '</code>, <code>nums[mid] = ' + a[M] + '</code> — match. Return <b>' + M + '</b>.', panels: panels(SRC)});
-            return M;
-          }
-          if (a[M] < t){
-            L = M + 1;
-            steps.push({lines:[21,23], msg:'<code>nums[' + M + '] = ' + a[M] + '</code> is below <b>' + t + '</b>, and this run is genuinely sorted, so everything at or left of mid is too small: <code>left = mid + 1</code>.', panels: panels(SRC)});
-          } else {
-            R = M - 1;
-            steps.push({lines:[21,24], msg:'<code>nums[' + M + '] = ' + a[M] + '</code> is above <b>' + t + '</b>, so mid and everything right of it overshoots: <code>right = mid - 1</code>.', panels: panels(SRC)});
-          }
-        }
-        M = -1;
-        steps.push({lines: tailLines, msg: tailMsg, panels: panels(SRC)});
-        return -1;
-      };
-      const emptyLeft = pivot - 1 < 0;
-      const first = runSearch(0, pivot - 1, [13,19],
-        'First call: <code>BinarySearch(nums, target, 0, ' + (pivot - 1) + ')</code> over the run that ends just before the pivot' + (emptyLeft ? '. The array was not really rotated, so this range is empty — <code>left = 0 &gt; right = -1</code> and the loop body never runs.' : ', which spans values ' + a[0] + '..' + a[pivot - 1] + '. No rotation inside it, so a textbook binary search works.'),
-        [19,26],
-        'The window closed with no match, so the helper returns <b>-1</b>' + (emptyLeft ? ' immediately.' : ' for the left run.'));
-      if (first === -1){
-        steps.push({lines:[14,15], msg:'<code>result != -1</code> is false, so nothing is returned yet — fall through to the second call, <code>BinarySearch(nums, target, ' + pivot + ', ' + (a.length - 1) + ')</code>. Note the cost: two searches, but each is O(log n), so the total is still logarithmic.', panels: panels(SRC)});
-        runSearch(pivot, a.length - 1, [15,19],
-          'Second call: the run starting at the pivot, values ' + a[pivot] + '..' + a[a.length - 1] + '. Also strictly ascending, so the same plain helper applies.',
-          [19,26],
-          'This window closed empty too. Both runs were fully covered by sorted searches, so <b>' + t + '</b> is not in the array — return <b>-1</b>.');
+      if (found < 0){
+        mid = -1;
+        steps.push({lines:[33], msg:'<code>l = ' + l + '</code> has passed <code>r = ' + r + '</code>: the live window is empty, every index has been ruled out by a range test, so <b>' + t + '</b> is not in the array. Return <b>-1</b>.', panels: panels('Each round halved the window, so ' + nums.length + ' elements were settled in about log2(n) probes.')});
       }
       return steps;
     }
+  },
+  {
+    label: 'Find the pivot first, then search a sorted run',
+    badge: 'O(log n) time · O(1) space · two binary searches · optimal-variant.cs',
+    blurb: 'Split the problem in two. One binary search finds the pivot — the index of the smallest element — by walking toward whichever side still has a drop in it. That cuts the array into two plain sorted runs, and an ordinary textbook binary search is run on each: the left one first, the right one if that misses.',
+    legend: [
+      {cls:'hot', text:'m / mid — element being tested'},
+      {cls:'in-window', text:'live window'},
+      {cls:'dim', text:'discarded'},
+      {cls:'good', text:'pivot / found'}
+    ],
+    code: [
+      'public int Search(int[] nums, int target)',
+      '{',
+      '    int l = 0, r = nums.Length - 1;',
+      '',
+      '    while (l < r)',
+      '    {',
+      '        int m = (l + r) / 2;',
+      '        if (nums[m] > nums[r])',
+      '        {',
+      '            l = m + 1;',
+      '        }',
+      '        else',
+      '        {',
+      '            r = m;',
+      '        }',
+      '    }',
+      '',
+      '    int pivot = l;',
+      '',
+      '    int result = BinarySearch(nums, target, 0, pivot - 1);',
+      '    if (result != -1)',
+      '    {',
+      '        return result;',
+      '    }',
+      '',
+      '    return BinarySearch(nums, target, pivot, nums.Length - 1);',
+      '}',
+      '',
+      'public int BinarySearch(int[] nums, int target, int left, int right)',
+      '{',
+      '    while (left <= right)',
+      '    {',
+      '        int mid = (left + right) / 2;',
+      '        if (nums[mid] == target)',
+      '        {',
+      '            return mid;',
+      '        }',
+      '        else if (nums[mid] < target)',
+      '        {',
+      '            left = mid + 1;',
+      '        }',
+      '        else',
+      '        {',
+      '            right = mid - 1;',
+      '        }',
+      '    }',
+      '    return -1;',
+      '}'
+    ],
+    simulate(input){
+      const nums = input.nums, t = input.target, steps = [];
+      let lo = 0, hi = nums.length - 1, mid = -1, pivotIdx = -1, found = -1, phase = 'pivot';
+      const panels = (note) => {
+        const extra = {ptrs: []};
+        const ln = phase === 'pivot' ? 'l' : 'left';
+        const rn = phase === 'pivot' ? 'r' : 'right';
+        const mn = phase === 'pivot' ? 'm' : 'mid';
+        if (lo >= 0 && lo < nums.length) extra.ptrs.push({name: ln, idx: lo, cls:'accent'});
+        if (hi >= 0 && hi < nums.length) extra.ptrs.push({name: rn, idx: hi, cls:'accent'});
+        if (mid >= 0) extra.ptrs.push({name: mn, idx: mid, cls:'hot'});
+        if (pivotIdx >= 0) extra.ptrs.push({name:'pivot', idx: pivotIdx, cls:'good'});
+        if (lo <= hi) extra.bracket = {from: lo, to: hi, dashed: true};
+        return [
+          pTiles('nums', nums, (i) => ({
+            cls: i === found ? 'good'
+               : i === mid ? 'hot'
+               : (i < lo || i > hi) ? 'dim'
+               : (i === pivotIdx ? 'good' : 'in-window')
+          }), extra),
+          pPills('state', [
+            {k:'phase', v: phase === 'pivot' ? 'find pivot' : 'binary search', cls:'accent'},
+            {k:'target', v: t},
+            {k: phase === 'pivot' ? 'l' : 'left', v: lo},
+            {k: phase === 'pivot' ? 'r' : 'right', v: hi},
+            {k: phase === 'pivot' ? 'm' : 'mid', v: mid >= 0 ? mid : '-', cls:'hot'},
+            {k:'pivot', v: pivotIdx >= 0 ? pivotIdx : '-', cls: pivotIdx >= 0 ? 'good' : ''}
+          ]),
+          pNote('why', note)
+        ];
+      };
+      steps.push({lines:[3], msg:'Phase one ignores the target completely: it only wants the <b>pivot</b>, the index of the smallest element, where the array wraps around. Start with the whole range.', panels: panels('Once the pivot is known the array is just two sorted runs glued together, and each can be searched the textbook way.')});
+      let guard = 0;
+      while (lo < hi && guard++ < 40){
+        mid = Math.floor((lo + hi) / 2);
+        steps.push({lines:[7,8], msg:'<code>m = (' + lo + ' + ' + hi + ') / 2 = ' + mid + '</code> → <b>' + nums[mid] + '</b>. Compare it with the right end <code>nums[' + hi + '] = ' + nums[hi] + '</code>: that single comparison says which side of <code>m</code> the wrap lives on.', panels: panels('Comparing against the right end, not the left, is what makes this loop converge on the minimum.')});
+        if (nums[mid] > nums[hi]){
+          steps.push({lines:[8,10], msg:'<code>' + nums[mid] + ' &gt; ' + nums[hi] + '</code>: values fall somewhere after <code>m</code>, so the wrap — and therefore the minimum — is strictly to the right. <code>l = m + 1</code> discards <code>m</code> and everything left of it.', panels: panels('m cannot be the minimum here: something to its right is smaller than it.')});
+          lo = mid + 1;
+        } else {
+          steps.push({lines:[12,14], msg:'<code>' + nums[mid] + ' &lt;= ' + nums[hi] + '</code>: the stretch from <code>m</code> to <code>r</code> is already in order, so the minimum is at <code>m</code> or before it. <code>r = m</code> — note it keeps <code>m</code>, because <code>m</code> may itself be the pivot.', panels: panels('r = m, not m - 1. Dropping m here could throw away the answer.')});
+          hi = mid;
+        }
+      }
+      mid = -1;
+      pivotIdx = lo;
+      lo = 0; hi = nums.length - 1;
+      steps.push({lines:[16,18], msg:'<code>l</code> and <code>r</code> have met, so <code>pivot = ' + pivotIdx + '</code> — the smallest value <b>' + nums[pivotIdx] + '</b>. The array is now two sorted runs: indices <code>0 .. ' + (pivotIdx - 1) + '</code> and <code>' + pivotIdx + ' .. ' + (nums.length - 1) + '</code>.', panels: panels('Rotation has been factored out. Everything after this is plain binary search on ordinary sorted data.')});
+      phase = 'search';
+      const runBS = (left, right, callLine, label) => {
+        lo = left; hi = right; mid = -1;
+        steps.push({lines:[callLine, 31], msg:'Call <code>BinarySearch</code> on the <b>' + label + '</b> run, indices <code>' + left + ' .. ' + right + '</code>.' + (left > right ? ' That range is empty (<code>left &gt; right</code>), so the loop body never runs.' : ' This stretch is sorted, so no rotation logic is needed inside.'), panels: panels(left > right ? 'An empty range is legal input here — the guard left <= right handles it with no special case.' : 'Inside a sorted run, nums[mid] < target means the answer is to the right, full stop.')});
+        let g = 0;
+        while (left <= right && g++ < 40){
+          mid = Math.floor((left + right) / 2);
+          lo = left; hi = right;
+          steps.push({lines:[33,34], msg:'<code>mid = ' + mid + '</code> → <b>' + nums[mid] + '</b>. Compare with the target <b>' + t + '</b>.', panels: panels('Ordinary three-way binary search: equal, smaller, larger.')});
+          if (nums[mid] === t){
+            found = mid;
+            steps.push({lines:[36], msg:'<code>nums[' + mid + '] == ' + t + '</code> — return <b>' + mid + '</b>.', panels: panels('Phase one cost about log2(n) probes and phase two the same, so the total is still O(log n).')});
+            return mid;
+          } else if (nums[mid] < t){
+            steps.push({lines:[38,40], msg:'<code>' + nums[mid] + ' &lt; ' + t + '</code>, and this run is sorted, so anything at or left of <code>mid</code> is too small. <code>left = mid + 1</code>.', panels: panels('No rotation to worry about inside a single run.')});
+            left = mid + 1;
+          } else {
+            steps.push({lines:[42,44], msg:'<code>' + nums[mid] + ' &gt; ' + t + '</code>, so the target, if present, is to the left. <code>right = mid - 1</code>.', panels: panels('Half the remaining run drops away each probe.')});
+            right = mid - 1;
+          }
+        }
+        lo = left; hi = right; mid = -1;
+        steps.push({lines:[47], msg:'The window is empty — the <b>' + label + '</b> run does not contain <b>' + t + '</b>. Return <b>-1</b>.', panels: panels('A -1 from one run is not the final answer; the caller still has the other run to try.')});
+        return -1;
+      };
+      const first = runBS(0, pivotIdx - 1, 20, 'left');
+      if (first !== -1){
+        lo = 0; hi = nums.length - 1; mid = -1;
+        steps.push({lines:[21,23], msg:'<code>result = ' + first + '</code> is not -1, so the target was in the left run. Return <b>' + first + '</b> and never touch the right run.', panels: panels('Answer: index ' + first + '.')});
+        return steps;
+      }
+      lo = 0; hi = nums.length - 1; mid = -1;
+      steps.push({lines:[21,26], msg:'The left run returned -1, so the <code>if</code> does not fire. The only place left is the run starting at the pivot — search it and return whatever it says, -1 included.', panels: panels('Two searches, each O(log n), and at most one of them can succeed because the runs do not overlap.')});
+      const second = runBS(pivotIdx, nums.length - 1, 26, 'right');
+      lo = 0; hi = nums.length - 1; mid = -1;
+      steps.push({lines:[26], msg: second !== -1
+        ? 'The right run found it: return <b>' + second + '</b>.'
+        : 'Neither run contains <b>' + t + '</b>, so the method returns <b>-1</b>.',
+        panels: panels(second !== -1 ? 'Answer: index ' + second + '.' : 'Answer: -1. The two runs together cover every index, so nothing was skipped.')});
+      return steps;
+    }
   }]
-};;
+};
 
 /* ==========================================================================
    Shared visualizer engine.

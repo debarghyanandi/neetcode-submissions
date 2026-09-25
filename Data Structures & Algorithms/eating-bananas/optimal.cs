@@ -1,13 +1,12 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n log k) time / O(1) space
-// -  binary search on eating speed, linear feasibility check
-// -  [binary-search-on-speed]
+// -  binary search on answer   [binary-search-answer]
 // -  the only solution in this folder
 // -
 // -  Reference solution - not one you solved yourself
 // -
-// -  binary searches speed in [1, max(pile)] and for each candidate does an
-// -  O(n) pass summing ceil(pile/speed) hours
+// -  Binary search over speeds [1, max_pile] with O(n) feasibility check
+// -  per iteration
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -53,76 +52,86 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary search on the answer - monotone feasibility
+ PATTERN : Binary search on the answer - monotone feasibility check
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  low       smallest speed still possible, 1 because speed 0 never finishes
+  high      largest speed worth trying = the biggest pile
+  mid       candidate speed being tested this round
+  hour      hours needed at the candidate speed, summed over all piles
 WHY THIS PATTERN
-  piles is never sorted and never needs to be. The binary search runs over the
-  candidate answers - eating speeds - not over the array. What makes that legal
-  is monotonicity of the predicate: ceil(pile/speed) is non-increasing as speed
-  grows, so if CanFinish(piles, s, hoursLimit) is true it is true for every
-  speed above s. The boolean sequence over speeds 1, 2, ..., max(piles) is
-  therefore F F F ... T T T, and the task is to find the first T.
-SEARCH BOUNDS
-  low = 1 because speed 0 never finishes any pile, so it can never be the
-  answer.
-
-  high = max(piles) because at that speed every pile takes exactly one hour and
-  the total is piles.Length hours - the smallest total achievable. No speed
-  above max(piles) buys anything, so the answer cannot live past it.
-
-  high is seeded to 1 rather than 0 before the foreach, which keeps low <= high
-  even before any pile is examined.
-INVARIANT AND WHY IT RETURNS LOW
-  The invariant is: the answer is always inside [low, high].
-
-  When CanFinish(mid) is true, mid is still a live candidate - it may be the
-  minimum - so the code writes high = mid, not high = mid - 1. When it is false,
-  mid is definitely too slow, so low = mid + 1 discards it safely.
-
-  The loop exits at low == high, a single surviving candidate, which is why
-  returning low needs no separate best variable and why CanFinish is never
-  called on the returned value.
-WHY IT TERMINATES
-  mid = low + (high - low) / 2 floors toward low, so whenever low < high the
-  result satisfies low <= mid < high. The high = mid branch therefore strictly
-  shrinks the range rather than parking on the same value, and the low = mid + 1
-  branch obviously advances. Writing mid = (low + high + 1) / 2 with this pair
-  of updates would hang.
-WATCH OUT - THE TWO CEILINGS
-  Math.Ceiling((double)pile / speed) is exact here: any int converts to double
-  losslessly (doubles are exact through 2^53), so the division cannot round its
-  way into an off-by-one hour.
-
-  The commented-out integer form (pile + speed - 1) / speed is the usual
-  substitution, but it is not a free swap - with pile and speed both near 1e9,
-  pile + speed - 1 exceeds int.MaxValue and wraps negative. Check the
-  constraints before uncommenting it.
-WATCH OUT - THE ACCUMULATOR
-  hour is an int and CanFinish has no early exit, so it always sums across all
-  of piles. At a small speed the sum approaches sum(piles): with 1e4 piles of
-  1e9 that overflows int, and a wrapped negative makes hour <= targetHour
-  spuriously true, which would return a speed that is too slow.
-
-  Either fix closes it: declare hour as long, or return false the moment hour >
-  targetHour - the second also stops wasting work on hopeless speeds.
+  We are asked for the smallest speed that finishes inside hoursLimit, and the
+  total time is monotone: if a speed works, every faster speed also works. That
+  turns the search for a number into a yes/no question, CanFinish(piles, mid,
+  hoursLimit), asked over the sorted range of speeds 1..max(pile). Binary search
+  narrows [low, high) until the two meet on the first speed where the answer
+  flips from false to true.
 BRUTE FORCE
-  Scan speed = 1, 2, 3, ... and return the first one CanFinish accepts. Correct,
-  and it uses the identical predicate - the only difference is that it walks
-  1..max(piles) linearly instead of halving it, giving O(n * max(piles)). That
-  framing is the point: binary search on the answer replaces the scan over the
-  answer range, and leaves the feasibility check untouched.
+  The first thing you would write is a loop over speed = 1, 2, 3, ... calling
+  CanFinish until it returns true. That is correct, because the same monotone
+  property holds, but it costs O(n * k) where k is the largest pile - it walks
+  the whole speed range instead of halving it. It only matters when piles hold
+  large values, which is exactly when it dies.
+INVARIANT
+  At the top of every while iteration, the answer lies in [low, high]: low is
+  never above the true answer, and high always satisfies CanFinish. Setting high
+  = mid keeps a known-good speed in range; setting low = mid + 1 discards a
+  speed proven too slow. Because the window always shrinks by at least one and
+  only holds valid candidates, when low == high that single value is the
+  smallest feasible speed, so returning low is safe.
+WHY HIGH = MAX(PILE) IS ENOUGH
+  At a speed equal to the largest pile, every pile takes exactly one hour, so
+  the total is piles.Length hours - the lowest total any speed can reach. No
+  speed above the largest pile helps, so the search space stops there and never
+  needs an artificial cap. The initial high = 1 also doubles as a floor, so high
+  never drops below the legal minimum speed.
+THE COMMENTED-OUT CEILING
+  The live line uses (int)Math.Ceiling((double)pile / speed); the commented
+  alternative (pile + speed - 1) / speed does the same thing with integers. They
+  are not equal in edge cases: if a pile is close to int.MaxValue, pile + speed
+  - 1 overflows and gives a wrong, tiny hour count. The double version has no
+  such overflow because every int converts exactly to double.
+WATCH OUT
+  hour is an int and, at speed 1, it sums to the total number of bananas; a
+  large enough total silently overflows and can make CanFinish return true for a
+  speed that is far too slow. There is no feasibility guard: if hoursLimit is
+  smaller than piles.Length the task is impossible, but the loop still returns
+  max(pile) instead of signalling failure. An empty piles array leaves high = 1
+  and returns 1 without entering the loop. Also note mid is computed as low +
+  (high - low) / 2 on purpose - low + high would be the overflow-prone form.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is the loop condition low < high and not low <= high?
+     The half-open form needs no separate variable for the best answer found:
+     high is always a feasible speed, so the meeting point is the answer. With
+     low <= high you must store a result on each success and return that, or you
+     loop forever when high = mid.
+  2. The hour total can overflow. How do you fix it while keeping the same
+  structure?
+     Make hour a long, or return early from CanFinish as soon as hour >
+     targetHour. The early exit also saves work on slow speeds, since it stops
+     before touching every pile.
+  3. Variant - Koko may eat from several piles in the same hour, up to speed
+  bananas per hour total. What changes?
+     The problem stops being per-pile and becomes ceil(total bananas /
+     hoursLimit), a single arithmetic step with no search at all. The binary
+     search only earns its place because leftover capacity inside an hour is
+     wasted.
+  4. What if piles were given as a stream you can read only once?
+     You can still find the maximum in that one pass, but CanFinish needs to
+     re-read the data on every candidate speed, so you must buffer it or accept
+     O(log k) passes over the stream.
 TRIGGER
-  Reach for this when the question asks for a minimum or maximum value such that
-  some condition holds, the value lives in a contiguous integer range with
-  obvious bounds, and the condition flips exactly once across that range. The
-  habit worth keeping from this file is the shape: push the condition into its
-  own predicate that takes the candidate and the threshold (CanFinish(piles,
-  mid, hoursLimit)), so the search body stays three lines and the correctness
-  argument splits cleanly into "is the predicate monotone" and "is the range
-  right".
+  The question asks for the smallest or largest value that satisfies a
+  condition, and checking one candidate value is cheap and monotone.
+C# NOTE
+  CanFinish is a separate private method that re-receives piles on every call; a
+  local function inside MinEatingSpeed could capture piles directly and take
+  only speed, which keeps the signature honest about what actually varies. The
+  max-finding foreach could be piles.Max() from LINQ, but the plain loop avoids
+  the delegate-free-yet-still-enumerator walk and keeps the 1 floor explicit.
 COMPLEXITY
   Time  : O(n log k)
   Space : O(1)

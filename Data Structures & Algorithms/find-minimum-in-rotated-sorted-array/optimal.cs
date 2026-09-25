@@ -1,12 +1,12 @@
 // ##########################################################################
 // #  optimal.cs            O(log n) time / O(1) space
-// #  binary search comparing mid to right   [binary-search-rotated-min]
+// #  Binary search on rotated array   [binary-search-rotated-array]
 // #  the only solution in this folder
 // #
-// #  YOU SOLVED THIS YOURSELF (from submission-0)
+// #  YOU SOLVED THIS YOURSELF
 // #
-// #  halves search space each iteration by comparing nums[mid] to
-// #  nums[right] to determine which side contains the minimum
+// #  Binary search repeatedly halves the search space by comparing the
+// #  middle element with the right boundary.
 // ##########################################################################
 
 public class Solution
@@ -30,79 +30,78 @@ public class Solution
     }
 }
 
-
-
 /*
 ================================================================================
- PATTERN : Binary Search on the Break - compare mid against right
+ PATTERN : Binary Search on the rotation point - compare mid to right
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
+VARIABLES
+  l    left end of the range still being searched (inclusive)
+  r    right end of that range (inclusive), and the value nums[mid] is compared against
 WHY THIS PATTERN
-  A rotated sorted array is two sorted runs glued together, and every element of
-  the left run is strictly greater than every element of the right run. The
-  minimum is the first element of the right run - the single point where the
-  order breaks. That break is detectable from one comparison, so you never need
-  to see the whole array: you only need to know which half of [left, right]
-  still contains the break, which is exactly what binary search gives you.
+  The array was sorted and then rotated, so it is two ascending runs and every
+  element in the left run is bigger than every element in the right run. That
+  split gives a yes/no test that can be answered at one index: if nums[mid] >
+  nums[r], then mid sits in the left run and the minimum must be after it, so l
+  = mid + 1. Otherwise mid is already in the run that contains the minimum, so r
+  = mid keeps mid as a candidate. Each test throws away half the range, which is
+  what makes this a binary search rather than a scan.
 BRUTE FORCE
-  Scan all of nums and keep a running minimum, or scan for the one index i with
-  nums[i] > nums[i+1] and return nums[i+1]. Both are linear and both throw away
-  the fact that the input is sorted-but-for-one-break. The linear scan is the
-  right answer only if duplicates are allowed and the worst case collapses
-  anyway - see WATCH OUT.
+  The first thing most people write is a single pass that keeps the smallest
+  value seen, or just a scan for the one place where nums[i] > nums[i+1]. Both
+  are correct and O(n) time. They lose because they read every element even
+  though the two-run structure lets one comparison rule out half the array.
 INVARIANT
-  The minimum is always inside the closed window [left, right]. It holds at
-  entry (window is the whole array) and each branch is chosen to preserve it.
-  The loop condition is left < right, not left <= right, because the window is
-  never allowed to become empty - it shrinks to exactly one index, and that
-  index is the answer. That is why the return is nums[left] with no post-loop
-  comparison and no separate answer variable being tracked.
-THE TWO BRANCHES
-  1. nums[mid] > nums[right]: mid sits in the left (high) run while right sits
-  in the right (low) run, so the break is strictly to the right of mid. mid
-  itself cannot be the minimum - nums[right] already beats it - so left = mid +
-  1 discards mid safely.
-  2. nums[mid] <= nums[right]: the stretch mid..right has no break in it, so it
-  is plainly sorted and its smallest element is nums[mid]. mid is still a
-  candidate, so right = mid and NOT mid - 1. Everything strictly past mid is
-  eliminated, which is enough progress.
-WHY NUMS[RIGHT] AND NOT NUMS[LEFT]
-  Comparing nums[mid] against nums[left] is ambiguous: nums[mid] > nums[left]
-  happens both when the array is not rotated at all and when mid is in the left
-  run, and those demand opposite moves. Anchoring on nums[right] has no such
-  collision, because right is always the tail of the current window. It also
-  handles the unrotated input for free: if nums is already sorted, every mid
-  satisfies nums[mid] <= nums[right], right walks down to 0, and nums[0] comes
-  back with no special case written for it.
-TERMINATION
-  mid = left + (right - left) / 2 floors, and the loop only runs when left <
-  right, so mid < right always. That makes right = mid a strict decrease, and
-  left = mid + 1 a strict increase. Neither branch can leave the window the same
-  size, so no infinite loop. The same expression also avoids the left + right
-  overflow, though with the loop bounds here the anti-overflow property matters
-  less than the floor - if mid could equal right, the second branch would spin
-  forever.
+  At the top of every loop iteration, the minimum element lies somewhere in
+  nums[l..r] inclusive. Both updates preserve it: l = mid + 1 only runs when
+  nums[mid] > nums[r], which proves nums[mid] is not the minimum and neither is
+  anything before it in that run; r = mid keeps mid itself inside the range. The
+  range shrinks by at least one each time, so the loop ends with l == r, and by
+  the invariant that single position holds the answer.
+COMPARE AGAINST NUMS[R], NOT NUMS[L]
+  The pivot of the comparison must be the right end. Comparing nums[mid] to
+  nums[l] does not separate the two cases: on an array that is not rotated at
+  all, nums[mid] > nums[l] is true and would send the search the wrong way.
+  Against nums[r] the not-rotated case falls into the else branch and r walks
+  down to 0 correctly.
+MIDPOINT AND LOOP BOUND
+  mid = l + (r - l) / 2 avoids computing l + r, which could overflow a 32-bit
+  int. The condition is l < r, not l <= r, and there is no early return: the
+  loop is designed to converge to one index rather than to find an exact match,
+  so l <= r would loop forever once l == r and the else branch sets r = mid = l.
 WATCH OUT
-  - right = mid - 1 in the second branch loses the answer whenever mid IS the
-  minimum. The asymmetry between mid + 1 and mid is the whole trick; do not tidy
-  it into symmetry.
-  - Flipping the test to nums[mid] >= nums[right] is still correct here only
-  because the problem promises distinct values. With duplicates, nums[mid] ==
-  nums[right] tells you nothing about which side the break is on, and the
-  standard patch is right-- , which degrades to linear on an input like
-  [1,1,1,1,0,1]. That is the Find Minimum in Rotated Sorted Array II variant,
-  and this code does not solve it.
-  - nums[left] is never read inside the loop, so there is no hidden dependence
-  on the left endpoint's value.
+  An empty array breaks this: nums.Length - 1 makes r = -1, the condition 0 < -1
+  is false, and return nums[l] throws on index 0. There is no null check either.
+  The strict > also means duplicates are not handled: on something like
+  [3,3,1,3] the else branch can move r past the minimum, so this exact code only
+  answers the distinct-values version of the problem.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How does it change when the array may contain duplicates?
+     Add a third case: when nums[mid] == nums[r], do r-- instead of r = mid. It
+     stays correct but the worst case degrades to O(n), for example an array of
+     all equal values.
+  2. The interviewer wants the index of the minimum, or the number of times the
+  array was rotated.
+     Return l instead of nums[l]; that index is also the rotation count, since
+     the original element 0 moved to position l.
+  3. Search for an arbitrary target in this rotated array, not just the minimum.
+     Run this loop first to get l, then binary search normally on the rotated
+     range by mapping a logical index to (l + idx) % nums.Length. Still O(log n)
+     and no extra memory.
+  4. Could this be written recursively?
+     Yes, with (nums, l, r) parameters and tail recursion, but the loop is
+     simpler and uses no call stack; C# does not guarantee tail-call
+     elimination, so the iterative form is the safer choice.
 TRIGGER
-  When a problem hands you a sorted array with one rotation and asks for the
-  minimum, the pivot index, the rotation count, or a target lookup, reach for a
-  comparison against a fixed endpoint that you know lives on the low side. Pivot
-  index is this exact code returning left instead of nums[left]; rotation count
-  is the same left. For target search, this loop first, then a normal binary
-  search in the correct run.
+  A sorted array that has been shifted or cut and re-joined, where a single
+  comparison against a fixed endpoint tells you which half the answer is in.
+C# NOTE
+  nums[^1] (index-from-end) would read the same value as nums[r] at the start
+  and reads more clearly, but r must stay a real int because it is updated.
+  Resist nums.Min() from LINQ here - it is correct but O(n) and allocates an
+  enumerator, throwing away the whole point of this loop.
 COMPLEXITY
   Time  : O(log n)
   Space : O(1)

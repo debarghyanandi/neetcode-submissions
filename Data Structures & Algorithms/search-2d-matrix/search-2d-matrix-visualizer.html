@@ -110,9 +110,9 @@ button.primary:hover{background:#F7B85F;}
 .panel-title{font-size:21px;font-weight:600;margin:0 0 16px;transform:rotate(-0.6deg);transform-origin:left center;}
 
 /* ---------- tiles ---------- */
-.nums-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
-.nums-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
-.nums-row.no-ptrs{padding-bottom:8px;}
+.array-scroll{overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;}
+.array-row{position:relative;display:flex;gap:12px;padding-top:12px;padding-bottom:46px;width:max-content;}
+.array-row.no-ptrs{padding-bottom:8px;}
 .tile{
   min-width:var(--tile);height:var(--tile);padding:0 6px;
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);
@@ -433,9 +433,9 @@ button.primary:hover{background:#F7B85F;}
 .grid-box.visible{opacity:1;}
 .grid-box.dashed{border-style:dashed;border-color:var(--pencil);}
 
-/* ---------- heap (nums and the tree it implies) ---------- */
+/* ---------- heap (array and the tree it implies) ---------- */
 .heap-wrap{display:flex;flex-direction:column;gap:calc(10px * var(--pscale));}
-.heap-nums{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
+.heap-array{display:flex;gap:calc(8px * var(--pscale));flex-wrap:wrap;}
 .heap-slot{
   min-width:calc(48px * var(--pscale));height:calc(48px * var(--pscale));padding:0 calc(5px * var(--pscale));
   border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);position:relative;
@@ -612,7 +612,7 @@ function treeFromLevelOrder(vals){
   }
   return nodes;
 }
-/* A binary heap stored in an nums: index i has children 2i+1 and 2i+2. */
+/* A binary heap stored in an array: index i has children 2i+1 and 2i+2. */
 function heapNodes(values){
   return values.map((v, i) => ({
     id: 'h' + i, v: v, parent: i ? 'h' + ((i - 1) >> 1) : null, side: i % 2 ? 'L' : 'R',
@@ -651,61 +651,66 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Search a 2D Matrix',
-  note: 'the matrix is already a sorted nums - it has just been folded into rows, and integer division unfolds it again',
+  note: 'the matrix is one sorted list that has been folded into rows - the fast version unfolds it with / and %, the slow version never notices and binary searches each row separately',
   inputs: [
-    {id:'m', label:'matrix (rows, ; between)', value:'1,3,5,7;10,11,16,20;23,30,34,60', width:320},
-    {id:'t', label:'target', value:'16', width:90}
+    {id:'matrix', label:'matrix (rows separated by ;)', value:'1,3,5,7;10,11,16,20;23,30,34,60', width:300},
+    {id:'target', label:'target', value:'16', width:110}
   ],
   parse(raw){
-    const rowsRaw = String(raw.m).split(/[;\n]/).map(s => s.trim()).filter(s => s.length);
+    const rowsRaw = String(raw.matrix).split(';').map(s => s.trim()).filter(s => s.length);
     if (!rowsRaw.length) return {ok:false, msg:'Enter rows separated by ; e.g. 1,3,5,7;10,11,16,20'};
-    const rows = [];
+    if (rowsRaw.length > 4) return {ok:false, msg:'Use at most 4 rows so the whole run stays watchable.'};
+    const m = [];
     for (const r of rowsRaw){
-      const nums = parseInts(r);
-      if (!nums) return {ok:false, msg:'Every row needs comma-separated integers.'};
-      rows.push(nums);
+      const nums = parseInts(r, 6);
+      if (!nums) return {ok:false, msg:'Each row must be comma separated whole numbers, e.g. 1,3,5,7'};
+      if (nums.some(v => !Number.isInteger(v) || v < 0 || v > 999)) return {ok:false, msg:'Each value must be a whole number from 0 to 999.'};
+      m.push(nums);
     }
-    const C = rows[0].length;
-    if (rows.some(r => r.length !== C)) return {ok:false, msg:'Every row needs the same number of columns.'};
-    if (rows.length > 4 || C > 5) return {ok:false, msg:'Keep it to 4 rows and 5 columns or fewer.'};
-    if (rows.length * C > 16) return {ok:false, msg:'Keep it to 16 cells or fewer so the whole run stays watchable.'};
-    const flat = [].concat.apply([], rows);
+    const cols = m[0].length;
+    if (cols < 2) return {ok:false, msg:'Give each row at least 2 columns, or there is nothing to bisect.'};
+    if (m.some(r => r.length !== cols)) return {ok:false, msg:'Every row must have the same number of columns - the flattening math assumes a rectangle.'};
+    const flat = [].concat.apply([], m);
+    if (flat.length > 24) return {ok:false, msg:'Keep the matrix at 24 cells or fewer so every step fits on screen.'};
     for (let i = 1; i < flat.length; i++){
-      if (flat[i] <= flat[i - 1]) return {ok:false, msg:'Read row by row the values must strictly increase - that is the precondition both searches rely on.'};
+      if (flat[i] <= flat[i - 1]) return {ok:false, msg:'Read row by row, the values must strictly increase - both searches are only correct on a sorted list.'};
     }
-    const t = Number(String(raw.t).trim());
-    if (!Number.isFinite(t)) return {ok:false, msg:'Target must be a number.'};
+    const target = Number(String(raw.target).trim());
+    if (!Number.isInteger(target) || target < 0 || target > 999) return {ok:false, msg:'Target must be a whole number from 0 to 999.'};
     return {
       ok:true,
-      value:{matrix: rows, target: t},
-      normalized:{m: rows.map(r => r.join(',')).join(';'), t: String(t)}
+      value:{matrix: m, target: target},
+      normalized:{matrix: m.map(r => r.join(',')).join(';'), target: String(target)}
     };
   },
   shuffle(){
-    const rows = [];
+    const rows = 3, cols = 4;
+    const m = [];
     let v = 1 + Math.floor(Math.random() * 5);
-    for (let r = 0; r < 3; r++){
+    for (let r = 0; r < rows; r++){
       const row = [];
-      for (let c = 0; c < 4; c++){ row.push(v); v += 1 + Math.floor(Math.random() * 6); }
-      rows.push(row);
+      for (let c = 0; c < cols; c++){
+        row.push(v);
+        v += 1 + Math.floor(Math.random() * 7);
+      }
+      m.push(row);
     }
-    const flat = [].concat.apply([], rows);
+    const flat = [].concat.apply([], m);
     const hit = Math.random() < 0.7;
-    let t = flat[Math.floor(Math.random() * flat.length)];
-    if (!hit){ t = t + 1; while (flat.indexOf(t) >= 0) t++; }
-    return {m: rows.map(r => r.join(',')).join(';'), t: String(t)};
+    const target = hit ? flat[Math.floor(Math.random() * flat.length)] : flat[flat.length - 1] + 1 + Math.floor(Math.random() * 4);
+    return {matrix: m.map(r => r.join(',')).join(';'), target: String(target)};
   },
   solutions: [
   {
     label: 'One binary search over the flattened matrix',
-    badge: 'O(log(m * n)) time · O(1) space · binary search · optimal.cs',
-    blurb: 'Each row is sorted and every row starts above the previous one ends, so in reading order the matrix already <em>is</em> one sorted nums of <code>rows * cols</code> values. The code searches the virtual indices <code>0 .. rows*cols-1</code> and uses <code>mid / cols</code> and <code>mid % cols</code> to turn an index back into a cell only when it has to read one.',
-    shapeOverride: {skip: ['call-stack'], reason: 'this version is a single iterative while loop - nothing recurses, so there are no frames to draw; the whole search state is the two ints left and right.'},
+    badge: 'O(log(m*n)) time · O(1) space · binary search on a virtual 1D array · optimal.cs',
+    blurb: 'Reading the matrix row by row gives one strictly increasing list of <code>rows * cols</code> numbers, so a single binary search over indices <code>0 .. rows*cols-1</code> is enough. The index is never materialised as an array: <code>mid / cols</code> and <code>mid % cols</code> unfold it back into a row and a column on demand.',
+    shapeOverride: {skip: ['call-stack'], reason: 'this version is one while loop with three integers - nothing recurses, so no frames ever exist; the array panel shows the virtual 1D view the loop is really searching.'},
     legend: [
-      {cls:'hot', text:'matrix[row][col] - the cell mid names right now'},
-      {cls:'in-window', text:'still inside [left, right], could still hold the target'},
-      {cls:'good', text:'the target, found'},
-      {cls:'dim', text:'ruled out by an earlier comparison'}
+      {cls:'hot', text:'matrix[row][col] - the cell mid points at'},
+      {cls:'in-window', text:'still in the live range left..right'},
+      {cls:'dim', text:'discarded - proven not to hold the target'},
+      {cls:'good', text:'the target, found'}
     ],
     code: [
       'public bool SearchMatrix(int[][] matrix, int target)',
@@ -727,90 +732,88 @@ const PROBLEM = {
       '        {',
       '            right = mid - 1;',
       '        }',
-      '        else return true;',
+      '        else',
+      '            return true;',
       '    }',
       '    return false;',
       '}'
     ],
     simulate(input){
-      const m = input.matrix, t = input.target;
-      const R = m.length, C = m[0].length;
+      const m = input.matrix, target = input.target;
+      const rows = m.length, cols = m[0].length, n = rows * cols;
       const flat = [].concat.apply([], m);
-      const N = R * C;
       const steps = [];
-      let left = 0, right = N - 1, mid = -1, showMid = false, hit = -1, probes = 0;
+      let left = 0, right = n - 1, mid = null, rowI = null, colI = null, found = null, iters = 0;
 
-      const clsFor = (idx) => {
-        if (hit >= 0 && idx === hit) return 'good';
-        if (showMid && idx === mid) return 'hot';
-        if (idx >= left && idx <= right) return 'in-window';
+      const cls = (k) => {
+        if (found === k) return 'good';
+        if (mid === k) return 'hot';
+        if (k >= left && k <= right) return 'in-window';
         return 'dim';
       };
-
-      const panels = () => {
-        const ptrs = [];
-        if (left >= 0 && left < N) ptrs.push({name:'left', idx: left});
-        if (right >= 0 && right < N) ptrs.push({name:'right', idx: right});
-        if (showMid && mid >= 0 && mid < N) ptrs.push({name:'mid', idx: mid, cls:'accent'});
-        return [
-          pGrid('matrix', m.map((row, r) => row.map((v, c) => ({
-            v: v,
-            cls: clsFor(r * C + c),
-            sub: '#' + (r * C + c)
-          }))), {
-            rowLabels: m.map((_, r) => 'r' + r),
-            colLabels: m[0].map((_, c) => 'c' + c),
-            scale: 0.9
-          }),
-          pTiles('the same cells as one virtual nums, index 0 .. ' + (N - 1), flat, (i) => ({cls: clsFor(i)}), {ptrs: ptrs}),
-          pPills('state', [
-            {k:'target', v: t, cls:'hot'},
-            {k:'left', v: left},
-            {k:'right', v: right},
-            {k:'mid', v: showMid ? mid : '-'},
-            {k:'row, col', v: showMid ? (Math.floor(mid / C) + ', ' + (mid % C)) : '-'},
-            {k:'cells read', v: probes}
-          ])
-        ];
+      const ptrs = () => {
+        const out = [];
+        if (left >= 0 && left < n) out.push({name:'left', idx: left});
+        if (mid !== null) out.push({name:'mid', idx: mid, cls:'accent'});
+        if (right >= 0 && right < n) out.push({name:'right', idx: right});
+        return out;
       };
+      const panels = (fresh) => [
+        pGrid('matrix - ' + rows + ' x ' + cols + ', sorted end to end', m.map((row, r) => row.map((v, c) => ({
+          v: v, cls: cls(r * cols + c), sub: '#' + (r * cols + c), fresh: fresh === r * cols + c
+        }))), {rowLabels: m.map((_, r) => 'row ' + r), colLabels: m[0].map((_, c) => 'col ' + c), scale: 0.85}),
+        pTiles('the same cells as one virtual array of length ' + n, flat, (i) => ({cls: cls(i)}), {ptrs: ptrs(), scale: 0.85}),
+        pPills('state', [
+          {k:'target', v: target, cls:'hot'},
+          {k:'left', v: left},
+          {k:'right', v: right},
+          {k:'mid', v: mid === null ? '-' : mid},
+          {k:'row', v: rowI === null ? '-' : rowI},
+          {k:'col', v: colI === null ? '-' : colI},
+          {k:'cells still live', v: Math.max(0, right - left + 1)},
+          {k:'iterations', v: iters}
+        ])
+      ];
 
-      steps.push({lines:[3,5], msg:'<code>rows</code> is <b>' + R + '</b> and <code>cols</code> is <b>' + C + '</b>. Because every row is sorted and each row begins above the previous row ends, walking the matrix in reading order gives a strictly increasing list of <b>' + N + '</b> values - so it can be binary searched as if it were a flat nums. Line 5 sets <code>left = 0</code> and <code>right = rows * cols - 1 = ' + (N - 1) + '</code>, the first and last <em>virtual</em> indices. No nums is ever built; the flattened row below is only what the index arithmetic pretends to see.', panels: panels()});
+      steps.push({lines:[3,5], msg:'Every value in a row is smaller than the first value of the next row, so laying the rows end to end gives one strictly increasing list of <b>' + n + '</b> numbers. That list is never built - only its index range is. <code>left = 0</code> and <code>right = rows * cols - 1 = ' + (n - 1) + '</code> bracket the whole matrix, and each loop turn will throw away half of whatever is left.', panels: panels(null)});
 
       while (left <= right){
+        iters++;
         mid = left + Math.floor((right - left) / 2);
-        showMid = true;
-        probes++;
-        const r = Math.floor(mid / C), c = mid % C;
-        const v = m[r][c];
-        steps.push({lines:[6,8,9,10], msg:'<code>left</code> (' + left + ') is still at most <code>right</code> (' + right + '), so <b>' + (right - left + 1) + '</b> candidate index(es) remain and the loop body runs. Line 8 takes the midpoint as <code>left + (right - left) / 2 = ' + mid + '</code> - written that way rather than <code>(left + right) / 2</code> so a huge pair of indices cannot overflow. Index <b>' + mid + '</b> is then unfolded: <code>' + mid + ' / ' + C + ' = ' + r + '</code> is the row (how many whole rows fit below it) and <code>' + mid + ' % ' + C + ' = ' + c + '</code> is the column (what is left over). That names <code>matrix[' + r + '][' + c + '] = ' + v + '</code>.', panels: panels()});
+        rowI = Math.floor(mid / cols);
+        colI = mid % cols;
+        const v = m[rowI][colI];
+        steps.push({lines:[6,8,9,10], msg:'Range <code>[' + left + ', ' + right + ']</code> is non-empty, so the loop runs. <code>mid = left + (right - left) / 2</code> = <b>' + mid + '</b> - written that way rather than <code>(left + right) / 2</code> so the sum can never overflow. Now the index has to become a cell: integer division <code>' + mid + ' / ' + cols + '</code> = <b>' + rowI + '</b> counts how many whole rows fit below it, and the remainder <code>' + mid + ' % ' + cols + '</code> = <b>' + colI + '</b> is how far into that row it sits. <code>matrix[' + rowI + '][' + colI + ']</code> = <b>' + v + '</b>.', panels: panels(mid)});
 
-        if (t > v){
+        if (target > v){
+          const old = left;
           left = mid + 1;
-          steps.push({lines:[12,14], msg:'<code>target</code> (' + t + ') is greater than <code>matrix[' + r + '][' + c + ']</code> (' + v + '). Everything at a virtual index at or below <b>' + mid + '</b> is at most that value, so the target cannot be there - and that is a whole prefix of the matrix, possibly crossing row boundaries, not just part of one row. Line 14 moves <code>left</code> to <b>' + left + '</b>, discarding half of what was left in one comparison.', panels: panels()});
-        } else if (t < v){
+          steps.push({lines:[12,14], msg:'<code>' + target + ' > ' + v + '</code>, and everything at index ' + mid + ' or below is smaller still, so all of <code>[' + old + ', ' + mid + ']</code> is dead. <code>left = mid + 1</code> = <b>' + left + '</b> - that is index arithmetic on the virtual list, and it can step across a row boundary without any special case, which is the whole payoff of flattening.', panels: panels(null)});
+        } else if (target < v){
+          const old = right;
           right = mid - 1;
-          steps.push({lines:[16,18], msg:'<code>target</code> (' + t + ') is less than <code>matrix[' + r + '][' + c + ']</code> (' + v + '). Every index from <b>' + mid + '</b> upward holds a value at least that big, so the whole suffix is out. Line 18 pulls <code>right</code> back to <b>' + right + '</b>. Note this may drop the rest of the current row and every row under it at once.', panels: panels()});
+          steps.push({lines:[16,18], msg:'<code>' + target + ' &lt; ' + v + '</code>, so the target cannot be at index ' + mid + ' nor anywhere above it - those cells are all at least ' + v + '. <code>right = mid - 1</code> = <b>' + right + '</b> discards <code>[' + mid + ', ' + old + ']</code> in one move.', panels: panels(null)});
         } else {
-          hit = mid;
-          steps.push({lines:[12,16,20], msg:'Neither comparison held: <code>target</code> is not greater and not less than <code>matrix[' + r + '][' + c + ']</code>, so they are equal. Line 20 returns <b>true</b> immediately, straight out of the loop. Only <b>' + probes + '</b> cell(s) of ' + N + ' were ever read - each comparison halved the remaining range, which is the log(m * n).', panels: panels()});
+          found = mid;
+          steps.push({lines:[20,21], msg:'<code>matrix[' + rowI + '][' + colI + ']</code> is exactly <b>' + target + '</b>. Neither comparison fired, so the <code>else</code> returns <b>true</b> immediately. It took <b>' + iters + '</b> iteration(s) over ' + n + ' cells, and only three integers - <code>left</code>, <code>right</code>, <code>mid</code> - were ever held, so the extra space is O(1).', panels: panels(mid)});
           return steps;
         }
       }
 
-      showMid = false;
-      steps.push({lines:[6,21,22], msg:'<code>left</code> is now ' + left + ' and <code>right</code> is ' + right + ', so <code>left &lt;= right</code> fails and the loop ends. The two pointers have crossed, which means the range of indices that could still contain <b>' + t + '</b> is empty - every index was eliminated by a comparison that was definitely correct, because the flattened order is sorted. Line 22 returns <b>false</b> after reading only ' + probes + ' cell(s), and the only extra memory used the whole way was the handful of ints.', panels: panels()});
+      mid = null; rowI = null; colI = null;
+      steps.push({lines:[6,23], msg:'<code>left = ' + left + '</code> has passed <code>right = ' + right + '</code>, so the live range is empty and the <code>while</code> condition fails. Every cell has been either tested or eliminated by a comparison, so <b>' + target + '</b> is not in the matrix and <b>false</b> comes back after ' + iters + ' iteration(s) - about log2(' + n + ') of them, not ' + n + '.', panels: panels(null)});
       return steps;
     }
   },
   {
-    label: 'Recursive binary search, once per row',
-    badge: 'O(m * log n) time · O(log n) space · recursive binary search · suboptimal.cs',
-    blurb: 'This version never uses the fact that the rows are ordered relative to each other. It just binary searches <em>every</em> row in turn until one reports a hit, so a miss costs m separate searches of log n steps each. The search itself is recursive: each call halves its own range and hands the smaller range to a new frame.',
+    label: 'Recursive binary search, one row at a time',
+    badge: 'O(m log n) time · O(log n) space · recursive binary search per row · suboptimal.cs',
+    blurb: 'This version treats the matrix as m unrelated sorted arrays: walk the rows, binary search each one, stop at the first hit. It is correct, but it throws away the fact that the rows are sorted relative to each other, so a miss costs a full search of every row - m log n instead of log(m*n).',
     legend: [
       {cls:'hot', text:'nums[mid] in the row being searched'},
-      {cls:'in-window', text:'inside [left, right] of the innermost call'},
-      {cls:'good', text:'the target, found'},
-      {cls:'dim', text:'ruled out, or a row already searched and rejected'}
+      {cls:'in-window', text:'inside the current left..right window'},
+      {cls:'dim', text:'discarded, or a row already finished'},
+      {cls:'good', text:'the target, found'}
     ],
     code: [
       'public bool SearchMatrix(int[][] matrix, int target)',
@@ -844,134 +847,118 @@ const PROBLEM = {
       '}'
     ],
     simulate(input){
-      const m = input.matrix, t = input.target;
-      const R = m.length, C = m[0].length;
+      const m = input.matrix, target = input.target;
+      const rows = m.length, cols = m[0].length;
       const steps = [];
-      let frames = [], curRow = -1, lo = 0, hi = C - 1, mid = -1, showMid = false;
-      let hitR = -1, hitC = -1, calls = 0, maxF = 0;
-      const dead = [];
+      const frames = [];
+      let curRow = -1, left = null, right = null, mid = null, found = false, calls = 0, maxDepth = 0, comparisons = 0;
 
-      const panels = (popTop) => {
-        const rowIdx = curRow < 0 ? 0 : curRow;
-        const cellCls = (r, c) => {
-          if (r === hitR && c === hitC) return 'good';
-          if (r === curRow){
-            if (showMid && c === mid) return 'hot';
-            if (c >= lo && c <= hi) return 'in-window';
-            return 'dim';
-          }
-          if (dead.indexOf(r) >= 0) return 'dim';
-          return '';
-        };
-        const ptrs = [];
-        if (curRow >= 0){
-          if (lo >= 0 && lo < C) ptrs.push({name:'left', idx: lo});
-          if (hi >= 0 && hi < C) ptrs.push({name:'right', idx: hi});
-          if (showMid && mid >= 0 && mid < C) ptrs.push({name:'mid', idx: mid, cls:'accent'});
-        }
-        return [
-          pGrid('matrix', m.map((row, r) => row.map((v, c) => ({v: v, cls: cellCls(r, c)}))), {
-            rowLabels: m.map((_, r) => 'r' + r),
-            colLabels: m[0].map((_, c) => 'c' + c),
-            scale: 0.9
-          }),
-          pTiles('nums - the single row handed to BinarySearch (r' + rowIdx + ')', m[rowIdx], (i) => {
-            if (curRow < 0) return {};
-            if (curRow === hitR && i === hitC) return {cls:'good'};
-            if (showMid && i === mid) return {cls:'hot'};
-            if (i >= lo && i <= hi) return {cls:'in-window'};
-            return {cls:'dim'};
-          }, {ptrs: ptrs}),
-          pStack('call stack', [{
-            label: 'BinarySearch(left, right, target, nums)',
-            mode: 'stack',
-            items: frames.map((f, i) => ({
-              text: 'left, right = ' + f.l + ', ' + f.r,
-              sub: f.note,
-              cls: i === frames.length - 1 ? 'hot' : '',
-              fresh: f.fresh === true,
-              popped: popTop === true && i === frames.length - 1
-            })),
-            empty: 'no frames - the foreach loop is between rows',
-            foot: 'SearchMatrix',
-            top: 'running now'
-          }]),
-          pPills('state', [
-            {k:'target', v: t, cls:'hot'},
-            {k:'row', v: curRow < 0 ? 'not started' : 'r' + curRow},
-            {k:'left, right', v: curRow < 0 ? '-' : (lo + ', ' + hi)},
-            {k:'mid', v: showMid ? mid : '-'},
-            {k:'frames open', v: frames.length},
-            {k:'BinarySearch calls', v: calls}
-          ])
-        ];
+      const cellCls = (r, c) => {
+        if (found && r === curRow && c === mid) return 'good';
+        if (r < curRow) return 'done';
+        if (r > curRow) return 'dim';
+        if (mid !== null && c === mid) return 'hot';
+        if (left !== null && c >= left && c <= right) return 'in-window';
+        return 'dim';
       };
+      const ptrs = () => {
+        const out = [];
+        if (left !== null && left >= 0 && left < cols) out.push({name:'left', idx: left});
+        if (mid !== null) out.push({name:'mid', idx: mid, cls:'accent'});
+        if (right !== null && right >= 0 && right < cols) out.push({name:'right', idx: right});
+        return out;
+      };
+      const panels = (popTop, fresh) => [
+        pGrid('matrix - searched one row at a time', m.map((row, r) => row.map((v, c) => ({
+          v: v, cls: cellCls(r, c), fresh: fresh === r + ',' + c
+        }))), {rowLabels: m.map((_, r) => 'row ' + r), colLabels: m[0].map((_, c) => 'col ' + c), scale: 0.85}),
+        pTiles(curRow >= 0 ? 'nums - the row handed to BinarySearch (row ' + curRow + ')' : 'nums - no row picked yet',
+          curRow >= 0 ? m[curRow] : [], (c) => ({cls: cellCls(curRow, c)}), {ptrs: ptrs(), scale: 0.9}),
+        pStack('call stack', [{
+          label: 'BinarySearch(left, right, ...)',
+          mode: 'stack',
+          items: frames.map((f, k) => ({
+            text: 'BS(' + f.l + ', ' + f.r + ')',
+            sub: f.note,
+            cls: k === frames.length - 1 ? 'hot' : '',
+            fresh: fresh === 'frame',
+            popped: popTop && k === frames.length - 1
+          })),
+          empty: 'no frames - between rows, the stack is empty again',
+          foot: 'SearchMatrix',
+          top: 'running now'
+        }]),
+        pPills('state', [
+          {k:'target', v: target, cls:'hot'},
+          {k:'row', v: curRow < 0 ? '-' : curRow},
+          {k:'left', v: left === null ? '-' : left},
+          {k:'right', v: right === null ? '-' : right},
+          {k:'mid', v: mid === null ? '-' : mid},
+          {k:'calls', v: calls},
+          {k:'comparisons', v: comparisons},
+          {k:'deepest stack', v: maxDepth}
+        ])
+      ];
 
-      const clearFresh = () => { frames.forEach(f => { f.fresh = false; }); };
+      steps.push({lines:[6,8], msg:'No flattening here: the <code>foreach</code> will hand each row to <code>BinarySearch</code> as an ordinary sorted <code>int[]</code>, and the only thing tying the rows together is the loop itself. The author says as much in the comments - <em>this is good but mLogn, we need log(m*n)</em>. There are <b>' + rows + '</b> rows of <b>' + cols + '</b>, so the worst case is ' + rows + ' separate searches.', panels: panels(false, null)});
 
-      const bs = (l, r) => {
-        clearFresh();
-        lo = l; hi = r; calls++;
-        frames.push({l: l, r: r, note: 'just entered', fresh: true});
-        maxF = Math.max(maxF, frames.length);
-        const top = frames[frames.length - 1];
+      const BS = (l, r, via) => {
+        frames.push({l: l, r: r, note:'just entered'});
+        calls++;
+        maxDepth = Math.max(maxDepth, frames.length);
+        const f = frames[frames.length - 1];
+        left = l; right = r; mid = null;
+        const lead = via ? 'Line ' + via + ' made this call, so a new frame stacks on top. ' : '';
 
         if (l > r){
-          showMid = false;
-          top.note = 'left > right - empty range';
-          steps.push({lines:[15,17,18], msg:'This frame was handed <code>left = ' + l + '</code>, <code>right = ' + r + '</code>. Line 17 catches it: <code>left &gt; right</code> means the range is empty, every position in row <b>r' + curRow + '</b> has been eliminated, so line 18 returns <b>false</b> without reading the nums at all. This is the base case that stops the recursion when the value simply is not in this row.', panels: panels(true)});
+          steps.push({lines:[17,18], msg: lead + '<b>BS(' + l + ', ' + r + ')</b> on row ' + curRow + ': <code>left > right</code>, so the window is empty. Every index of this row has been ruled out by some earlier comparison, so the base case returns <b>false</b> and the frame pops. This is the recursive spelling of "the while loop ended".', panels: panels(true, 'frame')});
           frames.pop();
+          if (frames.length){ left = frames[frames.length - 1].l; right = frames[frames.length - 1].r; }
           return false;
         }
 
         mid = l + Math.floor((r - l) / 2);
-        showMid = true;
         const v = m[curRow][mid];
+        comparisons++;
 
-        if (v === t){
-          hitR = curRow; hitC = mid;
-          top.note = 'nums[mid] == target';
-          steps.push({lines:[20,22,23], msg:'Line 20 gives <code>mid = ' + l + ' + (' + r + ' - ' + l + ') / 2 = ' + mid + '</code>, and <code>nums[' + mid + '] = ' + v + '</code> is exactly <code>target</code>. Line 23 returns <b>true</b>, and that value is passed straight back up through every waiting frame - each parent does nothing but <code>return</code> what its child gave it.', panels: panels(true)});
+        if (v === target){
+          found = true;
+          steps.push({lines:[20,22,23], msg: lead + '<b>BS(' + l + ', ' + r + ')</b>: <code>mid</code> = <b>' + mid + '</b> and <code>nums[' + mid + ']</code> = <b>' + v + '</b>, which equals the target. <b>true</b> is returned and it will be passed straight back down through every waiting frame - each one does nothing with it but hand it on, because the recursive calls are in <code>return</code> position.', panels: panels(true, curRow + ',' + mid)});
           frames.pop();
           return true;
         }
 
-        if (v < t){
-          top.note = 'nums[mid] = ' + v + ' < target, recursing right';
-          steps.push({lines:[20,25,26], msg:'<code>mid</code> is <b>' + mid + '</b> and <code>nums[' + mid + '] = ' + v + '</code>, which is less than <code>target</code> (' + t + '). The row is sorted, so index ' + mid + ' and everything left of it are too small. Line 26 recurses on <code>(' + (mid + 1) + ', ' + r + ')</code> - a brand new frame, while this one stays on the stack doing nothing but waiting to hand the answer on.', panels: panels(false)});
-          const res = bs(mid + 1, r);
+        if (v < target){
+          steps.push({lines:[20,25,26], msg: lead + '<b>BS(' + l + ', ' + r + ')</b>: <code>mid</code> = <b>' + mid + '</b>, <code>nums[' + mid + ']</code> = <b>' + v + '</b>, which is less than <b>' + target + '</b>. The row is sorted, so indices <code>' + l + '..' + mid + '</code> are all too small and are dropped. The tail call <code>BinarySearch(mid + 1, right, ...)</code> re-asks the same question on <code>[' + (mid + 1) + ', ' + r + ']</code> - note nothing is accumulated on the way back, so the only cost of the recursion is the frame itself.', panels: panels(false, curRow + ',' + mid)});
+          f.note = 'waiting on BS(' + (mid + 1) + ', ' + r + ')';
+          const res = BS(mid + 1, r, 26);
           frames.pop();
+          if (frames.length){ left = frames[frames.length - 1].l; right = frames[frames.length - 1].r; }
           return res;
         }
 
-        top.note = 'nums[mid] = ' + v + ' > target, recursing left';
-        steps.push({lines:[20,25,28], msg:'<code>nums[' + mid + '] = ' + v + '</code> is greater than <code>target</code> (' + t + '), so the test on line 25 fails and control falls to line 28. Everything from index ' + mid + ' rightward is too big; the search continues on <code>(' + l + ', ' + (mid - 1) + ')</code> in a new frame.', panels: panels(false)});
-        const res = bs(l, mid - 1);
+        steps.push({lines:[20,25,28], msg: lead + '<b>BS(' + l + ', ' + r + ')</b>: <code>mid</code> = <b>' + mid + '</b>, <code>nums[' + mid + ']</code> = <b>' + v + '</b>, which is greater than <b>' + target + '</b>. Both <code>if</code>s fall through, so the last line recurses on the lower half <code>[' + l + ', ' + (mid - 1) + ']</code>. Halving each time is why one row costs log n - and why the stack can only grow to about log2(' + cols + ') frames.', panels: panels(false, curRow + ',' + mid)});
+        f.note = 'waiting on BS(' + l + ', ' + (mid - 1) + ')';
+        const res2 = BS(l, mid - 1, 28);
         frames.pop();
-        return res;
+        if (frames.length){ left = frames[frames.length - 1].l; right = frames[frames.length - 1].r; }
+        return res2;
       };
 
-      steps.push({lines:[3,4,5,6], msg:'The author’s own comment says it: this is <b>m log n</b> and the target is <b>log(m * n)</b>. The reason is line 6 - a <code>foreach</code> over every row. The relationship <em>between</em> rows (each one starting above the last one ends) is never used, so the code has no way to pick the one row that could contain the target. It just searches them all, one at a time, until one says yes.', panels: panels(false)});
-
-      let answer = false;
-      for (let r = 0; r < R; r++){
-        curRow = r; lo = 0; hi = C - 1; showMid = false;
-        steps.push({lines:[6,8], msg:'The <code>foreach</code> binds <code>row</code> to row <b>r' + r + '</b> = [' + m[r].join(', ') + ']. Line 8 starts a fresh recursive binary search over the whole of it, <code>(0, ' + (C - 1) + ')</code>. Nothing was checked first - not even whether <b>' + t + '</b> falls between this row’s first and last value - so the search runs in full whatever is in here.', panels: panels(false)});
-        const found = bs(0, C - 1);
-        if (found){
-          answer = true;
-          steps.push({lines:[8,9,10], msg:'Every frame has returned <b>true</b> and line 8 finally assigns <code>found = true</code>. Line 9 sees it, line 10 returns out of the method, and rows r' + (r + 1) + ' onward are never touched. The call stack, which peaked at <b>' + maxF + '</b> frame(s) for a row of ' + C + ', is now empty - that depth is the O(log n) space this version costs on top of the search.', panels: panels(false)});
-          break;
+      for (let r = 0; r < rows; r++){
+        curRow = r; left = null; right = null; mid = null;
+        steps.push({lines:[6,8], msg:'Row <b>' + r + '</b> is picked up by the <code>foreach</code> and passed as <code>nums</code>, with the window opened to the whole row: <code>BinarySearch(0, ' + (cols - 1) + ', ' + target + ', row)</code>. Nothing learned from the previous row is carried in - that lost information is exactly what the flattened version exploits.', panels: panels(false, null)});
+        const hit = BS(0, cols - 1, 8);
+        if (hit){
+          steps.push({lines:[9,10], msg:'<code>found</code> came back <b>true</b> from row ' + r + ', the stack is empty again, and <code>if (found == true)</code> returns it at once - the remaining ' + (rows - r - 1) + ' row(s) are never touched. Total: ' + calls + ' call(s) and ' + comparisons + ' comparison(s).', panels: panels(false, null)});
+          return steps;
         }
-        dead.push(r);
-        showMid = false; lo = 0; hi = -1;
-        steps.push({lines:[9,11], msg:'The recursion collapsed all the way back to line 8 with <b>false</b>: <b>' + t + '</b> is not in row r' + r + '. The <code>if</code> on line 9 does not fire, the frames are all gone, and line 11 sends the loop round to the next row - where the whole log n search begins again from scratch. That repetition is the extra factor of m.', panels: panels(false)});
+        mid = null; left = null; right = null;
+        steps.push({lines:[8,9], msg:'Row ' + r + ' is exhausted and <code>found</code> is <b>false</b>, so the <code>if</code> does not fire and the loop moves on. Every frame for this row has popped - the O(log n) stack is reclaimed between rows, which is why the space is log n and not m log n.', panels: panels(false, null)});
       }
 
-      if (!answer){
-        curRow = -1; showMid = false;
-        steps.push({lines:[11,12], msg:'All <b>' + R + '</b> rows were searched and every one came back false, so the loop runs out and line 12 returns <b>false</b>. That cost <b>' + calls + '</b> BinarySearch calls in total; the flattened version would have settled the same question with a single search of about ' + Math.max(1, Math.ceil(Math.log2(R * C))) + ' comparisons.', panels: panels(false)});
-      }
+      curRow = rows;
+      steps.push({lines:[12], msg:'All <b>' + rows + '</b> rows were binary searched and none of them contained <b>' + target + '</b>, so the <code>foreach</code> falls through and <b>false</b> is returned. That miss cost ' + calls + ' calls and ' + comparisons + ' comparisons - roughly ' + rows + ' x log2(' + cols + ') - where the single flattened search would have needed about log2(' + (rows * cols) + ').', panels: panels(false, null)});
       return steps;
     }
   }]
@@ -981,7 +968,7 @@ const PROBLEM = {
    Shared visualizer engine.
    A problem file defines PROBLEM = { title, note, inputs, parse, shuffle,
    solutions:[{ label, badge, blurb, legend, code, simulate }] }.
-   simulate(input) returns an nums of steps:
+   simulate(input) returns an array of steps:
      { lines:[1-based], msg:'html', panels:[ ...panel descriptors... ] }
    Panel descriptors are declarative; everything below is generic rendering.
    ========================================================================== */
@@ -1047,10 +1034,10 @@ function buildTabs(){
 }
 
 /* ---------------- code layers ----------------
-   A layer is a method, worked out from the code nums itself rather than
+   A layer is a method, worked out from the code array itself rather than
    declared by the problem definition. That matters: it costs the generator
    nothing, needs no schema field that could be filled in wrong, and applies to
-   every visualizer already written. When the parse finds nothing - a code nums
+   every visualizer already written. When the parse finds nothing - a code array
    that is a bare fragment rather than a class - layers are simply off and the
    panel renders exactly as it always did. */
 const CTRL_WORD = /^\s*(?:if|else|for|foreach|while|do|switch|case|return|using|lock|try|catch|finally|new)\b/;
@@ -1213,15 +1200,15 @@ function renderPanels(panels, animate){
 
 const RENDER = {};
 
-/* --- tiles: an nums or string laid out as boxes, with optional bracket + pointers --- */
+/* --- tiles: an array or string laid out as boxes, with optional bracket + pointers --- */
 RENDER.tiles = function(body, p, animate){
-  let scroll = body.querySelector('.nums-scroll');
+  let scroll = body.querySelector('.array-scroll');
   if (!scroll){
-    body.innerHTML = '<div class="nums-scroll"><div class="nums-row">' +
+    body.innerHTML = '<div class="array-scroll"><div class="array-row">' +
       '<div class="window-bracket"></div></div></div>';
-    scroll = body.querySelector('.nums-scroll');
+    scroll = body.querySelector('.array-scroll');
   }
-  const row = scroll.querySelector('.nums-row');
+  const row = scroll.querySelector('.array-row');
   const bracket = row.querySelector('.window-bracket');
   const ptrs = p.ptrs || [];
   row.classList.toggle('no-ptrs', ptrs.length === 0);
@@ -1315,7 +1302,7 @@ RENDER.chips = function(body, p, animate){
   });
 };
 
-/* --- slots: the output nums, dashes until written --- */
+/* --- slots: the output array, dashes until written --- */
 RENDER.slots = function(body, p, animate){
   let row = body.querySelector('.slot-row');
   if (!row){ body.innerHTML = '<div class="slot-row"></div>'; row = body.querySelector('.slot-row'); }
@@ -1438,7 +1425,7 @@ const mkSvg = (name) => document.createElementNS(SVG_NS, name);
 
 /* ---------------- shared tree layout ----------------
    Used by both the tree panel and the heap panel, which is a tree with its
-   edges implied by nums indices. Leaves take the next free column; a parent
+   edges implied by array indices. Leaves take the next free column; a parent
    centres over its children. Depth comes from the parent chain, so the caller
    never states a depth and cannot state a wrong one. */
 function layoutTree(nodes, k){
@@ -1836,10 +1823,10 @@ RENDER.grid = function(body, p, animate){
   }
 };
 
-/* --- heap: the tree and the nums that stores it, side by side ---
+/* --- heap: the tree and the array that stores it, side by side ---
    A heap is the one structure where both views are needed at once: the
    sift path only makes sense as a tree, and the index arithmetic only
-   makes sense as an nums. Showing one without the other is how a heap
+   makes sense as an array. Showing one without the other is how a heap
    animation ends up teaching nothing. */
 RENDER.heap = function(body, p, animate){
   const k = pscale(p);
@@ -1847,12 +1834,12 @@ RENDER.heap = function(body, p, animate){
   let wrap = body.querySelector('.heap-wrap');
   if (!wrap){
     body.innerHTML = '<div class="heap-wrap"><div class="tree-scroll"><div class="tree-stage"></div></div>' +
-                     '<span class="heap-caption"></span><div class="heap-nums"></div></div>';
+                     '<span class="heap-caption"></span><div class="heap-array"></div></div>';
     wrap = body.querySelector('.heap-wrap');
   }
   const stage = wrap.querySelector('.tree-stage');
   const cap = wrap.querySelector('.heap-caption');
-  const arr = wrap.querySelector('.heap-nums');
+  const arr = wrap.querySelector('.heap-array');
 
   if (!items.length){
     stage.style.width = ''; stage.style.height = '';
@@ -1870,7 +1857,7 @@ RENDER.heap = function(body, p, animate){
     }, k);
   }
 
-  cap.textContent = p.caption || 'stored as an nums — index i has children 2i+1 and 2i+2';
+  cap.textContent = p.caption || 'stored as an array — index i has children 2i+1 and 2i+2';
   cap.style.display = p.showArray === false ? 'none' : '';
 
   if (p.showArray === false){ arr.style.display = 'none'; return; }
