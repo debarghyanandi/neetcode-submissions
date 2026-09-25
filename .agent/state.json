@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-24T19:24:08.379Z",
+  "updatedAt": "2026-09-25T05:17:34.360Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4844,15 +4844,90 @@
     },
     "trapping-rain-water": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d709006e7af6403ed854a7c0f6ec1fd467da395767acad1666ba30856fc9db70": "optimal.cs",
+        "a18a78271c1a87a0a98393fdb4d8811aadd96919a5e93bd054a6fe773e4d1ca1": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "d709006e7af6403ed854a7c0f6ec1fd467da395767acad1666ba30856fc9db70": "optimal.cs",
+        "a18a78271c1a87a0a98393fdb4d8811aadd96919a5e93bd054a6fe773e4d1ca1": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "aba9b9dc04b4"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "a21e2e29f4de"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"aba9b9dc04b4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer converging from ends\",\"approachKey\":\"two-pointer-trap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a21e2e29f4de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Prefix and suffix maximum arrays\",\"approachKey\":\"prefix-suffix-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Two-pointer converging from ends",
+          "approachKey": "two-pointer-trap",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Prefix and suffix maximum arrays",
+          "approachKey": "prefix-suffix-max",
+          "correct": true,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"aba9b9dc04b4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer converging from ends\",\"approachKey\":\"two-pointer-trap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a21e2e29f4de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Prefix and suffix maximum arrays\",\"approachKey\":\"prefix-suffix-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "aba9b9dc04b4",
+          "suboptimal.cs": "a21e2e29f4de"
+        },
+        "structures": [
+          "array",
+          "dp-table"
+        ],
+        "builtAt": "2026-09-25T05:17:34.119Z"
+      }
     },
     "two-integer-sum": {
       "topic": "Data Structures & Algorithms",
