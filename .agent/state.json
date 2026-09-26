@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-26T22:03:51.285Z",
+  "updatedAt": "2026-09-26T22:20:07.406Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3470,15 +3470,88 @@
     },
     "median-of-two-sorted-arrays": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d9f1fa5c29b19fde1577acb3ab8c92596ec09276624c89832a93f67c18ceddcb": "optimal.cs",
+        "fb52abdf08440e4c27dc264f47f6b923b8a0eadbbe271c166ebd888d5bc58463": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "d9f1fa5c29b19fde1577acb3ab8c92596ec09276624c89832a93f67c18ceddcb": "optimal.cs",
+        "fb52abdf08440e4c27dc264f47f6b923b8a0eadbbe271c166ebd888d5bc58463": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "5c7c0c5ec04d"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "e86ca9a2c6c3"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5c7c0c5ec04d\",\"time\":\"O(log(min(m, n)))\",\"space\":\"O(1)\",\"algorithm\":\"binary search on partition\",\"approachKey\":\"binary-search-partition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"e86ca9a2c6c3\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(log(min(m, n))) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(log(min(m, n)))",
+          "space": "O(1)",
+          "algorithm": "binary search on partition",
+          "approachKey": "binary-search-partition",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(1)",
+          "algorithm": "two-pointer merge",
+          "approachKey": "two-pointer-merge",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5c7c0c5ec04d\",\"time\":\"O(log(min(m, n)))\",\"space\":\"O(1)\",\"algorithm\":\"binary search on partition\",\"approachKey\":\"binary-search-partition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"e86ca9a2c6c3\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(log(min(m, n))) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "5c7c0c5ec04d",
+          "suboptimal.cs": "e86ca9a2c6c3"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-09-26T22:20:07.199Z"
+      }
     },
     "merge-intervals": {
       "topic": "Data Structures & Algorithms",
