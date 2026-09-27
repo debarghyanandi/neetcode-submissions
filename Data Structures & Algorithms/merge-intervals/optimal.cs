@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-// -  optimal.cs            O(n log n) time / O(log n) space
+// -  optimal.cs            O(n log n) time / O(n) space
 // -  sort and greedy merge   [sort-and-merge]
 // -  the only solution in this folder
 // -
@@ -126,6 +126,6 @@ C# NOTE
   arrays the loop just mutated - fine here because nothing else holds them.
 COMPLEXITY
   Time  : O(n log n)
-  Space : O(log n)
+  Space : O(n)
 ================================================================================
 */
