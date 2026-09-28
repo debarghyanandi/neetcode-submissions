@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-28T15:12:54.490Z",
+  "updatedAt": "2026-09-28T22:55:10.665Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1712,14 +1712,64 @@
     },
     "implement-prefix-tree": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1a0ef49dd037c2de1079eb5f9a97f4f104385d46bea24d393359e64c778289e7": "optimal.cs"
+      },
+      "fingerprints": {
+        "1a0ef49dd037c2de1079eb5f9a97f4f104385d46bea24d393359e64c778289e7": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "0e0ae31fbdee"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(L)",
+          "space": "O(1)",
+          "algorithm": "Trie prefix tree",
+          "approachKey": "trie",
+          "correct": true,
+          "structures": [
+            "trie",
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "0e0ae31fbdee"
+        },
+        "structures": [
+          "trie",
+          "array"
+        ],
+        "builtAt": "2026-09-28T22:55:10.355Z"
+      }
     },
     "implement-queue-using-stacks": {
       "topic": "Data Structures & Algorithms",
