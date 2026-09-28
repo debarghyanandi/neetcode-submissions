@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-28T22:55:10.665Z",
+  "updatedAt": "2026-09-28T23:33:08.518Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2228,7 +2228,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap of size k\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap with size constraint\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2241,7 +2241,7 @@
         "optimal.cs": {
           "time": "O(n log k)",
           "space": "O(k)",
-          "algorithm": "Min-heap of size k",
+          "algorithm": "Min-heap with size constraint",
           "approachKey": "min-heap-kth-largest",
           "correct": true,
           "structures": [
@@ -2250,7 +2250,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap of size k\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap with size constraint\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -2263,7 +2263,7 @@
         "structures": [
           "heap"
         ],
-        "builtAt": "2026-09-22T22:47:56.536Z"
+        "builtAt": "2026-09-28T23:31:28.580Z"
       }
     },
     "kth-smallest-integer-in-bst": {
@@ -4817,8 +4817,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, flatten matrix to 1D\",\"approachKey\":\"binary-search-flattened-matrix\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"binary-search-per-row-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, treat 2D as 1D\",\"approachKey\":\"virtual-1d-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"per-row-recursive-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4836,19 +4836,18 @@
         "optimal.cs": {
           "time": "O(log(m*n))",
           "space": "O(1)",
-          "algorithm": "binary search, flatten matrix to 1D",
-          "approachKey": "binary-search-flattened-matrix",
+          "algorithm": "binary search, treat 2D as 1D",
+          "approachKey": "virtual-1d-binary-search",
           "correct": true,
           "structures": [
-            "matrix",
-            "array"
+            "matrix"
           ]
         },
         "suboptimal.cs": {
           "time": "O(m log n)",
           "space": "O(log n)",
           "algorithm": "recursive binary search per row",
-          "approachKey": "binary-search-per-row-recursive",
+          "approachKey": "per-row-recursive-search",
           "correct": true,
           "structures": [
             "matrix",
@@ -4858,8 +4857,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, flatten matrix to 1D\",\"approachKey\":\"binary-search-flattened-matrix\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"binary-search-per-row-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, treat 2D as 1D\",\"approachKey\":\"virtual-1d-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"per-row-recursive-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -4876,7 +4875,7 @@
           "array",
           "call-stack"
         ],
-        "builtAt": "2026-09-25T22:18:20.894Z"
+        "builtAt": "2026-09-28T23:33:08.516Z"
       }
     },
     "search-for-word-ii": {
