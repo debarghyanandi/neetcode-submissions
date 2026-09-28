@@ -40,7 +40,14 @@ const onlyRaw = arg('--slug');
 const only = onlyRaw ? onlyRaw.split(',').map((x) => x.trim()).filter(Boolean) : null;
 const limit = Number(arg('--limit', '0')) || 0;
 const doApply = has('--apply');
-// Opus at medium effort since 2026-09-17. Sonnet at high effort held this slot before it, and was
+// Opus 5.5 (claude-opus-5-5) at medium effort since 2026-09-29, replacing Opus 5 at medium. Measured
+// on binary-tree-diameter, 2 runs each, all passing: Opus 5 $0.31 / 86s, Opus 5.5 $0.18 / 72s, and
+// Opus 5.5 also picked a teaching default tree (diameter not through the root). Sonnet 5.5 was
+// cheaper ($0.12 / 56s) but its "best diameter" pill went backwards (2 -> 0 -> 3) - wrong in a way
+// validate() does not see. The model is a FULL ID, not the 'opus' alias: an alias silently changes
+// model whenever the pinned CLI version is bumped.
+//
+// History: Opus at medium effort since 2026-09-17. Sonnet at high effort held this slot before it, and was
 // correct, but spent 5-8 minutes and ~39,000 thinking tokens to get there. Opus at medium reaches
 // the same place in well under two minutes on ~1,700 thinking tokens, for roughly the same money -
 // measured on binary-tree-diameter: Sonnet high $0.22, Opus medium $0.31 (and $0.31 included a
@@ -58,11 +65,12 @@ const doApply = has('--apply');
 // third attempt: a failed repair fails the folder loudly.
 // An explicit --model is respected on both attempts.
 const modelGiven = argv.includes('--model');
-const model = arg('--model', 'opus');
-const RETRY_MODEL = 'opus';
-// The repair's effort. Unset = Opus's own default (high): a repair is the one place extra thinking
-// is worth paying for, because attempt 1 already failed.
-const repairEffort = arg('--repair-effort');
+const model = arg('--model', 'claude-opus-5-5');
+const RETRY_MODEL = 'claude-opus-5-5';
+// The repair runs on Opus 5.5 at HIGH effort: a repair is the one place extra thinking is worth paying
+// for, because attempt 1 already failed. Set explicitly - Opus 5.5's own default is medium, not high
+// as Opus 5's was. With an explicit --model, the repair keeps that model and the build's --effort.
+const repairEffort = arg('--repair-effort', modelGiven ? null : 'high');
 // Local test of the repair alone: start from an existing definition (a visualizer .html or a .js
 // holding `const PROBLEM = ...`) instead of paying for attempt 1. If that definition passes, one
 // deliberate error is injected so there is something to repair. Dry runs only.

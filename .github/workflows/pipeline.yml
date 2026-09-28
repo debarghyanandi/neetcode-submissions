@@ -208,7 +208,9 @@ jobs:
         # To upgrade: install the new version locally, run `node scripts/probe-cli.mjs` (probes A-H
         # must all PASS), then change the number here.
         env:
-          CLAUDE_CODE_VERSION: '2.1.273'
+          # 2.1.284: Opus 5.5 needs >= 2.1.280 (Sonnet 5.5 >= 2.1.284). Verified locally 2026-09-29 by
+          # scripts/compare-visualizer-models.ps1 on binary-tree-diameter.
+          CLAUDE_CODE_VERSION: '2.1.284'
         run: |
           set -euo pipefail
           npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"

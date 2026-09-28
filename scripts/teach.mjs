@@ -46,9 +46,12 @@ const force = has('--force');
 // recursive flood fill whose call stack is O(m*n) - a wrong answer to give an interviewer.
 // Once it also started taking a third turn, it cost about what Opus does. --model sonnet
 // still works for a comparison.
-const model = arg('--model', 'opus');
-// No --effort means the model's own default. Only ever set by hand, for comparisons.
-const effort = arg('--effort');
+// Opus 5.5 (claude-opus-5-5) at medium since 2026-09-29, replacing the 'opus' alias (Opus 5 on the
+// CLI pinned then). A full ID, so a CLI bump cannot change the model underneath.
+const modelGiven = argv.includes('--model');
+const model = arg('--model', 'claude-opus-5-5');
+// Medium by default; an explicit --model without --effort gets that model's own default, for comparisons.
+const effort = arg('--effort', modelGiven ? null : 'medium');
 // One file inside the folder, so a model comparison does not pay for every file.
 const fileOnly = arg('--file');
 // Also pick up any curated folder with a file that has NO teaching block. Nothing is in that
