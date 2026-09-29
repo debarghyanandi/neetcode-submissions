@@ -85,85 +85,44 @@ public class LRUCache
 
 /*
 ================================================================================
- PATTERN : Hash Map + Doubly Linked List - O(1) move-to-recent
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Design a cache with a fixed capacity. Get(key) returns the value or
+           -1. Put(key, value) inserts or updates. When the cache is over
+           capacity, evict the least recently used key. Both Get and Put count
+           as a "use". cap=2: put(1,1), put(2,2), get(1), put(3,3), get(2) ->
+           1, -1
+ PATTERN : Hash Map + Doubly Linked List
 ================================================================================
-VARIABLES
-  cap      the most entries the cache may hold
-  cache    cache[key] = the list node that holds that key's value
-  left     dummy head node; left.next is the least recently used entry
-  right    dummy tail node; right.prev is the most recently used entry
-  lru      the node taken from left.next and evicted when the cache is over capacity
-WHY THIS PATTERN
-  The problem asks for Get and Put in constant time, and it asks us to drop the
-  least recently used key. The dictionary cache finds a key's node in O(1). The
-  doubly linked list keeps the nodes in order of use, so it can unlink a node
-  and move it to the end in O(1). Neither structure can do both jobs alone. The
-  dictionary has no order, and the list cannot find a key without walking
-  through it.
-BRUTE FORCE
-  Keep a list of (key, value) pairs in order of use. On each Get or Put, search
-  the list for the key, remove it, and append it at the end. On overflow, remove
-  the first element. This is correct but costs O(n) per operation, because both
-  the search and the removal from the middle of the list scan or shift elements.
-  The interviewer wants O(1).
-INVARIANT
-  The nodes between left and right are exactly the values in cache, ordered from
-  least recent (next to left) to most recent (next to right). Every Get and Put
-  that touches a key calls Remove and then Insert, which moves that node next to
-  right. So left.next is always the entry that has gone longest without use.
-  When cache.Count goes over cap, left.next is the right node to evict.
-NODE STORES ITS OWN KEY
-  When we evict lru, we must also delete it from the dictionary. The list only
-  gives us the node, so the node has to carry its key. That is why Node has a
-  key field and why the code calls cache.Remove(lru.key). If the node held only
-  the value, eviction could not find its dictionary entry without a scan.
-SENTINEL NODES
-  left and right are dummy nodes that are never stored in cache. Because of
-  them, Remove and Insert never meet a null prev or next, so there are no
-  special cases for an empty list or for the first or last node. Their key 0
-  never clashes with a real key 0, because they are never added to the
-  dictionary.
-WATCH OUT
-  When Put gets a key that already exists, it unlinks the old node and makes a
-  new one. It does not update node.val in place. This is correct, but it creates
-  a new object on every update. The dictionary entry must be overwritten
-  (cache[key] = newNode) at the same time as the unlink. If you split those two
-  steps, the dictionary will point at a node that is no longer in the list.
-  Eviction runs after the insert, so the check must be cache.Count > cap and not
-  >=. The code has no locking, so two threads calling Get at the same time can
-  break the prev and next links.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you make this thread-safe?
-     The simplest way is one lock around the body of Get and Put. Even Get
-     changes the list, so a reader-writer lock does not help much. Striped locks
-     (one lock per shard of the keys) give more throughput, but the recency
-     order is then only kept inside each shard.
-  2. How would you change it to LFU (evict the least frequently used key)?
-     Keep a count in each node and one doubly linked list for each frequency,
-     plus a minFreq variable. A Get moves the node to the next frequency's list.
-     Eviction takes the oldest node from the minFreq list. All steps are still
-     O(1), but there is more to keep in sync.
-  3. Can you use library types instead of your own Node?
-     Yes. In C#, use LinkedList<(int key, int val)> with a Dictionary<int,
-     LinkedListNode<...>>. Its Remove(node) and AddLast(node) are O(1). You
-     write less code, but you lose the sentinel trick and have to handle the
-     empty-list case yourself.
-  4. What if entries must also expire after a time limit (TTL)?
-     Store an expiry time in each node. On Get, treat an expired node as missing
-     and remove it. To remove expired entries early, add a min-heap ordered by
-     expiry time. That makes those operations O(log n).
-TRIGGER
-  Reach for this when a problem needs O(1) lookup by key and also an O(1) way to
-  reorder items or remove the oldest one.
-C# NOTE
-  Get and Put each call cache.ContainsKey(key) and then cache[key], which does
-  two hash lookups. cache.TryGetValue(key, out Node node) does one lookup and
-  gives you the node directly.
+IDEA
+  cache maps each key to its Node in a doubly linked list. The dummy node
+  left sits beside the LRU end, and the dummy node right beside the MRU end.
+  Every use calls Remove(node), then Insert(node) just before right. When
+  cache.Count > cap, left.next is the least recently used node, so we drop
+  it. This is correct because list order always equals recency order.
+EXAMPLE
+  cap=2: put(1,1) put(2,2) -> list [1,2]; get(1)=1 -> [2,1]
+  put(3,3) -> [2,1,3], count 3 > 2, evict left.next=2 -> [1,3]
+  get(2)=-1; put(1,10) -> [3,1]; get(1)=10
 COMPLEXITY
-  Time  : O(1)
-  Space : O(k)
+  Time  O(1)  dictionary lookup plus a fixed number of pointer changes
+  Space O(k)  one dictionary entry and one Node per stored key, at most cap+1
+PATH TO OPTIMAL
+  Array or list with timestamps, scan for oldest - O(n) per op - simple.
+  Hash map + DLL (this file) - O(1) per op - no scan, O(1) unlink/move.
+KEYWORDS
+  LRU cache, design, hash map, doubly linked list, sentinel nodes, eviction
+WATCH OUT
+  - Node must store key: on eviction, cache.Remove(lru.key) needs it.
+  - Update an existing key before you check eviction, or a full cache
+    wrongly evicts another key when you only changed a value.
+  - Without the left/right dummies, Remove and Insert need null checks.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you use built-in types?
+     -> Java LinkedHashMap with access order, Python OrderedDict. Still O(1).
+  2. Make it thread-safe?
+     -> Lock around Get and Put, since Get changes the list too.
+  3. LFU instead of LRU?
+     -> Keep a map from count to a DLL plus minFreq. Still O(1), more code.
+TRIGGER
+  Need O(1) lookup plus O(1) "move to front / remove oldest": map + DLL.
 ================================================================================
 */

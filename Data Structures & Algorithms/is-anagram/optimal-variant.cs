@@ -39,68 +39,35 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Frequency Counting - build a budget, then spend it
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : Given two strings s and t, return true if t is an anagram of s.
+           That means t uses exactly the same characters as s, each the same
+           number of times, only in a different order. Example: s = "anagram",
+           t = "nagaram" -> true; s = "rat", t = "car" -> false.
+ PATTERN : Hash Map frequency count (count up, then spend down)
 ================================================================================
-VARIABLES
-  charFrequency  charFrequency[c] = count of c in s, minus the uses of c seen so far in t
-  currentCount   the count of c so far while building from s (0 if c is new)
-  remaining      how many uses of c are still left in the budget before this step of t
-WHY THIS PATTERN
-  An anagram means both strings have the same multiset of characters, which
-  means the same count for every character. Order does not matter, so we only
-  need the counts. The first loop turns s into a budget in charFrequency. The
-  second loop spends that budget with the characters of t, so any extra
-  character in t shows up right away.
-BRUTE FORCE
-  The simple correct approach is to sort both strings, for example with new
-  string(s.OrderBy(c => c).ToArray()), and compare the results. It costs O(n log
-  n) time and O(n) extra space for the sorted copies. It loses because sorting
-  does more work than needed: we only need counts, not order.
-INVARIANT
-  After each character of t is handled, charFrequency[c] equals the count of c
-  in s minus the count of c in the part of t read so far, and every value is 0
-  or more. The remaining == 0 check keeps that "0 or more" part true. At the
-  end, the sum of all values is s.Length - t.Length, which is 0. If every value
-  is 0 or more and the sum is 0, then every value is 0. So the counts match
-  exactly, and returning true without a second pass is correct.
-WATCH OUT
-  Keys are never removed. A character that is fully spent stays in the
-  dictionary with value 0, so both checks are needed: the TryGetValue miss
-  handles a key that is not there, and remaining == 0 handles a spent key. If
-  you delete one of them, the code breaks. The comparison is exact, one char at
-  a time: 'A' and 'a' count as different characters. A char is one UTF-16 unit,
-  so an emoji made of two units (a surrogate pair) is counted as two separate
-  halves. A null s or t throws on .Length.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. The input is only lowercase a-z. What would you change?
-     Use an int[26] and index with c - 'a'. You add 1 for each char of s and
-     subtract 1 for each char of t in one loop, then check that all values are
-     0. There is no hashing, and the memory is a fixed array. The cost is that
-     the code only works for that alphabet.
-  2. How would you group a list of words into anagram groups?
-     Give each word a key, either its sorted letters or its 26-count signature,
-     and put the words in a Dictionary<string, List<string>> by that key. The
-     count signature avoids sorting each word, but you have to build the key
-     string yourself.
-  3. What if t arrives as a stream and you cannot know its length first?
-     You lose the early length check and the "sum is 0" argument. Keep spending
-     the budget as characters arrive. At the end, check that every value in
-     charFrequency is 0, or keep a counter of units still unspent and check that
-     it is 0.
-TRIGGER
-  When the question is "same items, any order", like anagram, permutation or
-  rearrangement, compare frequency counts instead of sorting.
-C# NOTE
-  TryGetValue sets currentCount to default(int), which is 0, when the key is
-  missing. So the build loop needs no ContainsKey branch. It still does two hash
-  lookups per character: one read and one write through the indexer.
-  CollectionsMarshal.GetValueRefOrAddDefault can do this in one lookup if you
-  need it.
+IDEA
+  First reject if s.Length != t.Length. Then fill charFrequency with the
+  count of each char in s. Walk t and spend one unit of that char's count.
+  Stop with false if the char is missing or its count is already 0. Why it
+  is correct: the lengths are equal and no count went below 0, so every
+  count must end at exactly 0. Unlike optimal.cs, it uses a Dictionary, not
+  a fixed array, so it works for any char and can exit early.
+EXAMPLE
+  s = "aab", t = "abb" (same length, but the counts differ)
+  build: charFrequency = {a:2, b:1}
+  t: 'a' -> {a:1, b:1}; 'b' -> {a:1, b:0}; 'b' -> remaining == 0
+  answer: false (t uses 'b' more often than s does)
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  one pass over s and one pass over t, each lookup O(1) on average
+  Space O(1)  one map entry per distinct char, bounded for a fixed alphabet
+WATCH OUT
+  - The length check is required. Without it, s = "aab", t = "ab" returns
+    true, because t only spends part of s's budget.
+  - A key stays in the map at count 0, so TryGetValue still succeeds. The
+    check remaining == 0 is what catches too many uses of a char.
+  - O(1) space holds only for a fixed alphabet. With full Unicode input,
+    the map grows with the number of distinct chars.
+  - A null s or t throws on s.Length. Ask the interviewer whether null is
+    possible.
 ================================================================================
 */

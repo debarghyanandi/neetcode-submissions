@@ -37,64 +37,36 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : K-way Merge / Min-Heap - always take the smallest head
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
-           first processed
- STATUS  : Suboptimal
+ PROBLEM : You get an array of k linked lists. Each list is sorted in
+           ascending order. Merge them all into one sorted linked list and
+           return its head. Some lists may be empty, and the array itself may
+           be empty. Example: [[1,4],[1,3],[]] -> 1->1->3->4
+ PATTERN : K-way merge with a min-heap (priority queue)
 ================================================================================
-VARIABLES
-  dummy    fake start node, so the first real node needs no special case
-  res      tail of the merged list built so far; new nodes are added after it
-  q        min-heap of the current head node of each list, keyed by node.val
-WHY THIS PATTERN
-  The problem gives k lists that are each already sorted, and asks for one
-  sorted list. The next node of the output must be the smallest of the k current
-  heads, so you only ever compare heads. A min-heap (a structure that returns
-  its smallest item quickly) holds those heads in q. Each Dequeue gives the next
-  output node in O(log k) instead of scanning all k heads.
-BETTER APPROACH
-  The time here is already the best possible for this problem. The better
-  approach is divide and conquer done bottom-up. Merge the lists in pairs (0
-  with 1, 2 with 3, ...), then merge the results in pairs, and keep going until
-  one list is left. That takes log k rounds of O(n) work each, so the time is
-  the same. But it only relinks existing nodes, so it needs O(1) extra space.
-  This file loses because q holds up to k nodes at once.
-INVARIANT
-  Before each loop pass, q holds exactly one node from each list that still has
-  unused nodes: its smallest unused node. So the node that comes out of q is the
-  smallest unused node overall. Adding it after res keeps the output sorted.
-  After that, the code pushes node.next, so the invariant holds again. When q is
-  empty, every node has been linked exactly once.
-WATCH OUT
-  If lists itself is null, lists.Length throws a NullReferenceException. There
-  is no guard for this. Also, when res.next = node runs, node.next still points
-  into its old list. That is only safe because a later pass overwrites it, and
-  the last node taken is always the tail of its own list, so its next is already
-  null. If you change the loop to stop early, you must set res.next = null
-  yourself, or the output will carry the rest of an old list.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you merge k sorted arrays instead of linked lists?
-     Arrays have no next pointer, so the heap must store (listIndex, position)
-     and use the value as the priority. You also need a new output array of size
-     n, so extra space becomes O(n + k).
-  2. What if the lists are huge streams that do not fit in memory?
-     Use the same heap, but store one buffered head per stream and write each
-     output value straight to disk. Memory stays O(k) plus the buffers. This is
-     the classic external merge sort step.
-  3. What if you only need the first m nodes of the merged result?
-     Stop after m Dequeue calls and set res.next = null. The time becomes O(k +
-     m log k), which beats merging everything when m is small.
-TRIGGER
-  When you see several inputs that are each already sorted and must be combined,
-  or you need the "next smallest across k sources", reach for a min-heap of the
-  k heads.
-C# NOTE
-  The Count check plus Dequeue can be one call: while (q.TryDequeue(out ListNode
-  node, out _)). PriorityQueue does not keep equal priorities in insertion
-  order. That is fine here, because nodes with equal val can come out in any
-  order and the list is still sorted.
+IDEA
+  Put the head of every non-null list into the min-heap q, keyed by val.
+  Loop: Dequeue the smallest node and append it after res.
+  Then Enqueue node.next, the next node from the same list.
+  q always holds the current front of each list that is not finished.
+  So the global minimum is always on top, and the output stays sorted.
+  optimal.cs instead merges the lists in pairs (divide and conquer), no heap.
+EXAMPLE
+  lists = [[1,4],[1,3],[]]; the empty list is skipped, so q = {1a,1b}
+  pop 1a, push 4 -> {1b,4}; pop 1b, push 3 -> {3,4}; pop 3 -> {4}; pop 4
+  Result: 1->1->3->4 (if the two 1s pop in the other order, same answer)
 COMPLEXITY
-  Time  : O(n log k)
-  Space : O(k)
+  Time  O(n log k)  each of the n nodes is pushed and popped once; the heap
+                    size is <= k
+  Space O(k)        q holds at most one node per list; the output reuses the
+                    nodes
+WATCH OUT
+  - Skip null heads before Enqueue. lists[i].val on an empty list throws
+    a NullReferenceException.
+  - The priority is the int val, not the node itself. In Java or Python you
+    must give a comparator or a tie-breaker, or ties on val will crash.
+  - Push node.next only if it is not null. The last node you pop has
+    next == null, so the merged list ends correctly and has no cycle.
+  - If lists is empty or all its lists are null, the loop never runs and
+    dummy.next is null. That is correct, so do not add a special case.
 ================================================================================
 */

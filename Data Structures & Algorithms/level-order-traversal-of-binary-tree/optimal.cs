@@ -39,71 +39,54 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS preorder with depth index - one list per level
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, return its node values level by
+           level. Each level is one list, ordered left to right, from the top
+           level down. An empty tree returns an empty list. Example:
+           [3,9,20,null,null,15,7] -> [[3],[9,20],[15,7]]
+ PATTERN : DFS (preorder) with depth index, instead of BFS
 ================================================================================
-VARIABLES
-  res      res[d] = values of all nodes at depth d, from left to right
-  level    depth of the current node (the root is 0)
-WHY THIS PATTERN
-  The problem asks for the node values grouped by depth, with each group in
-  left-to-right order. You do not need a queue for this. You only need to know
-  the depth of each node when you visit it. Traverse passes level + 1 to each
-  child, so every node knows its depth. It then adds its value to res[level].
-BRUTE FORCE
-  A simple correct first idea has two passes. First, find the height h of the
-  tree. Then, for each depth d from 0 to h-1, walk the tree from the root and
-  collect only the nodes at depth d. This costs O(n*h) time, and O(n^2) on a
-  skewed tree (a tree that is one long chain). It loses because it walks the
-  upper levels again for every depth. This file visits each node only once.
-INVARIANT
-  When Traverse reaches a node at depth level, its parent at level - 1 was
-  visited earlier. So res already holds lists 0..level-1, and res.Count is at
-  least level. Because of this, the check res.Count == level is true exactly
-  once per depth: at the first node we reach at that depth. That is the moment
-  the new list is created. The code visits the node first, then the left child,
-  then the right child (preorder). So nodes at the same depth are added from
-  left to right, and every res[level] ends up in the correct order.
-WATCH OUT
-  res is a field of the class, not a local variable. If LevelOrder is called
-  twice on the same Solution object, the second result also contains the first
-  tree's levels. The comment says "res.Count is now 2" at the next node of level
-  1. That is not always true: the left subtree may already have created lists
-  for deeper levels, so res.Count can be 3 or more. The code is still correct,
-  because it only checks for equality with level. The root == null check in
-  LevelOrder does nothing extra, because Traverse already returns early on null.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you write it without recursion?
-     Use BFS (breadth-first search) with a Queue<TreeNode>. At the start of each
-     level, save count = queue.Count, then dequeue exactly count nodes into a
-     new list. This removes the call stack, which matters on a very deep tree.
-     The cost is that the queue can hold a whole level at once, up to about n/2
-     nodes.
-  2. Zigzag order, where every other level goes right to left?
-     Keep this same DFS. When level is odd, insert at the front of res[level]
-     instead of the end. On a List<int>, inserting at the front costs O(k) per
-     insert, so either use a LinkedList or reverse the odd lists once at the
-     end.
-  3. Right side view, meaning the last node of each level?
-     Keep the same res.Count == level check, but visit the right child before
-     the left child and store only one value per level. The first node you reach
-     at each depth is then the rightmost one.
-  4. Bottom-up level order?
-     Build res exactly as now and reverse it once at the end. Or use BFS and
-     insert each finished level at the front.
-TRIGGER
-  The output groups nodes by their depth in a tree, so passing a depth number
-  down the recursion can replace a BFS queue.
-C# NOTE
-  res[level] on a List<T> is an O(1) indexed read (it reads straight from an
-  internal array), so adding to any earlier level while the DFS is deeper in the
-  tree is cheap. This code returns List<List<int>>. If the judge's signature is
-  IList<IList<int>>, you must declare the outer list as List<IList<int>>,
-  because C# does not convert List<List<int>> to IList<IList<int>>.
+IDEA
+  Traverse visits nodes in preorder and carries the depth as level.
+  If res.Count == level, this is the first node seen at this depth,
+  so a new empty list is added. Then root.val is appended to res[level].
+  It is correct because left is visited before right at every node, so
+  within any one level, values are appended in left-to-right order.
+EXAMPLE
+  Input [1,2,3,4] (4 is the left child of 2). Visit order: 1, 2, 4, 3.
+  1: L0, Count 0 -> new list. 2: L1, Count 1 -> new. 4: L2, Count 2 -> new
+  3: L1, Count 3 != 1 -> just append to res[1] = [2,3]
+  Answer: [[1],[2,3],[4]]
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited once, and each append is O(1)
+  Space O(n)  output holds n values; recursion stack is tree height, n if
+              skewed
+PATH TO OPTIMAL
+  Height first, then one DFS per depth d - O(n*h) - simple but repeats work.
+  One DFS that passes level (this file) - O(n) - each node is touched once.
+  BFS with a queue, one level per round - O(n) - same cost, no recursion;
+  compare it with optimal-variant.cs.
+KEYWORDS
+  level order traversal, BFS, queue, DFS with depth, binary tree, levels
+WATCH OUT
+  - res is a class field. A second LevelOrder call on the same Solution
+    object adds to the old results. Make res local, or clear it first.
+  - The comment says res.Count "is now 2" at the next level-1 node. It can
+    be larger (it is 3 in the example), so the test must be ==, not >=.
+  - Visit left before right. Swapping them reverses every level.
+  - A deep skewed tree can overflow the call stack. BFS avoids this.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it with BFS instead?
+     -> Use a queue. Each round, read count = queue.Count, pop that many nodes
+        into one list, and push their children. O(n) time, O(width) extra.
+  2. Zigzag order (alternate directions)?
+     -> Same traversal. Reverse every odd level at the end, or insert at the
+        front on odd levels. It stays O(n).
+  3. Right side view, or the average of each level?
+     -> Keep the per-level grouping. Take the last value, or the sum / count
+        of each level. O(n) time. DFS can also do it by visiting right first.
+  4. Return the levels bottom-up?
+     -> Build the lists as here, then reverse res once. Still O(n).
+TRIGGER
+  The answer must be grouped by depth or distance from a start node.
 ================================================================================
 */

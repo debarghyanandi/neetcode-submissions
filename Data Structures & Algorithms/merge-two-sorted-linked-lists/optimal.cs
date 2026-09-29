@@ -40,69 +40,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers / Linked List Merge - dummy head splice
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get the heads of two linked lists, each sorted in ascending
+           order. Return the head of one sorted list made by splicing the
+           existing nodes together, not by copying values. Either list may be
+           empty. Example: [1,2,4] and [1,3,5] -> [1,1,2,3,4,5].
+ PATTERN : Two Pointers (merge step) + dummy head node
 ================================================================================
-VARIABLES
-  dummy    a fake node with value 0; the real merged list starts at dummy.next
-  node     tail of the merged list so far; the next chosen node is attached here
-WHY THIS PATTERN
-  Both input lists are already sorted, so the next smallest value must be at the
-  head of list1 or at the head of list2. Comparing only those two heads and
-  moving one pointer forward is the same merge step used in merge sort. The
-  dummy node gives node a place to attach to before any real node has been
-  chosen, so the first step needs no special case.
-BRUTE FORCE
-  Walk both lists and copy every value into an array, sort the array, then build
-  a new linked list from it. This takes O((n + m) log(n + m)) time and O(n + m)
-  extra space. It loses because it does not use the fact that the inputs are
-  already sorted, and it makes new nodes when the existing ones could be reused.
-INVARIANT
-  At the start of each loop step, the list from dummy.next to node holds the
-  smallest values seen so far, in sorted order. Every value still in list1 or
-  list2 is greater than or equal to node.val. Taking the smaller head keeps both
-  facts true. When one list runs out, the other list is already sorted and every
-  value in it is greater than or equal to node.val, so attaching it in one step
-  completes the answer.
-SPLICE THE REST, DO NOT LOOP
-  After the while loop, at most one list still has nodes. The code sets
-  node.next to that list in one assignment instead of copying it node by node.
-  The else branch also covers the case where both lists are null, because then
-  node.next = list2 sets it to null, which is correct.
-WATCH OUT
-  On a tie, the test list1.val < list2.val is false, so the node from list2 is
-  taken first. The output is still sorted, but the merge is not stable. If equal
-  keys must keep list1 first, change the test to <=. The input lists are also
-  changed in place: after the call, list1 and list2 no longer point to their
-  original chains, and the caller's original nodes are now part of the merged
-  list.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you merge k sorted lists?
-     Put the head of each list into a min-heap (a structure that always gives
-     back its smallest item fast), keyed by val. Pop the smallest, attach it,
-     and push its next node. This takes O(N log k) time and O(k) extra space.
-     Another option is to merge the lists in pairs, round after round, which is
-     also O(N log k) and needs no heap.
-  2. Can you write it recursively?
-     Yes. Return the smaller head and set its next to the merge of the rest. The
-     code is shorter, but the call stack grows to O(n + m) deep, so very long
-     lists can overflow the stack. The iterative version stays at O(1) extra
-     space.
-  3. What if the inputs must not be changed?
-     Create a new ListNode for each value you take, instead of linking the
-     original nodes. This uses O(n + m) extra space, but it keeps the caller's
-     lists as they were.
-TRIGGER
-  Two or more inputs that are each already sorted, and you need one sorted
-  output: compare the fronts and take the smaller one.
-C# NOTE
-  dummy is created with new ListNode(0), but its value is never read, and only
-  dummy.next is returned. If the ListNode class has a parameterless constructor,
-  new ListNode() makes it clearer that this node is only a placeholder.
+IDEA
+  list1 and list2 point at the smallest node not yet used in each list.
+  Each step links the smaller of the two onto node.next, moves that
+  pointer forward, then moves node to the new tail. When one list runs
+  out, the other list is attached in one step, because it is already
+  sorted. This is correct because the output tail is always the smallest
+  unused value, and dummy removes the special case for the first node.
+EXAMPLE
+  list1 = 1->2->4, list2 = 1->3->5 (tie on 1: the else branch takes list2)
+  take 1(list2), 1(list1), 2(list1), 3(list2), 4(list1); list1 is null
+  the loop ends, so node.next = list2 attaches 5
+  result: 1->1->2->3->4->5, returned as dummy.next
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(1)
+  Time  O(n + m)  each node is linked once, and the leftover tail is linked in
+                  O(1)
+  Space O(1)      only dummy and a few pointers; the nodes are reused, not
+                  copied
+PATH TO OPTIMAL
+  Copy all values to an array, sort, build a new list - O((n+m) log(n+m))
+  time, O(n+m) space - simple, but it ignores that both inputs are sorted.
+  Two-pointer merge with splicing (this file) - O(n+m) time, O(1) space -
+  it uses the sorted order and reuses nodes. There is no sibling file.
+KEYWORDS
+  linked list, merge, two pointers, dummy node, sentinel, merge sort
+WATCH OUT
+  - Forgetting node = node.next overwrites node.next again and again,
+    so the output list keeps only its last linked node.
+  - Returning dummy instead of dummy.next adds a fake 0 at the head.
+  - On ties, "<" takes list2 first. Use "<=" if equal keys must keep
+    list1's order (a stable merge).
+  - Do not loop over the leftover list. One assignment is enough.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you write it recursively?
+     -> Pick the smaller head, set its next to merge(rest, other), and return
+        it. Same O(n+m) time, but O(n+m) call stack, which risks overflow.
+  2. Merge k sorted lists?
+     -> Use a min-heap of the k heads and pop the smallest each step, for O(N
+        log k) time and O(k) space. Pairwise divide and conquer also gives O(N
+        log k).
+  3. What if the inputs are arrays and the first one has spare room?
+     -> Merge from the back, with pointers at the ends, writing the largest
+        value first. That is O(n+m) time and O(1) extra space, with no shifting.
+  4. Why is the tail attach safe?
+     -> The remaining list is sorted, and all its values are >= the last node
+        linked, so it can follow as it is.
+TRIGGER
+  Two or more already-sorted sequences must become one sorted sequence.
 ================================================================================
 */

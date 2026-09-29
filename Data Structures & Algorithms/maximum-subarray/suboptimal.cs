@@ -29,74 +29,31 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 1D DP (Kadane) - best subarray sum ending at each index
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Suboptimal
+ PROBLEM : Given an integer array nums, find the contiguous subarray (at least
+           one element) with the largest sum and return that sum, not the
+           indices. Example: [-2,1,-3,4,-1,2,1,-5,4] -> 6 (subarray
+           [4,-1,2,1]).
+ PATTERN : 1D DP (Kadane's recurrence, stored as a full table)
 ================================================================================
-VARIABLES
-  bestEndingAt  bestEndingAt[i] = largest sum of any subarray that ends exactly at i
-  maxSum        the best value seen so far across all bestEndingAt entries
-  sum           one bestEndingAt entry, read in the second pass
-WHY THIS PATTERN
-  The problem asks for the best contiguous subarray. Every subarray ends at some
-  index. So if you know the best sum ending at each index, the answer is the
-  largest of those. The best sum ending at i depends only on the best sum ending
-  at i-1. That is a one-step recurrence, so a simple DP works: bestEndingAt[i] =
-  max(nums[i], nums[i] + bestEndingAt[i - 1]).
-BETTER APPROACH
-  The better approach is classic Kadane with two scalars: a running "current"
-  and a running "best". That uses O(1) extra space and one pass. This file loses
-  on two points. It allocates the full bestEndingAt array, but each step only
-  reads bestEndingAt[i - 1]. It also makes a second foreach pass to find the
-  max, when maxSum could be updated inside the first loop.
-INVARIANT
-  After step i, bestEndingAt[i] holds the true maximum sum over all subarrays
-  that end at i. This holds because such a subarray is either just [nums[i]], or
-  it extends a subarray ending at i-1. In that second case, the best choice is
-  the best one ending at i-1. The base case bestEndingAt[0] = nums[0] comes from
-  the Clone. Every subarray ends at some index, so the max over all of
-  bestEndingAt is the answer.
-DROP A NEGATIVE PREFIX
-  Math.Max(nums[i], nums[i] + bestEndingAt[i - 1]) picks "start fresh" exactly
-  when bestEndingAt[i - 1] < 0. A negative prefix can only make the sum smaller,
-  so you cut it. Seeding maxSum from bestEndingAt[0] and not from 0 is what
-  makes an all-negative input return its largest element, not 0.
-WATCH OUT
-  An empty nums throws IndexOutOfRangeException at bestEndingAt[0], because the
-  loop is skipped but the read is not. The expression nums[i] + bestEndingAt[i -
-  1] is unchecked int math, so it can silently overflow and wrap to a negative
-  number when values are large. The foreach loop compares bestEndingAt[0] with
-  itself once. That is harmless, but it is wasted work.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you return the start and end indices of the best subarray, not only its
-  sum?
-     Keep a "start" index and reset it to i whenever you choose nums[i] alone.
-     When maxSum improves, record start and i. The time is the same, and you add
-     two ints of state.
-  2. What if the array is circular (the subarray can wrap around the end)?
-     The answer is max(normal Kadane, total sum - minimum subarray sum). Run a
-     second Kadane for the minimum. If every element is negative, return the
-     normal Kadane result, because total - min would describe an empty subarray.
-  3. Can you solve it with divide and conquer?
-     Split at mid. The answer is the best of the left half, the right half, or
-     the best subarray crossing mid. This takes O(n log n) time, so it is
-     slower. But each half can be solved on its own, and it is the base of the
-     segment-tree version that answers range queries.
-  4. What if the input comes as a stream you can only read once?
-     Kadane already needs only the previous value. Keep current and best as
-     scalars and update them per element. There is no array and no second pass.
-TRIGGER
-  When a problem asks for the best contiguous subarray and extending or
-  restarting depends only on the previous element's result, reach for "best
-  ending here" DP (Kadane).
-C# NOTE
-  (int[])nums.Clone() returns object, so it needs a cast. It makes a shallow
-  copy (only the top-level array is copied), which is fine for ints. You could
-  drop the copy completely by writing into nums in place, if the caller allows
-  it to change, or by using the two-scalar form.
+IDEA
+  bestEndingAt[i] is the best sum of a subarray that must end exactly at i.
+  For each i, either start fresh with nums[i] or extend the run ending at i-1.
+  A second pass takes the max of the table into maxSum.
+  It is correct because every subarray ends somewhere, so the true answer is
+  one of the bestEndingAt values. optimal.cs keeps only the previous value.
+EXAMPLE
+  nums = [-2, 1,-3, 4,-1, 2, 1,-5, 4]
+  bestEndingAt= [-2, 1,-2, 4, 3, 5, 6, 1, 5] (at 4: max(4, 4+-2) = 4, fresh)
+  maxSum = 6. All negative [-3,-1,-2] -> table [-3,-1,-2], answer -1.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  one pass to fill the table, one pass to scan it
+  Space O(n)  the bestEndingAt array holds one value per index
+WATCH OUT
+  - Empty nums throws at bestEndingAt[0]; ask if empty input can happen.
+  - Seeding maxSum with 0 instead of bestEndingAt[0] returns 0 for an
+    all-negative array; the answer must come from a real subarray.
+  - Do not write Math.Max(bestEndingAt[i-1], ...): that mixes "best so far"
+    with "best ending here" and allows gaps between elements.
+  - Sums are int; a very long run of large values can overflow silently.
 ================================================================================
 */

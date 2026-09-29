@@ -38,75 +38,54 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - grow-only window, stale max count
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given a string s of uppercase letters and an int k, you may change
+           at most k characters to any other letter. Return the length of the
+           longest substring that can be made of one repeated letter. Example:
+           s = "AABABBA", k = 1 -> 4 ("AABA" becomes "AAAA").
+ PATTERN : Sliding Window (variable size) + running max frequency
 ================================================================================
-VARIABLES
-  windowCounts   windowCounts[c] = how many times c appears in s[left..right]
-  maxFrequency   highest count of one character seen in any window so far; it never goes down
-  count          count of s[right] in the window before this step (0 if the key is new)
-  longest        largest window size right - left + 1 seen so far
-WHY THIS PATTERN
-  The problem asks for the longest substring (a contiguous run) that you can
-  make all one letter with at most k changes. A window is valid when (right -
-  left + 1) - maxFrequency <= k: every character except the most common one must
-  be replaced. Moving right one step and moving left forward only when needed
-  means each index enters and leaves the window once. There is no need to test
-  every substring.
-BRUTE FORCE
-  For each start index, move the end forward and keep a count of each character
-  in the substring and its top count. Record the length while (length - top
-  count) <= k, and stop at the first failure. This is always correct, but it is
-  O(n^2) time, because every start scans again from scratch. The sliding window
-  reuses the counts from the previous window.
-INVARIANT
-  The window size (right - left + 1) never gets smaller. At each step it either
-  grows by one or slides one place to the right. It can only grow when some
-  window reaches a new, higher maxFrequency. So longest only goes up when a
-  truly valid window of that size exists. Windows that look valid only because
-  maxFrequency is stale cannot be longer than one that was valid earlier, so
-  they never raise the answer by mistake.
-WHY MAXFREQUENCY IS NEVER LOWERED
-  When s[left] leaves the window, the real top count can drop, but maxFrequency
-  is not updated. This is safe: a smaller top count can only allow a shorter
-  window, and we already found a longer one. To beat longest, the window needs a
-  count higher than maxFrequency, and that updates the variable right away.
-  Because of this, the while loop runs at most once per step, so it could be an
-  if.
-WATCH OUT
-  The comment "see the note below" points to a note that does not exist. The
-  explanation is missing from the file. The comment "Replacements needed =
-  window size - the most common character" is true only when maxFrequency is up
-  to date. With a stale value the code underestimates the replacements, so the
-  final s[left..right] may not be a valid window. Return longest and never the
-  window itself. A null s throws on s.Length.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the substring itself, not only its length?
-     Keep maxFrequency exact. After each shrink, recompute it as the max over
-     windowCounts, with a real while loop. Then every window is truly valid, and
-     you save left when longest changes. The cost is an extra scan over the
-     alphabet at each step.
-  2. What if the replacements must all be to one given letter c?
-     Count only the characters that are not c in the window, and shrink while
-     that count is > k. This is the same as "Max Consecutive Ones III", and you
-     do not need maxFrequency.
-  3. Is there another approach besides the sliding window?
-     Binary search on the answer length L. For each L, slide a window of fixed
-     size L and check if (L - top count) <= k for some window. This takes O(n
-     log n) time, which is slower but easy to prove correct.
-TRIGGER
-  Look for this: the longest contiguous substring where at most k elements break
-  a rule that depends on counts inside the window.
-C# NOTE
-  TryGetValue followed by windowCounts[s[right]] = count + 1 does two hash
-  lookups per character.
-  CollectionsMarshal.GetValueRefOrAddDefault(windowCounts, s[right], out _)++
-  does one. If the alphabet is known to be small, a fixed int array indexed by
-  the character works too.
+IDEA
+  Grow the window with right and count letters in windowCounts. A window is
+  valid if (size - maxFrequency) <= k, because those extra letters get
+  replaced. If it is invalid, move left one step. maxFrequency is never
+  lowered: a stale value can only stop the window from shrinking below the
+  best size, and longest only grows when a real higher frequency appears.
+EXAMPLE
+  s = "AABABBA", k = 1. r=3: window "AABA", maxF=3, 4-3=1 ok, longest=4.
+  r=4: "AABAB" needs 2 > 1, drop s[0], left=1. r=5, r=6: each slides by 1.
+  r=6: window "ABBA" (left=3), maxF stays 3 (stale, real max is 2). Ans 4.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  right and left each move forward at most n times
+  Space O(1)  windowCounts holds at most 26 uppercase letters
+PATH TO OPTIMAL
+  Brute force: every substring, count letters - O(n^2) - simple baseline.
+  suboptimal.cs - O(n * k) - one window pass, but extra work per step.
+  optimal.cs - O(n) - keep maxFrequency as a running max, no rescans.
+KEYWORDS
+  sliding window, two pointers, character frequency, at most k replacements
+WATCH OUT
+  - The comment says "see the note below", but no note exists in the code.
+    Be ready to explain the stale maxFrequency trick out loud yourself.
+  - Do not decrease maxFrequency when left moves. It is not a bug here, and
+    recomputing it correctly costs a 26-count scan each step.
+  - The while runs at most once per step, so an if works too. It still
+    must use the window size (right - left + 1), not right - left.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is a stale maxFrequency still correct?
+     -> The answer is only bigger when a window has a larger true max freq.
+        Until then the window just slides at the best size, so longest is not
+        wrong.
+  2. Binary string, flip at most k zeros (Max Consecutive Ones III)?
+     -> Same window: count zeros and shrink while zeros > k. O(n) time, O(1)
+        space. It is simpler because the target letter is fixed.
+  3. Any Unicode letters, not only A-Z?
+     -> Keep the Dictionary instead of int[26]. Time stays O(n). Space becomes
+        O(distinct chars), still fine because maxFrequency is kept separately.
+  4. Another way to solve it?
+     -> Binary search on the answer length L. Check each window of size L in
+        O(n). Total O(n log n), slower but easy to prove correct.
+TRIGGER
+  Longest substring where at most k elements break a rule: grow right,
+  shrink left.
 ================================================================================
 */

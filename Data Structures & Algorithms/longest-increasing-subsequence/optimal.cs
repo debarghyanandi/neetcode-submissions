@@ -31,71 +31,61 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Patience Sorting / Binary Search - smallest tail per length
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-12.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Given an integer array nums, return the length of the longest
+           strictly increasing subsequence. A subsequence keeps the original
+           order but may skip elements, and it does not need to be contiguous.
+           Example: [10,9,2,5,3,7,101,18] -> 4 (for example 2,3,7,101).
+ PATTERN : Patience sorting (tails array) + binary search
 ================================================================================
-VARIABLES
-  dp     dp[k] = smallest tail value of any increasing subsequence of length k+1 seen so far
-  LIS    length of the longest increasing subsequence found; always equal to dp.Count
-  idx    position in dp where nums[i] replaces the old tail
-WHY THIS PATTERN
-  The problem asks only for the length of the longest strictly increasing
-  subsequence, not the subsequence itself. So we do not need to remember every
-  subsequence. For each length we only need its smallest possible last value,
-  because a smaller tail leaves more room to extend. The list dp stays sorted,
-  so each nums[i] can find its place with a binary search instead of a scan.
-BRUTE FORCE
-  The first correct version is the classic DP. Let best[i] be the LIS that ends
-  at index i. Then best[i] = 1 + max(best[j]) over all j < i with nums[j] <
-  nums[i]. This is O(n^2) time, because every element looks back at all earlier
-  elements. The tails list replaces that backward scan with one binary search.
-INVARIANT
-  After processing nums[0..i], dp is strictly increasing. dp[k] is the smallest
-  value that can end an increasing subsequence of length k+1. If nums[i] is
-  larger than dp's last value, it extends the longest chain, so dp grows by one.
-  Otherwise nums[i] replaces the first tail that is greater than or equal to it.
-  That keeps the tail for that length as small as possible and does not break
-  the sorted order. dp.Count only grows when a truly longer chain exists, so LIS
-  is correct.
-THE ~IDX FROM BINARYSEARCH
-  List.BinarySearch returns a negative number when the value is missing. That
-  number is the bitwise complement (all bits flipped) of the index of the first
-  larger element. So ~idx is the lower bound, which is the exact slot to
-  overwrite. When nums[i] is already in dp, the returned index points to that
-  equal value. Writing it again changes nothing, and this is right for a
-  strictly increasing subsequence.
-WATCH OUT
-  dp.Add(nums[0]) throws an exception when nums is empty. Add a guard that
-  returns 0. The name dp suggests a normal DP table, and dp at the end looks
-  like an answer, but it is usually NOT a real subsequence. Only its length
-  means something. LIS is a second copy of dp.Count. If you edit one path and
-  forget LIS++, the two numbers drift apart. Returning dp.Count is safer.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you return the actual subsequence, not just its length?
-     Store indices in dp instead of values, and keep a parent[i] array that
-     points to the index in the slot before. At the end, walk back from the last
-     tail. This costs O(n) extra space for parent.
-  2. What changes for the longest non-decreasing subsequence?
-     Equal values must now extend a chain. Use an upper bound (the first element
-     strictly greater) instead of a lower bound, and use <= in the append check.
-     List.BinarySearch does not give an upper bound directly, so write your own
-     binary search.
-  3. How would you count how many longest increasing subsequences there are?
-     Tails alone cannot count. Use the O(n^2) DP with a count[i] array. For O(n
-     log n), use a Fenwick tree (an array that answers prefix queries fast) over
-     compressed values that stores (length, count) pairs.
-TRIGGER
-  When a problem asks for the length of a longest increasing (or chained, like
-  nested envelopes) subsequence and O(n^2) is too slow, keep the smallest tail
-  for each length and binary search into it.
-C# NOTE
-  dp can never grow past nums.Length. So a preallocated int[] plus a length
-  counter, searched with Array.BinarySearch(tails, 0, len, nums[i]), gives the
-  same ~idx behavior and never has to regrow the list.
+IDEA
+  dp[k] holds the smallest possible tail of any increasing subsequence of
+  length k+1 seen so far, so dp is always strictly increasing. If nums[i] is
+  bigger than the last tail, it extends the longest one: append it, LIS++.
+  Otherwise, binary search the first tail >= nums[i] and replace it. A smaller
+  tail can only help future numbers, and a length never shrinks, so
+  dp.Count (= LIS) is the answer.
+EXAMPLE
+  nums = [4,10,4,3,8,9]
+  4:[4] 10:append [4,10] 4:found at idx 0, no change 3:~idx->0 [3,10]
+  8:~idx->1 [3,8] 9:append [3,8,9], LIS=3
+  Answer 3 (4,8,9). Note that [3,10] was never a real subsequence.
 COMPLEXITY
-  Time  : O(n log n)
-  Space : O(n)
+  Time  O(n log n)  n elements, each does one binary search on dp in O(log n)
+  Space O(n)        dp holds at most n tails
+PATH TO OPTIMAL
+  Recursion take/skip with prev value - O(2^n) - tries every subsequence.
+  Memo on (i, prev) - O(n^2) time and space - reuses states (suboptimal-3.cs).
+  Bottom-up dp[i] = LIS ending at i - O(n^2)/O(n) - less memory
+  (suboptimal.cs).
+  Tails + binary search - O(n log n) - one log-time step per element.
+KEYWORDS
+  LIS, dynamic programming, patience sorting, binary search, lower bound,
+  tails
+WATCH OUT
+  - dp is not the actual LIS, only its length is right. Do not return dp as
+    the sequence.
+  - Empty nums crashes on nums[0]. Guard with if (nums.Length == 0) return 0.
+  - Search for the first tail >= x (lower bound) for strict increase. Upper
+    bound would count duplicates, e.g. [2,2,2] would give 3.
+  - List.BinarySearch returns ~insertIndex when x is missing. Forgetting ~idx
+    gives a negative index.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return the subsequence itself, not only its length.
+     -> Store the index of each tail and a parent[i] link to the previous
+        tail, then walk back from the last tail. Still O(n log n) time and O(n)
+        space.
+  2. Longest non-decreasing subsequence instead?
+     -> Use upper bound (first tail > x) so equal values extend the run. Same
+        complexity.
+  3. Count how many LIS there are.
+     -> Use O(n^2) DP with len[i] and cnt[i], or a Fenwick tree over
+        compressed values for O(n log n). The tails trick alone cannot count.
+  4. Russian Doll Envelopes (2D)?
+     -> Sort by width ascending and height descending, then run this LIS on
+        the heights. O(n log n). The descending order stops equal widths from
+        nesting.
+TRIGGER
+  You need the longest ordered chain where each item must beat the previous
+  one, and O(n^2) pair checks are too slow.
 ================================================================================
 */

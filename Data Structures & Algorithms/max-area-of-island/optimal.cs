@@ -67,75 +67,54 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Graph DFS / Flood Fill - size of each connected component
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : You get a grid of 0 (water) and 1 (land). An island is a group of
+           land cells joined up, down, left or right (not diagonally). Area is
+           the number of cells in an island. Return the largest area, or 0 if
+           there is no land. Example: [[1,1,0],[0,1,0],[0,0,1]] -> 3
+ PATTERN : Grid DFS (flood fill) + running max
 ================================================================================
-VARIABLES
-  visited     visited[r, c] = 1 once cell (r, c) has been counted in some island
-  size        in MaxAreaOfIsland: the largest island area seen so far; in Dfs: the area found from this cell
-  islandSize  the area of the island that starts at (row, col)
-  delRow      row step to a neighbour, from -1 to 1
-  delCol      column step to a neighbour, from -1 to 1
-  nRow, nCol  the neighbour cell being checked
-WHY THIS PATTERN
-  An island is a group of 1-cells joined up, down, left or right. In graph
-  terms, it is a connected component: a set of nodes where each one can reach
-  every other one. The problem asks for the biggest group, so each island must
-  be counted once and its cells added up. The outer double loop finds a land
-  cell with visited == 0 that has not been counted yet. Then Dfs spreads to
-  every reachable land cell and returns the count, and size keeps the maximum.
-BRUTE FORCE
-  Start a new flood fill from every land cell. Give each one a fresh visited
-  array, and take the largest count you get. This is correct, but each island of
-  k cells is walked k times, so the worst case is O((m * n)^2). The shared
-  visited array in this file removes that repeated work: each cell is counted
-  exactly once, across all islands.
-INVARIANT
-  A cell is marked in visited at the moment it is added to some island's count,
-  and never before. Because Dfs marks visited[row, col] = 1 before it looks at
-  the neighbours, no cell can be counted twice, even when the island has cycles.
-  Dfs reaches every land cell that is connected to the start cell, so its return
-  value is the exact island area. The outer loop only starts from unvisited
-  land, so every island is measured exactly once, and size ends up as the true
-  maximum.
-THE ABS FILTER PICKS 4 OF 9 OFFSETS
-  The two loops produce 9 (delRow, delCol) pairs. The check Math.Abs(delRow) ==
-  Math.Abs(delCol) skips (0,0) and the four diagonals. That leaves exactly up,
-  down, left and right. The code matches its comments here.
-WATCH OUT
-  The recursion goes as deep as the path the DFS takes, and in the worst case
-  that is the size of the biggest island. A large all-land grid could cause a
-  StackOverflowException, and C# cannot catch that exception. Also,
-  grid[0].Length is read with no guard, so an empty grid throws
-  IndexOutOfRangeException before any work is done.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you drop the extra O(m * n) visited array?
-     Yes. Set grid[nRow][nCol] = 0 when you visit a cell, so "visited" becomes
-     "no longer land". This saves memory, but it changes the caller's input.
-     Some interviewers do not allow that.
-  2. How do you write it without recursion?
-     Push cells onto an explicit Stack<(int, int)> or Queue<(int, int)> (BFS).
-     Mark each cell when you push it, and count it when you pop it. The
-     complexity is the same, and the depth now lives on the heap instead of the
-     call stack.
-  3. What if diagonal cells also connect an island?
-     Change the filter so it skips only (0,0). All 8 neighbours then count, and
-     nothing else changes.
-  4. What if land cells are added one at a time, and you need the max area after
-  each one?
-     Use Union-Find (disjoint set union) with a size count at each root. Union
-     each new cell with its land neighbours, and keep a running maximum. Each
-     addition then costs close to O(1), instead of a full new scan.
-TRIGGER
-  A grid where cells join through their neighbours, and the question asks you to
-  count, measure or compare the connected regions.
-C# NOTE
-  visited is an int[,] but only ever holds 0 or 1. A bool[,] states that intent
-  more clearly and uses 1 byte per cell instead of 4.
+IDEA
+  Scan every cell. When a cell is land and not yet in visited, start Dfs.
+  Dfs marks the cell, counts it as 1, and adds the Dfs result of each valid
+  4-direction neighbour. The delRow/delCol loop skips cells where
+  Math.Abs(delRow) == Math.Abs(delCol): the center and the diagonals.
+  Each Dfs returns one whole island, and visited stops a recount, so the
+  running max in size is the true answer.
+EXAMPLE
+  Grid [[1,1,0],[0,1,0],[0,0,1]]: Dfs(0,0) -> (0,1) -> (1,1), area 3.
+  (1,1) touches (2,2) only diagonally, so it is not added.
+  Later Dfs(2,2) gives area 1. size = max(3, 1) = 3.
 COMPLEXITY
-  Time  : O(m * n)
-  Space : O(m * n)
+  Time  O(m * n)  each cell starts or enters Dfs at most once, 4 checks each
+  Space O(m * n)  visited matrix plus a recursion stack as deep as one island
+PATH TO OPTIMAL
+  Fresh flood fill from every land cell, no shared visited - O((m*n)^2).
+  Shared visited across all starts - O(m*n) - each cell is done once.
+  Only optimal.cs is in this folder, so no sibling file shows step one.
+KEYWORDS
+  flood fill, DFS, BFS, connected components, grid graph, visited, union-find
+WATCH OUT
+  - Mark visited before you recurse (Dfs does it first). If you mark later,
+    two cells can call each other forever.
+  - Empty grid: grid[0].Length throws when rows == 0. Check this first.
+  - A big all-land grid makes Dfs recurse m*n deep and can overflow the
+    stack. Use an explicit stack or BFS queue.
+  - The Math.Abs check removes diagonals. If you drop it, you get
+    8-direction islands and the wrong area.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it without the extra visited array?
+     -> Set grid[r][c] = 0 when you visit a cell. The space drops to just the
+        stack, but the input is changed. Ask if that is allowed.
+  2. Can you avoid recursion?
+     -> Use BFS with a queue, or DFS with your own stack. It is still O(m*n)
+        time, and there is no risk of call-stack overflow.
+  3. What if cells turn into land one by one, and you report the max area?
+     -> Use union-find with a size per root. Each added cell unions with its
+        land neighbours in near O(1) amortized time, and you track the max.
+  4. What if you may flip one 0 to 1 (Making A Large Island)?
+     -> Label each island with an id and store its area. For each 0, add 1 to
+        the areas of its distinct neighbour ids. Still O(m*n).
+TRIGGER
+  A grid of cells where you must find, count, or measure connected regions.
 ================================================================================
 */

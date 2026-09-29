@@ -30,63 +30,34 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree Traversal (Iterative DFS) - swap children at each node
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-2.cs when it was first processed
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : You are given the root of a binary tree. Mirror it: at every node,
+           swap the left and right child. Return the root of the same, now
+           inverted, tree. Example: [4,2,7,1,3,6,9] -> [4,7,2,9,6,3,1]. Empty
+           tree -> null.
+ PATTERN : Tree DFS (iterative, explicit stack)
 ================================================================================
-VARIABLES
-  stack      nodes found but not yet swapped
-  leftChild  the node's original left child, saved before node.left is overwritten
-WHY THIS PATTERN
-  To invert a tree, every node's left and right children must trade places. That
-  is one small local change applied to every node, so any full traversal will
-  do. This file uses a Stack<TreeNode> to walk the tree depth-first without
-  recursion. Each popped node gets its swap, and then its non-null children go
-  onto stack.
-BRUTE FORCE
-  Most people first write the recursive version: swap root.left and root.right,
-  then call InvertTree on both children. Its cost is the same as this file. Its
-  extra memory is the call stack, which grows with the tree height. It only
-  loses on a very deep, skewed tree, where the call stack can overflow. This
-  file keeps that depth in a heap-allocated stack instead.
-INVARIANT
-  Every node popped from stack has its two children swapped exactly once. Every
-  node that is still waiting sits in stack with its own children not yet
-  touched. Each non-null child is pushed exactly once, by its parent. So when
-  stack is empty, every node has been visited and swapped once, and the whole
-  tree is mirrored.
-WATCH OUT
-  The tree is changed in place, and the returned root is the same object that
-  was passed in. Any caller that still needs the original tree has lost it. The
-  swap depends on saving leftChild first. If you write node.left = node.right
-  before saving it, the original left subtree is lost. The early return for root
-  == null is required, because otherwise stack.Push(null) would lead to a
-  NullReferenceException on node.left.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it level by level instead?
-     Yes. Replace Stack<TreeNode> with Queue<TreeNode> and use Enqueue/Dequeue.
-     The swap stays the same. The peak memory becomes the widest level instead
-     of about the tree height, so a bushy tree costs more and a skewed tree
-     costs less.
-  2. How would you check that a tree is symmetric (a mirror of itself)?
-     Do not invert it. Walk two pointers at the same time: compare a.left with
-     b.right and a.right with b.left, using a stack of pairs. This only reads
-     the tree, and it can stop at the first mismatch.
-  3. Does the order in which nodes are visited matter here?
-     No. Each swap only touches one node's own two pointers, so preorder,
-     postorder, or BFS all give the same result. Only the peak size of the
-     container changes.
-TRIGGER
-  When the same local change must be done at every node of a tree, and no node
-  needs results from its subtrees, pick any traversal and apply the change on
-  visit.
-C# NOTE
-  The leftChild temp can be replaced by a tuple swap: (node.left, node.right) =
-  (node.right, node.left). This does the same exchange in one line, and you
-  cannot get the order wrong.
+IDEA
+  Put root on stack. Pop a node, swap node.left and node.right using the
+  temp leftChild, then push each non-null child. Every node is popped once
+  and swapped once. So every node ends up mirrored, and the whole tree is
+  mirrored. It is the same work as recursive optimal.cs, but an explicit
+  Stack replaces the call stack.
+EXAMPLE
+  Tree [4,2,7,1,3,6,9]. Pop 4: now left=7, right=2; push 7, push 2.
+  Pop 2: left=3, right=1; push 3, 1. Pop 1, pop 3 (leaves, nothing to do).
+  Pop 7: left=9, right=6; push 9, 6. Pop 6, pop 9.
+  Pop order 4,2,1,3,7,6,9. Result [4,7,2,9,6,3,1].
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is pushed and popped once, with an O(1) swap per pop
+  Space O(n)  the stack can hold up to n nodes in the worst case
+WATCH OUT
+  - Skipping the temp: node.left = node.right; node.right = node.left
+    loses the old left subtree. Keep the swap in leftChild.
+  - The null-root check must come first, or Push(null) then crashes on
+    node.left.
+  - The tree changes in place. The caller's original tree is gone.
+    Clone the tree first if the caller still needs the original.
+  - Popping order does not matter. Pushing children after the swap or before
+    it both work, because each node swaps only its own two child links.
 ================================================================================
 */

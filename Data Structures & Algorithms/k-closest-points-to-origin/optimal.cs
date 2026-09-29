@@ -30,66 +30,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Top-K with a Bounded Max-Heap - evict the farthest point
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Given an array of points [x, y] on a plane and an integer k, return
+           the k points closest to the origin (0, 0). Distance is Euclidean.
+           The answer may be in any order. Example: points = [[1,3],[-2,2]], k
+           = 1 -> [[-2,2]].
+ PATTERN : Heap (max-heap of size k, Top-K)
 ================================================================================
-VARIABLES
-  maxHeap   holds at most K points; the priority is -distance, so the farthest point comes out first
-  distance  squared distance from the origin, x*x + y*y (no square root)
-WHY THIS PATTERN
-  The problem asks for the K closest points, not a full ordering. That "only K
-  of n" wording points to a heap of fixed size K. maxHeap keeps the K best
-  points seen so far. The worst of those K sits at the top, so each new point
-  only has to be checked against that one point. Squared distance is enough
-  because the square root does not change which point is closer.
-BRUTE FORCE
-  Compute the distance for every point, sort all n points by that distance, and
-  take the first K. This is correct and O(n log n) time. It loses when K is much
-  smaller than n, because it orders all n points when only K matter. It also
-  needs O(n) extra space unless you sort the input in place.
-INVARIANT
-  After each point is handled, maxHeap holds the K closest points among the
-  points seen so far, or all of them if fewer than K have been seen. When a new
-  point makes the count K+1, Dequeue removes the point with the smallest
-  priority, which is the largest distance. That point cannot be in the final
-  answer, because at least K points are closer to the origin. When the loop
-  ends, every point has been checked, so the heap holds the true K closest.
-WATCH OUT
-  The result is not sorted from nearest to farthest. The drain loop pops the
-  farthest point first, so result comes out in order of decreasing distance. If
-  the caller needs nearest first, reverse it. point[0] * point[0] + point[1] *
-  point[1] is done in int. With large coordinates it can overflow and turn
-  negative, and then -distance gives the wrong order. Use long if the bounds are
-  not known. Ties at the K-th distance are broken in no fixed order, so which
-  tied point is kept can change from run to run.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you beat O(n log k) on average?
-     Yes. Use Quickselect on the squared distances to split the array around the
-     K-th smallest, then take the first K. It is O(n) on average but O(n^2) in
-     the worst case. It also reorders the input and does not work on a stream.
-  2. What if the points arrive as an endless stream and you must answer at any
-  time?
-     Keep this same bounded heap. It already uses only O(k) memory and never
-     needs to see old points again. Quickselect and sorting both need all points
-     at once.
-  3. What if K is close to n?
-     Then log k is about log n, so the heap gives no gain over sorting. Another
-     option is to keep a heap of the n-K farthest points and return everything
-     else.
-TRIGGER
-  The problem asks for the K smallest, largest, closest or most frequent items,
-  and you do not need the full order.
-C# NOTE
-  PriorityQueue in .NET is a min-heap, and this code turns it into a max-heap by
-  negating the priority. Another way is to pass Comparer<int>.Create((a, b) =>
-  b.CompareTo(a)) to the constructor. Once the heap has K items,
-  EnqueueDequeue(point, -distance) does the push and the pop in one call. It
-  also returns the new point at once, without adding it, if the new point is the
-  worst one.
+IDEA
+  Keep maxHeap holding the k closest points seen so far, with the farthest on
+  top.
+  C# PriorityQueue is a min-heap, so the priority is -distance to make it act
+  as
+  a max-heap. After each Enqueue, if Count > K, Dequeue drops the farthest
+  point.
+  A point that is dropped is farther than K kept points, so it can never be in
+  the answer. distance skips sqrt because squaring keeps the same order.
+EXAMPLE
+  points = [[3,3],[5,-1],[-2,4]], K = 2 -> distances 18, 26, 20
+  add [3,3] (-18), add [5,-1] (-26), add [-2,4] (-20) -> Count 3 > 2,
+  Dequeue removes -26 = [5,-1]. Drain: [-2,4] then [3,3].
+  Answer: [[-2,4],[3,3]] (farthest of the k comes first)
 COMPLEXITY
-  Time  : O(n log k)
-  Space : O(k)
+  Time  O(n log k)  n pushes and pops on a heap that never holds more than k+1
+                    items
+  Space O(k)        the heap and result hold at most k+1 points
+PATH TO OPTIMAL
+  Sort all points by distance, take first k - O(n log n) - simple baseline.
+  Min-heap of all n, pop k - O(n + k log n) - heapify is O(n), but O(n) space.
+  Max-heap capped at k (this file) - O(n log k) - O(k) space, works on a
+  stream.
+KEYWORDS
+  top k, k closest, max-heap, priority queue, quickselect, squared distance
+WATCH OUT
+  - Forgetting the minus sign: priority distance keeps the k FARTHEST points,
+    because Dequeue removes the smallest priority.
+  - x*x + y*y is int. Very large coordinates would overflow; use long then.
+  - Do not use Math.Sqrt: it is slower and adds floating point error.
+  - The output comes out farthest-first; sort it if the caller wants order.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do better than O(n log k)?
+     -> Quickselect on distance, partitioning until index k-1 is placed. O(n)
+        average, O(n^2) worst, O(1) extra space, but it changes the input array.
+  2. Points arrive as a stream and are too many to store?
+     -> This heap already fits: keep only k points, O(log k) per new point,
+        O(k) memory. Sorting or quickselect need all points in memory.
+  3. What if many queries ask for different k?
+     -> Sort once in O(n log n); then each query just takes a prefix in O(k).
+  4. Why max-heap and not min-heap?
+     -> The max-heap top is the worst of the kept points, the only one that a
+        new closer point can replace, so the check stays O(log k).
+TRIGGER
+  When a problem asks for the k smallest/largest/closest items and k is much
+  smaller than n, keep a heap of size k.
 ================================================================================
 */

@@ -39,72 +39,33 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 2D DP / Memoized recursion on two string prefixes
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Suboptimal
+ PROBLEM : Given two strings text1 and text2, return the length of their
+           longest common subsequence. A subsequence keeps the order of
+           characters but may skip some; it does not have to be contiguous.
+           Return 0 if none exists. Example: "abcde", "ace" -> 3 ("ace").
+ PATTERN : 2D DP, top-down (recursion + memoization)
 ================================================================================
-VARIABLES
-  dp     dp[i, j] = LCS length of s[0..i] and t[0..j], or -1 if not computed yet
-  s, t   text1 and text2, passed down under shorter names
-  i, j   the last index of the current prefix of s and of t
-WHY THIS PATTERN
-  The problem asks for the best result over two sequences, and a subsequence
-  keeps the original order. So each step only asks about the last character of
-  each prefix: use both, drop one from s, or drop one from t. The same (i, j)
-  pair comes up again and again through different paths. The dp table stores
-  each answer, so Lcs does the real work only once per (i, j).
-BETTER APPROACH
-  The better approach is bottom-up tabulation. It fills the table in a loop with
-  no recursion, and keeps only two rows (or one row plus a saved diagonal
-  value), each of length min(n, m) + 1. That cuts extra space to O(min(n, m)).
-  This file loses because it keeps the full n x m table, which is only needed to
-  rebuild the actual subsequence. It also uses a call stack that can grow to
-  about n + m frames, and it spends one extra pass setting every cell to -1.
-INVARIANT
-  When dp[i, j] is set, it equals the LCS length of s[0..i] and t[0..j]. If s[i]
-  == t[j], you can always put that shared last character at the end of some best
-  LCS. So 1 + Lcs(i - 1, j - 1) is correct, and the code does not need to try
-  the two "skip" options. If they differ, at least one of s[i] or t[j] is not in
-  the LCS, so the Math.Max of the two smaller cases covers every option. The
-  base case i < 0 or j < 0 (an empty prefix) returns 0. So by induction the top
-  call Lcs(n - 1, m - 1) is correct.
-WATCH OUT
-  The recursion can go about n + m levels deep, for example when no characters
-  match and it walks one index at a time. On long strings this can throw
-  StackOverflowException, which C# cannot catch. The -1 sentinel (a special
-  value meaning "not computed") is safe only because a real LCS length is never
-  negative. Empty input works: n or m is 0, the table is empty, and Lcs(-1, ...)
-  returns 0 before it touches dp.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you return the subsequence itself, not just its length?
-     Keep the full table and walk back from (n - 1, m - 1). On a match, take the
-     character and move diagonally. Otherwise, move toward the larger neighbor.
-     This takes O(n + m) extra time, but you can no longer use the two-row
-     memory saving.
-  2. How do you rebuild the subsequence when the strings are too long for an n x
-  m table?
-     Use Hirschberg's algorithm. It is divide and conquer: split s in half and
-     run linear-space DP forward on one half and backward on the other to find
-     where to split t. Then recurse on both halves. Memory is linear, and time
-     is still O(n * m), about twice the constant.
-  3. What changes for the LCS of three strings?
-     Make the state (i, j, k). A match needs all three characters equal, and
-     otherwise you take the max over dropping one of the three. Time and space
-     become O(n * m * p).
-  4. How does this connect to Shortest Common Supersequence or delete-only edit
-  distance?
-     Both come straight from the LCS length. SCS length = n + m - LCS.
-     Delete-only distance = n + m - 2 * LCS.
-TRIGGER
-  Two strings or sequences, and a question about the best way to match or align
-  them in order: think of a dp[i, j] over prefix pairs.
-C# NOTE
-  new int[n, m] already fills the table with 0. If you store LCS + 1 in each
-  cell, then 0 can mean "not computed", and you can delete the nested -1 fill
-  loop.
+IDEA
+  Lcs(i, j) is the LCS of the prefixes s[0..i] and t[0..j], walking from the
+  ends. If s[i] == t[j], that char is used: 1 + Lcs(i-1, j-1). Otherwise
+  drop one end: max(Lcs(i-1, j), Lcs(i, j-1)). Any index below 0 means an
+  empty prefix, so it returns 0. dp[i, j] caches each answer (-1 = unknown),
+  so each state is solved once. optimal.cs does the same bottom-up in 1D.
+EXAMPLE
+  text1="abcde", text2="ace", start Lcs(4,2): e==e -> 1 + Lcs(3,1).
+  Lcs(3,1): d!=c -> max(Lcs(2,1), Lcs(3,0)). Lcs(2,1): c==c -> 1+Lcs(1,0).
+  Lcs(1,0)=max(Lcs(0,0)=1, 0)=1, so Lcs(2,1)=2; Lcs(3,0)=1 (memo hit).
+  Lcs(3,1)=2, answer Lcs(4,2)=3.
 COMPLEXITY
-  Time  : O(n * m)
-  Space : O(n * m)
+  Time  O(n * m)  n*m states, each computed once with O(1) work plus memo hits
+  Space O(n * m)  dp table is n*m; the recursion stack adds up to n+m frames
+WATCH OUT
+  - Recursion depth reaches about n+m. Very long strings can overflow the
+    call stack in C#. Say this, and offer the bottom-up table as the fix.
+  - On a match, do not also try the skip branches. Taking s[i]==t[j] is
+    always safe, and extra calls only waste time.
+  - The sentinel must be -1, not 0. 0 is a real LCS value, so a 0 sentinel
+    recomputes those states and loses the memo speedup.
+  - Empty input is fine: n-1 = -1 hits the i < 0 base case before dp[i, j].
 ================================================================================
 */

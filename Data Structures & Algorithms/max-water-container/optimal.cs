@@ -34,65 +34,55 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers / Greedy - drop the shorter wall
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an array heights, each value is a vertical wall at that
+           index. Pick two walls. With the x-axis, they form a container that
+           holds water. Return the max water: (j - i) * min(heights[i],
+           heights[j]). Example: [1,8,6,2,5,4,8,3,7] -> 49 (walls at index 1
+           and 8).
+ PATTERN : Two Pointers (converging from both ends)
 ================================================================================
-VARIABLES
-  left     index of the left wall in the current pair
-  right    index of the right wall in the current pair
-  height   the water level for this pair = the shorter of the two walls
-WHY THIS PATTERN
-  The problem asks for the best pair of walls, and a pair's value depends on two
-  things: the distance between the walls and the shorter wall. We start with
-  left and right at the two ends, which gives the widest pair. After that, every
-  move makes the width smaller. So the only way to get a bigger area is to find
-  a taller shorter wall. That means we should always move the pointer on the
-  shorter side.
-BRUTE FORCE
-  Try every pair with two nested loops, i < j. Compute (j - i) *
-  Math.Min(heights[i], heights[j]) and keep the largest value. This is correct
-  and simple, but it takes O(n^2) time because it checks about n^2 / 2 pairs. It
-  loses because it never uses the fact that a shorter wall limits every pair it
-  is part of.
-INVARIANT
-  Before each loop step, the best pair is either already counted in maxArea or
-  it lies fully inside [left, right]. Say heights[left] < heights[right]. Pair
-  left with any inner wall: the width is smaller, and the height is still at
-  most heights[left]. So none of those pairs can beat the area we just recorded,
-  and removing left loses nothing. The loop stops when left meets right, and at
-  that point every pair has been counted or safely ruled out.
-WATCH OUT
-  width * height uses int. If the heights and the array length are both large,
-  the product can overflow and wrap to a negative number. If that can happen,
-  compute area as a long. When heights[left] == heights[right], the else branch
-  moves right. This is correct, because both walls cap every inner pair at the
-  same level, but do not "fix" it with a third branch that moves nothing, or the
-  loop never ends. The comment on the discard step matches the code.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the two indices instead of the area?
-     When area > maxArea, also save left and right into two extra variables. The
-     time stays the same, and you only need two more ints.
-  2. Can you skip some steps?
-     After you drop a wall of height h, keep moving that pointer past every wall
-     with height <= h. None of those walls can do better, because the width is
-     smaller and the height is no higher. This saves area calculations, but the
-     worst case is still linear.
-  3. How is this different from Trapping Rain Water?
-     Here only two walls hold the water, and the walls in between do not matter.
-     In Trapping Rain Water, every bar holds its own water, so you must track
-     leftMax and rightMax and add up the water at each index. It is still two
-     pointers, but it builds a running total instead of keeping one best pair.
-TRIGGER
-  When you must pick the best pair (i, j) in an array and the score is limited
-  by the smaller of the two ends, start pointers at both ends and move the
-  weaker side inward.
-C# NOTE
-  The if (area > maxArea) block can be written as maxArea = Math.Max(maxArea,
-  area). The result is the same, and the one-line form is the usual C# idiom and
-  is easier to read quickly in an interview.
+IDEA
+  Start with left at 0 and right at the last index, the widest container.
+  Each step computes area and keeps the best in maxArea.
+  Then move the pointer at the SHORTER wall inward.
+  This is correct because the shorter wall limits height. Any other pair
+  using it is narrower and no taller, so it can never beat the current area.
+EXAMPLE
+  heights = [2,5,3,5,1] (tie case at 5,5)
+  (0,4) w4 h1 a4 -> (0,3) w3 h2 a6 -> (1,3) w2 h5 a10, tie so right--
+  -> (1,2) w1 h3 a3 -> left == right, stop. Answer: 10
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  each step moves left or right one index, so at most n-1 steps
+  Space O(1)  only a few int variables
+PATH TO OPTIMAL
+  Brute force: try every pair i<j - O(n^2) time - simple but too slow.
+  Two pointers (optimal.cs) - O(n) time, O(1) space - drops a whole wall
+  per step instead of checking all its pairs.
+KEYWORDS
+  two pointers, greedy, container with most water, array, area, shorter wall
+WATCH OUT
+  - Moving the TALLER wall is the classic bug: it can only lose width and
+    never gains height, so it can skip the answer.
+  - width * height is int. If heights and length are big, it can overflow;
+    use long if the interviewer says values are large.
+  - Do not mix it up with Trapping Rain Water: here only two walls count,
+    walls in between do not block anything.
+  - Tie: heights[left] == heights[right] goes to right--. Either move is
+    safe, since both walls are equally limiting.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is it safe to skip the shorter wall for good?
+     -> Every other pair with it is narrower and its height is still at most
+        that wall. So its best area is the one just computed.
+  2. Return the two indices, not the area?
+     -> Save left and right when area > maxArea. Still O(n) time, O(1) space.
+  3. What if the water trapped over all bars is asked (Trapping Rain Water)?
+     -> Use two pointers with leftMax and rightMax, add min side max minus
+        height at each step. O(n) time, O(1) space.
+  4. Can you skip useless steps?
+     -> After moving, keep moving while the new wall is not taller than the
+        old one. Same O(n) worst case, fewer area computations.
+TRIGGER
+  Pick a pair from an array where the score is width times the smaller value,
+  so a greedy move from both ends can safely drop the limiting side.
 ================================================================================
 */

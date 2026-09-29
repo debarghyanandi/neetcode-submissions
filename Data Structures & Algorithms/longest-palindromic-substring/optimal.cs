@@ -44,76 +44,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Expand Around Center - grow palindromes from 2n-1 centers
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Given a string s, return its longest substring that reads the same
+           forwards and backwards. A substring must be contiguous. If two
+           answers have the same length, any one is accepted. Example: "babad"
+           -> "bab" ("aba" is also valid).
+ PATTERN : Expand Around Center (two pointers moving outward)
 ================================================================================
-VARIABLES
-  start      index in s where the best palindrome found so far begins
-  maxLength  length of the best palindrome found so far (0 before any match)
-  left       left edge of the window being grown outward in Expand
-  right      right edge of the window being grown outward in Expand
-  length     right - left + 1, the size of the palindrome that was just checked
-WHY THIS PATTERN
-  The problem asks for the longest contiguous substring that reads the same both
-  ways. A palindrome is mirrored around its middle. So if you fix the middle and
-  step outward while s[left] == s[right], you find every palindrome with that
-  middle. The loop tries every i as a middle, so the longest one cannot be
-  missed.
-BRUTE FORCE
-  The simplest approach is to list every substring (i, j) and check each one
-  with two pointers. That is O(n^2) substrings times an O(n) check, so O(n^3)
-  time. It loses because it checks the same inner characters again and again. A
-  palindrome DP table, where isPal[i][j] depends on isPal[i+1][j-1], gets to
-  O(n^2) time but needs O(n^2) memory. This file gets the same time with O(1)
-  extra space.
-INVARIANT
-  Inside Expand, every time the while condition passes, s[left..right] is a
-  palindrome. The outer part matched, and the inner part was already a
-  palindrome on the step before. Each of these palindromes is compared with
-  maxLength at once, so after all centers are tried, start and maxLength
-  describe the longest one. When a match fails, the loop stops, because no wider
-  window around that same center can be a palindrome.
-TWO CENTERS PER INDEX
-  Expand(i, i) finds odd-length palindromes, where the middle is one character.
-  Expand(i, i + 1) finds even-length palindromes, like "abba", where the middle
-  falls between two characters. If you skip the second call, the code silently
-  misses every even-length answer. When i is the last index, i + 1 equals
-  s.Length, and the right < s.Length check stops that call right away.
+IDEA
+  Every palindrome has a center: one char (odd length) or a gap between two
+  chars (even length). For each i, the code calls Expand(i, i) and then
+  Expand(i, i + 1). Expand moves left and right outward while the chars
+  match, and saves a longer match in start and maxLength. The code tries all
+  2n - 1 centers, and each one grows to its widest palindrome, so it cannot
+  miss the longest one.
+EXAMPLE
+  s = "abbab". i=0: odd "a" -> maxLength=1, start=0.
+  i=1: even (1,2) "bb" -> 2, start=1; then (0,3) "abba" -> 4, start=0.
+  i=3: odd (2,4) "bab" has length 3, which is not > 4, so no update.
+  Return s.Substring(0, 4) = "abba".
+COMPLEXITY
+  Time  O(n^2)  2n - 1 centers, and each can expand up to n/2 steps
+  Space O(1)    only index variables; one Substring for the result
+PATH TO OPTIMAL
+  Check every substring for palindrome - O(n^3) - the simple baseline.
+  DP table dp[i][j] = s[i]==s[j] && dp[i+1][j-1] - O(n^2) time and space;
+  each check is O(1) because it reuses the smaller answer.
+  Expand around center (this file) - O(n^2) time, O(1) space; no table.
+KEYWORDS
+  palindrome, expand around center, two pointers, odd/even center, DP,
+  Manacher
 WATCH OUT
-  length is computed inside the loop, before left-- and right++. If you refactor
-  so the length is computed once after the loop ends, the correct formula
-  becomes right - left - 1, not + 1. The check length > maxLength is strict, so
-  when two palindromes tie, the first one found (the leftmost center) wins. If
-  the problem wants a different tie rule, this has to change. A null s throws at
-  s.Length. An empty s returns "" because Substring(0, 0) is valid.
+  - Forgetting the even center Expand(i, i + 1): "abba" would then return
+    only "bb"? No, only "a". Even palindromes are missed completely.
+  - If you compute the length after the while loop ends, it is
+    right - left - 1, not + 1. The pointers have gone one step too far.
+  - C# Substring(start, length) takes a length, not an end index.
+  - Ties keep the first one found (strict >). s = "" returns "".
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. Can you do better than O(n^2)?
-     Yes. Manacher's algorithm runs in O(n). It inserts separators so every
-     palindrome has odd length. It then reuses mirror radii inside the rightmost
-     palindrome found so far. The cost is O(n) extra memory and code that is
-     much harder to get right in an interview.
-  2. How would you count all palindromic substrings instead (LeetCode 647)?
-     Keep the same two Expand calls, but add 1 to a counter each time the while
-     condition passes instead of tracking the max. The time and space stay the
-     same.
-  3. What if the question asks for the longest palindromic subsequence, where
-  the characters do not have to be next to each other?
-     Expanding around a center no longer works, because gaps are allowed. Use
-     interval DP: dp[i][j] = dp[i+1][j-1] + 2 if s[i] == s[j], otherwise
-     max(dp[i+1][j], dp[i][j-1]). That takes O(n^2) time, and memory can drop to
-     O(n) by keeping only rolling rows.
+     -> Manacher's algorithm reuses mirror radii inside the current rightmost
+        palindrome, so it runs in O(n) time with O(n) space. It is hard to code,
+        so mention it and explain the idea, then write the center version.
+  2. Count all palindromic substrings (LC 647).
+     -> Use the same two Expand calls, but add 1 to a counter at each
+        successful step instead of tracking the max. O(n^2) time, O(1) space.
+  3. Longest palindromic subsequence (chars need not be contiguous)?
+     -> Centers do not work there. Use DP: dp[i][j] = dp[i+1][j-1] + 2 if the
+        ends match, otherwise the max of the two sides. O(n^2) time and space.
+  4. Why is this better than the DP table?
+     -> Same time, O(1) space instead of O(n^2), and it stops early when chars
+        do not match.
 TRIGGER
-  When a problem asks about a contiguous substring that must be symmetric or
-  mirrored, try expanding outward from each of the 2n-1 possible centers.
-C# NOTE
-  Expand is a local function that captures s, start and maxLength from the
-  enclosing method, so it updates the answer directly and can return void with
-  no out parameters. The code tracks only indices and calls Substring once at
-  the end, so it creates just one string instead of one for every candidate.
-COMPLEXITY
-  Time  : O(n^2)
-  Space : O(1)
+  When a problem asks for the longest or the count of contiguous palindromes,
+  grow two pointers outward from every char and every gap.
 ================================================================================
 */

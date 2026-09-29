@@ -22,60 +22,52 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS (post-order) - swap children after recursing
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, mirror it: at every node, swap the
+           left and right child. Return the root of the inverted tree. An
+           empty tree returns null. Example: [4,2,7,1,3,6,9] ->
+           [4,7,2,9,6,3,1].
+ PATTERN : Tree DFS (recursive, post-order swap)
 ================================================================================
-VARIABLES
-  left     the old right subtree, already inverted; it becomes the new root.left
-  right    the old left subtree, already inverted; it becomes the new root.right
-WHY THIS PATTERN
-  Inverting a tree means every node swaps its two children. The same rule
-  applies to each subtree, so the problem breaks into smaller copies of itself.
-  Recursion fits this directly. InvertTree(root.right) gives back the finished
-  mirror of the right side, and that result becomes root.left. The left side is
-  handled the same way.
-BRUTE FORCE
-  A first attempt might copy the tree into a new mirrored tree, or collect the
-  nodes level by level and rebuild the links. Both are correct, but they
-  allocate extra nodes or lists and take more code. There is no simpler correct
-  method that is also slower. Every node must be visited once, so this in-place
-  swap is already the direct answer.
-INVARIANT
-  When InvertTree(x) returns, the whole subtree under x is mirrored, and x is
-  still its root. The base case (root == null) is trivially mirrored. For any
-  other node, both recursive calls return mirrored subtrees. Placing them on the
-  opposite sides gives a mirror of the whole subtree. By induction, the call on
-  the real root returns the fully inverted tree.
+IDEA
+  If root is null, return it. Otherwise first invert both subtrees.
+  The inverted right subtree goes into the variable left, and the inverted
+  left subtree goes into the variable right. Then set root.left = left and
+  root.right = right, and return root.
+  It is correct by induction: each subtree comes back fully mirrored, so
+  putting them on opposite sides mirrors the whole tree.
+EXAMPLE
+  Input [4,2,7,1,3,6,9]. InvertTree(7): leaves 6 and 9 swap -> 7(9,6).
+  InvertTree(2): leaves 1 and 3 swap -> 2(3,1).
+  At 4: left = 7(9,6), right = 2(3,1), then assign both.
+  Answer: [4,7,2,9,6,3,1].
+COMPLEXITY
+  Time  O(n)  each node is visited once and does O(1) work
+  Space O(n)  recursion stack is as deep as the tree, n for a skewed tree
+PATH TO OPTIMAL
+  Build a new mirrored copy of the tree - O(n) time, O(n) extra nodes.
+  In-place recursive swap (this file) - O(n) / O(h) - no copy is needed.
+  Iterative BFS or DFS with a queue/stack - same O(n), no call-stack risk
+  (the other O(n) versions are in optimal-variant.cs / -2.cs).
+KEYWORDS
+  binary tree, mirror tree, invert, DFS, recursion, post-order, BFS
 WATCH OUT
-  The names are easy to misread: left is built from root.right, and right is
-  built from root.left. That is correct, but a quick edit that "fixes" the names
-  to match would break the swap. The code changes the input tree in place, so
-  the caller's original tree is gone after the call. Recursion depth equals the
-  tree height, so a very skewed tree (like a linked list) can overflow the call
-  stack.
+  - Bug: root.left = InvertTree(root.right); root.right =
+    InvertTree(root.left);
+    The second call then sees the new left. Save both results first, as here.
+  - A very deep skewed tree (a long chain) can overflow the C# call stack.
+  - The tree is changed in place. The caller's original tree is gone.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. Can you do it without recursion?
-     Yes. Put root in a Queue<TreeNode> (BFS, level by level) or a
-     Stack<TreeNode> (DFS). Pop a node, swap its left and right, then push the
-     non-null children. This removes the stack overflow risk, but you have to
-     manage the queue or stack yourself.
-  2. What if the original tree must not be changed?
-     Build new nodes: new TreeNode(root.val, Mirror(root.right),
-     Mirror(root.left)). The input stays the same, but you allocate n new nodes.
-  3. How would you check if a tree is symmetric, using the same idea?
-     Compare two pointers together: a.left against b.right and a.right against
-     b.left, recursively. You do not need to build an inverted copy.
+     -> Use a queue (BFS). Pop a node, swap its children, push the non-null
+        children. O(n) time, O(w) space, where w is the max level width.
+  2. Keep the original tree unchanged?
+     -> Build new nodes: new TreeNode(val, copy(right), copy(left)). O(n)
+        time, O(n) extra memory for the copy.
+  3. Check whether two trees are mirrors of each other (Symmetric Tree)?
+     -> Recurse on pairs: the values match, a.left mirrors b.right, and
+        a.right mirrors b.left. O(n) time, O(h) stack.
 TRIGGER
-  The answer for a node depends only on the same answer for its two children, so
-  solve both children first and then combine at the node.
-C# NOTE
-  Returning root in the null branch works, but "return null;" says the intent
-  more clearly. If nullable reference types are enabled, the return type should
-  be TreeNode? so the compiler does not warn.
-COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  The task changes or compares every node of a tree using only its own
+  children, so one DFS that handles each subtree solves it.
 ================================================================================
 */

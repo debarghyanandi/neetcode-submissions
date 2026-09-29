@@ -28,71 +28,61 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS / In-order traversal - count nodes, stop at k
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get the root of a binary search tree and an integer k
+           (1-based). Return the k-th smallest value among all node values in
+           the tree. Example: tree 3 (left 1, right 4), node 1 has right child
+           2; k = 2 -> 2.
+ PATTERN : DFS in-order traversal with early stop
 ================================================================================
-VARIABLES
-  visitedCount  how many nodes in-order has reached so far (the rank of the current node)
-  left          the result from the left subtree, or -1 if the kth node was not there
-WHY THIS PATTERN
-  The input is a binary search tree (BST), and we want the kth smallest value.
-  An in-order walk (left, node, right) visits BST nodes in sorted order. So the
-  node where visitedCount reaches k is the answer. We can stop at that point
-  without visiting the rest of the tree.
-BRUTE FORCE
-  Walk the whole tree into a List<int>, sort it, and return list[k-1]. This is
-  O(n log n) time and O(n) space, and it ignores the BST order. A better first
-  try is a full in-order walk into a list with no sort, which is O(n). It still
-  loses because it always visits every node, even when k is small.
-INVARIANT
-  When visitedCount is increased at a node, every smaller value in the tree has
-  already been counted. So visitedCount is the node's exact rank in sorted
-  order. The first node where visitedCount == k is therefore the kth smallest.
-  Its value is passed up through the "if (left != -1) return left" checks, and
-  no more nodes are counted after that.
-EARLY EXIT THROUGH THE RETURN VALUE
-  The value returned by each call does two jobs. It is the answer, and it also
-  says "found". If the left call returns anything other than -1, the parent
-  returns it at once and skips its own node and its right subtree. This is what
-  makes the search stop early instead of walking the whole tree.
-WATCH OUT
-  The sentinel (a special value that means "not found") is -1, but -1 can also
-  be a real node value. If the kth smallest value is -1, the parent reads it as
-  "not found". It then keeps counting and returns a wrong, larger value. If k is
-  bigger than the node count, the method returns -1 without saying the input was
-  bad. On a very unbalanced tree, the recursion depth equals the tree height,
-  and a deep enough tree can throw a StackOverflowException.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do this without recursion?
-     Yes. Use an explicit Stack<TreeNode>. Push all the left children, then pop
-     a node, count it, and move to its right child. When the count reaches k,
-     return. The logic is the same, but a deep tree cannot overflow the call
-     stack. The trade-off is more code to write.
-  2. The tree changes often and kth-smallest is asked many times. What do you
-  change?
-     Store a subtree size in each node. At each node, compare k with leftSize +
-     1, then go left, return the node, or go right with k reduced by leftSize +
-     1. Each query then costs O(h), where h is the tree height. The cost is that
-     every insert and delete must also update the sizes.
-  3. Can you use O(1) extra space?
-     Yes, with Morris traversal. It builds temporary links from each node's
-     in-order predecessor back to that node, so no stack is needed. The
-     trade-off is that it changes the tree for a short time and is harder to get
-     right.
-  4. How do you find the kth largest instead?
-     Do a reverse in-order walk (right, node, left) and use the same counter.
-TRIGGER
-  The problem asks for the kth smallest or kth in sorted order, and the input is
-  a BST.
-C# NOTE
-  visitedCount is an instance field, so it is never reset. Calling KthSmallest
-  twice on the same Solution object gives a wrong result. A private helper with
-  a "ref int count" parameter, started from a local in KthSmallest, keeps the
-  count local to one call.
+IDEA
+  An in-order walk (left, node, right) of a BST visits values in sorted order.
+  The code recurses left first, then increments visitedCount at each node.
+  When visitedCount == k, it returns root.val. A non -1 result from the left
+  subtree is passed straight up, so the search stops early.
+  It is correct because the k-th node seen in sorted order is the k-th
+  smallest.
+EXAMPLE
+  Tree 3 (left 1, right 4), 1 has right child 2; k = 2. Sorted order: 1,2,3,4.
+  Go left from 3 to 1; 1.left null -> -1; visit 1: visitedCount=1, not k.
+  Go to 1.right = 2; 2.left null -> -1; visit 2: visitedCount=2 == k, return
+  2.
+  2 goes up through 1 and 3 as left != -1; nodes 3 and 4 are never counted.
 COMPLEXITY
-  Time  : O(k)
-  Space : O(n)
+  Time  O(k)  walk down the left spine, then count only k nodes before
+              stopping
+  Space O(n)  recursion stack as deep as the tree height, n if the tree is
+              skewed
+PATH TO OPTIMAL
+  Collect all values, sort, take index k-1 - O(n log n) - simple, ignores BST.
+  Full in-order into a list, take k-1 - O(n) - BST order removes the sort.
+  In-order with counter, stop at k (this file) - O(h + k) - no list, stops
+  early.
+  No sibling file in this folder holds the earlier steps.
+KEYWORDS
+  BST, in-order traversal, kth smallest, DFS, recursion, early termination
+WATCH OUT
+  - -1 is used as "not found". If a node value is -1, the code thinks nothing
+    was found and keeps searching, so it returns a wrong answer.
+  - visitedCount is a class field that is never reset. Calling KthSmallest
+    twice on the same Solution object gives wrong results.
+  - If you forget "if (left != -1) return left", the answer found on the left
+    is lost.
+  - If k is larger than the node count, the code silently returns -1.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. The tree changes often and kth is asked many times. What would you do?
+     -> Store the subtree size in each node, and update it on insert and
+        delete. Compare k with left.size to go left, answer, or go right: O(h)
+        per query.
+  2. Can you do it without recursion?
+     -> Use an explicit stack: push all left children, pop, count, move right.
+        The time and space are the same, and there is no risk of stack overflow.
+  3. Can you use O(1) extra space?
+     -> Use Morris traversal. It threads right pointers back to the in-order
+        successor. It takes O(n) time and changes the tree for a while.
+  4. How do you find the k-th largest?
+     -> Do a reverse in-order walk (right, node, left) with the same counter.
+TRIGGER
+  When a problem asks for a rank or sorted position inside a BST, reach for an
+  in-order walk with a counter.
 ================================================================================
 */

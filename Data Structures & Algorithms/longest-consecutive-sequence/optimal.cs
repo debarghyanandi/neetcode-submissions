@@ -36,68 +36,59 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Set / Sequence Start - count only from left edges
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an unsorted int array nums, return the length of the longest
+           run of consecutive integers (x, x+1, x+2, ...). The values can be
+           in any order in the array, and duplicates count once. Example:
+           [100,4,200,1,3,2] -> 4.
+ PATTERN : Hash Set + start only at sequence left edge
 ================================================================================
-VARIABLES
-  numberSet    all distinct values from nums, for fast lookup
-  longestRun   longest run of consecutive values found so far
-  runLength    length of the run that starts at the current number
-WHY THIS PATTERN
-  The problem asks for the longest run of consecutive values in any order, in
-  linear time. That rules out sorting. It only needs "is x present?" questions,
-  and a hash set answers each one in average O(1) time. numberSet answers those
-  questions. The check on number - 1 makes sure each run is walked only once,
-  from its smallest value.
-BRUTE FORCE
-  The first correct version most people write is to sort nums, then scan once.
-  Skip equal neighbours, and reset the count when a gap is bigger than 1. That
-  costs O(n log n) time because of the sort. It loses because the problem asks
-  for O(n). A simpler brute force counts upward from every value using the set,
-  with no left-edge check. That is O(n^2) on one long run.
-INVARIANT
-  When a number passes the number - 1 check, it is the smallest value of its
-  run. The while loop then walks the full run upward, so runLength is that run's
-  true length. Every run has exactly one left edge, so every run is measured
-  exactly once. The while loop does a total of at most n steps across all edges.
-  longestRun is the maximum over all runs, and that is the answer.
-LOOP OVER THE SET, NOT THE ARRAY
-  The foreach runs over numberSet, not nums. If it ran over nums and one left
-  edge appeared many times, the same run would be walked again for every copy.
-  With many duplicates of the start of a long run, that becomes O(n^2). Looping
-  over the set means each distinct value is visited once.
-WATCH OUT
-  The arithmetic can wrap around at the int limits. For the input {int.MinValue,
-  int.MaxValue}, number - 1 on int.MinValue wraps to int.MaxValue, so
-  int.MinValue is skipped as a start. Then number + runLength on int.MaxValue
-  wraps to int.MinValue, and the code returns 2 when the right answer is 1. Use
-  long for these two checks if the input can reach the limits. Also, the first
-  comment says O(1). That is only the average case for a hash lookup, not a
-  guarantee. A null nums throws in the HashSet constructor.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the sequence itself, not just its length?
-     Keep a bestStart value and update it together with longestRun. Rebuild the
-     run as bestStart .. bestStart + longestRun - 1. This adds O(1) extra space.
-  2. Memory is tight. Can you avoid the O(n) set?
-     Sort nums in place, then scan it once. Extra space drops to O(1), or the
-     sort's stack. Time grows to O(n log n), and the caller's array is changed.
-  3. Numbers arrive one at a time, and you must report the longest run after
-  each one.
-     Use union-find (a structure that groups items into sets and merges them).
-     On each new x, union it with x - 1 and x + 1 if they are present, and track
-     each group's size. Each step costs near O(1) amortized, but it needs more
-     code and more memory.
-TRIGGER
-  The problem asks for consecutive values or a chain in an unsorted array, in
-  O(n), and only needs membership checks.
-C# NOTE
-  You cannot call numberSet.Remove inside this foreach to skip visited values.
-  Changing a HashSet while you enumerate it throws InvalidOperationException. If
-  you want removal, loop over nums instead and remove from the set there.
+IDEA
+  Put every value in numberSet so each lookup is O(1) and duplicates vanish.
+  A number starts a run only if number - 1 is NOT in the set. From each start,
+  grow runLength while number + runLength is in the set, and keep the max in
+  longestRun. This is correct because every run has exactly one left edge, so
+  each run is counted once, and it is counted in full.
+EXAMPLE
+  nums = [100,4,200,1,3,2,1] -> numberSet {100,4,200,1,3,2} (duplicate 1 gone)
+  100: 99 missing -> run 1. 4: 3 present -> skip. 200: run 1.
+  1: 0 missing -> 1,2,3,4 present, 5 missing -> run 4. 3 and 2 -> skip.
+  Answer: longestRun = 4
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  the while loop runs only from left edges, so each value is
+              walked once
+  Space O(n)  numberSet holds up to n distinct values
+PATH TO OPTIMAL
+  Brute force: for each x, scan the array for x+1, x+2, ... - O(n^3) - no
+    extra memory. There is no sibling file for this step.
+  Sort, then count adjacent diffs of 1 and skip equal values - O(n log n)
+    - avoids the repeated scans.
+  Hash set + left-edge check (this file) - O(n) - no sort needed.
+KEYWORDS
+  hash set, consecutive sequence, left edge, amortized O(n), array, union find
+WATCH OUT
+  - Without the "number - 1 in set" skip, a run like 1..n is walked from every
+    value, which is O(n^2). The skip is the whole trick.
+  - Overflow: C# wraps int by default. [2147483647, -2147483648] returns 2,
+    not 1, because MaxValue + 1 wraps to MinValue. Use long, or stop at
+    MaxValue.
+  - Loop over numberSet, not nums. If nums has many copies of a left edge,
+    the same run is walked again and again.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is it O(n) when there is a while loop inside the foreach?
+     -> The while loop starts only at left edges, and runs never overlap. So
+        the total while steps over all starts is at most n. Amortized O(n).
+  2. What if you must use O(1) extra memory?
+     -> Sort nums in place and scan once. Reset the count when the gap is more
+        than 1, and ignore equal neighbours. O(n log n) time, but no hash set.
+  3. Return the sequence itself, not just its length.
+     -> Also save the start number when runLength beats longestRun. Then
+        output start .. start + longestRun - 1. Time and space stay the same.
+  4. Numbers arrive as a stream. Can you answer after each insert?
+     -> Keep a map from each run's edge to its length (or use union-find). On
+        insert, join with the runs at x-1 and x+1. Amortized O(1) per insert.
+TRIGGER
+  Unsorted input, you want the length of a run of consecutive values, and the
+  time limit rules out sorting: use a hash set and start only at the left
+  edge.
 ================================================================================
 */

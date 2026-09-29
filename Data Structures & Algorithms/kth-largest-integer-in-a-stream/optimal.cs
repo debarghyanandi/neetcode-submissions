@@ -35,61 +35,58 @@ public class KthLargest
 
 /*
 ================================================================================
- PATTERN : Top-K with a Min-Heap - keep only the k largest
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Design a class built from k and an int array nums. Each call
+           Add(val) adds val to the stream and returns the k-th largest value
+           so far (k-th in sorted order, duplicates count, not k-th distinct).
+           Example: k=3, nums=[4,5,8,2]; Add(3) -> 4, Add(5) -> 5, Add(10) ->
+           5.
+ PATTERN : Top-K with a min-heap of size k
 ================================================================================
-VARIABLES
-  pq    min-heap that holds the k largest values seen so far; pq.Peek() = kth largest
-  k     heap size limit, saved in a field so Add can use it
-WHY THIS PATTERN
-  The problem asks for the kth largest value in a stream that only grows. We
-  never need the whole order, only the border between the top k and the rest. A
-  min-heap (a tree that always gives the smallest item first) of size k keeps
-  that border at its root. So pq.Peek() is the answer, and each new val needs
-  only one push and at most one pop.
-BRUTE FORCE
-  Keep every value in a sorted List<int>. On each Add, find the place with
-  binary search, Insert there, and return the item at index Count - k. This is
-  correct, but Insert shifts elements, so each Add costs O(n) time. It also uses
-  O(n) memory, and that memory grows with the whole stream. The heap needs only
-  O(k) memory.
-INVARIANT
-  After every constructor step and every Add, pq holds exactly the min(k, values
-  seen) largest values. When pq.Count goes above k, Dequeue removes the smallest
-  one. That value already has k larger values above it, and the stream only adds
-  values, so it can never become the kth largest again. This means the root of
-  pq is always the kth largest value.
-WATCH OUT
-  If k is 0, Add pushes val and then pops it at once. The heap is then empty,
-  and pq.Peek() throws InvalidOperationException. If nums plus the added values
-  give fewer than k items, Peek returns the smallest of what is there. That is
-  not a true kth largest, and the code gives no warning. In the constructor, the
-  parameter k hides the field k. The code is correct only because the field is
-  set first with this.k = k.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the kth smallest instead?
-     Keep the k smallest values in a max-heap. Pass Comparer<int>.Create((a, b)
-     => b.CompareTo(a)) to the PriorityQueue, or use -val as the priority. The
-     logic stays the same, only the heap order flips.
-  2. What if values can also be removed from the stream?
-     A heap cannot remove any item except its root. One option is an
-     order-statistic tree (a balanced tree that also stores subtree sizes),
-     which gives O(log n) insert, delete and kth lookup. The cost is O(n)
-     memory, because a removal can bring an evicted value back into the top k.
-  3. What if each query asks for a different k?
-     A fixed-size heap no longer works. Keep all values in an order-statistic
-     tree, or in two heaps split around the current rank. Memory grows to O(n).
-TRIGGER
-  The problem asks for the kth largest or smallest value in a stream that keeps
-  growing, and you only need the top k items, not the full sorted order.
-C# NOTE
-  When pq.Count already equals k, you can call pq.EnqueueDequeue(val, val). It
-  does the push and the pop in one call. If val is not larger than the root, it
-  returns val and does not change the heap.
+IDEA
+  Keep only the k largest values seen so far in a min-heap, pq.
+  After every Enqueue, if pq.Count > k, Dequeue removes the smallest.
+  The root, pq.Peek(), is the smallest of the top k, so it is the answer.
+  It is correct because a value dropped from pq already has k larger or
+  equal values in pq, so it can never be the k-th largest again.
+EXAMPLE
+  k=3, nums=[4,5,8,2] -> pq holds 4,5,8 and 2 is dequeued.
+  Add(3): 3 in, 3 out -> 4 | Add(5): 4 out -> {5,5,8} -> 5
+  Add(10): 5 out -> {5,8,10} -> 5 | Add(9): 5 out -> {8,9,10} -> 8
+  Add(4): 4 in, 4 out -> 8. Outputs: 4, 5, 5, 8, 8.
 COMPLEXITY
-  Time  : O(n log k)
-  Space : O(k)
+  Time  O(n log k)  each push/pop costs log k because pq never holds more than
+                    k+1
+  Space O(k)        pq keeps at most k+1 values, the rest of the stream is
+                    dropped
+PATH TO OPTIMAL
+  Sort all values on every Add - O(n log n) per call - simple baseline.
+  Sorted list, insert by position - O(n) per call - no full re-sort.
+  Min-heap of size k (this file) - O(log k) per call - never shifts n items.
+KEYWORDS
+  heap, priority queue, min-heap, top k elements, data stream, design
+WATCH OUT
+  - C# PriorityQueue is a min-heap by priority. Using a max-heap here
+    gives the largest value, not the k-th largest.
+  - Pop when Count > k, not >= k. With >= the heap keeps k-1 values.
+  - Priority must be the value itself (Enqueue(v, v)); a constant priority
+    breaks the ordering.
+  - Peek() throws if pq is empty. This relies on the guarantee that at
+    least k values exist when Add is called.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why a min-heap and not a max-heap for the k-th largest?
+     -> We must throw away small values fast; the min-heap root is the
+        smallest of the top k, which is exactly the answer and the thing to drop.
+  2. What if values can also be removed from the stream?
+     -> Use a balanced BST or SortedDictionary with counts, or two heaps with
+        lazy deletion. O(log n) per operation, but memory grows to O(n).
+  3. What if k changes between calls?
+     -> A fixed heap of size k no longer works. Keep all values in an
+        order-statistic tree: O(log n) per query and O(n) space.
+  4. Only one query at the end, not a stream?
+     -> Quickselect finds the k-th largest in O(n) average time and O(1) extra
+        space, but O(n^2) in the worst case.
+TRIGGER
+  When you need the k-th largest, k-th smallest or top k of a growing
+  stream, keep a heap of size k with the opposite order.
 ================================================================================
 */

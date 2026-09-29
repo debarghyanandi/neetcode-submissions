@@ -32,67 +32,56 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Counting / Frequency Array - one balance per letter
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given two strings s and t, return true if t is an anagram of s. An
+           anagram uses exactly the same letters with the same counts, in any
+           order. Example: s = "anagram", t = "nagaram" -> true; s = "rat", t
+           = "car" -> false.
+ PATTERN : Frequency Counting (fixed-size count array)
 ================================================================================
-VARIABLES
-  letterBalance  letterBalance[c] = (count of letter c in s) - (count of letter c in t)
-  balance        one slot of letterBalance, read in the final check
-WHY THIS PATTERN
-  An anagram means both strings use the same letters the same number of times,
-  and the order does not matter. So we only need to count letters, not compare
-  positions. The alphabet is small and fixed (26 lowercase letters), so a plain
-  array works as the counter. letterBalance holds one net count per letter: s
-  adds to it and t takes away from it.
-BRUTE FORCE
-  The first correct idea is to sort both strings and compare them. For example,
-  turn each string into a char array, call Array.Sort, and check the two arrays
-  with SequenceEqual. This takes O(n log n) time and O(n) extra space for the
-  two copies. It loses because sorting puts the letters in order, and we never
-  need that order. We only need the counts.
-INVARIANT
-  After step i of the loop, letterBalance[c] equals the count of letter c in
-  s[0..i] minus its count in t[0..i]. When the loop ends, this covers both full
-  strings. So every slot is zero exactly when every letter appears the same
-  number of times in s and in t. That is the definition of an anagram.
-LENGTH CHECK GUARDS THE SHARED INDEX
-  The loop reads s[i] and t[i] with the same i, so it is only safe when the
-  lengths are equal. The early return on s.Length != t.Length does two jobs. It
-  skips work when the answer is clearly false. It also stops t[i] from going out
-  of range, or stops the loop from ending before all of t is read.
-WATCH OUT
-  The code assumes every character is 'a' to 'z'. If the input has an uppercase
-  letter, a digit, or a space, s[i] - 'a' gives an index outside 0..25. For
-  example, 'A' - 'a' is -32, so the code throws IndexOutOfRangeException instead
-  of returning false. If s or t is null, the code throws NullReferenceException
-  on s.Length.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you return false early, before you read all of the input?
-     Yes. Use two loops: first count up over s, then count down over t. Return
-     false as soon as any slot goes below zero. This works because the lengths
-     are equal, so if some letter has too many in t, another letter must go
-     negative at some point. The cost is two passes instead of one combined
-     pass.
-  2. How do you group a list of words into anagram groups?
-     Build a key for each word, such as its 26 counts joined into a string, or
-     the word sorted. Use a Dictionary from key to List<string>. A counts key
-     costs O(length) per word. A sorted key costs O(length log length).
-  3. How do you find every substring of s that is an anagram of p?
-     Use a sliding window the length of p with the same balance array. Add the
-     letter that enters the window and remove the letter that leaves. Keep a
-     count of slots that are not zero, so each step is O(1) and you do not
-     rescan all 26 slots.
-TRIGGER
-  When a problem asks if two collections hold the same items the same number of
-  times, and order does not matter, count them with a frequency array or map.
-C# NOTE
-  In C#, new int[26] always starts with every element set to 0, so letterBalance
-  needs no setup loop. Note that s[i] - 'a' works on UTF-16 char values and
-  gives back an int, so its result can be used directly as an array index.
+IDEA
+  Two strings are anagrams exactly when every letter appears equally often.
+  letterBalance has one slot per letter 'a'..'z'.
+  In one loop, s[i] adds 1 to its slot and t[i] takes 1 away.
+  If the strings are anagrams, all slots end at zero. Any other slot shows an
+  extra letter on one side. So a single nonzero slot means false.
+EXAMPLE
+  s = "aab", t = "aba": i=0 a+1,a-1 -> all 0; i=1 a+1,b-1 -> a=1,b=-1;
+    i=2 b+1,a-1 -> a=0,b=0. All slots are zero -> true.
+  s = "ab", t = "aa": i=0 a+1,a-1 -> a=0; i=1 b+1,a-1 -> a=-1,b=1 -> false.
+  Slots can be nonzero during the loop. Only the final values matter.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  one pass over the n characters, then a scan of 26 fixed slots
+  Space O(1)  letterBalance always has 26 ints, whatever n is
+PATH TO OPTIMAL
+  Sort both strings and compare - O(n log n) time - simple but slow.
+  Dictionary of char counts - O(n) time, O(k) space - removes the sort.
+  Array of 26 counts (this file) - O(n) / O(1) - no hashing, fixed memory.
+  optimal-variant.cs reaches the same bounds in a different way.
+KEYWORDS
+  anagram, frequency count, hash map, character array, counting, strings
+WATCH OUT
+  - Any character outside 'a'..'z' breaks this code. 'A' - 'a' is -32, so
+    letterBalance throws IndexOutOfRangeException. The same happens for
+    spaces.
+  - The length check is required. Without it, t[i] goes out of range or
+    chars are skipped when the lengths differ.
+  - Do not return early on a negative slot inside the loop. With s = "ab"
+    and t = "ba", slot b is -1 at i=0 even though the answer is true.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if the input contains Unicode characters?
+     -> Use a Dictionary<char,int> (or Rune) for the counts. Time stays O(n)
+        and space becomes O(k) for k distinct characters. You pay for hashing.
+  2. How do you group many words into anagram sets (Group Anagrams)?
+     -> Key each word by its sorted form or by its 26-count signature. Put the
+        words into a Dictionary of lists. Time is O(m * n) with the count key.
+  3. t arrives as a stream you cannot store. What changes?
+     -> First count s into letterBalance. Then decrement for each char of t as
+        it arrives. Check all slots are zero at the end. Memory stays O(1).
+  4. Why is one array enough instead of two?
+     -> Anagrams need equal counts. Adding for s and subtracting for t leaves
+        the difference, and a zero difference means equal counts.
+TRIGGER
+  When a problem asks whether two strings are the same letters rearranged,
+  count each letter's frequency.
 ================================================================================
 */

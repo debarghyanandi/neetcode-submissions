@@ -41,77 +41,34 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 2D DP on two prefixes - match takes the diagonal
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
-           first processed
- STATUS  : Suboptimal
+ PROBLEM : Given two strings text1 and text2, return the length of their
+           longest common subsequence. A subsequence keeps the order of
+           characters but may skip some; it need not be contiguous. Return 0
+           if nothing is shared. Example: text1 = "abcde", text2 = "ace" -> 3
+           ("ace").
+ PATTERN : 2D DP (tabulation) on two prefixes
 ================================================================================
-VARIABLES
-  dp  dp[i,j] = LCS length of text1[0..i-1] and text2[0..j-1]
-  n   length of text1, the number of real rows (row 0 is the empty prefix)
-  m   length of text2, the number of real columns (column 0 is the empty prefix)
-WHY THIS PATTERN
-  The problem asks for the best result over two sequences, and any common
-  subsequence can be built one character at a time from the end. So the answer
-  for two prefixes depends only on the answers for shorter prefixes. That is
-  overlapping subproblems, and a table dp over every (i, j) pair of prefix
-  lengths solves each one once. The final answer is dp[n, m].
-BETTER APPROACH
-  A better approach keeps the same recurrence but stores only two rows, or one
-  row plus a saved diagonal value. That needs O(min(n, m)) space if the shorter
-  string is used for the columns. This file loses because it keeps the whole
-  (n+1) x (m+1) table. Each row i only reads row i-1 and the current row, so all
-  older rows are never read again.
-INVARIANT
-  When the loop writes dp[i, j], it is already correct for every cell above it
-  and to its left, because the loops fill row by row, left to right. If
-  text1[i-1] == text2[j-1], an optimal LCS can end with that shared character,
-  which gives 1 + dp[i-1, j-1]. If they differ, at least one of the two
-  characters is not in the LCS, so the answer is the larger of dp[i-1, j] and
-  dp[i, j-1]. Row 0 and column 0 are 0 because an empty prefix has no common
-  subsequence. By induction, dp[n, m] is correct.
-MATCH DOES NOT NEED THE MAX
-  On a match the code uses only 1 + dp[i-1, j-1] and does not compare it with
-  dp[i-1, j] or dp[i, j-1]. This is safe because removing one character lowers
-  the LCS by at most 1, so dp[i-1, j] and dp[i, j-1] are never bigger than 1 +
-  dp[i-1, j-1]. If an interviewer asks why there is no third option, this is the
-  proof.
-WATCH OUT
-  A null text1 or text2 throws a NullReferenceException at .Length. Empty
-  strings are fine and return 0. The commented-out block that fills dp with -1
-  is left over from a memoization version, where -1 means "not computed yet".
-  Tabulation does not need it, and if you uncommented it without the base-case
-  loops after it, row 0 and column 0 would hold -1 and the answers would be
-  wrong. The comment "Tabulation one right shift" is accurate: dp index i stands
-  for character i-1. Mixing up the two indexes is the most common bug when you
-  rewrite this.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you return the actual subsequence, not just its length?
-     Start at dp[n, m] and walk back. On a match, add the character and move
-     diagonally. Otherwise, move toward the larger of the up and left neighbors.
-     This needs the full table, so it conflicts with the rolling-row memory
-     saving.
-  2. How does this change for longest common substring, where the characters
-  must be next to each other?
-     On a mismatch, set dp[i, j] = 0 instead of taking the max. Keep a running
-     maximum over all cells, because the answer is no longer in dp[n, m].
-  3. What is the shortest common supersequence length?
-     n + m - dp[n, m]. Characters in the LCS are shared, so each one is counted
-     only once.
-  4. What about the LCS of three strings?
-     Use a 3D table dp[i, j, k] with the same match or drop-one rule. On a
-     mismatch, take the max over the three neighbors where one index is lowered.
-     Time and space grow to O(n * m * p).
-TRIGGER
-  Two strings or arrays, and the question asks for the best matching, alignment,
-  or common part while keeping order: build a table indexed by the two prefix
-  lengths.
-C# NOTE
-  new int[n + 1, m + 1] already sets every cell to 0, so the two base-case loops
-  change nothing. You can delete them and keep only a comment that row 0 and
-  column 0 are the empty-prefix base cases.
+IDEA
+  dp[i, j] is the LCS length of the first i chars of text1 and the first j
+  chars of text2. Indexes are shifted right by one, so row 0 and column 0
+  mean "empty prefix" and hold 0. If text1[i-1] == text2[j-1], that char
+  extends the LCS of both shorter prefixes: 1 + dp[i-1, j-1]. Otherwise one
+  of the two chars is unused, so take max(dp[i-1, j], dp[i, j-1]).
+  Unlike optimal.cs, it keeps the whole (n+1) x (m+1) table, not one row.
+EXAMPLE
+  text1 = "abcde" (rows), text2 = "ace" (cols). Rows i=1..5 end as:
+  a: 1 1 1 | b: 1 1 1 | c: 1 2 2 (match: 1+dp[2,1]) | d: 1 2 2
+  e: 1 2 3 (match at j=3: 1+dp[4,2] = 3)
+  Answer dp[5, 3] = 3.
 COMPLEXITY
-  Time  : O(n * m)
-  Space : O(n * m)
+  Time  O(n * m)  each of the n*m cells is filled once in O(1)
+  Space O(n * m)  the full dp table has (n+1)*(m+1) ints
+WATCH OUT
+  - Off by one: dp[i, j] compares text1[i-1] and text2[j-1]. Using
+    text1[i] overruns the string. Return dp[n, m], not dp[n-1, m-1].
+  - On a mismatch, do not add 1 or use dp[i-1, j-1]. Take only the max of
+    skipping one char: dp[i-1, j] or dp[i, j-1].
+  - The base-case loops are redundant: new int[,] is already all zeros.
+    The commented -1 fill is memoization leftover, unused in tabulation.
 ================================================================================
 */

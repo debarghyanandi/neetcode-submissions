@@ -31,76 +31,37 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - shrink left until the new char is unique
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : Given a string s, return the length of the longest substring with
+           no repeated character. A substring is contiguous. A subsequence
+           does not count. Example: "pwwkew" -> 3 ("wke").
+ PATTERN : Sliding Window (variable size) + hash set
 ================================================================================
-VARIABLES
-  windowChars  the exact set of chars in s[left..right-1] (then s[left..right] after Add)
-  left         index of the first char of the current window
-  longest      the longest duplicate-free window length seen so far
-WHY THIS PATTERN
-  The problem asks for the longest contiguous substring with no repeated
-  characters. "Contiguous" and "longest" together point to a window with two
-  ends. If a window has no duplicates, every smaller window inside it also has
-  none. So when s[right] creates a duplicate, we only need to move left forward
-  and never back. windowChars lets us check in constant time whether s[right] is
-  already inside the window.
-BRUTE FORCE
-  Try every start index i. From i, extend j to the right and add s[j] to a fresh
-  set. Stop at the first repeat and record j - i. This is correct, and it runs
-  in O(n^2) time, or O(n * alphabet) if you note that a run can never be longer
-  than the alphabet. It is slower because each new start rebuilds the set from
-  nothing. The window keeps the work from the previous start and only removes
-  the chars that fall off the left.
-INVARIANT
-  After the while loop, windowChars holds exactly the chars of s[left..right-1],
-  and none of them is s[right]. After the Add, s[left..right] has no duplicates.
-  left only moves when a duplicate forces it to. So for each right, left is the
-  smallest start that gives a valid window ending at right. That means right -
-  left + 1 is the best length for windows ending at right. longest takes the
-  maximum over all right, so it is the answer.
-THE NESTED WHILE IS NOT QUADRATIC
-  The while loop inside the for loop looks like O(n^2), but it is not. Each
-  index is added to windowChars once and removed at most once. left only moves
-  forward and never passes right. So across the whole run, the while loop does
-  at most s.Length steps in total. This is called "amortized" cost: the total
-  work is spread over all iterations.
-WATCH OUT
-  C# char is one UTF-16 code unit, not one visible character. An emoji or other
-  surrogate pair counts as two chars here, so the length is counted in code
-  units. The O(1) space bound only holds if the character set is fixed.
-  windowChars grows with the number of distinct chars, so if the alphabet is not
-  bounded, space is really O(min(n, alphabet)). The check is case-sensitive: 'a'
-  and 'A' count as different characters.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can left jump straight past the duplicate instead of stepping one char at a
-  time?
-     Yes. Keep a Dictionary<char,int> from each char to its last index, and set
-     left = Math.Max(left, last[c] + 1). The Max is needed because an old index
-     may sit before left. You get the same bound with fewer operations, but you
-     must think about stale entries (old indexes that are no longer inside the
-     window).
-  2. What if the input is known to be ASCII?
-     Replace the HashSet with bool[128] or int[128] indexed by the char. This
-     removes hashing and gives a truly fixed-size table. The cost is that it
-     breaks on any char above 127 unless you make the array larger.
-  3. Longest substring with at most k distinct characters?
-     Use the same window, but store a count per char in a Dictionary<char,int>.
-     Shrink from the left while the dictionary has more than k keys, and remove
-     a key when its count reaches 0. This version needs counts because a single
-     yes/no set is not enough.
-TRIGGER
-  When you see "longest or shortest contiguous substring or subarray where some
-  condition holds", and shrinking a valid window keeps it valid, use a sliding
-  window.
-C# NOTE
-  HashSet.Add returns false when the item is already in the set. So the Contains
-  check and the Add can be merged into one loop: while
-  (!windowChars.Add(s[right])) windowChars.Remove(s[left++]);
+IDEA
+  windowChars holds exactly the characters of s[left..right]. For each new
+  s[right], if it is already in the set, we remove s[left] and move left
+  one step, again and again, until the old copy is gone. Then we add
+  s[right] and update longest with right - left + 1. It is correct because
+  the window is always duplicate-free, and it is the longest such window
+  that ends at right. Unlike a jump-by-index version, left only ever moves
+  one step at a time here.
+EXAMPLE
+  s = "abba": r=0 {a} len 1; r=1 {a,b} len 2, longest=2
+  r=2 'b' dup: remove a (left=1), remove b (left=2), add b -> {b} len 1
+  r=3 'a' not in set (removed at r=2) -> {b,a}, left=2, len 2
+  Answer: 2 (the stale 'a' at index 0 is never a problem here)
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  each char is added once and removed at most once; left, right <=
+              n
+  Space O(1)  set holds at most one copy of each distinct char (fixed
+              alphabet)
+WATCH OUT
+  - Use while, not if. At r=2 in "abba" one removal is not enough, and
+    with if the set still contains 'b'.
+  - Remove s[left], not s[right], and do it before left++. Add s[right]
+    only after the loop, or the loop never ends.
+  - The O(1) space holds only for a fixed charset. For any Unicode input
+    the set can grow to O(min(n, k)), where k is the alphabet size.
+  - char is a UTF-16 unit, so an emoji counts as two chars. Say this if
+    asked about Unicode.
 ================================================================================
 */

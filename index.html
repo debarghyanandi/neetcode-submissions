@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">24</span> / 72</b></div>
-      <div class="bar"><span id="bar" style="width:33.3%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">48</span> / 72</b></div>
+      <div class="bar"><span id="bar" style="width:66.7%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -152,7 +152,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Arrays &amp; Hashing">
   <div class="group-head">
     <h2>Arrays &amp; Hashing</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>7</b> at standard</span>
+    <span class="group-count"><b class="gdone">4</b> / <b>7</b> at standard</span>
   </div>
   <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
   <ul>
@@ -176,24 +176,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="is anagram is-anagram arrays &amp; hashing counting / frequency array - one balance per letter array string hash-map needs rebuilt" data-status="rebuild">
+    <li data-hay="is anagram is-anagram arrays &amp; hashing frequency counting (fixed-size count array) array string hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/is-anagram" target="_blank" rel="noopener noreferrer">Is Anagram</a>
-        <span class="why">Counting / Frequency Array - one balance per letter</span>
+        <span class="why">Frequency Counting (fixed-size count array)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-anagram/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-anagram/is-anagram-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set / sequence start - count only from left edges array hash-set needs rebuilt" data-status="rebuild">
+    <li data-hay="longest consecutive sequence longest-consecutive-sequence arrays &amp; hashing hash set + start only at sequence left edge array hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-consecutive-sequence" target="_blank" rel="noopener noreferrer">Longest Consecutive Sequence</a>
-        <span class="why">Hash Set / Sequence Start - count only from left edges</span>
+        <span class="why">Hash Set + start only at sequence left edge</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-consecutive-sequence/longest-consecutive-sequence-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="products of array discluding self products-of-array-discluding-self arrays &amp; hashing prefix / suffix products - two passes, one output array array needs rebuilt" data-status="rebuild">
@@ -232,28 +232,38 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Two Pointers">
   <div class="group-head">
     <h2>Two Pointers</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>7</b> at standard</span>
+    <span class="group-count"><b class="gdone">3</b> / <b>8</b> at standard</span>
   </div>
   <p class="group-note">Two indices moving under a rule that never lets you miss an answer.</p>
   <ul>
-    <li data-hay="is palindrome is-palindrome two pointers two pointers - converge from both ends, skip non-alnum string needs rebuilt" data-status="rebuild">
+    <li data-hay="is palindrome is-palindrome two pointers two pointers (converging from both ends) string current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/is-palindrome" target="_blank" rel="noopener noreferrer">Is Palindrome</a>
-        <span class="why">Two Pointers - converge from both ends, skip non-alnum</span>
+        <span class="why">Two Pointers (converging from both ends)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/is-palindrome/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/is-palindrome/is-palindrome-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="max water container max-water-container two pointers two pointers / greedy - drop the shorter wall array needs rebuilt" data-status="rebuild">
+    <li data-hay="longest palindromic substring longest-palindromic-substring two pointers expand around center (two pointers moving outward) string current" data-status="current">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/longest-palindromic-substring" target="_blank" rel="noopener noreferrer">Longest Palindromic Substring</a>
+        <span class="why">Expand Around Center (two pointers moving outward)</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n^2) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-palindromic-substring/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-palindromic-substring/longest-palindromic-substring-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
+      </span>
+    </li>
+    <li data-hay="max water container max-water-container two pointers two pointers (converging from both ends) array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/max-water-container" target="_blank" rel="noopener noreferrer">Max Water Container</a>
-        <span class="why">Two Pointers / Greedy - drop the shorter wall</span>
+        <span class="why">Two Pointers (converging from both ends)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/max-water-container/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/max-water-container/max-water-container-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="move zeroes move-zeroes two pointers two pointers (read/write) - in-place stable partition array needs rebuilt" data-status="rebuild">
@@ -312,7 +322,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Sliding Window">
   <div class="group-head">
     <h2>Sliding Window</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>7</b> at standard</span>
+    <span class="group-count"><b class="gdone">3</b> / <b>7</b> at standard</span>
   </div>
   <p class="group-note">A range that grows on the right and shrinks on the left, never restarting.</p>
   <ul>
@@ -326,24 +336,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest repeating substring with replacement longest-repeating-substring-with-replacement sliding window sliding window - grow-only window, stale max count string hash-map hash-set needs rebuilt" data-status="rebuild">
+    <li data-hay="longest repeating substring with replacement longest-repeating-substring-with-replacement sliding window sliding window (variable size) + running max frequency string hash-map hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-repeating-substring-with-replacement" target="_blank" rel="noopener noreferrer">Longest Repeating Substring With Replacement</a>
-        <span class="why">Sliding Window - grow-only window, stale max count</span>
+        <span class="why">Sliding Window (variable size) + running max frequency</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-repeating-substring-with-replacement/longest-repeating-substring-with-replacement-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest substring without duplicates longest-substring-without-duplicates sliding window sliding window - jump left past the last repeat string hash-map hash-set needs rebuilt" data-status="rebuild">
+    <li data-hay="longest substring without duplicates longest-substring-without-duplicates sliding window sliding window (variable size) + last-seen index map string hash-map hash-set current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-substring-without-duplicates" target="_blank" rel="noopener noreferrer">Longest Substring Without Duplicates</a>
-        <span class="why">Sliding Window - jump left past the last repeat</span>
+        <span class="why">Sliding Window (variable size) + last-seen index map</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-substring-without-duplicates/longest-substring-without-duplicates-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="minimum size subarray sum minimum-size-subarray-sum sliding window sliding window (variable size) - shrink while valid array needs rebuilt" data-status="rebuild">
@@ -462,7 +472,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Binary Search">
   <div class="group-head">
     <h2>Binary Search</h2>
-    <span class="group-count"><b class="gdone">3</b> / <b>6</b> at standard</span>
+    <span class="group-count"><b class="gdone">5</b> / <b>6</b> at standard</span>
   </div>
   <p class="group-note">Halve a space that is ordered — sometimes the array, sometimes the answer.</p>
   <ul>
@@ -496,24 +506,24 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest increasing subsequence longest-increasing-subsequence binary search patience sorting / binary search - smallest tail per length array dp-table call-stack matrix needs rebuilt" data-status="rebuild">
+    <li data-hay="longest increasing subsequence longest-increasing-subsequence binary search patience sorting (tails array) + binary search array dp-table call-stack matrix current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-increasing-subsequence" target="_blank" rel="noopener noreferrer">Longest Increasing Subsequence</a>
-        <span class="why">Patience Sorting / Binary Search - smallest tail per length</span>
+        <span class="why">Patience sorting (tails array) + binary search</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/suboptimal-2.cs" target="_blank" rel="noopener noreferrer">suboptimal-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/suboptimal-3.cs" target="_blank" rel="noopener noreferrer">suboptimal-3</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/suboptimal-4.cs" target="_blank" rel="noopener noreferrer">suboptimal-4</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-increasing-subsequence/longest-increasing-subsequence-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="median of two sorted arrays median-of-two-sorted-arrays binary search binary search on partition - split both arrays at once array needs rebuilt" data-status="rebuild">
+    <li data-hay="median of two sorted arrays median-of-two-sorted-arrays binary search binary search on the partition (smaller array) array current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/median-of-two-sorted-arrays" target="_blank" rel="noopener noreferrer">Median Of Two Sorted Arrays</a>
-        <span class="why">Binary Search on Partition - split both arrays at once</span>
+        <span class="why">Binary Search on the partition (smaller array)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(log(min(m, n))) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/median-of-two-sorted-arrays/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/median-of-two-sorted-arrays/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/median-of-two-sorted-arrays/median-of-two-sorted-arrays-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="search 2d matrix search-2d-matrix binary search binary search - treat the 2d matrix as one sorted array matrix array call-stack needs rebuilt" data-status="rebuild">
@@ -532,7 +542,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Linked List">
   <div class="group-head">
     <h2>Linked List</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>9</b> at standard</span>
+    <span class="group-count"><b class="gdone">6</b> / <b>9</b> at standard</span>
   </div>
   <p class="group-note">Pointer surgery. The trick is almost always a dummy head or a second pointer.</p>
   <ul>
@@ -556,44 +566,44 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="linked list cycle detection linked-list-cycle-detection linked list fast and slow pointers - floyd cycle detection linked-list needs rebuilt" data-status="rebuild">
+    <li data-hay="linked list cycle detection linked-list-cycle-detection linked list fast and slow pointers (floyd's cycle detection) linked-list current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/linked-list-cycle-detection" target="_blank" rel="noopener noreferrer">Linked List Cycle Detection</a>
-        <span class="why">Fast and Slow Pointers - Floyd cycle detection</span>
+        <span class="why">Fast and Slow Pointers (Floyd's cycle detection)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/linked-list-cycle-detection/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/linked-list-cycle-detection/linked-list-cycle-detection-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="lru cache lru-cache linked list hash map + doubly linked list - o(1) move-to-recent linked-list hash-map needs rebuilt" data-status="rebuild">
+    <li data-hay="lru cache lru-cache linked list hash map + doubly linked list linked-list hash-map current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/lru-cache" target="_blank" rel="noopener noreferrer">Lru Cache</a>
-        <span class="why">Hash Map + Doubly Linked List - O(1) move-to-recent</span>
+        <span class="why">Hash Map + Doubly Linked List</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(1) &middot; O(k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lru-cache/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/lru-cache/lru-cache-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="merge k sorted linked lists merge-k-sorted-linked-lists linked list divide and conquer - pairwise merge of sorted lists linked-list call-stack heap needs rebuilt" data-status="rebuild">
+    <li data-hay="merge k sorted linked lists merge-k-sorted-linked-lists linked list divide and conquer (merge sort on lists) linked-list call-stack heap current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/merge-k-sorted-linked-lists" target="_blank" rel="noopener noreferrer">Merge K Sorted Linked Lists</a>
-        <span class="why">Divide and Conquer - pairwise merge of sorted lists</span>
+        <span class="why">Divide and Conquer (merge sort on lists)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log k) &middot; O(log k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-k-sorted-linked-lists/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-k-sorted-linked-lists/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-k-sorted-linked-lists/merge-k-sorted-linked-lists-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="merge two sorted linked lists merge-two-sorted-linked-lists linked list two pointers / linked list merge - dummy head splice linked-list needs rebuilt" data-status="rebuild">
+    <li data-hay="merge two sorted linked lists merge-two-sorted-linked-lists linked list two pointers (merge step) + dummy head node linked-list current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/merge-two-sorted-linked-lists" target="_blank" rel="noopener noreferrer">Merge Two Sorted Linked Lists</a>
-        <span class="why">Two Pointers / Linked List Merge - dummy head splice</span>
+        <span class="why">Two Pointers (merge step) + dummy head node</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n + m) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-two-sorted-linked-lists/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-two-sorted-linked-lists/merge-two-sorted-linked-lists-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="remove node from end of linked list remove-node-from-end-of-linked-list linked list two pointers - fixed gap, with a dummy head node linked-list needs rebuilt" data-status="rebuild">
@@ -632,7 +642,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Trees">
   <div class="group-head">
     <h2>Trees</h2>
-    <span class="group-count"><b class="gdone">4</b> / <b>12</b> at standard</span>
+    <span class="group-count"><b class="gdone">8</b> / <b>12</b> at standard</span>
   </div>
   <p class="group-note">Recursion that returns something useful from every subtree.</p>
   <ul>
@@ -676,44 +686,44 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="invert a binary tree invert-a-binary-tree trees tree dfs (post-order) - swap children after recursing tree call-stack queue stack needs rebuilt" data-status="rebuild">
+    <li data-hay="invert a binary tree invert-a-binary-tree trees tree dfs (recursive, post-order swap) tree call-stack queue stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/invert-a-binary-tree" target="_blank" rel="noopener noreferrer">Invert A Binary Tree</a>
-        <span class="why">Tree DFS (post-order) - swap children after recursing</span>
+        <span class="why">Tree DFS (recursive, post-order swap)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal-variant-2.cs" target="_blank" rel="noopener noreferrer">optimal-variant-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/invert-a-binary-tree/invert-a-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="kth smallest integer in bst kth-smallest-integer-in-bst trees tree dfs / in-order traversal - count nodes, stop at k tree call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="kth smallest integer in bst kth-smallest-integer-in-bst trees dfs in-order traversal with early stop tree call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/kth-smallest-integer-in-bst" target="_blank" rel="noopener noreferrer">Kth Smallest Integer In Bst</a>
-        <span class="why">Tree DFS / In-order traversal - count nodes, stop at k</span>
+        <span class="why">DFS in-order traversal with early stop</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(k) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/kth-smallest-integer-in-bst/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/kth-smallest-integer-in-bst/kth-smallest-integer-in-bst-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="level order traversal of binary tree level-order-traversal-of-binary-tree trees dfs preorder with depth index - one list per level tree call-stack queue needs rebuilt" data-status="rebuild">
+    <li data-hay="level order traversal of binary tree level-order-traversal-of-binary-tree trees dfs (preorder) with depth index, instead of bfs tree call-stack queue current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/level-order-traversal-of-binary-tree" target="_blank" rel="noopener noreferrer">Level Order Traversal Of Binary Tree</a>
-        <span class="why">DFS preorder with depth index - one list per level</span>
+        <span class="why">DFS (preorder) with depth index, instead of BFS</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/level-order-traversal-of-binary-tree/level-order-traversal-of-binary-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="lowest common ancestor in binary search tree lowest-common-ancestor-in-binary-search-tree trees bst descent - walk down until p and q split tree call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="lowest common ancestor in binary search tree lowest-common-ancestor-in-binary-search-tree trees bst property descent (iterative, one path down) tree call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/lowest-common-ancestor-in-binary-search-tree" target="_blank" rel="noopener noreferrer">Lowest Common Ancestor In Binary Search Tree</a>
-        <span class="why">BST Descent - walk down until p and q split</span>
+        <span class="why">BST property descent (iterative, one path down)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/lowest-common-ancestor-in-binary-search-tree/lowest-common-ancestor-in-binary-search-tree-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="same binary tree same-binary-tree trees tree dfs - recursive structural comparison of two trees tree call-stack stack queue needs rebuilt" data-status="rebuild">
@@ -762,38 +772,38 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Heap / Priority Queue">
   <div class="group-head">
     <h2>Heap / Priority Queue</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>4</b> at standard</span>
+    <span class="group-count"><b class="gdone">3</b> / <b>4</b> at standard</span>
   </div>
   <p class="group-note">You need the best few, not the sorted whole.</p>
   <ul>
-    <li data-hay="k closest points to origin k-closest-points-to-origin heap / priority queue top-k with a bounded max-heap - evict the farthest point array heap needs rebuilt" data-status="rebuild">
+    <li data-hay="k closest points to origin k-closest-points-to-origin heap / priority queue heap (max-heap of size k, top-k) array heap current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/k-closest-points-to-origin" target="_blank" rel="noopener noreferrer">K Closest Points To Origin</a>
-        <span class="why">Top-K with a Bounded Max-Heap - evict the farthest point</span>
+        <span class="why">Heap (max-heap of size k, Top-K)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log k) &middot; O(k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/k-closest-points-to-origin/k-closest-points-to-origin-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="kth largest integer in a stream kth-largest-integer-in-a-stream heap / priority queue top-k with a min-heap - keep only the k largest heap needs rebuilt" data-status="rebuild">
+    <li data-hay="kth largest integer in a stream kth-largest-integer-in-a-stream heap / priority queue top-k with a min-heap of size k heap current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/kth-largest-integer-in-a-stream" target="_blank" rel="noopener noreferrer">Kth Largest Integer In A Stream</a>
-        <span class="why">Top-K with a Min-Heap - keep only the k largest</span>
+        <span class="why">Top-K with a min-heap of size k</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log k) &middot; O(k)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/kth-largest-integer-in-a-stream/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/kth-largest-integer-in-a-stream/kth-largest-integer-in-a-stream-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="last stone weight last-stone-weight heap / priority queue max-heap simulation - smash the two heaviest stones array heap needs rebuilt" data-status="rebuild">
+    <li data-hay="last stone weight last-stone-weight heap / priority queue heap (max-heap simulation) array heap current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/last-stone-weight" target="_blank" rel="noopener noreferrer">Last Stone Weight</a>
-        <span class="why">Max-Heap Simulation - smash the two heaviest stones</span>
+        <span class="why">Heap (max-heap simulation)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/last-stone-weight/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/last-stone-weight/last-stone-weight-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="top k elements in list top-k-elements-in-list heap / priority queue bucket sort by frequency - count, then index by count array hash-map heap needs rebuilt" data-status="rebuild">
@@ -812,7 +822,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Graphs">
   <div class="group-head">
     <h2>Graphs</h2>
-    <span class="group-count"><b class="gdone">4</b> / <b>6</b> at standard</span>
+    <span class="group-count"><b class="gdone">5</b> / <b>6</b> at standard</span>
   </div>
   <p class="group-note">Nodes and edges — the traversal is the same, the bookkeeping is the problem.</p>
   <ul>
@@ -856,14 +866,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="max area of island max-area-of-island graphs graph dfs / flood fill - size of each connected component matrix call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="max area of island max-area-of-island graphs grid dfs (flood fill) + running max matrix call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/max-area-of-island" target="_blank" rel="noopener noreferrer">Max Area Of Island</a>
-        <span class="why">Graph DFS / Flood Fill - size of each connected component</span>
+        <span class="why">Grid DFS (flood fill) + running max</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/max-area-of-island/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/max-area-of-island/max-area-of-island-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
     <li data-hay="rotting fruit rotting-fruit graphs multi-source bfs - all rotten oranges start at time 0 matrix queue array needs rebuilt" data-status="rebuild">
@@ -882,7 +892,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="1-D DP">
   <div class="group-head">
     <h2>1-D DP</h2>
-    <span class="group-count"><b class="gdone">3</b> / <b>4</b> at standard</span>
+    <span class="group-count"><b class="gdone">4</b> / <b>4</b> at standard</span>
   </div>
   <p class="group-note">A row of subproblem answers, each built from the ones before it.</p>
   <ul>
@@ -916,14 +926,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="maximum subarray maximum-subarray 1-d dp kadane's algorithm - drop a negative running sum array dp-table needs rebuilt" data-status="rebuild">
+    <li data-hay="maximum subarray maximum-subarray 1-d dp kadane's algorithm (greedy running sum + running max) array dp-table current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/maximum-subarray" target="_blank" rel="noopener noreferrer">Maximum Subarray</a>
-        <span class="why">Kadane's Algorithm - drop a negative running sum</span>
+        <span class="why">Kadane's Algorithm (greedy running sum + running max)</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/maximum-subarray/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/maximum-subarray/maximum-subarray-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>
@@ -932,7 +942,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="2-D DP">
   <div class="group-head">
     <h2>2-D DP</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>2</b> at standard</span>
+    <span class="group-count"><b class="gdone">2</b> / <b>2</b> at standard</span>
   </div>
   <p class="group-note">A table of subproblem answers, filled in an order that never looks forward.</p>
   <ul>
@@ -946,14 +956,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="longest common subsequence longest-common-subsequence 2-d dp 2d dp / lcs - tabulation with two rolling rows array dp-table matrix call-stack needs rebuilt" data-status="rebuild">
+    <li data-hay="longest common subsequence longest-common-subsequence 2-d dp 2d dp (grid over two strings), rolled into two rows array dp-table matrix call-stack current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-common-subsequence" target="_blank" rel="noopener noreferrer">Longest Common Subsequence</a>
-        <span class="why">2D DP / LCS - tabulation with two rolling rows</span>
+        <span class="why">2D DP (grid over two strings), rolled into two rows</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n * m) &middot; O(m)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-common-subsequence/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-common-subsequence/suboptimal-2.cs" target="_blank" rel="noopener noreferrer">suboptimal-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-common-subsequence/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-common-subsequence/longest-common-subsequence-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>
@@ -962,38 +972,18 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Intervals">
   <div class="group-head">
     <h2>Intervals</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>1</b> at standard</span>
+    <span class="group-count"><b class="gdone">1</b> / <b>1</b> at standard</span>
   </div>
   <p class="group-note">Sort by one end, then sweep once.</p>
   <ul>
-    <li data-hay="merge intervals merge-intervals intervals intervals / sort by start - merge in one pass array interval needs rebuilt" data-status="rebuild">
+    <li data-hay="merge intervals merge-intervals intervals intervals: sort by start + single linear sweep array interval current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/merge-intervals" target="_blank" rel="noopener noreferrer">Merge Intervals</a>
-        <span class="why">Intervals / Sort by start - merge in one pass</span>
+        <span class="why">Intervals: sort by start + single linear sweep</span>
       </span>
       <span class="meta">
         <span class="cx" title="time / space">O(n log n) &middot; O(log n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/merge-intervals/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/merge-intervals/merge-intervals-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
-      </span>
-    </li>
-  </ul>
-</section>
-
-<section class="group" data-group="Other">
-  <div class="group-head">
-    <h2>Other</h2>
-    <span class="group-count"><b class="gdone">0</b> / <b>1</b> at standard</span>
-  </div>
-  <p class="group-note">Not yet filed. Add a rule in scripts/lib/patterns.mjs.</p>
-  <ul>
-    <li data-hay="longest palindromic substring longest-palindromic-substring other expand around center - grow palindromes from 2n-1 centers string needs rebuilt" data-status="rebuild">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/longest-palindromic-substring" target="_blank" rel="noopener noreferrer">Longest Palindromic Substring</a>
-        <span class="why">Expand Around Center - grow palindromes from 2n-1 centers</span>
-      </span>
-      <span class="meta">
-        <span class="cx" title="time / space">O(n^2) &middot; O(1)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/longest-palindromic-substring/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/longest-palindromic-substring/longest-palindromic-substring-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std rebuild" title="needs: teach"><i class="dot"></i>Needs rebuilt</span>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
   </ul>

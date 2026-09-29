@@ -21,68 +21,52 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fast and Slow Pointers - Floyd cycle detection
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get the head of a singly linked list. Return true if some
+           node's next pointer leads back to an earlier node (a cycle), else
+           false. Nodes are compared by identity, not by value. Example: 1 ->
+           2 -> 3 -> 4 -> back to 2 -> true; 1 -> 2 -> null -> false.
+ PATTERN : Fast and Slow Pointers (Floyd's cycle detection)
 ================================================================================
-VARIABLES
-  slow   moves one node per loop step
-  fast   moves two nodes per loop step; reaches null first if there is no cycle
-WHY THIS PATTERN
-  The problem asks one thing: does following next ever lead back to a node you
-  already visited? If there is no cycle, fast reaches the end (null). If there
-  is a cycle, fast can never leave it. Inside the loop, fast gains one node on
-  slow at every step, so it must land on slow in the end. The two pointers find
-  the cycle without storing any visited nodes.
-BRUTE FORCE
-  Walk the list and put every node reference in a HashSet<ListNode>. Return true
-  the first time Add fails, and false when you reach null. This is correct and
-  also O(n) time, but it uses O(n) extra space. That space is exactly what the
-  two-pointer version removes.
-INVARIANT
-  fast is always at least as far along the walk as slow, so if fast has not hit
-  null, then slow has not hit null either. Once both pointers are inside the
-  cycle, the gap between them (counted along the cycle) shrinks by exactly 1
-  each step. A gap that shrinks by 1 cannot jump over 0, so the pointers must
-  meet. The meeting happens within one lap of slow, which is why the time stays
-  linear. If there is no cycle, the loop condition fails and the method returns
-  false.
-MOVE FIRST, THEN COMPARE
-  slow and fast both start at head, so they are equal before any move. The check
-  fast == slow sits after the two moves. If the check came first, every
-  non-empty list would return true on the first step.
-WATCH OUT
-  The loop condition checks fast != null before fast.next != null, and this
-  order matters. It is what makes fast.next.next safe. If you swap the two
-  checks, an empty list (head == null) throws a NullReferenceException.
-  slow.next needs no null check, because slow never passes fast. If a change in
-  the code breaks that rule, slow.next can fail.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the node where the cycle starts, not just true or false.
-     After the pointers meet, put one pointer back at head and leave the other
-     at the meeting point. Move both one step at a time. They meet at the cycle
-     start. This works because the distance from head to the start equals the
-     distance from the meeting point to the start, modulo the cycle length. Time
-     is still O(n), with no extra space.
-  2. How long is the cycle?
-     From the meeting point, keep slow still and step a second pointer around
-     the loop until it comes back to slow. Count the steps. This adds one lap of
-     work.
-  3. Where else does this idea work when there is no linked list?
-     Any function that maps a value to a next value, such as Find the Duplicate
-     Number (i -> nums[i]) or Happy Number (n -> sum of the squares of its
-     digits). The "next" step becomes a function call instead of .next.
-TRIGGER
-  Reach for this when you must detect a loop, or find its entry, in a sequence
-  where each item points to exactly one next item, and you are asked for O(1)
-  extra space.
-C# NOTE
-  fast == slow compares references only because ListNode does not overload the
-  == operator. If a class defines value-based ==, use ReferenceEquals(fast,
-  slow) to be sure you are comparing node identity.
+IDEA
+  slow moves one node per step and fast moves two nodes per step.
+  With no cycle, fast reaches null first and the loop exits with false.
+  With a cycle, both pointers end up inside the loop. There the gap between
+  them shrinks by exactly 1 each step, so fast can never jump over slow.
+  They must meet (fast == slow), and the code returns true.
+EXAMPLE
+  List 1 -> 2 -> 3 -> 4, and 4.next = 2. Start: slow=1, fast=1.
+  Step 1: slow=2, fast=3. Step 2: slow=3, fast=2 (3 -> 4 -> 2).
+  Step 3: slow=4, fast=4 (2 -> 3 -> 4). They meet, so the answer is true.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  fast gains 1 node on slow per step, so they meet within ~n steps
+  Space O(1)  only two pointer variables, slow and fast
+PATH TO OPTIMAL
+  HashSet of visited nodes - O(n) time / O(n) space - simple, one pass.
+  Floyd fast/slow (optimal.cs) - O(n) / O(1) - no extra memory needed.
+  (The HashSet step has no sibling file in this folder.)
+KEYWORDS
+  linked list, cycle detection, Floyd, tortoise and hare, fast slow pointers
+WATCH OUT
+  - Compare fast == slow only AFTER moving. Both start at head, so a check
+    before the first move returns true on every list.
+  - Keep "fast != null" before "fast.next != null". Swapping them throws
+    a NullReferenceException on even-length lists.
+  - Compare node references, not .val. Duplicate values do not mean a cycle.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Where does the cycle start? (LeetCode 142)
+     -> After they meet, reset one pointer to head. Move both one step at a
+        time. They meet again at the cycle entry. Still O(n) time / O(1) space.
+  2. How long is the cycle?
+     -> From the meeting point, keep slow still and step once around the loop,
+        counting until you are back at slow. This adds O(cycle length) time.
+  3. Why can't fast skip over slow?
+     -> Inside the loop, each step closes the gap by exactly 1. It goes k,
+        k-1, ..., 0, so the gap must hit 0. It never goes negative.
+  4. Can you do it without Floyd?
+     -> Put each node in a HashSet and return true on a repeat. It is O(n)
+        space and easier to explain, but it uses more memory.
+TRIGGER
+  When you follow "next" links (a list, or x -> f(x)) and must detect a loop
+  using O(1) memory, use fast and slow pointers.
 ================================================================================
 */

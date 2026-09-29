@@ -45,75 +45,38 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DP on subsequences - pick/skip with previous index
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-9.cs when it was first processed
- STATUS  : Suboptimal
+ PROBLEM : Given an integer array nums, return the length of the longest
+           strictly increasing subsequence. A subsequence keeps the original
+           order but may skip elements, so it need not be contiguous. Equal
+           values do not count as increasing. Example: [10,9,2,5,3,7,101,18]
+           -> 4 (2,3,7,101).
+ PATTERN : 1D DP (take / not-take), tabulated with two rows
 ================================================================================
-VARIABLES
-  next       next[p+1] = LIS length from index i+1 onward, when the last picked index is p
-  curr       curr[p+1] = LIS length from index i onward, when the last picked index is p
-  prevIndex  index of the last element already taken; -1 means none taken yet
-  notPick    best length if nums[i] is skipped
-  pick       best length if nums[i] is taken; stays 0 when taking it is not allowed
-WHY THIS PATTERN
-  The problem asks for the longest subsequence, and a subsequence is built by
-  making a take-or-skip choice at each element. Whether you may take nums[i]
-  depends only on the last value you took. So the state is (i, prevIndex), and
-  each state picks the larger of pick and notPick. Row i only reads row i+1, so
-  the code keeps two rows, next and curr, instead of the full n x (n+1) table.
-BETTER APPROACH
-  A faster method keeps a "tails" list, sometimes called patience sorting.
-  tails[k] holds the smallest possible last value of an increasing subsequence
-  of length k+1. For each number, a binary search finds the first tail that is
-  >= the number and replaces it. If no such tail exists, the number is appended.
-  That runs in O(n log n) time. This file loses because it tries every (i,
-  prevIndex) pair, which is O(n^2) work.
-INVARIANT
-  After the outer loop has finished row i and swapped the arrays, next[p+1] is
-  the true LIS length of nums[i..n-1] when every element must be greater than
-  nums[p]. With p = -1 there is no such limit. The claim holds for row n because
-  all cells start at 0. Each row is correct if the row below it is correct,
-  because the best choice at i is either to skip it (notPick) or to take it and
-  continue from i+1 with prevIndex = i (pick). So next[0] at the end is the LIS
-  of the whole array with no limit.
-COLUMN SHIFT FOR PREVINDEX -1
-  prevIndex can be -1, and an array has no index -1. So every access adds 1:
-  column 0 means nothing taken yet. In pick, the lookup next[i + 1] is really
-  "prevIndex becomes i", after the shift. It is not "move to row i+1 at the same
-  column". Mixing up these two meanings is the most likely bug to make when you
-  rewrite this from memory.
-WATCH OUT
-  The code returns next[0], not curr[0]. The swap at the end of each row moves
-  the newest row into next, so returning curr would give an old row. After a
-  swap, curr still holds values from two rows back in columns above i+1. This is
-  safe only because row i writes columns 0..i and reads only columns up to i+1.
-  If you change the loop bounds, you can read those stale values. The check
-  nums[i] > nums[prevIndex] is strict, so equal values do not extend the
-  sequence. Changing it to >= turns the answer into the longest non-decreasing
-  subsequence.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you write a simpler O(n^2) DP?
-     Yes. Let dp[i] = the LIS that ends at index i, and set dp[i] = 1 + the max
-     of dp[j] over all j < i with nums[j] < nums[i]. The time is the same and it
-     uses one array, but the answer is max(dp), not the last cell.
-  2. How do you return the subsequence itself, not only its length?
-     Keep a parent[i] array in the dp[i] version, or keep the index of each tail
-     in the tails version, and follow the links back from the end. This costs
-     O(n) extra memory.
-  3. How do you count how many LIS exist?
-     Next to dp[i], keep cnt[i]. When a j gives a longer length, set cnt[i] =
-     cnt[j]. When it ties the best length, add cnt[j] to cnt[i]. This stays
-     O(n^2). The simple tails method cannot count.
-TRIGGER
-  Reach for this pattern when you must choose a subsequence and whether you can
-  take an element depends only on the last element you took.
-C# NOTE
-  The line (next, curr) = (curr, next) swaps two array references with a tuple.
-  It copies no elements, so rolling the rows costs O(1) per row. This is simpler
-  than Array.Copy and does less work.
+IDEA
+  State (i, prevIndex) means: the best LIS length from index i onward, when
+  nums[prevIndex] was the last picked value (-1 means nothing picked yet).
+  notPick skips nums[i]. pick is allowed only if nums[i] > nums[prevIndex],
+  and it gives 1 + the answer at (i+1, prev=i). Column prevIndex+1 stores
+  prevIndex, so -1 fits in column 0. Row i reads only row i+1, so we keep
+  just next and curr and swap them. It is correct because every subsequence
+  is one chain of pick/skip choices, and the max covers all of them.
+  Unlike optimal.cs, there is no tails array and no binary search.
+EXAMPLE
+  nums = [1,3,2]
+  i=2: prev=1 (3): 2>3 fails, 0; prev=0 (1): pick=1; prev=-1: 1 ->
+  next=[1,1,0,0]
+  i=1: prev=0: max(notPick=1, pick=1+next[2]=1)=1; prev=-1: 1 ->
+  next[0..1]=[1,1]
+  i=0: prev=-1: pick=1+next[1]=2, notPick=1 -> return next[0]=2
 COMPLEXITY
-  Time  : O(n^2)
-  Space : O(n)
+  Time  O(n^2)  about n^2/2 pairs (i, prevIndex), each filled in O(1)
+  Space O(n)    two rows next and curr of size n+1
+WATCH OUT
+  - In pick, read next[i+1], not next[i]. Column i+1 means "prev is i".
+    The +1 shift is the most common off-by-one here.
+  - The swap runs after each row, so the answer is next[0], not curr[0].
+  - Use strict >. With >=, input [2,2] gives 2, but the answer is 1.
+  - The inner loop must go prevIndex = i-1 down to -1. It must include -1,
+    or no chain can start and every answer becomes 0.
 ================================================================================
 */

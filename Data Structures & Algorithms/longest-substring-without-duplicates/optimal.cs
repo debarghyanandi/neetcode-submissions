@@ -34,69 +34,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - jump left past the last repeat
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given a string s, return the length of the longest substring that
+           has no repeated character. A substring must be contiguous, so a
+           subsequence does not count. Return the length, not the substring
+           itself. Example: "abcabcbb" -> 3 ("abc").
+ PATTERN : Sliding Window (variable size) + last-seen index map
 ================================================================================
-VARIABLES
-  lastSeenIndex  lastSeenIndex[c] = the latest index in s where char c was seen
-  left           start index of the current window; s[left..right] has no repeats
-  current        s[right], the char that just entered the window
-  previousIndex  the last index where current was seen before right
-WHY THIS PATTERN
-  The problem asks for the longest contiguous substring with no repeated
-  characters. Contiguous plus "longest" plus a property that breaks and can then
-  be fixed points to a sliding window. The right end only moves forward. When
-  current is a repeat, left moves forward just enough to remove the old copy.
-  Every valid window is then checked once, and longest keeps the best size.
-BRUTE FORCE
-  Take every start index. Extend the end one char at a time, using a HashSet,
-  and stop at the first repeat. This is correct, but it is O(n^2) time in the
-  worst case, because each start scans forward again. The window version never
-  scans backward, and left never moves back, so each index is visited once.
-INVARIANT
-  At the end of each loop step, s[left..right] has no repeated characters. Also,
-  lastSeenIndex holds the latest position of every char seen so far. If current
-  appeared inside the window at previousIndex, then previousIndex + 1 is the
-  smallest left that removes that copy, so the window stays as large as it can
-  be. Every longest valid substring ends at some right. At that step the window
-  is at least as long as that substring, so longest records its length.
-STALE ENTRIES STAY IN THE MAP
-  Old chars are never removed from lastSeenIndex. So previousIndex can point to
-  a spot before left. Math.Max(left, previousIndex + 1) ignores these old
-  entries. For "abba", at the last 'a' left is 2 and previousIndex is 0. Without
-  Math.Max, left would move back to 1 and the answer would be 3 instead of 2.
-  The comment in the code is correct about this.
-WATCH OUT
-  The order inside the loop matters. Read previousIndex first, then write
-  lastSeenIndex[current] = right. If you swap them, TryGetValue returns right
-  itself and left jumps past current. Also, char is a UTF-16 code unit, not a
-  full character. An emoji is a surrogate pair (two chars), so it counts as two
-  characters, and two emojis that share a high surrogate count as a repeat.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you return the substring itself, not only its length?
-     Store bestStart when longest grows, then return s.Substring(bestStart,
-     longest). This costs one extra int and one string copy at the end.
-  2. Change it to "longest substring with at most k distinct characters."
-     Keep a count per char, not a last index. When the number of distinct chars
-     goes above k, move left one step at a time and decrease counts until it is
-     k again. You lose the direct jump, but it is still linear, because left
-     only moves forward.
-  3. What if the input is a stream you cannot index back into?
-     This code never reads s[left], only indexes, so it already works on a
-     stream. Keep a running position and use it in place of right. It only fails
-     if you must output the substring, because then you need to buffer the
-     window.
-TRIGGER
-  The problem asks for the longest or shortest contiguous substring or subarray
-  where a "no duplicates" or "at most k" rule must hold.
-C# NOTE
-  If the input is known to be ASCII, an int[128] filled with -1 can replace
-  Dictionary<char, int>. The lookup becomes a plain array index, with no hashing
-  and no TryGetValue. The Math.Max logic stays the same, because -1 + 1 = 0
-  never moves left backward.
+IDEA
+  The window s[left..right] always holds distinct characters. For each
+  right, if current was seen before at previousIndex, jump left to
+  previousIndex + 1 so the old copy leaves the window. Math.Max stops left
+  from moving backward when that old copy is already outside the window.
+  Then store lastSeenIndex[current] = right and update longest. This is
+  correct because every valid window ending at right starts at left or later.
+EXAMPLE
+  s = "abba"
+  r=0 a: new, left=0, len 1 | r=1 b: new, left=0, len 2 (longest=2)
+  r=2 b: prev 1, left=max(0,2)=2, len 1 | r=3 a: prev 0 is stale,
+  left=max(2,1)=2, len 2 -> answer 2
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  right visits each index once; each map lookup is O(1)
+  Space O(1)  the map holds at most one entry per distinct character (fixed
+              set)
+PATH TO OPTIMAL
+  Check every substring for duplicates - O(n^3) - the simplest start.
+  Grow from each start with a set, stop at the first repeat - O(n^2).
+  Window with a set, shrink left one step at a time - O(n), 2n steps
+  (likely the approach in optimal-variant.cs).
+  This file: left jumps straight past the repeat - O(n), one pass.
+KEYWORDS
+  sliding window, two pointers, hash map, last seen index, distinct chars
+WATCH OUT
+  - Without Math.Max, "abba" gives 3: at r=3, left moves back to 1.
+  - Look up previousIndex BEFORE you write lastSeenIndex[current] = right,
+    or you always find the current index.
+  - The window length is right - left + 1. Forgetting the +1 is a common bug.
+  - O(1) space holds only for a fixed alphabet. With full Unicode, the map
+    grows with the number of distinct characters.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Longest substring with at most k distinct characters?
+     -> Keep a count map. Shrink left while the map has more than k keys. O(n)
+        time, O(k) space. You cannot jump left here, so shrink step by step.
+  2. The input is only ASCII. Can you avoid the dictionary?
+     -> Use an int[128] array filled with -1. It is still O(n) time and O(1)
+        space, but faster, with no hashing.
+  3. Return the substring itself, not the length?
+     -> Save left when longest improves. Return s.Substring(bestLeft,
+        longest).
+  4. Why is the answer never missed when left jumps?
+     -> Any window that starts before previousIndex + 1 has current twice, so
+        the start positions we skip can never be valid.
+TRIGGER
+  Look for "longest or shortest contiguous substring or subarray where a
+  condition (such as no repeats) must hold"; use a sliding window.
 ================================================================================
 */

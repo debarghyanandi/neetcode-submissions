@@ -67,68 +67,52 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Divide and Conquer - pairwise merge of sorted lists
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-2.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get an array of k linked lists. Each list is sorted in
+           ascending order. Merge them all into one sorted linked list and
+           return its head. Reuse the existing nodes. Some lists may be empty.
+           Example: [[1,4],[1,3],[2,6]] -> [1,1,2,3,4,6]
+ PATTERN : Divide and Conquer (merge sort on lists)
 ================================================================================
-VARIABLES
-  l, r     the range lists[l..r] that this Divide call must merge into one list
-  mid      the split point; the left half is lists[l..mid] and the right half is lists[mid+1..r]
-  left     the merged result of lists[l..mid]
-  right    the merged result of lists[mid+1..r]
-  dummy    a fake head node, so the first real node needs no special case
-  curr     the tail of the merged list that Conquer is building
-WHY THIS PATTERN
-  The problem gives k lists that are each already sorted and asks for one sorted
-  list. Merging two sorted lists is easy and linear, so the task becomes: how do
-  we pair up the merges? Divide splits the range at mid, merges each half, then
-  calls Conquer(left, right). Each node takes part in only about log k merges.
-BRUTE FORCE
-  The simple approach merges the lists one by one into a growing result: merge
-  lists[0] with lists[1], then merge that result with lists[2], and so on. It is
-  correct, but the result gets longer every time, so early nodes are walked
-  again in every later merge. That costs O(n * k) in total. Pairwise merging
-  keeps the sizes balanced, and that is the whole gain.
-INVARIANT
-  Divide(lists, l, r) always returns one sorted list that holds every node from
-  lists[l..r]. The base cases are true: an empty range gives null, and one list
-  is already sorted. Inside Conquer, the list from dummy.next to curr is always
-  sorted, and it holds the smallest nodes taken so far from l1 and l2. This is
-  because we always take the smaller of the two heads. When one list runs out,
-  the rest of the other list is sorted and not smaller than curr, so we attach
-  it whole.
-WATCH OUT
-  The code reuses the input nodes by changing their next pointers. After the
-  call, the original lists are destroyed, so a caller who still needs them will
-  get wrong data. The "l > r" guard in Divide never runs from MergeKLists,
-  because the Length == 0 case returns early. Keep it anyway, because it
-  protects the method if another caller uses it. Null entries inside lists are
-  safe, because Conquer treats a null list as empty. The comment "//Not
-  solved.." is only a personal note, not a claim about the code.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you remove the recursion and get O(1) extra space?
-     Yes. Merge bottom-up: first merge pairs at distance 1, then 2, then 4, and
-     store each result back into lists. The time is the same, there is no call
-     stack, and the code is a little harder to read.
-  2. How would you solve it with a heap (a structure that always gives you the
-  smallest item fast)?
-     Put the head of each list into a min-heap with k slots. Pop the smallest
-     node, append it, and push its next node. The time is still O(n log k) and
-     the space is O(k). The heap version also works when the lists arrive as
-     streams.
-  3. What if duplicates must be removed from the output?
-     In Conquer, skip a node when its val equals curr.val before you attach it
-     (and do not compare against the dummy). Merging still works the same way.
-TRIGGER
-  When you see "k sorted inputs to combine into one sorted output", think of
-  balanced pairwise merging or a k-sized min-heap.
-C# NOTE
-  ListNode is a reference type, so "curr.next = l1" only moves a pointer and
-  copies nothing. The only new object is the one dummy node made in each Conquer
-  call.
+IDEA
+  Divide splits the index range [l, r] at mid, just like merge sort.
+  It merges the lists in each half recursively, then joins the two results.
+  Conquer is the classic two-list merge: a dummy head, and curr always takes
+  the smaller of l1 and l2. At the end it attaches the leftover tail.
+  It is correct because merging two sorted lists gives a sorted list.
+EXAMPLE
+  lists=[[1,4],[1,3],[2,6]]; Divide(0,2) mid=1; Divide(0,1) mid=0
+  Conquer([1,4],[1,3]) -> [1,1,3,4]; Divide(2,2) -> [2,6]
+  Conquer([1,1,3,4],[2,6]) -> [1,1,2,3,4,6]
 COMPLEXITY
-  Time  : O(n log k)
-  Space : O(log k)
+  Time  O(n log k)  log k merge levels, and each level touches all n nodes
+                    once
+  Space O(log k)    recursion depth is log k; merges relink nodes, no new
+                    copies
+PATH TO OPTIMAL
+  Copy all values, sort, rebuild - O(n log n) time, O(n) space - baseline.
+  Merge lists one by one into a result - O(n*k) time - no extra array.
+  Min-heap of k list heads (suboptimal.cs) - O(n log k), O(k) - fewer passes.
+  Pairwise merge by halves (this file) - O(n log k), O(log k) - no heap.
+KEYWORDS
+  merge k sorted lists, divide and conquer, min-heap, priority queue, dummy
+  node
+WATCH OUT
+  - The comment "//Not solved.." is stale. The code below it works.
+  - Merging left to right (result = merge(result, lists[i])) looks the same
+    but costs O(n*k). You must merge in pairs by halves.
+  - Empty list entries are null. Conquer handles them: the loop is skipped.
+  - Forget "curr = curr.next" and the merge loses nodes.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it with O(1) extra space?
+     -> Merge bottom-up. Use interval = 1, 2, 4... and set lists[i] =
+        merge(lists[i], lists[i+interval]). Same O(n log k) time, no recursion.
+  2. The lists arrive as streams and you cannot see them all at once?
+     -> Use a min-heap holding the current head of each stream. Pop the
+        smallest, then push its next node. O(log k) per node, O(k) memory.
+  3. Why is this O(n log k) and not O(n k)?
+     -> Each node is copied through one merge per level. There are log k
+        levels, because the number of lists halves each round.
+TRIGGER
+  You must combine many already sorted sequences into one sorted output.
 ================================================================================
 */
