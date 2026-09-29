@@ -26,10 +26,17 @@ const WIDTH = 78;
 
 /** Hard line limits for the whole rendered block, rules and comment markers included. */
 // Set from the blocks this replaced, not picked by eye: the Opus 5.5 blocks on main ran a
-// median of 73 lines, and the target is about 30% less. A suboptimal or variant file skips the
+// median of 73 lines, and the TARGET is about 30% less. A suboptimal or variant file skips the
 // sections that belong to the whole problem (path, keywords, follow-ups, trigger), so its
-// limit is lower.
-export const BLOCK_LIMIT = { full: 52, short: 34 };
+// target is lower.
+//
+// The model cannot count rendered lines - wrapping is done here - so it lands a few lines either
+// side of what it is asked for. Rejecting at the target itself failed 9 of 11 first attempts in
+// the first local run (54, 55, 55, 57, 37, 38 ... against 52 / 34), and every retry is a full
+// call. So the prompt asks for the target and the hard limit sits a margin above it: only a
+// block that really ran long (63, 69) is sent back.
+export const BLOCK_TARGET = { full: 52, short: 34 };
+export const BLOCK_LIMIT = { full: 60, short: 42 };
 
 /** optimal.cs gets the full block; every other file gets the short one. */
 export const roleFor = (file) => (file === 'optimal.cs' ? 'full' : 'short');
@@ -128,7 +135,7 @@ export function parseTeachText(text, role = 'full') {
 }
 
 /** Lines of text the model may write: the block limit minus markers, rules and section headings. */
-const textBudget = (role) => BLOCK_LIMIT[role] - 5 - sectionsFor(role).filter((s) => s.key !== 'problem' && s.key !== 'pattern').length;
+const textBudget = (role) => BLOCK_TARGET[role] - 5 - sectionsFor(role).filter((s) => s.key !== 'problem' && s.key !== 'pattern').length;
 
 export const TEACH_INSTRUCTIONS = (ctx) => {
   const role = ctx.role ?? 'full';
@@ -152,7 +159,7 @@ export const TEACH_INSTRUCTIONS = (ctx) => {
     '',
     'Rules:',
     // The rendered block adds the comment markers, three rules and one heading per body section.
-    `- Aim for about ${textBudget(role) - 5} lines of text in total (76 characters each). The hard limit is ${textBudget(role)}.`,
+    `- Aim for about ${textBudget(role) - 4} lines of text in total (76 characters each), and never more than ${textBudget(role)}.`,
     '  Rich but not padded: every line should be worth re-reading before an interview.',
     '- Plain English for a reader whose second language is English: short sentences, common words.',
     '  Use the standard DSA interview terms (two pointers, sliding window, monotonic stack, prefix sum,',

@@ -320,6 +320,10 @@ for (const p of targets) {
     report('teach', p.slug, 'ok', `${file}: ${ctx.role} note, ${block.split('\n').length} lines`);
     wrote++;
   }
+  // Saved after every folder, not once at the end. A run stopped halfway (Ctrl+C, a lost
+  // connection) used to leave notes written to disk but not recorded, so the next run paid
+  // to write every one of them again.
+  if (doApply && wrote) saveState(state);
   endGroup();
   if (outOfBudget) break;
 }

@@ -71,19 +71,31 @@ export const usageLine = (u) =>
   `tokens: in ${n(u?.in)} · cache write ${n(u?.cacheWrite)}${u?.ttl ? ` (${u.ttl})` : ''} · cache read ${n(u?.cacheRead)} · out ${n(u?.out)}${u?.thinking ? ` (thinking ${n(u.thinking)})` : ''}`;
 
 /**
- * The lean call: our own one-line system prompt, and no tools.
+ * The lean call: our own one-line system prompt, no tools, no MCP servers, no skills.
  *
  * Without these, every call carries Claude Code's default system prompt and every tool
  * description - about 25-33k tokens, written to the cache at 2x input price on a cold
  * start. On a Sonnet teach call that was ~90% of the cost. None of it is needed: every
  * script hands the code over on stdin, and no prompt asks the model to read a file.
  *
- * This is NOT --bare. --bare stops reading the subscription login; these two flags do not.
+ * --tools "" only removes the BUILT-IN tools; the docs say it "doesn't affect MCP tools". On a
+ * machine with claude.ai connectors or plugins, their tool schemas rode along on every call:
+ * measured 2026-09-29, teach calls wrote ~11.7k tokens to the cache locally against ~2.0k in CI,
+ * about 3x the cost per file - and only on some calls, because connectors finish loading at
+ * different times. --strict-mcp-config (with no --mcp-config: no servers at all),
+ * --disallowedTools=mcp__* (belt and braces) and --disable-slash-commands (no skill listing)
+ * make a local call the same size as a CI one. The = form matters: --disallowedTools takes a
+ * list, and a separate value could swallow the arguments after it.
+ *
+ * This is NOT --bare. --bare stops reading the subscription login; these flags do not.
  * PIPELINE_FULL_PROMPT=1 turns them off, for a before/after comparison or a quick rollback.
  */
 export const SYSTEM_PROMPT =
   'You are one non-interactive step in a build pipeline. You have no tools and no file access: ' +
-  'everything you need is in the prompt and on stdin. Reply only through the required structured JSON output.';
+  'everything you need is in the prompt and on stdin. Reply only in the output format the prompt asks for - the structured JSON output when one is required.';
 
 export const leanArgs = () =>
-  process.env.PIPELINE_FULL_PROMPT === '1' ? [] : ['--system-prompt', SYSTEM_PROMPT, '--tools', ''];
+  process.env.PIPELINE_FULL_PROMPT === '1' ? [] : [
+    '--system-prompt', SYSTEM_PROMPT, '--tools', '',
+    '--strict-mcp-config', '--disallowedTools=mcp__*', '--disable-slash-commands',
+  ];

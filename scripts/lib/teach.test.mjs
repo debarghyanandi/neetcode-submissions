@@ -8,7 +8,7 @@
  *
  *   node scripts/lib/teach.test.mjs
  */
-import { parseTeachText, buildTeachingBlock, lengthProblem, roleFor, BLOCK_LIMIT, TEACH_INSTRUCTIONS } from './teach.mjs';
+import { parseTeachText, buildTeachingBlock, lengthProblem, roleFor, BLOCK_LIMIT, BLOCK_TARGET, TEACH_INSTRUCTIONS } from './teach.mjs';
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => { if (cond) { pass++; console.log(`ok    ${name}`); } else { fail++; console.log(`FAIL  ${name}${extra ? `\n      ${extra}` : ''}`); } };
@@ -130,7 +130,8 @@ ok('the prompt names the problem and lists the siblings', pFull.includes('"trapp
 ok('the full prompt asks for every full section', ['PROBLEM', 'PATH TO OPTIMAL', 'KEYWORDS', 'FOLLOW-UP', 'TRIGGER'].every((m) => pFull.includes(`@@ ${m}`)));
 ok('the short prompt asks for the problem', pShort.includes('@@ PROBLEM'));
 ok('but for none of the whole-problem sections', ['PATH TO OPTIMAL', 'KEYWORDS', 'FOLLOW-UP', 'TRIGGER'].every((m) => !pShort.includes(`@@ ${m}`)));
-ok('the limits are about 30% under the 73-line median they replace', BLOCK_LIMIT.full <= 52 && BLOCK_LIMIT.full >= 48);
+ok('the target is about 30% under the 73-line median it replaces', BLOCK_TARGET.full <= 52 && BLOCK_TARGET.full >= 48);
+ok('and the hard limit leaves a margin above it for wrapping', BLOCK_LIMIT.full - BLOCK_TARGET.full >= 6 && BLOCK_LIMIT.short - BLOCK_TARGET.short >= 6);
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);
