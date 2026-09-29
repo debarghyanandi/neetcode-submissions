@@ -51,75 +51,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Linked list digit addition - recursion carrying the carry
+ PATTERN : Linked List Digit Math - recursive add with carry
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  carry       carry coming in from the less significant digit already processed
-  v1, v2      digit at this position, or 0 when that list has already ended
-  sum         v1 + v2 + carry for this one position
-  newCarry    sum / 10, the carry handed to the next recursive call
-  nodeValue   sum % 10, the digit stored in the node built here
-  nextNode    the already-built rest of the result list (higher digits)
+  carry      the carry coming in from the less significant digit (0 or 1)
+  v1         digit of l1 at this position, or 0 if l1 has ended
+  v2         digit of l2 at this position, or 0 if l2 has ended
+  newCarry   sum / 10, the carry passed to the next position
+  nodeValue  sum % 10, the digit stored in the node built now
+  nextNode   head of the sum list for all later positions
 WHY THIS PATTERN
-  The digits are stored least significant first, so walking both lists forward
-  is exactly the order you add by hand: position by position, right to left,
-  with one carry passed along. That single piece of state, carry, is all that
-  links one position to the next, so the problem folds naturally into a
-  recursive call on l1.next and l2.next with newCarry. The stopping condition is
-  the honest one: nothing is left in either list and carry is 0, so there is no
-  digit to emit.
+  The digits are stored in reverse order, so the head of each list is the ones
+  digit. This means you can walk both lists from the front and add digits the
+  way you add numbers on paper, one column at a time. Each call to Add handles
+  one column: it adds v1 + v2 + carry, keeps nodeValue, and passes newCarry to
+  the call for the next column. The recursion builds the answer list in the same
+  order as the input lists.
 BETTER APPROACH
-  The better version is the same algorithm written as a loop with a dummy head
-  node and a tail pointer, advancing l1 and l2 while either is non-null or carry
-  is non-zero. That uses only a few pointers of extra state, while this file
-  puts one stack frame per digit, so the extra space grows with the longer list.
-  On a very long list the recursion can overflow the call stack; the loop
-  cannot. The digit work is identical, so this file loses on space and
-  robustness, not on speed.
+  The better approach is an iterative loop with a dummy head node and a tail
+  pointer. It moves through both lists once, adds each new node at the tail, and
+  uses only O(1) extra memory besides the output list. This file loses because
+  every column adds one stack frame to Add. So the call stack grows to max(n, m)
+  + 1 frames. That stack is where the extra space in the reported complexity
+  comes from.
 INVARIANT
-  Every call to Add receives lists positioned at the same digit index and the
-  carry produced by all lower positions. It returns the complete correctly
-  formed list for that position and everything above it. By induction from the
-  base case, where no digits and no carry give null, the list returned by the
-  top call spells out the full sum, least significant digit first.
+  Add(l1, l2, carry) returns the digit list of (number left in l1) + (number
+  left in l2) + carry. The base case is correct: when both lists are empty and
+  carry is 0, the sum is 0, which is the empty list. In every other case, the
+  call builds the correct lowest digit, nodeValue. The rest of the sum is
+  exactly the rest of both lists plus newCarry, and the recursive call returns
+  that. So the full result is correct by induction on the remaining length.
+CARRY IN THE BASE CASE
+  The stop check tests carry == 0 as well as both lists being null. Because of
+  this, a final carry (for example 5 + 5 = 10) goes into one more call. That
+  call makes the extra node with value 1. You do not need a separate "if carry >
+  0, add a node" step after the loop.
 WATCH OUT
-  Add returns null when both lists are null and carry is 0, so calling
-  AddTwoNumbers(null, null) gives back null rather than a node holding 0; if the
-  caller can pass two empty lists, that is a crash waiting to happen downstream.
-  The recursion is not tail recursive: the new ListNode is built after nextNode
-  comes back, so depth really is the length of the longer list. The null guards
-  on l1 and l2 are repeated three times each (value read, and twice in the
-  recursive call arguments) - easy to edit one and forget another. Leading zeros
-  in the input are copied straight through, since nothing trims them.
+  Each digit uses one recursive call, so a very long list can cause a
+  StackOverflowException. In .NET you cannot catch that exception, and it ends
+  the process. Also, the ternaries (l1 != null ? l1.next : null) are required:
+  when one list is shorter, the code keeps recursing with that side as null, and
+  reading .next on it directly would throw a NullReferenceException.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Rewrite it without recursion.
-     Use a dummy head, a tail pointer, and a while loop that runs while l1 !=
-     null || l2 != null || carry != 0; append new ListNode(sum % 10) each turn
-     and return dummy.next. Same time, constant extra space beyond the output.
-  2. What if the digits were stored most significant first?
-     You cannot add left to right with one carry. Either reverse both lists
-     first, or push all digits onto two Stack<int> and pop them together,
-     building the result by prepending each new node. Both cost extra space
-     proportional to the lists.
-  3. Can you avoid allocating a new list at all?
-     Write the result into the longer input list in place, reusing its nodes,
-     and only allocate when a final carry needs one more node. Saves allocations
-     but destroys the input, which is often not allowed.
-  4. What if each node held a digit in base 1000 instead of base 10?
-     Only the two constants change: newCarry = sum / 1000 and nodeValue = sum %
-     1000. The structure is untouched, which is a sign the carry logic is the
-     real core here.
+  1. What if the digits are stored most significant digit first (Add Two Numbers
+  II)?
+     Push both lists onto two stacks, or reverse both lists, then add from the
+     ones digit. Put each new node at the front of the result. Stacks use O(n +
+     m) extra memory. Reversing uses O(1) extra memory but changes the input
+     lists.
+  2. Can you avoid allocating a new list?
+     Yes. Write each sum digit into l1's existing nodes. When l1 runs out, link
+     to l2's remaining nodes, and allocate only the final carry node. This saves
+     memory, but it destroys the caller's input, and the caller may not expect
+     that.
+  3. How would it change for a different base, such as base 16?
+     Only the constant changes: newCarry = sum / base and nodeValue = sum %
+     base. The carry can still only be 0 or 1, because the largest sum is
+     (base-1) + (base-1) + 1.
 TRIGGER
-  Two sequences to combine position by position where one small piece of state
-  (a carry, a borrow) is the only thing passed forward.
+  Two numbers stored as digit lists with the ones digit first, and you must
+  return their sum as a list: add column by column and pass a carry.
 C# NOTE
-  LeetCode's ListNode has a constructor overload taking (val, next), so new
-  ListNode(nodeValue, nextNode) replaces the object initializer new
-  ListNode(nodeValue) { next = nextNode } and does not depend on next being
-  publicly settable.
+  The expression new ListNode(nodeValue) { next = nextNode } is an object
+  initializer. It runs the constructor first and then sets the public next
+  field. This only works because next is a writable public member of ListNode.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n + m)

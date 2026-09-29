@@ -38,69 +38,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS with visited-map - clone graph node by node
+ PATTERN : Graph DFS + Hash Map - map each original node to its copy
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  map     map[original node] = its clone; also serves as the visited set
-  copy    the new Node holding node.val, filled with cloned neighbors
+  map    map[original] = the cloned Node made for that original
+  copy   the new Node for the current node; its neighbors list is filled in by the recursion
+  n      one neighbor of the original node (not a count)
 WHY THIS PATTERN
-  The problem gives a connected undirected graph with cycles and asks for a deep
-  copy. A plain traversal would loop forever on a cycle, and a plain copy would
-  duplicate the same node twice when two neighbors point at it. Putting copy
-  into map before the neighbor loop makes map do both jobs: it marks node as
-  seen, and it hands back the one clone that every other edge must reuse.
+  The problem asks for a deep copy of a graph. A deep copy means new nodes with
+  the same links, not shared ones. A graph can have cycles and shared neighbors,
+  so a plain recursive copy would copy the same node many times or never stop. A
+  traversal (DFS) visits every reachable node. The Dictionary map remembers
+  which originals already have a copy, so each node is cloned exactly once and
+  every edge points to that one copy.
 BRUTE FORCE
-  The first idea is usually two passes: walk the graph once to collect all nodes
-  and make a bare clone for each, then walk again to wire the neighbor lists.
-  That is also O(n + m) but needs two traversals and its own visited set in
-  each. This single DFS does the same work in one pass, so the two-pass version
-  only loses on code size and clarity, not on order of growth.
+  First collect every reachable node into a list and make a copy for each one.
+  Then, for every edge, search the list of copies one by one to find the
+  matching copy. This is correct, but each neighbor lookup is a linear scan, so
+  the total is about O(n * (n + m)). The Dictionary replaces that scan with an
+  O(1) average lookup.
 INVARIANT
-  At every entry to Dfs, map holds a clone for each node already visited, and
-  any node in map has had its own neighbors either fully wired or is an ancestor
-  currently being wired. Because copy is inserted into map on the line before
-  the foreach, a cycle that comes back to node finds it in map and returns the
-  same object instead of recursing again. So each original node is created
-  exactly once and each edge is appended exactly once, which makes the clone
-  structurally identical.
+  Every original node that Dfs has entered has exactly one entry in map, and
+  that entry is its only copy. So when Dfs(n, map) is called, it either returns
+  the existing copy or makes the first and only one. Every copy.neighbors.Add
+  therefore links to the single copy of that neighbor. When the top call
+  returns, every reachable node has been copied once and every edge has been
+  copied once, from each side.
+STORE THE COPY BEFORE RECURSING
+  map[node] = copy runs before the foreach over neighbors. If a cycle leads back
+  to this node while its neighbors are still being built, the ContainsKey check
+  finds the half-built copy and returns it. That is fine, because the copy's
+  neighbors list gets filled in as the recursion unwinds. If you moved the map
+  insert after the loop, a cycle (even a single edge A-B, which is stored in
+  both directions) would recurse forever.
 WATCH OUT
-  The recursion depth follows the longest DFS path, so a long chain graph can
-  overflow the stack. The code assumes node.neighbors is never null and that the
-  Node constructor gives copy an empty, non-null neighbors list; if a Node(int)
-  constructor left neighbors null, copy.neighbors.Add throws. map uses the
-  default reference equality of Node, which is what we want here - if Node ever
-  got a custom Equals or GetHashCode based on val, two different nodes with the
-  same val would collide and the clone would be wrong. The node == null check
-  returns null for an empty graph, which is correct, but it also silently
-  returns null for a null neighbor entry instead of failing loudly.
+  The recursion goes as deep as the longest DFS path. A long chain-shaped graph
+  can cause a StackOverflowException, and .NET cannot catch that exception, so
+  the process just ends. The code assumes the Node constructor creates an empty
+  neighbors list; if it left neighbors null, copy.neighbors.Add would throw. The
+  code also assumes Node does not override Equals/GetHashCode. If it compared
+  nodes by val, two different nodes with the same val would share one copy.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you remove recursion?
-     Use an explicit Stack or Queue of original nodes. Create and map the clone
-     when you first push a node, then on pop iterate its neighbors: map the
-     unseen ones, push them, and append map[n] to the clone's neighbor list.
-     Same time, same map, but stack depth is now heap memory you control.
-  2. The graph is disconnected - does this still work?
-     No. This starts from one node and only reaches its component. You would
-     need the full node list and a loop calling Dfs on each unmapped node,
-     returning a list of clone roots instead of one.
-  3. The nodes carry extra mutable payload, like a list of tags?
-     map still handles identity, but each field must be copied by value, not by
-     reference - new Node(node.val) copies the int fine, while a shared List
-     would leave the clone aliased to the original.
-  4. How do you verify the clone is right?
-     Traverse both graphs in lockstep with a pair map; check vals match,
-     neighbor counts match, and that no clone node is reference-equal to any
-     original node.
+  1. How do you remove the recursion?
+     Use BFS with a Queue<Node>. Create the copy and add it to map when you
+     enqueue a node, then connect the copied neighbors when you dequeue it. It
+     takes the same time and has no stack depth risk, but the code is a little
+     longer.
+  2. Node values are unique and run from 1 to n. Can you drop the Dictionary?
+     Yes. Use a Node[] indexed by val as the visited-and-copy table. The space
+     is still O(n), but you avoid hashing. It only works because val is a
+     unique, small integer.
+  3. What if the graph is disconnected and you are given a list of all nodes?
+     Loop over the list and call Dfs on each node, sharing the same map. Nodes
+     already copied return right away, so the total work stays linear.
+  4. How is this like "Copy List with Random Pointer"?
+     It is the same idea: an original-to-copy map that breaks cycles and shared
+     references. You can also solve that problem in O(1) extra space by putting
+     each copy right after its original in the list, but that trick does not
+     work for general graphs.
 TRIGGER
-  A traversal where the same node can be reached by several paths and you must
-  return one object per original - map the node to its result before you
-  recurse.
+  When you must deep-copy a structure whose pointers can form cycles or shared
+  references, keep an original-to-copy map and fill it while you traverse.
 C# NOTE
-  ContainsKey followed by map[node] hashes node twice; TryGetValue(node, out var
-  existing) does it in one lookup and is the usual C# idiom here.
+  map.ContainsKey(node) followed by map[node] does two hash lookups. One call to
+  map.TryGetValue(node, out var existing) does the same job with a single
+  lookup.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n)

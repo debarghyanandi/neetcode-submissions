@@ -56,77 +56,76 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS flood fill on a grid - count connected components
+ PATTERN : Graph BFS / Flood Fill - count connected components
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  vis        vis[row, col] = true once that cell has been enqueued
-  cnt        number of islands started so far
-  dRow/dCol  the four neighbour offsets, paired by index i
-  queue      cells of the current island still waiting to expand
-  nRow/nCol  candidate neighbour of the dequeued cell (r, c)
+  vis      vis[r,c] = true once cell (r,c) has been put in some queue
+  cnt      number of islands found so far (one per new BFS start)
+  dRow     row offsets for up, down, left, right
+  dCol     column offsets that go with dRow at the same index
+  nRow     row of the neighbor being checked
+  nCol     column of the neighbor being checked
 WHY THIS PATTERN
-  The problem asks how many separate groups of '1' cells exist, where cells join
-  only through up/down/left/right links. That is exactly counting connected
-  components in an implicit graph whose nodes are land cells and whose edges are
-  the four dRow/dCol steps. The outer double loop finds a cell that has never
-  been reached, bumps cnt once, then the BFS drains every cell reachable from it
-  so those cells can never start a second count.
+  The problem asks how many groups of '1' cells touch each other up, down, left
+  or right. That is the number of connected components in a grid graph. Each
+  land cell is a node, and each pair of touching land cells is an edge. The
+  outer loops find a land cell that is not yet in vis, add 1 to cnt, and run a
+  BFS (breadth-first search: visit cells level by level using a queue). The BFS
+  marks the whole island, so no later start can count it again.
 BRUTE FORCE
-  The naive idea is union-find or, worse, repeatedly scanning the grid and
-  merging any two adjacent land cells until nothing changes. That
-  repeat-until-stable scan can cost O(m * n) per pass and O(m * n) passes in a
-  snake-shaped island. BFS reaches the same answer in a single sweep because
-  each cell is enqueued at most once.
+  The simplest correct approach is union-find (a structure that merges sets).
+  Give each land cell its own set, then union it with its right and down land
+  neighbors. The answer is the number of distinct roots. With path compression
+  it is about O(m * n) too, but it needs more code and a parent array. A more
+  naive approach restarts a full search from every land cell and removes
+  duplicates. That costs O((m * n)^2) and loses badly.
 INVARIANT
-  Every cell with vis true is either already counted inside some island or
-  sitting in queue for the current one, and no cell is ever enqueued twice. So
-  when the while loop drains queue, the whole component containing the start
-  cell is marked, and the outer loop can only trigger again on a genuinely new
-  component. cnt therefore equals the number of components finished.
+  When a BFS starts, every cell already in vis belongs to an island that cnt has
+  already counted. During the BFS, a cell goes into the queue only if it is
+  land, inside the grid, and not yet in vis, and it is marked at that moment. So
+  each land cell is enqueued exactly once, in total. When the queue is empty,
+  every land cell reachable from (row, col) is in vis. So each island adds
+  exactly 1 to cnt.
 MARK ON ENQUEUE
-  vis[nRow, nCol] is set at the moment of Enqueue, not after Dequeue. If you
-  moved the marking to dequeue time, a cell with two already-queued neighbours
-  would be pushed twice, and the queue could swell to more than m * n entries;
-  the count would still be right but the memory bound would break. The same
-  guard doubles as the "not yet seen" test in the if, so one array does two
-  jobs.
+  vis is set when a cell is enqueued, both for the start cell and inside the
+  neighbor loop. If you marked it only on dequeue, the same cell could be
+  enqueued by two neighbors before it is processed. The result would still be
+  correct, but the queue could hold duplicates and do extra work. The code
+  matches its own comment here.
 WATCH OUT
-  grid[0].Length runs before any emptiness check, so a null grid or a
-  zero-length outer array throws immediately. Because grid is char[][] (jagged),
-  a short inner row would make grid[row][col] throw even though nCol < cols
-  passed - the bounds check trusts cols from row 0 only. Note the cells are char
-  '1' and '0', not int 1 and 0; comparing against 1 would not compile the way
-  you expect and comparing against '0' is the easy typo. Finally the tuple (int,
-  int) has unnamed fields, so nothing stops you from later writing (c, r) in the
-  wrong order.
+  grid[0].Length throws if grid is empty (rows == 0), because there is no row 0.
+  Add a guard that returns 0 before reading cols. The code also assumes the grid
+  is rectangular, because cols comes from row 0 only. A jagged grid with a
+  shorter later row would throw at grid[nRow][nCol].
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you drop the vis array entirely?
-     Yes - overwrite grid[r][c] = '0' when you enqueue. Same time, no extra
-     bool[,], but it destroys the caller's input, so you would document that or
-     restore it afterwards.
-  2. DFS instead of BFS?
-     Recursion replaces the queue and the code shrinks, but a long snaking
-     island makes the call stack as deep as m * n and can overflow. The explicit
-     Queue here keeps the growth on the heap.
-  3. What if the grid is too large to hold in memory at once, streamed row by
-  row?
-     Switch to union-find over two rows at a time: keep component ids for the
-     previous row, union downward as each new row arrives, and count the roots
-     at the end. Memory falls to O(n).
-  4. What if diagonal touching also counts as one island?
-     Extend dRow and dCol to eight entries with the four diagonal pairs; nothing
-     else changes, the loop bound 4 becomes dRow.Length.
+  1. Can you drop the vis array to save memory?
+     Yes. Write '0' into grid when you enqueue a cell. This saves the O(m * n)
+     bool array, but it changes the caller's input. Ask first if that is
+     allowed.
+  2. Why BFS and not recursive DFS?
+     Recursive DFS is shorter, but one long island can make the recursion very
+     deep and overflow the call stack. BFS with a queue keeps that state on the
+     heap. The queue grows only to about the width of the BFS frontier.
+  3. What if diagonal cells also connect?
+     Extend dRow and dCol to 8 entries by adding the four diagonal offsets.
+     Nothing else changes.
+  4. What if land cells are added one at a time and you must report the count
+  after each?
+     Use union-find. Each add makes a new set (cnt++), and each union with a
+     land neighbor does cnt--. Each step costs almost O(1), instead of a full
+     rescan.
 TRIGGER
-  A grid of two symbols where the question is "how many groups" or "how big is
-  the largest group" under 4-directional adjacency.
+  When a grid question asks you to count or measure groups of touching cells,
+  run a flood fill from each unvisited cell and count how many times you start
+  one.
 C# NOTE
-  bool[,] is a true rectangular array with one allocation and one bounds pair,
-  which is why vis[row, col] is safe while grid[row][col] (jagged, separately
-  allocated rows) is not; Queue<(int, int)> stores value tuples inline, so no
-  per-cell object is allocated.
+  bool[,] is one rectangular block indexed as vis[r, c], while grid is a jagged
+  char[][] indexed as grid[r][c]. Keep the two index styles apart when you edit.
+  The value tuple (int, int) in Queue avoids allocating a new object for each
+  cell, and var (r, c) unpacks it in one line.
 COMPLEXITY
   Time  : O(m * n)
   Space : O(m * n)

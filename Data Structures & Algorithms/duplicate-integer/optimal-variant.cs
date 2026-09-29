@@ -21,79 +21,61 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Set Membership - size drop reveals repeats
+ PATTERN : Hash Set - compare distinct count to total count
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  nums                    the input array; nums.Length is the count with duplicates kept
-  new HashSet<int>(nums)  unnamed temporary; holds each distinct value of nums exactly once
+  nums                    the input array; nums.Length is the total count, repeats included
+  new HashSet<int>(nums)  unnamed set; holds each distinct value of nums once
+  Count                   Count = number of distinct values in nums
 WHY THIS PATTERN
-  The question only asks whether any value appears twice - it does not ask which
-  value, or where. That turns it into a counting question: how many distinct
-  values does nums hold? A hash set stores each value once and silently ignores
-  a second insert of the same value, so its Count is exactly the number of
-  distinct values. If that Count is below nums.Length, at least one insert was
-  dropped, and a dropped insert is a duplicate.
+  The question asks only whether any value appears twice. It does not ask which
+  value or where. A set keeps each value once, so all duplicates show up as one
+  number: the gap between nums.Length and the set's Count. If the set is smaller
+  than the array, at least one value was repeated.
 BRUTE FORCE
-  The first thing most people write is a double loop comparing nums[i] with
-  nums[j] for every j > i and returning true on the first match. That is correct
-  but quadratic in time, though it uses no extra memory. Sorting first and then
-  checking neighbouring pairs is the middle option at n log n time. The hash set
-  trades memory for a single pass, which is the better trade when the array is
-  large.
+  The first correct idea is to compare every pair i < j and return true when
+  nums[i] == nums[j]. That takes O(n^2) time and O(1) extra space. It loses
+  because the number of pairs grows with the square of n. The set does each
+  lookup in expected O(1) time, so it only needs one pass over the array.
 INVARIANT
-  After the set constructor has consumed the first k elements of nums, the set
-  contains exactly the distinct values among those k elements, so set.Count <= k
-  always, with equality only when those k were all different. At the end k is
-  nums.Length, so Count < nums.Length holds if and only if at least one element
-  was ever a repeat of an earlier one. That equivalence is the whole correctness
-  argument - no separate scan is needed.
-NO EARLY EXIT
-  This version always reads the entire array, even if nums[0] and nums[1] are
-  already equal. The common alternative loops and returns true the moment Add
-  returns false, which can stop after two elements. Both are the same order of
-  work in the worst case, when the answer is false and every element must be
-  seen. The loop version only wins on inputs where a duplicate appears early,
-  and it costs a few extra lines.
+  As the constructor reads nums from left to right, the set always holds exactly
+  the distinct values seen so far. When a value is already in the set, adding it
+  again does nothing and Count does not grow. So when the constructor finishes,
+  Count equals the number of distinct values in nums. Count < nums.Length is
+  then true exactly when some value was dropped, which means a duplicate exists.
 WATCH OUT
-  The method name hasDuplicate starts with a lower-case letter, which breaks the
-  usual C# convention and will not match an interface or override that spells it
-  HasDuplicate - check what the judge expects. There is no null check on nums:
-  passing null throws inside the HashSet constructor, not at the comparison, so
-  the stack trace points at a line that looks innocent. An empty array returns
-  false correctly, since 0 < 0 is false. The code also builds the full set even
-  when the answer is obvious from the first two elements, so peak memory is the
-  whole distinct set regardless of the answer.
+  The code has no early exit. Even if nums[0] == nums[1], it still hashes the
+  whole array before it compares the sizes. If nums is null, the HashSet
+  constructor throws ArgumentNullException. The code does not return false for
+  null. An empty array gives 0 < 0, which is false. That is the correct answer.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if you are not allowed extra memory?
-     Sort nums in place and compare each element with its neighbour. That drops
-     extra space to constant but raises time to n log n and destroys the
-     original order, which may matter to the caller.
-  2. What changes if the values are known to lie in a fixed small range, say 0
-  to 9?
-     Replace the set with a fixed bool or int array indexed by the value, or a
-     bitmask. Lookup becomes a plain array index with no hashing, and memory is
-     fixed rather than growing with n.
-  3. The array is too large to fit in memory and arrives as a stream. Now what?
-     You cannot hold every distinct value, so exact answers need external
-     sorting or partitioning by hash into chunks that do fit. If an approximate
-     answer is acceptable, a Bloom filter gives false positives but never false
-     negatives, at far less memory.
-  4. Instead of true or false, return the first value that repeats.
-     Switch to an explicit loop with a HashSet and return the current element
-     the moment Add returns false. The set-size trick cannot do this, because
-     Count tells you a duplicate exists but not which one.
+  1. Can you do it with O(1) extra memory?
+     Sort nums in place, then check neighbours: nums[i] == nums[i-1]. This takes
+     O(n log n) time, and it changes the caller's array.
+  2. What if the values are guaranteed to be in 1..n and the array has n+1
+  items?
+     Treat each value as a pointer to an index and use Floyd's cycle detection
+     (a slow pointer and a fast pointer). This takes O(n) time and O(1) space,
+     and the array is not changed. It only works when that value range is
+     guaranteed.
+  3. Return true only if two equal values are at most k indices apart.
+     Use a sliding window. Keep a set of only the last k values. Remove
+     nums[i-k] as the window moves forward. Space drops to O(k).
+  4. What if the data is a stream too large to fit in memory?
+     Use a Bloom filter, a compact bit array that answers "possibly seen" or
+     "definitely not seen". It can report false positives, so each "possibly
+     seen" needs a check against real storage. Another option is an external
+     sort on disk followed by a neighbour scan.
 TRIGGER
-  A question that asks only "does any element repeat" - existence, not position
-  or count - should make you reach for a hash set and compare distinct count
-  against total count.
+  Reach for this pattern when the question is only "is anything repeated?" or
+  "how many are unique?" and the order and positions do not matter.
 C# NOTE
-  The HashSet<int> constructor that takes an IEnumerable<T> does the whole loop
-  for you, and because nums is an int[] it can size the internal buckets up
-  front from the array's known length. Using HashSet<int> rather than
-  Dictionary<int,bool> also avoids storing a value you never read.
+  HashSet<int> is generic, so it stores and compares int values directly with no
+  boxing. The old non-generic Hashtable would wrap each int in an object. Count
+  is a stored property, so reading it does not walk the set again.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

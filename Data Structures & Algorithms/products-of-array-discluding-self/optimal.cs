@@ -40,70 +40,76 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Prefix/Suffix Products - two passes into the output array
+ PATTERN : Prefix / Suffix Products - two passes, one output array
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  result           result[i] = product of all nums except nums[i]
-  prefixProduct    product of nums[0..i-1], carried left to right
-  suffixProduct    product of nums[i+1..end], carried right to left
+  result          after pass 1: result[i] = nums[0] * ... * nums[i-1]; after pass 2: the final answer
+  prefixProduct   product of nums[0..i-1], the elements to the left of i
+  suffixProduct   product of nums[i+1..length-1], the elements to the right of i
 WHY THIS PATTERN
-  The answer for each index is the product of two independent halves: everything
-  left of i and everything right of i. That split means you never need nums[i]
-  itself, so no division is required and zeros cause no special case. One
-  left-to-right pass fills result[i] with the left half via prefixProduct, and
-  one right-to-left pass multiplies in the right half via suffixProduct.
+  The problem asks, for each index, for the product of "everything except me".
+  That splits into two parts: everything to my left and everything to my right.
+  A running product from each side gives both parts in one sweep each. Pass 1
+  stores the left part in result[i], and pass 2 multiplies in the right part
+  from suffixProduct. So there is no need for a separate suffix array.
 BRUTE FORCE
-  For each i, loop over all other indices and multiply them: two nested loops,
-  O(n^2) time. It is correct but recomputes the same partial products n times.
-  The other common first idea, total product divided by nums[i], is O(n) but
-  breaks when any element is 0 (and breaks worse with two zeros), and division
-  is what this pattern is designed to avoid.
+  For each i, loop over every j != i and multiply nums[j]. This is clearly
+  correct, but it is O(n^2) time, because it computes the same partial products
+  again and again. The other obvious idea is to take the total product and
+  divide by nums[i]. That breaks when there is a zero, and the problem usually
+  forbids division anyway.
 INVARIANT
-  Before the write in pass 1, prefixProduct equals the product of nums[0..i-1];
-  the write happens first and the update happens after, so result[i] never
-  contains nums[i]. Entering pass 2 at index i, suffixProduct equals the product
-  of nums[i+1..length-1], for the same reason: multiply first, then update. So
-  after both passes result[i] = (product left of i) * (product right of i),
-  which is exactly the required answer.
-THE ORDER OF THE TWO LINES IS THE ALGORITHM
-  In both loops the assignment comes before the accumulator update. Swap those
-  two lines in either loop and result[i] silently includes nums[i], which is
-  wrong for every index and still returns an array of the right size. The
-  initial value 1 for both accumulators is what makes index 0 and index length-1
-  work with no extra branch, since the empty product is 1.
+  In pass 1, when result[i] is written, prefixProduct equals the product of
+  nums[0..i-1] exactly. In pass 2, when result[i] *= suffixProduct runs,
+  suffixProduct equals the product of nums[i+1..length-1] exactly. Each running
+  product is used first and updated second, so nums[i] is never in either
+  factor. After both passes, result[i] = (left product) * (right product), which
+  is exactly what the problem asks for.
+ZEROS NEED NO SPECIAL CASE
+  There is no division, so a zero in nums is just another factor. It turns every
+  product that includes it into 0. With one zero, only the zero's own index gets
+  a nonzero answer. With two or more zeros, every entry is 0. The code gets both
+  cases right without any branch.
 WATCH OUT
-  Products are held in int, so a long input of large values overflows and wraps
-  silently; ask the interviewer for the value range, or use long for
-  prefixProduct and suffixProduct if the answer still fits in int. The O(1)
-  space claim counts only the two scalars - the returned result array is not
-  counted, and this code needs no other buffer because pass 2 mutates result in
-  place. nums is null-dereferenced at nums.Length with no guard; length 0
-  returns an empty array, which is fine.
+  The order inside each loop matters. If you update prefixProduct or
+  suffixProduct before you use it, nums[i] gets counted in its own answer. All
+  the math is int. C# arithmetic is unchecked by default, so an overflow wraps
+  around silently and does not throw. The last update in each loop
+  (prefixProduct *= nums[length-1] and suffixProduct *= nums[0]) builds the
+  product of the whole array, and nothing ever reads it. That product can
+  overflow even when every answer fits, and it would throw if this code ran in a
+  checked context.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if division were allowed and no element is zero?
-     One pass for the total product, then result[i] = total / nums[i]. Same O(n)
-     time and fewer multiplications, but it fails on any zero and division is
-     slower per element than multiplication.
-  2. Can you do it in one pass instead of two?
-     Yes: walk i forward and length-1-i backward in the same loop, doing
-     result[i] *= prefixProduct and result[length-1-i] *= suffixProduct after
-     initializing result to all 1s. Same work, just interleaved; the current
-     two-pass form is easier to read and to prove.
-  3. How would you answer many queries of "product except index i" on an array
-  that changes?
-     Prefix/suffix arrays go stale on every update, so switch to a segment tree
-     or Fenwick-style structure over products, giving O(log n) per update and
-     per query at the cost of O(n) extra memory and handling zeros separately.
+  1. What if division were allowed?
+     Count the zeros and take the product of the nonzero values. With zero
+     zeros, the answer is total / nums[i]. With exactly one zero, only the
+     zero's index gets the product and every other index gets 0. With two or
+     more zeros, every entry is 0. It is still one or two passes, but it needs
+     more branches, and it is only safe when that product fits in the type.
+  2. Why does this count as O(1) extra space when result has n entries?
+     The output array does not count by convention. The simpler version keeps
+     separate prefix[] and suffix[] arrays, which is O(n) extra. Here result is
+     reused as the prefix array, and a single scalar replaces the suffix array.
+  3. What if the answers could be larger than int?
+     Change result, prefixProduct and suffixProduct to long, or to BigInteger if
+     the values have no bound. long costs nothing in the algorithm. BigInteger
+     makes each multiplication slower as the numbers grow.
+  4. How about a 2D version: each cell gets the product of every other cell in
+  the grid?
+     Flatten the grid in row-major order (one row after another) and run the
+     same two passes on the flat index. The left and right idea does not depend
+     on the shape.
 TRIGGER
-  Every index needs an aggregate of "all the other elements", and the combine
-  operation splits cleanly into a left part and a right part.
+  Look for "for each index, combine everything except this one" with no division
+  or no inverse operation allowed. Build it from a left running value and a
+  right running value.
 C# NOTE
-  new int[length] is already zero-filled by the runtime, and this code never
-  relies on that - it overwrites every slot in pass 1 - so there is no need for
-  Array.Fill(result, 1) as the one-pass variant would require.
+  new int[length] fills the array with zeros, but pass 1 writes every slot
+  before anything reads it, so that fill does not matter here. Returning result
+  directly avoids an extra copy, such as a List<int> converted with ToArray().
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

@@ -37,72 +37,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - shrink while the sum still qualifies
+ PATTERN : Sliding Window (variable size) - shrink while valid
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  sum      sum of nums[left..right]
-  left     left edge of the current window
-  result   shortest qualifying length seen so far
+  sum      sum of nums[left..right], the current window
+  left     index of the first element still in the window
+  result   shortest valid window length seen so far; int.MaxValue means none found yet
 WHY THIS PATTERN
-  The problem asks for the shortest contiguous block whose sum reaches target,
-  and all values are positive. Positive values mean sum grows when right
-  advances and shrinks when left advances, so the window length and the sum move
-  in opposite directions in a predictable way. That lets left move forward only,
-  never back: once sum drops below target we know nothing shorter ending at this
-  right can work. So each index enters and leaves the window once.
+  The problem asks for the shortest contiguous subarray whose sum reaches
+  target. "Contiguous" plus "shortest or longest" is the usual sign of a sliding
+  window. The values are positive, so adding nums[right] can only raise sum and
+  removing nums[left] can only lower it. That means both edges only ever move
+  forward, and each index enters and leaves the window at most once.
 BRUTE FORCE
-  Fix every start i, walk j forward adding nums[j], and stop at the first j
-  where the running sum reaches target; keep the smallest j - i + 1. That is
-  O(n^2) time and correct, but it recomputes sums that overlap heavily between
-  consecutive starts. The window version reuses the same sum and never re-adds
-  an element.
+  For every start index, extend an end index and keep a running total. Stop at
+  the first end where the total reaches target, and record the length. This is
+  O(n^2) time and O(1) space, and it is correct. It loses because it adds up the
+  same elements again for every start, while the window reuses the sum it
+  already has.
 INVARIANT
-  At the top of each right iteration, sum equals the total of nums[left..right]
-  exactly, because every add is paired with a matching subtract before left
-  moves. The inner while exits only when sum < target, so after it runs, left is
-  the largest start for which the window ending at right still reaches target.
-  Since result took Math.Min at every qualifying length, and every right is
-  visited, the minimum over all valid windows is recorded.
-MEASURE BEFORE EVICT
-  Inside the while, result is updated first, then nums[left] is subtracted and
-  left incremented. The order matters: right - left + 1 must be read while the
-  window is still the qualifying one. If left were advanced before the Math.Min,
-  the recorded length would be one too small and the answer could be wrong by
-  one.
+  After the inner while loop ends, sum < target. So no window that ends at right
+  and starts at left or later reaches target. Any window that starts before left
+  and ends at right was already recorded in result when that start index was
+  removed, or it is longer than one that was recorded. So when right reaches the
+  end, every window that could be shortest has been measured.
+RECORD BEFORE YOU SHRINK
+  The line result = Math.Min(result, right - left + 1) runs inside the while
+  loop, before the eviction. At that point the window is still valid, so each
+  valid length gets recorded before the window gets shorter. The order "sum -=
+  nums[left], then left++" matters. If you swap the two lines, you subtract the
+  wrong element.
 WATCH OUT
-  This relies on all nums being positive; with a zero or a negative value the
-  inner loop's assumption breaks, because shrinking no longer reliably lowers
-  sum and left could need to move back. sum is an int, so a long array of large
-  values can overflow before target is ever compared - a long sum removes that
-  risk. The final ternary on int.MaxValue is what distinguishes "no window
-  qualifies" from a real answer, so returning result directly would return
-  int.MaxValue on an array whose total is below target.
+  The comment "the first failure means every shorter window ending here fails
+  too" is only true when every value is positive. If there are negative numbers,
+  a shorter window can have a larger sum, and this code gives a wrong answer. If
+  target <= 0, the while loop never stops on its own: left moves past right and
+  nums[left] finally throws IndexOutOfRangeException. The final check result ==
+  int.MaxValue ? 0 : result is what returns 0 when no window qualifies. If you
+  remove it, the code returns int.MaxValue.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if nums can contain negative numbers?
-     Sliding window fails. Use prefix sums with a sorted structure or monotonic
-     deque over prefix values to find the shortest range with sum >= target,
-     which costs O(n log n) time and O(n) space.
-  2. What if you must return the subarray itself, not its length?
-     Store bestLeft = left alongside each Math.Min improvement, then slice with
-     a range or Array.Copy at the end. Same time, plus O(k) for the copy.
-  3. The array is huge and arrives as a stream you cannot index twice.
-     The logic already works in one pass, but you must buffer the current window
-     to evict from its left end - a Queue<int> of the in-window values replaces
-     nums[left], and memory becomes proportional to the longest window, not the
-     whole stream.
-  4. Longest subarray with sum <= target instead?
-     Same two pointers, but shrink while sum > target and record right - left +
-     1 after the while, not inside it, because the valid window is the one that
-     exists once the violation is gone.
+  1. Can you do it in O(n log n) another way?
+     Build a prefix sum array. For each start i, binary search for the first j
+     where prefix[j] - prefix[i] >= target. This is slower and uses O(n) extra
+     memory. It still depends on the values being positive, because that keeps
+     the prefix array sorted.
+  2. What if nums can contain negative numbers?
+     Use prefix sums with a monotonic deque. A deque is a list you can add to or
+     remove from at both ends. Keep start indices in it with increasing prefix
+     values. Remove from the front while prefix[j] - prefix[front] >= target,
+     and remove from the back any index whose prefix value is not smaller than
+     prefix[j]. This is O(n) time but needs O(n) space.
+  3. What if you must return the subarray itself, not its length?
+     Keep a bestLeft variable and set it to left each time result gets smaller.
+     Return nums[bestLeft .. bestLeft + result - 1]. The extra cost is one
+     variable.
 TRIGGER
-  Shortest or longest contiguous run under a threshold on non-negative values,
-  where extending one end always pushes the metric one way.
+  Look for this pattern when you need the shortest or longest contiguous
+  subarray that meets a sum threshold and all values are non-negative, so the
+  sum only grows as the window grows.
 C# NOTE
-  int.MaxValue as the "not found" sentinel works only because Math.Min never
-  returns something larger, so the single ternary at the end is enough; int?
-  result with null checks would cost a comparison per update for no gain here.
+  By default C# integer math is unchecked. If sum = sum + nums[right] overflows,
+  it wraps around to a negative number without any error and breaks the while
+  condition. If the totals can be large, declare sum as long, or wrap the
+  addition in checked so it throws instead.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

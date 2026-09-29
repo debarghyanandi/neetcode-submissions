@@ -32,73 +32,63 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Monotonic Decreasing Stack - next greater element
+ PATTERN : Monotonic Stack - pending indices, cooler on top
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  res      res[i] = days from day i until a warmer day, 0 if none
+  res      res[i] = days to wait after day i for a warmer day (0 if none)
   stack    indices of days still waiting for a warmer day
-  curr     temperatures[i], today's temperature
-  val      index popped off the stack, the day that just got its answer
+  curr     temperature of today, temperatures[i]
+  val      index of a waiting day that today resolves
 WHY THIS PATTERN
-  The question asks, for each day, how far ahead the first warmer day is. That
-  is a "next greater element" query for every position. A day can only be
-  answered by a later day, and once a warmer day arrives it answers every
-  earlier day that is colder than it, in order from nearest to farthest. A stack
-  of indices kept in decreasing temperature order gives exactly that ordering,
-  and res[val] = i - val turns the two indices into a day count.
+  The problem asks, for each day, for the "next greater element" to its right.
+  That wording points to a monotonic stack. Each day waits in stack until a
+  warmer day arrives. When curr is warmer than the day on top, that day's answer
+  is found, so it is popped and res[val] = i - val is written.
 BRUTE FORCE
-  For each i, walk forward with a second loop until temperatures[j] >
-  temperatures[i], write j - i, else 0. That is correct and easy to write, but
-  it is O(n^2) time on a long non-increasing run, since every day scans the
-  whole tail. The stack version pays the scan once: each index is pushed once
-  and popped at most once.
+  For each day i, scan forward with j from i+1 until temperatures[j] >
+  temperatures[i], then record j - i. This is correct and needs no extra memory.
+  But it is O(n^2) time, for example on a strictly falling sequence where every
+  scan runs to the end. The stack version avoids this because each index is
+  pushed once and popped at most once.
 INVARIANT
-  After each iteration, the temperatures at the indices in stack are strictly
-  decreasing from bottom to top, and every index still in the stack has no
-  warmer day at or before i. So when curr is greater than
-  temperatures[stack.Peek()], day i really is the FIRST warmer day for that
-  popped index - any nearer day would have popped it earlier. Indices never
-  popped keep res at its default 0, which is the correct "no warmer day" answer.
+  From bottom to top, the temperatures at the indices in stack never go up
+  (non-increasing), and no day in stack has found a warmer day yet. When day i
+  arrives, all smaller temperatures on top are popped, and i is the first warmer
+  day for each of them, since any earlier warmer day would have popped them
+  already. Indices still in stack at the end never saw a warmer day, so their
+  res value stays at the default 0, which is correct.
 WATCH OUT
-  The comparison must stay strict: curr > temperatures[stack.Peek()]. If it
-  became >=, an equal temperature would pop and record a wrong answer, because
-  equal is not warmer. res is never explicitly filled with 0 - it relies on new
-  int[] zero-initializing, so if you ever rewrite this with a rented or reused
-  buffer you must clear it yourself. An empty temperatures array is safe here:
-  the loop never runs and a zero-length array comes back. Also note the answer
-  depends on comparing temperatures[stack.Peek()], not on any value stored in
-  the stack, so pushing temperatures instead of indices would break the i - val
-  subtraction.
+  The comparison must stay strict (curr > temperatures[stack.Peek()]). If you
+  change it to >=, a day of equal temperature would wrongly count as "warmer."
+  The code sets no answer for days left in stack. It depends on new int[]
+  filling res with 0, so if res is ever reused or filled with a sentinel (a
+  special marker value such as -1), those days would get wrong answers.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without a stack data structure, using res itself?
-     Yes - walk i from the end to the start and jump: from j = i + 1, while
-     temperatures[j] <= temperatures[i] and res[j] > 0, set j += res[j]. Same
-     O(n) amortized feel in practice, O(1) extra space, but the jump logic is
-     harder to defend in an interview than the stack.
-  2. What if the input is a stream and you cannot hold all days in memory?
-     The stack approach already works online - each new temperature resolves and
-     emits answers for the days it pops. You only need to buffer the pending
-     indices, which is the stack, but a long non-increasing stream still forces
-     the stack to grow to the number of unresolved days.
-  3. What if you want the previous warmer day instead of the next one?
-     Run the same loop from the last index down to 0, and write res[val] = val -
-     i. The monotonic structure is unchanged; only the direction and the
-     subtraction order flip.
-  4. What if temperatures are bounded to a small range, say 30 to 100?
-     Keep an array nextIndex[101] of the last seen index per temperature and
-     scan from the right, taking the minimum index over all temperatures warmer
-     than the current one. That is O(n * range) time with O(range) extra space -
-     better memory, worse constant.
+  1. Can you solve it with O(1) extra space besides the output?
+     Yes. Walk from right to left, keeping the hottest value seen so far. For
+     day i, start at j = i+1 and jump with j += res[j] until temperatures[j] >
+     temperatures[i], or stop when res[j] == 0 (no warmer day exists). This
+     removes the stack, and the jumps still add up to amortized O(n), but the
+     code is harder to prove correct.
+  2. What if you need the previous warmer day, not the next one?
+     Use the same stack. After popping every index with a temperature <= curr,
+     the index still on top is the previous warmer day. Record it before you
+     push i.
+  3. What if the input is a stream and you cannot see future days?
+     The same loop works online. Each new day resolves the waiting days it
+     beats. Days still in stack have no answer yet, and their final answer is 0
+     only when the stream ends.
 TRIGGER
-  Each element needs the first later element that beats it by some comparison,
-  and the answer is a distance or that element itself.
+  The problem asks for "the next (or previous) greater or smaller element" for
+  every position in an array.
 C# NOTE
-  Stack<int> of value-type int avoids boxing, and Peek plus Pop on it are plain
-  array-backed index operations; you do not need Count > 0 guarded twice because
-  the while condition already short-circuits before Peek runs.
+  Stack<int> stores the indices as ints with no boxing, and Peek/Pop throw on an
+  empty stack, so the check stack.Count > 0 must come first in the while
+  condition. An int[] with a top pointer would also work, and it avoids the
+  collection wrapper.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

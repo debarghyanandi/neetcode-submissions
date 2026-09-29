@@ -42,65 +42,68 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Stack - match each closer with the most recent opener
+ PATTERN : Stack - match each closer to the latest open bracket
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  stack    unmatched openers seen so far, newest on top
-  enums    enums[closer] = the opener that closer must match
+  stack    open brackets seen so far that are not matched yet; the top is the newest
+  enums    closer -> its opener: ')'->'(', '}'->'{', ']'->'['
 WHY THIS PATTERN
-  The rule "brackets must close in the reverse order they were opened" is
-  exactly last-in-first-out, which is what a stack gives you. Every opener is
-  pushed and waits; when a closer c arrives, only the newest waiting opener can
-  legally answer it, so stack.Peek() is the only candidate to check. The enums
-  map turns "is this the right partner" into one dictionary lookup instead of a
-  chain of if statements.
+  Brackets must close in the reverse order they opened. So the last one opened
+  must be the first one closed. That is last-in, first-out, which is exactly
+  what a stack does. When a closer c arrives, only stack.Peek() can be its
+  partner, so each check is one look at the top.
 BRUTE FORCE
-  The first idea most people write is repeated string replacement: delete every
-  "()", "{}" and "[]" from s, loop until the string stops changing, and return
-  true if it is empty. That is correct but costs O(n) per pass with up to O(n)
-  passes, so O(n^2) time plus a new string each pass. The stack does the same
-  collapsing in a single scan.
+  Search the string for an adjacent pair "()", "[]" or "{}", remove it, and
+  repeat until no pair is left. The string is valid if it ends up empty. Each
+  pass is O(n), and there can be up to n/2 passes, so the total is O(n^2) time.
+  It also builds a new string on every removal. The stack gets the same answer
+  in one pass.
 INVARIANT
-  At every point in the loop, stack holds exactly the openers seen so far that
-  have not yet been matched, in the order they were opened, newest on top. A
-  closer either cancels the top (valid so far) or the function returns false
-  immediately, so the invariant is never broken. When the loop finishes, the
-  string is valid if and only if nothing is still waiting, which is the final
-  stack.Count == 0 check.
+  At every step, stack holds the unmatched openers of the prefix read so far, in
+  the order they appeared. A closer is legal only if it matches stack.Peek(). If
+  it does not match, no later character can fix the order, so the early return
+  false is safe. At the end, the prefix is the whole string, and it is valid
+  only when stack.Count == 0.
+KEY THE MAP BY THE CLOSER
+  enums maps closer -> opener, not opener -> closer. This way one call,
+  enums.ContainsKey(c), tells you whether c is a closer, and enums[c] gives the
+  opener to compare with stack.Peek(). If you keyed it by the opener, you would
+  need a second set or a reverse lookup to spot closers.
 WATCH OUT
-  The else branch pushes anything that is not a key of enums, so a letter or a
-  space in s is treated as an opener and lands on the stack, which makes the
-  result false at the end. If the input can contain characters outside the six
-  brackets, add an explicit check that c is one of '(', '{', '[' before pushing.
-  The stack.Count > 0 guard must stay before stack.Peek(), otherwise a leading
-  closer like ")" throws InvalidOperationException. Note that the code calls
-  enums[c] after ContainsKey(c), so it hashes c twice.
+  The else branch pushes every character that is not a closer, not only '(', '{'
+  and '['. So the comment "Anything left over is an opener" is only true if the
+  input has nothing but bracket characters. A letter like "a" gets pushed and
+  makes the result false. If the input can hold other characters, skip them
+  instead of pushing them. Also, the stack.Count > 0 check must come before
+  Peek(). Without it, a leading closer such as ")" throws an exception instead
+  of returning false. A null s also throws in the foreach.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do this with O(1) extra memory?
-     Not in general. Nesting depth can be as large as n, and the stack must
-     remember every open bracket, so the space is inherent. Only a single
-     bracket type would let you replace the stack with one counter.
-  2. How do you return the index of the first bad character instead of a bool?
-     Switch the foreach to an indexed for loop and return that index on the
-     mismatch branch; for the leftover case, push the index alongside the char
-     (Stack<(char, int)>) so you can report the position of the unclosed opener.
-  3. The input is a huge file that does not fit in memory. What changes?
-     The algorithm is already streaming: read char by char and keep the same
-     stack, since each character is touched once and never revisited. Only the
-     stack needs memory, and it grows with nesting depth, not file length.
-  4. What if a new pair is added, like angle brackets?
-     Add one entry to enums. The loop body does not change, which is the reason
-     for using the map rather than hard-coded comparisons.
+  1. What if there is only one bracket type, like '(' and ')'?
+     Replace the stack with an int counter. Add 1 on '(' and subtract 1 on ')'.
+     Fail if it ever goes below 0, and require 0 at the end. This is O(1) space,
+     but it only works for one type, because a counter cannot remember the order
+     of different types.
+  2. Return the minimum number of brackets to add to make the string valid.
+     Keep the same scan, but do not return false on a bad closer. Count it as
+     one needed insertion and go on. The answer is that count plus stack.Count
+     at the end.
+  3. Find the length of the longest valid substring.
+     Push indexes instead of characters, and start with -1 as a base index. On a
+     match, pop, then measure i minus the new top. On a bad closer, push i as
+     the new base. This is still one pass.
+  4. Can you reject some inputs before the loop?
+     Yes. If s.Length is odd, return false right away, because every bracket
+     needs a partner. This is a cheap early exit. It does not change the worst
+     case.
 TRIGGER
-  When the problem says items must close, undo, or resolve in reverse order of
-  appearance, reach for a stack.
+  Reach for a stack when items must be matched or undone in the reverse order
+  they appeared, and only the newest open item can be closed next.
 C# NOTE
-  Replacing the ContainsKey plus indexer pair with enums.TryGetValue(c, out char
-  opener) does one lookup instead of two and reads cleaner; the Dictionary
-  itself is also allocated on every call, so making it a static readonly field
-  would avoid rebuilding it per invocation.
+  enums.ContainsKey(c) followed by enums[c] looks up the key twice.
+  enums.TryGetValue(c, out char open) does both in one call and gives you the
+  opener directly.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

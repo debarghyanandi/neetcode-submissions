@@ -47,75 +47,67 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two-pointer merge on sorted lists with a dummy head
+ PATTERN : Two Pointers / Linked List Merge - dummy head splice
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  dummy    a throwaway node whose next ends up being the merged head
-  node     the tail of the merged list built so far
-  list1    the still-unmerged part of the first input list
-  list2    the still-unmerged part of the second input list
+  dummy    a fake node with value 0; the real merged list starts at dummy.next
+  node     tail of the merged list so far; the next chosen node is attached here
 WHY THIS PATTERN
-  Both inputs are already sorted, so the smallest remaining value is always at
-  the front of list1 or list2. That means one comparison per step picks the next
-  output node, and no sorting or extra storage is needed. The dummy node exists
-  so the first append is written the same way as every later one: node.next =
-  ..., no special case for an empty result. Because nodes are relinked instead
-  of copied, the merge runs without allocating per element.
+  Both input lists are already sorted, so the next smallest value must be at the
+  head of list1 or at the head of list2. Comparing only those two heads and
+  moving one pointer forward is the same merge step used in merge sort. The
+  dummy node gives node a place to attach to before any real node has been
+  chosen, so the first step needs no special case.
 BRUTE FORCE
-  The first thing most people write is: walk both lists, copy every val into a
-  List<int>, call Sort(), then build a fresh linked list. That is O((n+m)
-  log(n+m)) time and O(n+m) extra space, and it throws away the fact that the
-  inputs are already ordered. It also allocates a whole new set of nodes instead
-  of reusing the ones handed in.
+  Walk both lists and copy every value into an array, sort the array, then build
+  a new linked list from it. This takes O((n + m) log(n + m)) time and O(n + m)
+  extra space. It loses because it does not use the fact that the inputs are
+  already sorted, and it makes new nodes when the existing ones could be reused.
 INVARIANT
-  At the top of every loop pass, the chain from dummy.next to node holds all
-  values already taken, in sorted order, and every value still in list1 or list2
-  is greater than or equal to node.val. So appending the smaller of list1.val
-  and list2.val keeps the output sorted. The loop ends when one list is empty;
-  the remaining list is sorted and all of it is at least node.val, so a single
-  link to it finishes the job.
-THE TAIL SPLICE IS ONE POINTER WRITE
-  After the loop, at most one list is non-empty, and it is already a correctly
-  ordered chain. The code links to it whole instead of walking it node by node.
-  The if/else is not really two cases: if list1 is null the else branch assigns
-  list2, which may itself be null, and that is the correct terminator anyway.
+  At the start of each loop step, the list from dummy.next to node holds the
+  smallest values seen so far, in sorted order. Every value still in list1 or
+  list2 is greater than or equal to node.val. Taking the smaller head keeps both
+  facts true. When one list runs out, the other list is already sorted and every
+  value in it is greater than or equal to node.val, so attaching it in one step
+  completes the answer.
+SPLICE THE REST, DO NOT LOOP
+  After the while loop, at most one list still has nodes. The code sets
+  node.next to that list in one assignment instead of copying it node by node.
+  The else branch also covers the case where both lists are null, because then
+  node.next = list2 sets it to null, which is correct.
 WATCH OUT
-  If both inputs are null the loop never runs, node.next is set to null, and
-  dummy.next returns null - correct, but only because the else branch tolerates
-  a null list2. This merge is destructive: the next pointers of the input nodes
-  are rewritten, so the caller can no longer use list1 or list2 as they were.
-  Using < rather than <= means that on a tie the node from list2 is taken first;
-  the result is still sorted, but the merge is not stable with respect to list1,
-  which matters if nodes carry extra data beyond val. The dummy node is
-  allocated on every call even when one list is empty.
+  On a tie, the test list1.val < list2.val is false, so the node from list2 is
+  taken first. The output is still sorted, but the merge is not stable. If equal
+  keys must keep list1 first, change the test to <=. The input lists are also
+  changed in place: after the call, list1 and list2 no longer point to their
+  original chains, and the caller's original nodes are now part of the merged
+  list.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Merge k sorted lists instead of two.
-     Either fold this method over the k lists pairwise in a tournament, O(N log
-     k) total, or push the k heads into a min-heap and pop-and-advance. The
-     pairwise fold reuses this exact code and needs no new data structure.
-  2. Write it recursively.
-     Compare the two heads, set the smaller node's next to the recursive merge
-     of the rest, and return that node. It is shorter, but it uses stack depth
-     proportional to n+m and can overflow on long lists, which the loop here
-     cannot.
-  3. The caller must keep the original lists intact.
-     Allocate a new ListNode per output element instead of relinking, copying
-     val across. Same time, but space grows to O(n+m).
-  4. The inputs are sorted descending.
-     Flip the comparison to list1.val > list2.val. The invariant argument is
-     unchanged, only the ordering relation is reversed.
+  1. How do you merge k sorted lists?
+     Put the head of each list into a min-heap (a structure that always gives
+     back its smallest item fast), keyed by val. Pop the smallest, attach it,
+     and push its next node. This takes O(N log k) time and O(k) extra space.
+     Another option is to merge the lists in pairs, round after round, which is
+     also O(N log k) and needs no heap.
+  2. Can you write it recursively?
+     Yes. Return the smaller head and set its next to the merge of the rest. The
+     code is shorter, but the call stack grows to O(n + m) deep, so very long
+     lists can overflow the stack. The iterative version stays at O(1) extra
+     space.
+  3. What if the inputs must not be changed?
+     Create a new ListNode for each value you take, instead of linking the
+     original nodes. This uses O(n + m) extra space, but it keeps the caller's
+     lists as they were.
 TRIGGER
-  Two or more already-sorted sequences that must become one sorted sequence,
-  especially when the container is a linked list and you can move links instead
-  of copying values.
+  Two or more inputs that are each already sorted, and you need one sorted
+  output: compare the fronts and take the smaller one.
 C# NOTE
-  ListNode is a class, so list1 and node are references; node = node.next just
-  moves the reference and no data is copied. Returning dummy.next rather than
-  dummy is the whole point of the pattern - and since dummy is a local with no
-  other reference to it, it becomes garbage as soon as the method returns.
+  dummy is created with new ListNode(0), but its value is never read, and only
+  dummy.next is returned. If the ListNode class has a parameterless constructor,
+  new ListNode() makes it clearer that this node is only a placeholder.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(1)

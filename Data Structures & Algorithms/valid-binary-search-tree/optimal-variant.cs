@@ -29,82 +29,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS with inherited range bounds - validate against (lower, upper)
+ PATTERN : DFS with bounds - pass a valid (lower, upper) range down
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-3.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  lower    exclusive lower bound every value in this subtree must beat
-  upper    exclusive upper bound every value in this subtree must stay under
-  node     current subtree root being checked
+  lower    every value in this subtree must be greater than lower
+  upper    every value in this subtree must be less than upper
 WHY THIS PATTERN
-  A BST is not defined by a local rule. It is not enough that node.left.val <
-  node.val; every value in the whole left subtree must be smaller. That "whole
-  subtree" condition is exactly a range, so each call carries the open interval
-  (lower, upper) that the current subtree is allowed to live in. Going left
-  tightens upper to node.val, going right tightens lower to node.val, and one
-  comparison per node then covers all ancestor constraints at once.
+  A BST (binary search tree) rule is not only about a parent and its child.
+  Every node in the left subtree must be smaller than the ancestor, and every
+  node in the right subtree must be larger. So each node has an allowed open
+  range that its ancestors decide. Validate carries that range as lower and
+  upper. Going left, node.val becomes the new upper. Going right, node.val
+  becomes the new lower.
 BRUTE FORCE
-  The first idea most people write is to check, for each node, the maximum of
-  its left subtree and the minimum of its right subtree by walking those
-  subtrees again. That is correct but costs O(n) work per node, so O(n^2) on a
-  skewed tree. The range-passing version pushes the same information downward
-  instead of pulling it upward, so each node is touched once.
+  For each node, walk its whole left subtree to find the max and its whole right
+  subtree to find the min. Then check max < node.val < min. This is correct, but
+  it visits each subtree again for every ancestor. That costs O(n^2) time on a
+  skewed tree (a tree shaped like a long chain), while here each node is checked
+  once.
 INVARIANT
-  When Validate(node, lower, upper) is called, every ancestor constraint on this
-  subtree has already been folded into the pair (lower, upper): a value is legal
-  here if and only if lower < val < upper. The two strict checks reject node.val
-  immediately, and the recursive calls preserve the invariant because the left
-  child inherits (lower, node.val) and the right child inherits (node.val,
-  upper). By induction, if the root call returns true then every node satisfied
-  all of its ancestors, which is the BST definition.
-WHY LONG AND NOT INT
-  The bounds are long, not int, only because the sentinels long.MinValue and
-  long.MaxValue must sit strictly outside the range of node.val. If lower and
-  upper were int, a root holding int.MinValue would fail node.val <= lower
-  against the int.MinValue sentinel and a valid tree would be rejected. The
-  alternative is nullable int? bounds with an explicit null means "no bound"
-  check, which costs more branches but no widening.
+  When Validate(node, lower, upper) is called, lower and upper are the tightest
+  bounds set by all ancestors of node. If every node falls strictly inside its
+  range, then every left descendant is less than each ancestor it hangs under,
+  and every right descendant is greater. That is exactly the BST definition. The
+  && also stops the search at the first node that breaks the rule.
+LONG SENTINELS FOR INT VALUES
+  node.val is an int, but the bounds are long, and they start at long.MinValue
+  and long.MaxValue. So a node that holds int.MinValue or int.MaxValue is still
+  strictly inside the starting range. If you used int.MinValue as the sentinel
+  (a special start value), then a single node with val = int.MinValue would fail
+  the <= check and the code would return false by mistake.
 WATCH OUT
-  The comparisons are strict on both sides, so equal values are rejected
-  everywhere, including a left child equal to its parent. That matches the usual
-  "strictly less / strictly greater" definition, but if the problem allows
-  duplicates on one side the check has to loosen to < or > on that side only.
-  Depth is recursion depth: a fully skewed tree of n nodes makes n nested frames
-  and can overflow the call stack, and there is no iterative fallback here. The
-  && between the two recursive calls short-circuits, so a failure in the left
-  subtree skips the right one entirely - fine for a boolean answer, but wrong if
-  you later add counting or side effects inside Validate.
+  The checks use <= and >=. This means duplicate values make the tree invalid.
+  That is right only if the problem defines a BST with strictly smaller left and
+  strictly larger right values. If duplicates are allowed on one side, you must
+  loosen one side of the check. The recursion depth equals the tree height. So a
+  very deep, skewed tree can overflow the call stack.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Remove the recursion - how?
-     Do an iterative inorder traversal with an explicit Stack<TreeNode>, keeping
-     prev as the last visited value and returning false if prev >= current. Same
-     O(n) time, and the stack is now heap memory so a deep tree no longer kills
-     the call stack.
-  2. Can you get it down to O(1) extra space?
-     Morris inorder traversal: temporarily rewire the rightmost node of each
-     left subtree to point back to the current node, then undo the link on the
-     way through. No stack and no recursion, but it mutates the tree during the
-     walk, which is unacceptable if the tree is shared across threads.
-  3. Instead of a yes/no, return the size of the largest BST subtree.
-     Switch from top-down bounds to bottom-up: each call returns (isBst, min,
-     max, size) for its subtree and the parent combines the children. Still
-     O(n), but you can no longer short-circuit, since both children must always
-     be visited.
-  4. The tree is huge and stored on disk, one node per page.
-     Prefer the inorder-with-prev form, since it reads nodes in sorted order and
-     touches each exactly once, which is friendlier to sequential access than
-     the two-sided range recursion.
+  1. Can you solve it without passing bounds?
+     Yes. Do an in-order traversal (left, node, right) and check that each value
+     is strictly greater than the one before it. You keep only one prev
+     variable. The cost is the same, but you must track state across calls, or
+     use an explicit stack.
+  2. How do you avoid recursion?
+     Use an explicit Stack of (node, lower, upper) tuples, or an iterative
+     in-order walk with a stack. This removes the call-stack limit. The extra
+     memory still grows with the tree height, but it lives on the heap.
+  3. Can you do it in O(1) extra space?
+     Morris in-order traversal links each node's in-order predecessor back to it
+     for a short time, so no stack is needed. The downside is that it changes
+     the tree while it runs and must undo those links. It is also harder to get
+     right.
+  4. What if the values were long, or any comparable type?
+     A long sentinel no longer works. Use nullable bounds (long? or TreeNode
+     references), where null means "no limit on this side".
 TRIGGER
-  A tree condition that talks about an entire subtree rather than a parent and
-  its direct child - push a min/max window down the recursion instead of
-  recomputing subtree extremes.
+  Reach for this when a node's validity depends on all of its ancestors, not
+  only its parent. Then pass the limits down as parameters.
 C# NOTE
-  node.val is int and the bounds are long, so node.val <= lower silently widens
-  the int to long at each comparison; that widening is the whole reason the
-  sentinel trick is safe, and it is worth saying out loud rather than leaving it
-  as an accident of the signature.
+  node.val is compared to long lower and upper, so C# implicitly widens the int
+  to long with no cast. Passing node.val as the new bound widens it the same
+  way. This is why the sentinel trick needs no extra code.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

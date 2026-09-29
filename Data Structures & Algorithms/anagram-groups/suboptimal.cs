@@ -44,68 +44,70 @@ public class Solution
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  groupsByKey   key = word with its letters sorted, value = all input words that sort to that key
-  characters    the current word's letters as a mutable array, sorted in place
-  sortedKey     the canonical form of the current word, built from characters
-  group          the live list inside groupsByKey for sortedKey
+  groupsByKey   groupsByKey[sortedKey] = every word whose letters sort to sortedKey
+  characters    a copy of the current word's chars, sorted in place
+  sortedKey     the canonical form of word: its letters in sorted order
+  group         the list stored in groupsByKey for sortedKey (same object, not a copy)
 WHY THIS PATTERN
-  Two words are anagrams exactly when they hold the same letters with the same
-  counts, so the test is an equality test on some canonical form - one value
-  that every anagram of a word produces. Sorting the letters gives such a form,
-  so sortedKey is the same string for every member of a group. A Dictionary
-  turns "find the group this word belongs to" into one O(1) lookup instead of
-  comparing the word against every group seen so far.
+  The problem says to put words together when they use the same letters. So each
+  word needs a label that is equal for all anagrams and different for all other
+  words. Sorting the letters gives that label: "eat", "tea" and "ate" all become
+  "aet". groupsByKey then collects the words by that label in one pass. The
+  answer is groupsByKey.Values.
 BETTER APPROACH
-  The better key is a 26-slot count array: count the letters of word, then turn
-  the counts into a fixed string such as "1#0#2#...". That removes the k log k
-  sort and makes key building linear in the word length, so the whole run is O(n
-  * k). This file loses because Array.Sort(characters) is run once per word; for
-  long words the log k factor is real work, and each word also costs two extra
-  allocations, ToCharArray plus new string.
+  The better approach uses a letter-count key instead of a sorted key. For each
+  word, fill an int[26] with how many times each letter appears. Then turn the
+  counts into a string key, for example "1#0#0#...#1", and use it the same way.
+  Building the key takes O(k) per word, so the total time is O(n * k) instead of
+  O(n * k log k). This file loses because Array.Sort does a comparison sort on
+  every word. Counting only needs to read each letter once.
 INVARIANT
-  After each iteration of the foreach, groupsByKey holds exactly one entry per
-  distinct canonical form seen so far, and that entry's list holds every word
-  processed so far with that form, in input order. The TryGetValue-else-create
-  step preserves this: an existing group is reused, a missing one is created
-  empty and stored before the Add. When the loop ends every input word sits in
-  exactly one list, so Values is the full partition into anagram groups.
+  After each word in the loop, every word seen so far is in exactly one list:
+  the list stored under its own sortedKey. Two words get the same sortedKey only
+  if they have the same multiset of characters (the same letters, each the same
+  number of times). That is the definition of an anagram. So each list holds all
+  the anagrams of one word and nothing else, and every word ends up in some
+  list.
+THE LIST IS SHARED BY REFERENCE
+  group is a reference to the list inside groupsByKey. It is not a copy. So
+  group.Add(word) changes the dictionary's list directly, and you never write it
+  back after adding. On a new key, the code stores the new list first and then
+  adds to it. On an existing key, TryGetValue does a single lookup.
 WATCH OUT
-  group is captured by reference, so group.Add(word) also updates the list
-  stored in the dictionary - the later assignment back into groupsByKey is not
-  needed and is not done. Because of that, the lists returned by ToList() are
-  the same objects still held by groupsByKey; if a caller mutates one, the
-  dictionary changes too. Sorting the raw chars means non-ASCII input is grouped
-  by UTF-16 code units, so a surrogate pair can be split and two different words
-  can collide on one key. An empty strs returns an empty list, which is correct,
-  but note that "" is a valid word and becomes its own group under the empty
-  key.
+  If strs contains a null entry, word.ToCharArray() throws a
+  NullReferenceException. The code does not check for it. An empty string "" is
+  fine: its key is "", and all empty strings go into one group. Array.Sort on a
+  char[] sorts by numeric char value, not by culture rules. That is what you
+  want here, but a string comparison that uses culture rules could treat
+  different letters as equal. The order of the groups comes from Dictionary
+  enumeration, and the documentation does not promise any order. So a test that
+  expects the groups in a fixed order may fail.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you drop the sort and keep the same grouping?
-     Build the key from a count array over the alphabet and join the counts with
-     a separator. Linear in word length, but the key is longer than the word for
-     short words and it hard-codes an alphabet size.
-  2. The input does not fit in memory. What changes?
-     Stream the words, compute the key, and write each word to a file or shard
-     named by a hash of the key; then group each shard on its own. You trade RAM
-     for disk IO and a second pass.
-  3. Output must be sorted - groups by size, words inside each group
-  alphabetically. How?
-     Sort each List<string> after the loop and sort the outer list by Count.
-     That adds O(total * log) work and gives up the input-order property the
-     current code has for free.
-  4. You only need the size of the largest anagram group. Can you save space?
-     Keep Dictionary<string,int> of counts instead of lists and track the
-     running maximum. Still O(number of distinct keys) space, but you stop
-     storing every input word.
+  1. What if the input can contain any Unicode characters, not only a-z?
+     Keep the sorted key. An int[26] count key only works for a fixed small
+     alphabet. For a large alphabet you would need a Dictionary<char,int> per
+     word, and turning that into a stable key costs a sort anyway.
+  2. What if the input is too large to fit in memory?
+     Stream the words. Write each (key, word) pair to disk, split into buckets
+     by a hash of the key, then group each bucket in memory. Each bucket fits in
+     memory, but you pay for extra disk passes.
+  3. How do you return only the groups that have more than one word?
+     Filter at the end, for example groupsByKey.Values.Where(g => g.Count > 1).
+     The grouping pass does not change, and the filter costs one extra O(number
+     of groups) pass.
+  4. Can you avoid storing a key string for each group?
+     Map each letter to a prime number and use the product as a long key. This
+     saves the key strings, but the product overflows for long words. After an
+     overflow, two different words can get the same key, and the grouping
+     becomes wrong.
 TRIGGER
-  When items must be bucketed by "same up to reordering or relabelling", invent
-  a canonical form and use it as a hash map key.
+  When a problem asks you to group or match items that are "the same up to
+  reordering", build a canonical key for each item and group by it in a hash
+  map.
 C# NOTE
-  TryGetValue with the out variable does one hash lookup for the miss case
-  instead of the ContainsKey-then-indexer pair, and the second write
-  groupsByKey[sortedKey] = group only happens on a miss. Array.Sort on a char[]
-  is the in-place sort here; word.OrderBy(c => c) would work but allocates an
-  iterator chain and needs string.Concat to rebuild the key.
+  word.ToCharArray() and new string(characters) each allocate on every word. For
+  short words you can copy into a Span<char> made with stackalloc, sort it with
+  MemoryExtensions.Sort, and allocate only the final key string.
 COMPLEXITY
   Time  : O(n * k log k)
   Space : O(n)

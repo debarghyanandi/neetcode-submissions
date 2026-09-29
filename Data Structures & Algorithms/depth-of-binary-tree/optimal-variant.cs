@@ -44,69 +44,64 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS level-order traversal - count levels
+ PATTERN : BFS Level Order - count the levels of the tree
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  queue        nodes of the current frontier waiting to be expanded
-  levelSize    how many nodes belong to the level being processed right now
-  level        number of levels fully drained so far; the answer at the end
+  queue      nodes still waiting to be visited, in level order
+  level      number of levels fully processed so far
+  levelSize  number of nodes in the current level, read before the for loop starts
 WHY THIS PATTERN
-  Maximum depth is the number of levels from root to the deepest leaf, and BFS
-  visits a tree exactly one level at a time. By reading queue.Count into
-  levelSize before the inner loop, the code freezes the size of the current
-  level, so the inner for loop pops exactly that level and the children it
-  enqueues form the next one. Every completed inner loop means one more full
-  level existed, so level is incremented once per level and ends equal to the
-  depth.
+  The problem asks for the number of nodes on the longest path from the root
+  down to a leaf. That is the same as the number of levels in the tree. BFS
+  (breadth-first search: visit all nodes at one distance before going deeper)
+  handles the tree one level at a time. So every pass of the while loop is one
+  level, and level++ counts it. When the queue is empty, no deeper level exists,
+  and level is the depth.
 BRUTE FORCE
-  The first thing most people write is recursion: return 0 for null, otherwise 1
-  + max(MaxDepth(root.left), MaxDepth(root.right)). That is also linear time,
-  and its space is the recursion stack, which is the tree height. It does not
-  lose on complexity - it loses only when the tree is a long chain and the call
-  stack overflows, which is the reason to prefer this explicit queue.
+  The first version most people write is recursive DFS (depth-first search:
+  follow one branch to the bottom first): return 0 for null, otherwise 1 +
+  max(MaxDepth(left), MaxDepth(right)). It is also O(n) time. Its space is the
+  call-stack height, which is O(n) on a tree that is one long chain. It is short
+  and correct. The weak point is that deep recursion can overflow the stack on a
+  very skewed tree. BFS uses no recursion at all.
 INVARIANT
-  At the top of each while iteration, the queue holds exactly the nodes at depth
-  level (0-indexed), and nothing else. The inner loop removes all levelSize of
-  them and enqueues all their non-null children, so the queue then holds exactly
-  depth level+1 before level++ restores the invariant. The loop stops when a
-  level has no children, meaning the deepest level was just counted, so level is
-  the true depth.
+  At the top of each while pass, queue holds exactly the nodes of one level and
+  nothing else, and level equals the number of levels above it. The for loop
+  removes exactly levelSize nodes, so it takes out only that level and adds only
+  their children, which are the next level. By induction, when the queue becomes
+  empty, level equals the number of levels that had at least one node, and that
+  is the max depth.
 WATCH OUT
-  The null check happens twice in different places: root is guarded before the
-  first Enqueue, and children are guarded before theirs, so a null never enters
-  the queue. If the early guard on root were dropped, a null root would be
-  enqueued and node.left would throw NullReferenceException; the empty tree
-  returns 0 only because of that one if. Reading queue.Count fresh inside the
-  for condition instead of caching it in levelSize would be a real bug - the
-  count grows as children are added, and the loop would swallow several levels
-  as one. Nothing here caps the queue, so a very wide level holds many nodes at
-  once.
+  levelSize must be saved before the for loop starts. If you write i <
+  queue.Count, the loop condition sees the children added during the loop, so
+  one pass mixes levels and the count is too small. The null check on root
+  matters: without it, an empty tree would enqueue null and then crash on
+  node.left. With the check, an empty tree returns 0 as it should.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. How would you find the minimum depth instead?
-     Same loop, but return level+1 the moment you dequeue a node with both
-     children null. BFS reaches the shallowest leaf first, so it stops early
-     instead of scanning the whole tree.
-  2. Can you drop the queue and use less memory?
-     Use the recursive 1 + max(left, right) form; space becomes the height
-     instead of the widest level. Better for wide bushy trees, worse for a
-     skewed chain because of stack depth.
-  3. The tree has n children per node instead of two - what changes?
-     Replace the two if blocks with a foreach over node.children that enqueues
-     each non-null child. The level counting logic is untouched.
-  4. Return the node values grouped by level, not just the count?
-     Build a List<int> inside the while, add node.val in the inner loop, and add
-     that list to a result list where level++ is now. levelSize is what makes
-     the grouping correct.
+     Use the same BFS, but return level + 1 as soon as you dequeue a leaf,
+     meaning a node with no left and no right child. BFS is better than DFS here
+     because it stops at the shallowest leaf and does not look at deeper parts
+     of the tree.
+  2. Can you do it with DFS but no recursion?
+     Use an explicit Stack of (node, depth) pairs and keep a running max of
+     depth. Memory becomes O(h), where h is the tree height, instead of the
+     width of the widest level. The cost is extra code to carry the depth with
+     each node.
+  3. What if you must return the nodes of each level, not just the count?
+     Inside the for loop, add each node.val to a list for that level, and add
+     the list to the result after the loop. The levelSize loop structure stays
+     the same.
 TRIGGER
-  Reach for this when the question asks about distance, depth, or anything "per
-  level" in a tree or graph and you want to avoid deep recursion.
+  If the problem talks about levels, depth or the shortest number of steps in a
+  tree or graph, reach for BFS with a levelSize loop.
 C# NOTE
-  Queue<T> gives O(1) Enqueue and Dequeue, which is what the per-level loop
-  needs; using a List<TreeNode> with RemoveAt(0) instead would shift elements on
-  every pop and make the traversal quadratic.
+  Queue<TreeNode> is a circular buffer, so Dequeue costs O(1). Using a
+  List<TreeNode> with RemoveAt(0) instead would shift the whole list on every
+  removal and make the method O(n^2).
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

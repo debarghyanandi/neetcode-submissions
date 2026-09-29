@@ -44,74 +44,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Length-prefixed encoding - "len#payload" framing
+ PATTERN : String Encoding - length prefix plus delimiter
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-6.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  res      Encode: the growing buffer; Decode: the decoded list
-  j        scan pointer - first finds the '#', then the end of the payload
-  length   the integer parsed from the digits before '#'
+  res      Encode: the growing encoded text. Decode: the list of decoded strings
+  i        index where the current "length#" header starts
+  j        first scans to the '#' after i, then marks the end of the current string
+  length   the number of characters in the current string, read from the header
 WHY THIS PATTERN
-  The strings may contain any characters, so no separator character is safe on
-  its own - a plain join on '#' breaks the moment a string contains '#'. Writing
-  the count of characters first removes the ambiguity: after reading length and
-  the single '#', the decoder knows exactly how many characters to take,
-  whatever they are. The '#' here is not a separator between strings, it only
-  marks where the digits of length stop.
+  The problem asks you to pack any list of strings into one string and unpack it
+  later. The strings can hold any character, including '#'. That means no single
+  delimiter (a separator character) is safe by itself. If you write s.Length
+  before each string, the decoder knows exactly how many characters to take. So
+  it never has to guess where a string ends.
 BRUTE FORCE
-  The first idea is usually to join with some "unlikely" delimiter and Split on
-  it, which is O(n) but simply wrong for any input containing that delimiter.
-  The next fix is escaping: double every '#' in the payload and use a single '#'
-  as the boundary. That is also O(n) but needs a character-by-character pass
-  with state on both sides and is much easier to get wrong than counting.
+  The first correct idea most people write is escaping. You double every '#'
+  inside a string, then join the strings with a separator such as "#,". Decoding
+  it is also linear, but you must look at every character and handle the escape
+  rules. That makes it easy to get wrong. The encoded text also grows when the
+  input has many '#'. The length prefix never needs to look inside the strings,
+  so it is simpler and harder to break.
 INVARIANT
-  At the top of the while loop, i always points at the first digit of the next
-  record, and everything before i has been fully decoded into res. Inside the
-  body, j walks to the '#', so s[i..j) is exactly the digit run, then i = j + 1
-  puts i on the first payload character and j = i + length on the character
-  after it. Since length was written by Encode as s.Length, the slice taken is
-  byte-for-byte the original string, so the loop re-establishes the invariant
-  and ends exactly at s.Length.
+  At the top of the outer while loop, i always points at the first digit of a
+  header "length#". A header holds only digits, so the first '#' that j finds is
+  always the end of the header, even if the string content has '#' in it. The
+  code then takes exactly length characters and sets i to the next header. Each
+  step reads exactly one record that Encode wrote, so the output list matches
+  the input list.
 WATCH OUT
-  The inner while (s[j] != '#') has no bound check - on any malformed or
-  truncated input it runs past the end and throws IndexOutOfRangeException
-  instead of a clear error. Same for s.Substring(i, length) if the stored length
-  is longer than what remains. int.Parse will throw on a non-digit run rather
-  than return a failure, so Decode trusts its input completely; this is fine
-  when only Encode produces it, but not for anything coming off a network. An
-  empty string encodes as "0#" and decodes correctly, since length 0 makes
-  Substring return "" and i lands on the next record.
+  Decode trusts its input. If there is no '#', the inner loop s[j] runs past the
+  end and throws IndexOutOfRangeException. If a header says more characters than
+  are left, Substring throws ArgumentOutOfRangeException. Encode throws
+  NullReferenceException if strs is null or holds a null string, because it
+  calls s.Length. The lines "j = i + length; ... i = j;" are only a long way to
+  write i += length. The file also has no "using System.Text;", so StringBuilder
+  compiles only because the judge adds that using for you.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you avoid allocating a new string for every field in Decode?
-     Scan with ReadOnlySpan<char>: parse the digits with int.Parse(s.AsSpan(i, j
-     - i)) and build the payload once. It removes the temporary digit string,
-     though the payload strings themselves must still be materialised because
-     the return type is List<string>.
-  2. What changes if the encoded form must be bytes on a wire, not a char
-  string?
-     Write a fixed 4-byte big-endian length instead of decimal digits plus '#'.
-     Decoding then needs no scan for a delimiter at all - read 4 bytes, read
-     that many bytes - at the cost of 4 bytes of overhead even for tiny strings.
-  3. What if the whole encoded payload does not fit in memory?
-     Turn Decode into an iterator (yield return) over a Stream, reading one
-     length header and one payload at a time. Callers process strings as they
-     arrive, but they lose random access and cannot go back to an earlier
-     record.
-  4. Could you drop the '#' entirely?
-     Only with a fixed-width length field, for example always 10 digits
-     zero-padded. The '#' exists purely because a decimal length has variable
-     digit count and would otherwise run into a payload that begins with a
-     digit.
+  1. How can you remove the '#' and the scan for it?
+     Write a fixed-width header, for example 4 characters or 4 bytes for each
+     length. The decoder reads the header in one step and never scans for a
+     delimiter. The trade-off is that the width limits the largest length, and
+     short strings waste header space.
+  2. What changes if the encoded text is sent over a network as bytes?
+     s.Length counts UTF-16 code units, not bytes. You must encode each string
+     to bytes first, for example UTF-8, and write the byte count. Otherwise the
+     decoder cuts through the middle of a multi-byte character.
+  3. What if the encoded text is too big to decode into one list?
+     Make Decode an iterator with yield return, so it gives back one string at a
+     time. Memory then holds only the current string, but the caller can read
+     the results only once, in order.
 TRIGGER
-  When you must serialise a list of arbitrary strings into one string and no
-  character can be reserved as a separator, prefix each item with its length.
+  When you must turn a list of items that can contain any character into one
+  flat string or stream and get it back exactly, put each item's length in front
+  of it.
 C# NOTE
-  res.Append(s.Length) uses the int overload of StringBuilder.Append, which
-  writes the digits straight into the buffer - no s.Length.ToString()
-  intermediate string is created; Append(string.Concat(...)) or string += in a
-  loop would be the costly version here.
+  s.Substring(i, j - i) creates a new string just so int.Parse can read the
+  header. You can use int.Parse(s.AsSpan(i, j - i)) to read the digits in place,
+  without that extra string.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(1)

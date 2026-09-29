@@ -35,78 +35,69 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hash Map Lookup - store seen values, search for complement
+ PATTERN : Hash Map Lookup - one pass, look up the complement
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  valueToIndex      value already passed -> the index where it sat
-  complement        target - nums[index], the partner this element needs
-  complementIndex   index stored earlier for that partner
+  valueToIndex     valueToIndex[v] = index where value v was last seen, among positions 0..index-1
+  complement       target - nums[index], the value that would finish the pair
+  complementIndex  index of that earlier complement, set by TryGetValue
 WHY THIS PATTERN
-  The problem asks for two positions whose values add to target, and addition is
-  fully determined by one side: once you fix nums[index], the partner you need
-  is exactly complement. So the question turns from "search all pairs" into
-  "have I seen this one number before?", which a hash map answers in constant
-  time. valueToIndex carries every earlier value along with where it was, so the
-  moment complement is found the pair of indices is ready.
+  The problem asks for two positions whose values add up to target. Once
+  nums[index] is fixed, the partner value is known exactly: complement = target
+  - nums[index]. So the question "does some earlier element equal complement?"
+  is a lookup by value, and a hash map answers it in constant time on average.
+  One pass is enough, because every pair (i, j) with i < j is checked at the
+  moment we reach j.
 BRUTE FORCE
-  Two nested loops: for every index, scan every later index and test whether the
-  two values sum to target. That is correct and needs no extra memory, but it
-  costs O(n^2) time because it re-scans the prefix for each element. The map
-  replaces that inner scan with one lookup.
+  Use two nested loops over all pairs i < j and test whether nums[i] + nums[j]
+  == target. It is correct and needs O(1) extra space, but it takes O(n^2) time.
+  It loses because it searches for the partner one element at a time, when the
+  partner's value is already known.
 INVARIANT
-  Before the body of iteration index runs, valueToIndex holds exactly the values
-  at positions 0..index-1 mapped to an index where each occurs. So a hit on
-  complement is always a strictly earlier position, never the current one, and
-  the returned pair is two distinct indices. If no answer exists among pairs
-  ending at index, the loop adds nums[index] and moves on, so every pair (a, b)
-  with a < b is tested exactly once at the step b.
-ORDER OF CHECK AND INSERT
-  The check happens before the insert, and this is what makes target = 2 *
-  nums[index] safe. If you inserted first, nums[index] would find itself as its
-  own complement and return a pair like [3, 3]. The comment in the code says
-  this, and the code matches it.
+  At the top of each iteration, valueToIndex holds exactly the values from
+  nums[0..index-1], each mapped to one of its positions. If a valid pair (i, j)
+  exists, then when index reaches j, nums[i] is already in the map, so the
+  lookup succeeds and the loop returns. Every pair it returns is valid:
+  complementIndex < index, and the two values sum to target.
+DUPLICATES LIKE [3,3] TARGET 6
+  The first 3 is stored at index 0. The second 3 then finds complement 3 in the
+  map and returns [0, 1]. This works only because we check before we insert. If
+  both 3s had to be in the map first, the second one would overwrite the first.
 WATCH OUT
-  Writing valueToIndex[nums[index]] = index overwrites the stored index when the
-  same value appears twice, so the map keeps the latest position, not the first.
-  That is harmless here because the check runs before the write, but it means
-  the returned pair is not always the earliest possible pair of indices - if the
-  problem demanded the lexicographically smallest answer you would need TryAdd
-  instead. The no-solution path returns Array.Empty<int>(), an empty array, not
-  null; a caller that does result[0] without a length check will throw
-  IndexOutOfRangeException. Also note the sum target - nums[index] can overflow
-  int if target and nums values sit near int.MinValue or int.MaxValue.
+  target - nums[index] can overflow int when the values are near int.MinValue or
+  int.MaxValue. C# does not check for overflow by default, so the result
+  silently wraps around and the lookup can look for the wrong value. Also, if
+  there is no answer, the method returns an empty array instead of throwing. A
+  caller that reads result[0] without a check will get an
+  IndexOutOfRangeException.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if the array is sorted and you must use O(1) extra space?
-     Use two pointers, one at each end; move left in when the sum is too small,
-     right in when too large. That is O(n) time with no map, but it only works
-     because sorting lets you discard half the search space, and sorting an
-     unsorted input first costs O(n log n).
-  2. Return all distinct pairs that sum to target, not just one.
-     Do not return on a hit; instead record the pair and keep going, and make
-     valueToIndex map a value to a list of indices so repeated values are all
-     reachable. Output size can become quadratic, so the time bound is no longer
-     O(n).
-  3. The array does not fit in memory and arrives as a stream.
-     The same single pass works as long as the map fits, since only past values
-     are needed - but the map grows to the number of distinct values seen, which
-     is the real memory limit. If that does not fit, you would shard values by
-     hash across machines or files so each shard holds a value and its
-     complement together.
-  4. Three numbers that sum to target instead of two.
-     Fix one index in an outer loop and run this exact map scan on the rest,
-     giving O(n^2) time; or sort and use the two-pointer sweep inside one loop
-     for O(n^2) time with O(1) extra space beyond the sort.
+  1. What if the array is sorted?
+     Use two pointers, one at each end. If the sum is too small, move the left
+     pointer right. If it is too big, move the right pointer left. This takes
+     O(1) extra space and no hashing, but it only works on sorted input.
+  2. What if the input is not sorted, but memory is tight?
+     Sort an array of (value, original index) pairs, then use two pointers. This
+     takes O(n log n) time. You keep the original indices, and you avoid the
+     hash map's extra cost for each entry.
+  3. What if you must return all pairs, or count them?
+     Keep a count for each value instead of one index. At each element, add
+     count[complement] to the total. Returning every index pair can produce
+     O(n^2) results in the worst case.
+  4. What about 3Sum?
+     Sort the array. Fix one element, then run two pointers on the rest. This
+     takes O(n^2) time. Skip equal neighbors so you do not return the same
+     triple twice.
 TRIGGER
-  You are asked for a pair of elements satisfying a relation where one element
-  fully determines the other.
+  When you need two elements that meet an exact condition, and fixing one of
+  them tells you the exact value of the other, store what you have seen in a
+  hash map and look up the partner.
 C# NOTE
-  TryGetValue with the out parameter does one hash lookup and hands back
-  complementIndex in the same call, where ContainsKey followed by the indexer
-  would hash twice; declaring out int complementIndex inline keeps the variable
-  scoped to the branch that uses it.
+  TryGetValue checks for the key and reads its value in one lookup. ContainsKey
+  followed by the indexer would search the map twice. Array.Empty<int>() returns
+  one shared cached empty array, so the "not found" path creates no new object.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

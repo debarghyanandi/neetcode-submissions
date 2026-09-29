@@ -39,68 +39,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 1-D DP - House Robber, no two adjacent picks
+ PATTERN : 1D Dynamic Programming - pick or skip each house
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  n        number of houses, nums.Length
-  dp       dp[i] = best loot robbing only houses 0..i
-  pick     rob house i: nums[i] + dp[i-2]
-  notPick  skip house i: dp[i-1]
+  dp        dp[i] = most money you can rob from houses 0..i
+  pick      nums[i] + dp[i - 2], the best total if you rob house i
+  notPick   dp[i - 1], the best total if you skip house i
 WHY THIS PATTERN
-  The problem asks for the maximum sum of a subset of nums where no two chosen
-  indices are adjacent. That single "cannot take the neighbour" rule means the
-  choice at house i only depends on what was already decided at i-1 and i-2, not
-  on the whole history. So one linear scan filling dp works: at each i you
-  compare pick against notPick and keep the larger. The answer is dp[n-1], the
-  best over the whole street.
+  You cannot rob two houses next to each other, and you want the largest total.
+  So at each house there are only two choices: rob it or skip it. Each choice
+  depends only on answers you already have for shorter streets. That is
+  overlapping subproblems with optimal substructure, which means the best answer
+  is built from best answers to smaller parts. So dp[i] can be filled from left
+  to right using pick and notPick.
 BETTER APPROACH
-  The better version keeps only two numbers instead of the whole dp array, since
-  the loop reads nothing older than dp[i-2]. Two rolling ints (say prev1 =
-  dp[i-1], prev2 = dp[i-2]), shifted each step, give the same answer in constant
-  extra space. This file loses on memory only: it allocates an int array of size
-  n+1 to store values it never looks at again, and one slot, dp[n], is never
-  even written or read.
+  A better version keeps only two numbers, the answer one house back and the
+  answer two houses back, and rolls them forward. That uses O(1) extra space
+  instead of this file's dp array. This file loses only on memory. The loop
+  reads just dp[i - 1] and dp[i - 2], so the rest of the array is never used
+  again.
 INVARIANT
-  After the iteration for index i, dp[i] holds the best total obtainable using
-  only houses 0..i, with the adjacency rule respected. This holds at the start
-  because dp[0] = nums[0] and dp[1] = Math.Max(nums[0], nums[1]) are the correct
-  answers for those prefixes. Each step preserves it: any valid plan for 0..i
-  either uses house i, and then cannot use i-1, giving nums[i] + dp[i-2], or
-  does not, giving dp[i-1]; taking the max covers both cases. So dp[n-1] is the
-  best over all houses.
+  When the loop starts step i, dp[0..i-1] holds the true best total for each
+  prefix of houses. If the best plan for 0..i robs house i, it must skip house
+  i-1, so its value is nums[i] + dp[i - 2]. If the plan skips house i, its value
+  is dp[i - 1]. Taking the max of these two covers every legal plan, so dp[i] is
+  correct, and dp[n - 1] is the answer.
+BASE CASE DP[1] IS A MAX
+  dp[1] is Math.Max(nums[0], nums[1]), not just nums[1]. With two houses you can
+  rob only one, so you take the bigger one. If you set dp[1] = nums[1], a case
+  like [5, 1] gives the wrong answer.
 WATCH OUT
-  An empty array breaks this: with n == 0 the n == 1 guard does not fire, dp
-  becomes new int[1], and dp[0] = nums[0] throws IndexOutOfRangeException. The
-  comment block describes the recurrence as calls f(indx - 1) and f(indx - 2),
-  which suggests recursion, but the code is a bottom-up loop with no function
-  calls - read it as notation, not as what runs. The 0 + in notPick adds nothing
-  and can be deleted. Also note the array is sized n + 1 while the loop stops at
-  n - 1, so the extra slot is dead weight and returning dp[n] instead of dp[n-1]
-  would silently give 0.
+  An empty nums array throws an error: n == 1 is the only guard, so dp[0] =
+  nums[0] runs with no element there. The comment "pick = f(indx) + f(indx - 2)"
+  does not match the code. The code adds nums[i], the money in the house, not
+  f(i), the best total so far. dp is sized n + 1, but index n is never used.
+  That does not break anything, but it suggests an off-by-one mix-up between
+  0-based and 1-based dp. The "0 +" in notPick does nothing and can be removed.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. The houses are in a circle, so the first and last are neighbours. What
-  changes?
-     Run the same linear scan twice, once on nums[0..n-2] and once on
-     nums[1..n-1], and take the max of the two results; the two runs exclude the
-     conflicting pair. Handle n == 1 separately as here.
-  2. Return the actual houses robbed, not just the total.
-     Keep the dp array, which this file already has, then walk backwards from i
-     = n-1: if dp[i] == dp[i-1] the house was skipped, move to i-1; otherwise
-     record i and move to i-2. That is why the full array is sometimes worth
-     keeping.
-  3. What if you must leave two houses between picks instead of one?
-     The recurrence becomes dp[i] = Math.Max(nums[i] + dp[i-3], dp[i-1]), so you
-     need three rolling variables and three base cases instead of two.
+  1. What if the houses are in a circle, so the first and last are neighbors?
+     Run this same logic twice: once on houses 0..n-2 and once on houses 1..n-1.
+     Return the larger result. That is still linear time. Handle n == 1 on its
+     own.
+  2. What if the houses form a binary tree and you cannot rob a parent and its
+  child together?
+     Do a post-order DFS (children first, then the parent). Each node returns a
+     pair: the best total with this node robbed and the best without it. Space
+     becomes O(tree height) for the recursion stack.
+  3. How would you return which houses were robbed, not just the total?
+     Keep the full dp array, then walk back from n - 1. If dp[i] != dp[i - 1],
+     house i was robbed, so jump to i - 2. Otherwise move to i - 1. This is one
+     reason to keep the array instead of two rolling variables.
 TRIGGER
-  A linear sequence where choosing an element forbids its immediate neighbour
-  and you want the best total.
+  You make a yes/no choice for each item in a line, a choice blocks nearby
+  items, and you want the best total.
 C# NOTE
-  Math.Max on two ints is the right call here, but note new int[n + 1] is
-  zero-initialised by the runtime, so the untouched dp[n] silently reads as 0
-  rather than as an error - a good reason to size the array exactly n.
+  When you roll two variables, tuple deconstruction does the shift in one line:
+  (prev2, prev1) = (prev1, Math.Max(prev1, prev2 + nums[i])). You do not need a
+  temp variable.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

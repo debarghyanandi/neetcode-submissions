@@ -49,83 +49,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sort by start + single sweep - merge overlapping intervals
+ PATTERN : Intervals / Sort by start - merge in one pass
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  merged        list of finished blocks; merged[last] is the one still open
-  lastMerged    reference to the last array inside merged, mutated in place
-  currentStart  intervals[i][0], the start of the interval being tested
-  currentEnd    intervals[i][1], its end
+  merged        the output so far; each entry is one closed block, except the last one
+  lastMerged    merged[merged.Count - 1], the block that is still growing
+  currentStart  start of intervals[i], checked against lastMerged[1]
+  currentEnd    end of intervals[i], used to stretch lastMerged[1]
 WHY THIS PATTERN
-  The problem asks to combine any intervals that touch or overlap, and overlap
-  is not tied to input order. Once the array is sorted by start, every interval
-  that could overlap the block currently being built appears immediately after
-  it, so one left-to-right pass is enough. The test currentStart <=
-  lastMerged[1] is the whole overlap rule, and Math.Max keeps the block's reach
-  correct when the new interval ends earlier.
+  The problem asks you to join intervals that overlap, and the input is in no
+  order. After Array.Sort by start, any interval that can overlap lastMerged
+  must come right after it in the array. So one left-to-right pass can decide
+  each interval with one comparison: currentStart <= lastMerged[1].
 BRUTE FORCE
-  Without sorting you repeatedly scan the whole list, merge any two intervals
-  that overlap, and restart until one full pass changes nothing. That is correct
-  but costs O(n^2) per pass and up to O(n) passes, so O(n^3) in the bad case,
-  because merging two intervals can create a new overlap with something far to
-  the left. Sorting removes that backtracking: after sorting, a gap at index i
-  means nothing later can reach back.
+  Keep merging pairs until nothing changes. On each round, compare every pair of
+  intervals, join any two that overlap, and start again. Each round is O(n^2),
+  and you may need up to n rounds, so the worst case is O(n^3). It loses because
+  it never uses the order that sorting gives for free.
 INVARIANT
-  After processing index i, merged holds the disjoint merged result of
-  intervals[0..i], sorted by start, and only its last element can still grow.
-  This holds because the array is start-sorted: currentStart is at least as
-  large as every start already seen, so if currentStart > lastMerged[1] it is
-  past the end of every earlier block, not just the last one. Therefore closing
-  the last block is safe, and the list is final when the loop ends.
-MUTATION THROUGH A REFERENCE
-  lastMerged is not a copy - it is the same int[] object stored in merged.
-  Writing lastMerged[1] = Math.Max(...) updates the list entry directly, with no
-  need to write merged[merged.Count - 1] back. This is the one place the code
-  depends on int[] being a reference type; if the code used a value type such as
-  a (int start, int end) tuple or a struct, the assignment would be lost and the
-  merge would silently fail.
+  Before step i, merged holds the merge of intervals[0..i-1]. Every block except
+  the last is final and does not overlap any later interval. This holds because
+  later intervals start at currentStart or later, and when a new block is added,
+  currentStart > lastMerged[1] means there is a gap. The last block is the only
+  one still open. Math.Max keeps its end right even when intervals[i] sits fully
+  inside it, for example [1,10] then [2,3].
+TOUCHING INTERVALS MERGE
+  The test is <= and not <, so [1,4] and [4,5] become [1,5]. If you change it to
+  <, touching intervals stay apart. Ask the interviewer which rule they want
+  before you write the comparison.
 WATCH OUT
-  intervals[0] is read before the loop with no length check, so an empty input
-  throws IndexOutOfRangeException; a null intervals throws in Array.Sort. The
-  comment says the caller's array is never mutated, but Array.Sort reorders
-  intervals in place, so the caller does see a change - only the inner int[]
-  pairs are protected by the copy. The comparator compares only a[0]; equal
-  starts keep an arbitrary relative order, which is harmless here because
-  Math.Max handles either order. Note also that this merges touching intervals
-  like [1,4] and [4,5] into [1,5], since the test uses <= and not <.
+  If intervals is empty, intervals[0] throws IndexOutOfRangeException before the
+  loop starts. Add a guard that returns an empty array. The comment "the
+  caller's array is never mutated" is only half true. The copy protects the
+  inner arrays, but Array.Sort reorders the caller's outer array in place. If
+  the caller must keep its original order, sort a copy (for example,
+  intervals.ToArray()).
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. The input is already sorted by start and you must insert one new interval.
-  How does the code change?
-     Skip the sort and do a single pass: copy blocks that end before the new
-     start, merge the overlapping run into the new interval, then copy the rest.
-     That is O(n) time and no sort at all.
-  2. Can you avoid the extra List and write the answer back into intervals?
-     Yes - keep a write index that starts at 0 and, on a gap, advance it and
-     store the block, otherwise stretch intervals[write][1]. The result is the
-     first write+1 rows, which saves the list but destroys the caller's data.
-  3. The input does not fit in memory. What now?
-     Sort the intervals externally (sort chunks on disk, then k-way merge them
-     by start) and stream the same sweep, emitting each block as soon as a gap
-     appears. The sweep itself needs only one open block in memory.
-  4. Instead of the merged list, you only need the total length covered by all
-  intervals. What changes?
-     Keep the same sweep but accumulate (blockEnd - blockStart) each time a
-     block closes, plus the final one, and store no arrays at all - O(1) extra
-     space beyond the sort.
+  1. The input is already sorted and has no overlaps. How do you insert one new
+  interval?
+     Skip the sort. Copy the intervals that end before the new one starts. Then
+     join every interval that overlaps it into one block, and copy the rest.
+     That is O(n) time, but it only works because the input is already clean.
+  2. Intervals come in as a stream, and you must answer "current merged set" at
+  any time.
+     Keep the blocks in a balanced tree keyed by start (SortedDictionary or
+     SortedSet in C#). For each new interval, find its neighbors and join them.
+     Each insert costs O(log n) plus the blocks it absorbs. You give up the
+     simple array for fast updates.
+  3. Instead of merging, return the smallest number of rooms needed for all the
+  meetings.
+     Sort the starts and the ends separately and walk both with two pointers, or
+     use a min-heap of end times. The answer is the most intervals open at the
+     same moment. You no longer build the merged list.
 TRIGGER
-  Pairs of (start, end) where the answer depends on which ones touch or overlap,
-  and the input order carries no meaning - sort by start and sweep.
+  The input is a list of [start, end] ranges, and the task is to combine, count
+  or check overlaps. Sort by start, then scan once.
 C# NOTE
-  Array.Sort(intervals, (a, b) => a[0].CompareTo(b[0])) takes a
-  Comparison<int[]> delegate; using a[0].CompareTo(b[0]) instead of a[0] - b[0]
-  avoids integer overflow when starts are far apart in sign. merged.ToArray()
-  copies only the references, so the returned int[][] shares the same inner
-  arrays the loop just mutated - fine here because nothing else holds them.
+  The comparer uses a[0].CompareTo(b[0]) and not a[0] - b[0]. Subtraction can
+  overflow when the starts have large opposite signs, and then the sort order is
+  wrong.
 COMPLEXITY
   Time  : O(n log n)
-  Space : O(n)
+  Space : O(log n)
 ================================================================================
 */

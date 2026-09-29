@@ -65,81 +65,68 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Length-prefixed serialization - size header then payload
+ PATTERN : String Encoding - length header, then the raw payload
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-5.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  sizes    in Encode: one entry per input string, sizes[k] = strs[k].Length; in Decode: the same list rebuilt from the header
-  res      in Encode: the growing encoded string; in Decode: the decoded list being filled
-  i        cursor into s - first scans the header, then walks the payload
-  j        end index of the current number in the header, stops on the ','
+  sizes    sizes[k] = length of the k-th string (built in both Encode and Decode)
+  res      in Encode, the output being built; in Decode, the list of decoded strings
+  i        in Decode, the read position in s (first in the header, then in the body)
+  j        in Decode, scans forward from i to the next ',' to find one size number
+  sz       the length of the current string, used to cut the next piece from the body
 WHY THIS PATTERN
-  The strings may contain any character, so no separator alone can be trusted -
-  a '#' or ',' inside a string would be read as a boundary. Recording each
-  length up front removes the need to search the payload at all: Decode reads
-  sizes, then cuts the payload into blocks of exactly those lengths with
-  s.Substring(i, sz). The single '#' is only needed to mark where the header
-  ends, and it is safe there because the header holds nothing but digits and
-  commas.
+  The strings can hold any character, so no single separator is safe. The
+  encoder cannot pick a delimiter that never shows up inside the data. This code
+  writes all the lengths first as "len,len,...,#". Then it writes all the
+  strings joined with nothing between them. The header has only digits and
+  commas, so the first '#' always ends it. After that, Decode cuts the body
+  using the numbers in sizes and never looks at the string content.
 BETTER APPROACH
-  The better version interleaves: for each string append its length, then '#',
-  then the string itself, so the encoding is "5#hello3#abc". Decode keeps one
-  cursor, scans digits to the next '#', parses the length, takes that many
-  characters, and repeats. That needs no sizes list and no second pass over
-  strs, so the extra memory beyond the output disappears; this file pays for a
-  List<int> of m lengths in both directions and walks strs twice in Encode.
+  The better way puts each length right before its own string, as
+  "5#hello3#abc". This takes one pass to encode and one pass to decode. It needs
+  no sizes list on either side. This file stores every length in sizes before it
+  writes anything. It then loops over the data twice in Encode and twice in
+  Decode. The big-O is the same. The loss is the extra list of lengths and the
+  extra loops.
 INVARIANT
-  In Decode's second loop, i always points at the first character of the next
-  string that has not been decoded yet, and sizes still describes the remaining
-  blocks in order. Each step takes exactly sz characters and advances i by sz,
-  so no character is read twice and none is skipped. Because Encode wrote the
-  lengths in the same order it wrote the strings, the k-th block consumed is
-  exactly strs[k].
-WHY THE PAYLOAD NEEDS NO ESCAPING
-  Nothing in the payload is ever inspected. The delimiters ',' and '#' are
-  searched for only while i is inside the header, and the loop stops the moment
-  s[i] == '#'. So a string that is itself "3#abc" or ",,,," round-trips
-  unchanged, which is the whole point of this problem.
+  In the header loop, i always points to the first digit of a size number, or to
+  the '#'. At the '#' the header is done. In the body loop, i always points to
+  the first character of the next string. Adding sz moves i to the exact start
+  of the string after it. Every string in the body has a matching entry in
+  sizes, in the same order. So each Substring(i, sz) returns exactly one
+  original string, even when that string contains ',' or '#'.
 WATCH OUT
-  The two empty guards are a matched pair: Encode returns "" for an empty list
-  and Decode returns an empty list for "". Remove only one and the pair breaks -
-  without the Encode guard an empty list would encode to "#", which Decode still
-  handles, but "" would then never be produced. Decode trusts its input
-  completely: while (s[i] != '#') and while (s[j] != ',') both run past the end
-  and throw IndexOutOfRangeException on any malformed string, and Substring(i,
-  sz) throws if a length is larger than the bytes left. Also note strs is
-  IList<string>, so a null element inside it makes s.Length throw a
-  NullReferenceException in the first foreach.
+  Decode trusts its input completely. If there is no '#', or a size is larger
+  than what is left, s[j] or Substring throws an exception. It does not return
+  an error. The check strs.Count == 0 in Encode is not needed: without it,
+  Encode would return "#", and Decode already turns "#" into an empty list. An
+  input of [""] encodes to "0,#", not "", so it stays different from an empty
+  list. Do not "simplify" the code in a way that returns "" for this case.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you cut the memory this uses beyond the output?
-     Drop the sizes list and write length + '#' + string per item, decoding with
-     a single cursor. The header then costs nothing extra, at the price of
-     losing the ability to read all the lengths before touching the payload.
-  2. Does this still work for non-ASCII text or emoji?
-     Yes, because s.Length and Substring both count UTF-16 code units, so a
-     surrogate pair is counted as 2 and cut back out as 2. It would break only
-     if you encoded with char counts and decoded with byte counts.
-  3. The input is far too large to hold one encoded string in memory. What
-  changes?
-     Stream it - write each record to a Stream or TextWriter as it is produced
-     and read it back record by record. That forces the interleaved layout,
-     since the header-first form needs all lengths before any payload can be
-     written.
-  4. Could you return the decoded parts without copying the characters?
-     Return ReadOnlyMemory<char> slices over the original s instead of new
-     strings from Substring. That removes m allocations but keeps the whole
-     encoded string alive as long as any slice is held.
+  1. Can you decode the data as a stream, without reading the whole header
+  first?
+     Yes. Put each length in front of its own string ("len#str"). The reader can
+     then return each string as soon as it arrives. The cost is that you lose
+     the separate header, which is useful if you want to know the count up
+     front.
+  2. How do you remove the need to parse numbers?
+     Write each length as a fixed 4-byte integer, or as a fixed-width field such
+     as 8 digits. Decoding is then simple offset math with no need to look for
+     ',' or '#'. The trade-off is a few wasted bytes for short strings and a
+     hard limit on the maximum length.
+  3. What if the interviewer asks for a delimiter approach instead of lengths?
+     Use escaping. For example, write every '#' in the data as "##" and put " #
+     " between strings. It works, but both sides must scan every character, and
+     the escape rules are easy to get wrong.
 TRIGGER
-  Reach for a length prefix whenever you must pack variable-length data that can
-  contain any character, so no delimiter is safe.
+  When you must pack a list of strings that can contain any character into one
+  string and get the exact list back, use a length prefix, not a delimiter.
 C# NOTE
-  res.Append(sz) uses the StringBuilder int overload, which formats the number
-  straight into the buffer instead of allocating sz.ToString() first. On the
-  decode side, int.Parse(s.Substring(i, j - i)) does allocate a throwaway string
-  per length - int.Parse(s.AsSpan(i, j - i)) parses the same characters in
-  place.
+  int.Parse(s.Substring(i, j - i)) creates a throwaway string for each size.
+  Calling int.Parse(s.AsSpan(i, j - i)) reads the digits in place without that
+  extra allocation.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(m)

@@ -36,80 +36,75 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary Search on a sorted array - recursive halving
+ PATTERN : Binary Search - recursive halving of a sorted range
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  left           lowest index still possible, inclusive
-  right          highest index still possible, inclusive
-  searchTarget   the value being looked for, renamed from target in the helper
-  mid            midpoint of [left, right], computed overflow-safe
+  left          first index of the range still being searched
+  right         last index of the range still being searched (inclusive)
+  mid           middle index of [left, right], the one element compared each call
+  searchTarget  the target value, passed down unchanged through every call
 WHY THIS PATTERN
-  The input nums is sorted, so one comparison against nums[mid] tells you which
-  half can still hold searchTarget. Each call throws away the other half, so the
-  range [left, right] shrinks by about half every step. The public Search just
-  seeds the range with 0 and nums.Length - 1 and lets the private overload do
-  the work.
+  The problem gives a sorted array and asks for the index of one value. Because
+  the array is sorted, one comparison with nums[mid] tells you which half cannot
+  hold the target. You can throw that half away. Each call then searches only
+  [left, mid - 1] or [mid + 1, right].
 BRUTE FORCE
-  The first thing most people write is a linear scan: loop i from 0 to
-  nums.Length - 1 and return i when nums[i] == target. That is correct and O(n)
-  time with O(1) space. It loses because it ignores the sorted order - it still
-  touches every element for a value that is not present, while this code touches
-  about log2(n) of them.
+  A linear scan checks nums[0], nums[1], and so on, and returns the first index
+  that equals target. It takes O(n) time and O(1) space. It is correct, but it
+  ignores the sorted order. It looks at every element, while binary search looks
+  at only about log2(n) of them.
 INVARIANT
-  At every call, if searchTarget exists in nums, its index lies inside [left,
-  right]. The two recursive calls keep that true: when searchTarget < nums[mid]
-  every index from mid upward holds a value that is too big, so [left, mid - 1]
-  is safe; otherwise every index up to mid is too small, so [mid + 1, right] is
-  safe. The range strictly shrinks each time, so the recursion ends either on a
-  hit at nums[mid] or with left > right, which means the value was never in the
-  array.
-MIDPOINT WITHOUT OVERFLOW
-  mid is computed as left + (right - left) / 2 instead of (left + right) / 2.
-  With int indices, left + right can exceed int.MaxValue on a very large array
-  and wrap to a negative number, which would make nums[mid] throw. The
-  subtraction form never builds a value larger than right, so it is always in
-  range.
+  If the target is anywhere in nums, it is inside [left, right]. At the start
+  this is true, because the range is 0 to nums.Length - 1. If searchTarget <
+  nums[mid], then every index from mid up holds a value that is too large, so
+  the recursion keeps [left, mid - 1]. In the other branch every index from mid
+  down is too small, so it keeps [mid + 1, right]. The range gets smaller on
+  every call. So either the code finds nums[mid] == searchTarget, or the range
+  becomes empty (left > right) and returning -1 is correct.
+SAFE MIDPOINT
+  The code computes mid = left + (right - left) / 2, not (left + right) / 2.
+  When left and right are both large, left + right can go past int.MaxValue.
+  Then it overflows to a negative number and gives a bad index. The subtraction
+  form never goes above right, so it cannot overflow.
 WATCH OUT
-  Correctness depends on nums being sorted in ascending order; the code never
-  checks this, and on unsorted input it silently returns -1 or a wrong index. If
-  nums holds duplicates of searchTarget, the returned index is whichever one mid
-  happens to land on, not the first or last. The empty array is handled by luck,
-  not by an explicit guard: nums.Length - 1 gives right = -1, and the left >
-  right check catches it before any indexing. The comment "// My Solution" says
-  nothing about the algorithm and should be dropped.
+  The code only works if nums is sorted in ascending order. On unsorted input it
+  can return -1 even when the target is in the array. If the value appears more
+  than once, the code returns whatever matching index it hits first, which is
+  not always the first or the last copy. An empty array works: right becomes -1,
+  so left > right on the first call and the answer is -1. The private helper has
+  the same name, Search, as the public method. It is an overload (same name,
+  different parameters). This is legal, but it is easy to mix up the two when
+  you read the code.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you remove the recursion?
-     Replace the calls with a while (left <= right) loop that reassigns right =
-     mid - 1 or left = mid + 1. Same time, and space drops to O(1) because there
-     are no stack frames to hold.
-  2. What if the array can contain duplicates and you must return the first
-  occurrence?
-     Do not return on the first equality. When nums[mid] == searchTarget, record
-     mid as a candidate and keep searching [left, mid - 1]; the last candidate
-     recorded is the leftmost index. Still O(log n), but it always runs the full
-     log2(n) steps instead of stopping early.
-  3. What if the array is sorted but rotated at an unknown pivot?
-     Still binary search, but at each step decide which side of mid is the
-     normally sorted half, then check whether searchTarget lies inside that
-     half's value range to pick the direction. Complexity is unchanged; the
-     branch logic gets longer.
-  4. The data is too large to fit in memory and lives on disk or behind an API.
-     The same index math works, but each nums[mid] becomes a fetch, so the cost
-     model changes from comparisons to I/O. You would switch to a B-tree style
-     layout or fetch blocks around mid so that one read serves several
-     comparisons.
+  1. Can you do it without recursion?
+     Yes. Use a while (left <= right) loop that moves left or right instead of
+     calling itself. The logic stays the same, and extra space drops from the
+     call stack to O(1).
+  2. What if there are duplicates and you need the first index of target?
+     Search for the lower bound instead. When nums[mid] >= target, set right =
+     mid and keep going. Do not return early. Stop when left == right, then
+     check whether nums[left] == target.
+  3. What if the sorted array was rotated at some unknown pivot?
+     At each mid, one half, [left, mid] or [mid, right], is still sorted. Check
+     whether the target falls inside that sorted half's range. If it does,
+     search that half. If not, search the other half. It is still O(log n).
+  4. What if you do not know the array's length, for example a stream or a
+  reader interface?
+     Start with right = 1 and double it until the value there is at least
+     target, or until you go out of bounds. Then binary search inside [right /
+     2, right]. This costs O(log p), where p is the target's position.
 TRIGGER
-  The input is already sorted (or the answer is monotonic: false, false, then
-  true) and you are asked for a single position or value.
+  The input is sorted (or you can check something that only goes one way, like
+  true for small values and false for large ones), and you need to find a value
+  or a boundary faster than a linear scan.
 C# NOTE
-  The int[] nums is passed as the last argument on every recursive call, which
-  copies only the reference, not the elements. If you want the library version,
-  Array.BinarySearch(nums, target) does the same job but returns the bitwise
-  complement of the insertion point when the value is missing, not -1, so the
-  caller must translate the result.
+  Array.BinarySearch(nums, target) does the same job in one line. When the value
+  is not found, it returns a negative number, not -1: the bitwise complement (~)
+  of the index where the value would be inserted. So map any negative result to
+  -1 if the problem asks for -1.
 COMPLEXITY
   Time  : O(log n)
   Space : O(log n)

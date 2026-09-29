@@ -46,80 +46,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS Level Order Traversal - queue with level-size snapshot
+ PATTERN : BFS level order - snapshot the queue size per level
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  queue    BFS frontier; holds real nodes AND null child placeholders
-  level    values of the nodes popped in the current round
-  i        counts down from the queue size captured at the start of this round
+  queue    nodes waiting to be visited, including null children
+  i        counts down from the queue size taken when the level starts
+  level    values of the non-null nodes at the current depth
 WHY THIS PATTERN
-  The problem asks for the values grouped by depth, one inner list per level.
-  Breadth-first search visits nodes in exactly depth order, so the only extra
-  work is knowing where one level ends. Capturing queue.Count into i before the
-  inner loop freezes the size of the current level, so everything added during
-  that loop belongs to the next level and is not consumed early. Each round
-  fills one level list and appends it to result.
+  The problem asks for values grouped by depth, from top to bottom and left to
+  right. A FIFO queue (first in, first out) visits nodes in exactly that order.
+  When a new level starts, queue holds that whole level and nothing else. The
+  children added while that level is processed go behind it, so they become the
+  next level.
 BRUTE FORCE
-  The simple first attempt is a depth-first recursion that carries a depth
-  argument and does result[depth].Add(node.val), creating a new inner list the
-  first time a depth is seen. That is also linear in time and space, so it does
-  not lose on complexity; what it loses is control - it needs the explicit depth
-  parameter and the recursion stack goes as deep as the tree, which can be the
-  node count on a skewed tree. An actually worse attempt is computing the height
-  first, then walking the tree once per level to collect that level, which is
-  O(n * height).
+  First find the tree height. Then, for each depth d, walk down from root and
+  collect the nodes at depth d into their own list. This is correct, but every
+  pass starts again at the root. That costs O(n*h) time, where h is the height,
+  so O(n^2) on a tree that is one long chain. The queue visits each node only
+  once.
 INVARIANT
-  At the top of each while iteration, the queue holds exactly the entries
-  produced by the previous level - real nodes at the current depth, plus null
-  slots where a child was missing. The inner loop pops exactly i of them, so it
-  never touches the children it just pushed. Therefore every value added to
-  level comes from one depth, and levels are appended to result in increasing
-  depth order.
-NULLS ARE ENQUEUED, NOT FILTERED
-  Unlike the common version, left and right are pushed without checking for
-  null; the null check happens after the Dequeue. This is why the guard if
-  (level.Count > 0) exists: the round after the last real level pops only nulls
-  and would otherwise append an empty list to result. The guard is load-bearing,
-  not defensive polish.
+  At the top of each while pass, queue holds exactly the entries of one depth,
+  in left-to-right order. Some of those entries may be null. The for loop
+  removes exactly those entries and adds their children in the same order. So
+  when the pass ends, queue again holds exactly one full depth, in order. This
+  means each level list gets the right values in the right order, and result
+  gets the levels top to bottom.
+THE LOOP BOUND IS READ ONCE
+  In "for (int i = queue.Count; i > 0; i--)", queue.Count is read only once,
+  when the loop starts. The children added inside the loop do not change i. That
+  is why the loop stops at the edge of the level. If you wrote "i < queue.Count"
+  as the loop condition, it would read the growing count on every step, and
+  levels would mix together.
 WATCH OUT
-  Because nulls go into the queue, the queue can hold up to about twice the real
-  level width, and the algorithm always runs one extra full round that pops
-  nulls and produces nothing. If someone "cleans up" the code by moving the null
-  test to the Enqueue side but leaves the level.Count > 0 guard, it still works;
-  if someone removes the guard while keeping null enqueues, every answer gains a
-  trailing empty list. Also note the loop bound is read once at initialization -
-  rewriting it as for (int i = 0; i < queue.Count; i++) is wrong, because
-  queue.Count grows inside the loop.
+  The code adds node.left and node.right even when they are null. Every real
+  node adds two entries, so the queue also carries about n+1 nulls. The last
+  while pass removes only nulls and builds an empty level. The "level.Count > 0"
+  check is the only thing that keeps an empty list off the end of result, so if
+  you remove that check the output is wrong. A cleaner fix is to add a child
+  only when it is not null. Then the "node != null" check and the empty-level
+  check are both no longer needed.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the levels bottom-up (deepest level first)?
-     Build result exactly as here and then call result.Reverse(), or insert each
-     level at index 0. Reverse is O(n) once; Insert(0, level) is O(levels)
-     shifting per level, so reverse at the end is cheaper.
-  2. Zigzag order - left to right, then right to left, alternating?
-     Keep the same loop and flip a bool each round; when the flag is set,
-     reverse level before adding it, or fill it back-to-front into a pre-sized
-     list. Traversal logic is untouched.
-  3. Can you cut the memory the queue uses?
-     Replace the queue with two lists, current and next: iterate current, push
-     children into next, then swap. This holds at most two levels instead of a
-     queue that mixes levels, and it also drops the need for the size snapshot.
-  4. The tree is huge and you only need the last level, or the right side view?
-     Keep the same BFS but do not store every level - for the last level
-     overwrite a single list each round; for the right side view take only the
-     final non-null node of each round. Space drops to the width of one level.
+  1. How do you return the levels bottom-up?
+     Build result the same way and reverse it at the end, or insert each level
+     at index 0. Reversing once costs O(n) in total. Inserting at the front
+     shifts the whole list every time, which costs O(levels^2).
+  2. How do you do zigzag order (left to right, then right to left)?
+     Keep a bool that flips after each level. Reverse level before adding it, or
+     fill it from the back. The queue order stays the same.
+  3. Can you do this with DFS instead?
+     Yes. Recurse with a depth parameter. If depth == result.Count, add a new
+     list, then add the value to result[depth]. Visit left before right. The
+     call stack uses O(h) space instead of the queue's width. On a very deep
+     chain, the recursion can cause a stack overflow.
+  4. How do you get the right side view?
+     Use the same level loop and keep only the last non-null node you remove in
+     each level (the one removed when i == 1).
 TRIGGER
-  The answer must be grouped by distance from a start point, or asks about
-  depth, width or "first time reached" - reach for BFS with a level-size
-  snapshot.
+  The problem asks for tree nodes grouped by depth, or asks for something per
+  level (average, max, rightmost), so reach for BFS with a snapshot of the level
+  size.
 C# NOTE
-  Queue<TreeNode> accepts null happily because TreeNode is a reference type,
-  which is what makes this enqueue-then-check style legal; under nullable
-  reference types you would need Queue<TreeNode?> to avoid warnings. Minor win
-  available: new List<int>(i) to pre-size level, since the snapshot already
-  tells you the upper bound on this level's width.
+  This method returns List<List<int>>. LeetCode's usual signature is
+  IList<IList<int>>, and C# will not convert List<List<int>> to
+  IList<IList<int>> because generic types in C# are invariant (a list of a
+  subtype is not a list of the base type). If you must match that signature,
+  declare result as new List<IList<int>>().
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

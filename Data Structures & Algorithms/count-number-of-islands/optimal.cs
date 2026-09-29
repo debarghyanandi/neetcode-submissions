@@ -71,75 +71,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Grid DFS flood fill - count connected components
+ PATTERN : Grid Flood Fill (DFS) - count connected components
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  vis      vis[row, col] == 1 means the cell was already swallowed by some island
-  cnt      number of DFS launches so far = number of islands found
-  delRow   row offset of the candidate neighbour, -1..1
-  delCol   column offset of the candidate neighbour, -1..1
-  nRow     row + delRow, the neighbour row before bounds checking
-  nCol     col + delCol, the neighbour column before bounds checking
+  vis        vis[r,c] = 1 if cell (r,c) is already part of a counted island
+  cnt        number of islands found so far (one per new DFS start)
+  delRow     row step to a neighbour, from -1 to 1
+  delCol     column step to a neighbour, from -1 to 1
+  nRow       row of the neighbour cell being checked
+  nCol       column of the neighbour cell being checked
 WHY THIS PATTERN
-  The problem asks how many separate groups of '1' cells touch each other side
-  by side. That is exactly "count connected components" in a graph whose nodes
-  are land cells and whose edges join neighbours. The outer double loop finds a
-  land cell no one has reached yet, and the single Dfs call from it marks the
-  whole component in vis, so every component is entered exactly once and cnt is
-  the answer.
+  An island is a group of '1' cells joined up, down, left or right. In graph
+  terms, each cell is a node and each shared edge is a link, so each island is
+  one connected component (a group of nodes you can reach from each other). The
+  outer loops look for a land cell with vis == 0. From there, Dfs marks the
+  whole island, and cnt goes up by one. Each island is counted exactly once,
+  because after its first cell starts a DFS, every other cell of it is already
+  marked.
 BRUTE FORCE
-  The naive version is union-find without any union by size or path compression:
-  give each land cell an id, union it with its right and down land neighbour,
-  then count distinct roots. It is correct but a chain of unions can degrade
-  each Find to a walk up a long parent chain, so it is slower for no gain here.
-  Flood fill already touches every cell a constant number of times, which is the
-  floor for a problem that must read the whole grid.
+  A simple correct first idea: for each land cell, run a new search with a fresh
+  visited set. This finds its whole island. Count the cell only if it is the
+  top-left-most cell of that island. This is correct, but it costs O((m*n)^2),
+  because every cell can walk the whole island again. The shared vis array
+  removes this repeated work. Each cell is visited once in the whole run.
 INVARIANT
-  At the moment the outer loop reaches (row, col), every land cell belonging to
-  an island already counted has vis == 1. So the test vis == 0 && grid == '1'
-  fires only on a cell of a brand new island. Inside Dfs, a cell is written vis
-  = 1 before its neighbours are explored, so no cell is ever entered twice and
-  the recursion cannot loop forever on a cycle.
-THE ABS TRICK FOR 4-DIRECTIONS
-  The loops over delRow and delCol generate all 9 offsets, and Math.Abs(delRow)
-  == Math.Abs(delCol) throws away the ones that are wrong. It removes (0,0)
-  because 0 == 0, and it removes the four diagonals because their absolute
-  values are 1 and 1. What survives is exactly up, down, left, right - which is
-  what this problem means by "adjacent".
+  When the outer loop reaches (row, col), every land cell of every island
+  already counted has vis = 1. No cell of an island not yet found has been
+  marked. So a cell with vis == 0 and grid == '1' must be the first cell seen of
+  a new island. Dfs marks a cell before it recurses, so no cell is entered
+  twice. It stops only at water, at the grid edge, or at cells already marked,
+  so it marks exactly one island.
+3X3 LOOP WITH ABS FILTER
+  Dfs loops delRow and delCol over -1..1 (9 pairs). It skips a pair when
+  Math.Abs(delRow) == Math.Abs(delCol). That one test removes the centre (0,0)
+  and the 4 diagonals (|1| == |1|). Only the 4 side neighbours are left. If you
+  remove the filter and skip only (0,0), you get the 8-direction version.
 WATCH OUT
-  The comment says "visit all 6 neighbours" but the code visits 4; there is no
-  6-neighbour case in a 2D grid, so trust the abs filter, not the comment. int
-  cols = grid[0].Length throws if grid is empty, and it assumes every row has
-  the same length - a ragged char[][] would break the bounds check for longer
-  rows. Dfs recursion depth can reach rows * cols on a grid that is all '1',
-  which can overflow the call stack. Dfs recomputes rows and cols on every call
-  instead of taking them as parameters.
+  The comment "visit all 6 neighbours" is wrong. The code visits 4 neighbours
+  (up, down, left, right), and the 3x3 loop checks 9 pairs in total.
+  grid[0].Length throws an exception if grid is empty (rows == 0), and
+  NumIslands reads it before any check. Dfs is recursive, so one very large
+  island (for example, a grid of all '1') can make the call stack very deep and
+  cause a StackOverflowException. In .NET you cannot catch that exception.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Remove the recursion - the stack overflows on a big all-land grid.
-     Push (row, col) pairs onto an explicit Stack<(int,int)> (or a Queue for
-     BFS) and mark vis at push time, not at pop time, or the same cell gets
-     queued many times. Same work, but the depth now lives on the heap.
-  2. Drop the vis array to save memory.
-     Overwrite grid[nRow][nCol] = '0' when you visit it; the '0' then doubles as
-     "visited". Cheaper in space, but it destroys the caller's input, so it
-     needs the caller's permission.
-  3. Now return the size of the largest island instead of the count.
-     Have Dfs return 1 plus the sum of its recursive calls, and keep a running
-     max instead of incrementing cnt. The traversal is unchanged.
-  4. The grid does not fit in memory and arrives one row at a time.
-     Switch to union-find over just the previous and current row: union each
-     land cell with its left neighbour and with the cell above, then retire ids
-     that can no longer be extended. Memory drops to O(cols).
+  1. Can you do it without the extra vis array?
+     Yes. Set grid[r][c] = '0' when you visit a cell, and test only grid == '1'.
+     This saves the O(m*n) visited memory, but it changes the caller's input.
+     Ask if that is allowed.
+  2. What if land cells are added one at a time, and you must report the count
+  after each one?
+     Use Union-Find (disjoint set: each cell points to a leader for its group).
+     Each new cell adds 1 to the count, and each merge with a land neighbour
+     takes 1 away. Each add is close to O(1), so you do not run a full flood
+     fill again every time.
+  3. How would you return the size of the largest island instead?
+     Make Dfs return 1 plus the sum of what its neighbour calls return. Keep a
+     running max in the outer loop instead of cnt++. The traversal stays the
+     same.
 TRIGGER
-  A 2D grid where cells of one type touching side by side form a region, and you
-  must count or measure those regions.
+  A grid or graph where you must count or measure groups of cells that are
+  "connected" should make you think of flood fill with a visited mark.
 C# NOTE
-  vis is a rectangular int[,] indexed once as vis[row, col], while grid is a
-  jagged char[][] needing two dereferences per read; a bool[,] would carry the
-  same information in one byte per cell instead of four.
+  vis only ever holds 0 or 1, so bool[,] shows the intent better, and each
+  element uses 1 byte instead of 4. Also, Dfs computes rows and cols again on
+  every call. Keep them in fields, or pass them in as parameters.
 COMPLEXITY
   Time  : O(m * n)
   Space : O(m * n)

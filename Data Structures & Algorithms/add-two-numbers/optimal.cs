@@ -50,68 +50,63 @@ public class Solution
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  dummy    a throwaway head node so we never special-case the first digit
-  res      the moving tail of the result list, not the result itself
-  carry    0 or 1 carried into the next digit position
-  x        current digit of l1, or 0 once l1 is exhausted
-  y        current digit of l2, or 0 once l2 is exhausted
+  dummy    fake head node; the real answer starts at dummy.next
+  res      tail pointer: the last node built so far, not the result itself
+  carry    0 or 1, the ten carried into the next digit
+  x        current digit of l1, or 0 when l1 has run out
+  y        current digit of l2, or 0 when l2 has run out
+  sum      x + y + carry, a value from 0 to 19
 WHY THIS PATTERN
-  The digits are already stored least significant first, which is exactly the
-  order school addition works in. So one left-to-right pass over both lists adds
-  matching positions and pushes carry forward, with no reversal and no
-  big-number conversion. The x and y ternaries let the two lists have different
-  lengths by treating a missing node as digit 0, and carry != 0 in the loop
-  condition keeps the loop alive for a final leading 1.
+  The digits are stored in reverse order, so the head of each list is the ones
+  digit. That is the same order you use to add numbers by hand on paper. So one
+  walk over both lists at the same time, pushing carry forward, builds the
+  answer from the lowest digit up. Using dummy removes the special case of
+  creating the first output node.
 BRUTE FORCE
-  The first instinct is to walk each list, build the number (string or long),
-  add them, then split the sum back into digits and build a list. That is still
-  O(n + m) work but it breaks as soon as the numbers are longer than a long can
-  hold, and the string or BigInteger version drags in conversion and allocation
-  for no gain. This code never forms the whole number, so length is unlimited.
+  The first idea is to read each list into a number, add the two numbers, and
+  turn the result back into a list. With int or long this is wrong: a long list
+  overflows the type and gives a wrong answer. With BigInteger it is correct and
+  still linear, but it does extra conversion passes and needs extra memory for
+  the big numbers. The digit walk does the same work in one pass with only carry
+  as state.
 INVARIANT
-  Before each iteration, every digit position already visited has been written
-  correctly into the result, and carry holds exactly the amount owed to the next
-  position. Each step restores that by writing sum % 10 and setting carry = sum
-  / 10, where sum = x + y + carry. The loop ends only when both lists are done
-  and carry is 0, so nothing is left unwritten.
+  After each loop pass, the list from dummy.next to res holds the lowest digits
+  of the true sum, and carry holds the part of the sum that has not been written
+  yet. Since sum is never more than 9 + 9 + 1 = 19, carry is always 0 or 1. The
+  loop stops only when both lists are empty and carry is 0, so nothing is left
+  to write and the list is the full sum.
 CARRY IN THE LOOP CONDITION
-  Putting carry != 0 in the while condition is what handles 5 + 5 = 10 and 999 +
-  1 = 1000. Without it you would need a separate tail block after the loop to
-  append the leading 1. It also means the loop can run one extra time past the
-  end of both lists, which is why x and y must default to 0 rather than
-  dereferencing l1 or l2.
+  The check carry != 0 in the while condition is what writes the last extra
+  digit, for example 5 + 5 = 10 gives 0 -> 1. Without it, you would need a
+  separate "if (carry > 0)" after the loop. Treating a finished list as digit 0
+  (x and y) means lists of different lengths need no extra loops.
 WATCH OUT
-  The name res reads like "result", but it is the tail pointer; returning res
-  instead of dummy.next would return only the last digit node. dummy.next is the
-  real answer and dummy itself is discarded. The carry = sum / 10 line is
-  correct only because each val is a single digit, so sum is at most 9 + 9 + 1 =
-  19 and carry is always 0 or 1; if a node ever held a value above 9, the carry
-  would exceed 1 and, while the division still works, any code that assumed
-  carry is a flag would break. Note also that the O(1) space claim counts only
-  the working variables, not the new nodes that form the output.
+  The name res sounds like "result", but it moves forward every pass and ends at
+  the last node. Returning res by mistake gives back only one node, so the
+  correct return is dummy.next. Reassigning l1 and l2 is safe: C# passes the
+  reference by value, so the caller's lists and variables do not change. The
+  code assumes every node holds a digit from 0 to 9. A value like 12 would still
+  run, but the output would not be a valid digit list.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if the digits were stored most significant first?
-     You cannot add left to right, because the carry moves the other way. Either
-     reverse both lists first, or push all values onto two stacks and pop them
-     together, or recurse to the end and add on the way back. Stacks and
-     recursion cost O(n + m) extra space; reversing keeps it O(1) but mutates
-     the input.
-  2. Can you avoid allocating a new list at all?
-     Yes, write the sum digits into the nodes of the longer input list and only
-     allocate when the final carry needs one more node. That saves allocations
-     but destroys the caller's input, which is usually not acceptable.
-  3. How would you add k lists instead of two?
-     Keep the same loop, but sum the current digit of every list that is still
-     non-null plus carry. Now carry can be larger than 1, and carry = sum / 10
-     already handles that correctly without any change.
+  1. What if the digits are stored most-significant first (Add Two Numbers II)?
+     Push each list's values onto two stacks, or reverse both lists first. Then
+     pop and add with carry, and put each new node at the front of the answer.
+     Stacks use O(n + m) extra memory. Reversing in place uses O(1) but changes
+     the input lists.
+  2. Can you avoid creating new nodes?
+     Yes. Write each sum digit into the nodes of the longer list and attach one
+     new node only for a final carry. This saves memory, but it destroys the
+     input, and the caller may not expect that.
+  3. Can you write it recursively?
+     Pass carry down as a parameter and build the node on the way back:
+     node.next = Add(l1.next, l2.next, newCarry). It reads cleanly, but it uses
+     O(n + m) stack depth, and a very long list can overflow the stack.
 TRIGGER
-  When the data is a sequence and each position's result depends only on that
-  position plus one small value handed forward from the previous position, do
-  one pass carrying that value.
+  Two numbers given as lists or arrays of digits, lowest digit first, that must
+  be added or combined without turning them into a single number.
 C# NOTE
-  The x and y ternaries can be written as int x = l1?.val ?? 0; because l1?.val
-  yields a nullable int that ?? collapses to 0 - same behaviour, less repetition
-  of the null test.
+  The null checks can be shorter with null-conditional operators: int x =
+  l1?.val ?? 0; and l1 = l1?.next;. This does the same thing in fewer lines.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(1)

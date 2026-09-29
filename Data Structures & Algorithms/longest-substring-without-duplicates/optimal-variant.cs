@@ -38,78 +38,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - grow right, shrink left on duplicate
+ PATTERN : Sliding Window - shrink left until the new char is unique
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  windowChars  the exact set of characters sitting in s[left..right-1]
-  left         first index still inside the window
-  longest      best window length seen so far
+  windowChars  the exact set of chars in s[left..right-1] (then s[left..right] after Add)
+  left         index of the first char of the current window
+  longest      the longest duplicate-free window length seen so far
 WHY THIS PATTERN
-  The problem asks for the longest contiguous piece of s with no repeated
-  character. "Contiguous" plus "a condition that only breaks when you add a
-  character" is the sliding window signal: if s[left..right] has a duplicate, no
-  longer window starting at the same left can fix it, so left only needs to move
-  forward. windowChars answers "is this character already inside?" in constant
-  time, which is the only question the window has to answer.
+  The problem asks for the longest contiguous substring with no repeated
+  characters. "Contiguous" and "longest" together point to a window with two
+  ends. If a window has no duplicates, every smaller window inside it also has
+  none. So when s[right] creates a duplicate, we only need to move left forward
+  and never back. windowChars lets us check in constant time whether s[right] is
+  already inside the window.
 BRUTE FORCE
-  The first thing most people write is two nested loops: for every start index,
-  extend the end and keep a HashSet until a repeat appears, then record the
-  length. That is O(n^2) time because every start index rescans the characters
-  after it. It loses because it throws away the work done for start index left
-  when it moves to left+1, even though most of that window is still
-  duplicate-free.
+  Try every start index i. From i, extend j to the right and add s[j] to a fresh
+  set. Stop at the first repeat and record j - i. This is correct, and it runs
+  in O(n^2) time, or O(n * alphabet) if you note that a run can never be longer
+  than the alphabet. It is slower because each new start rebuilds the set from
+  nothing. The window keeps the work from the previous start and only removes
+  the chars that fall off the left.
 INVARIANT
-  At the top of each iteration of the for loop, windowChars holds exactly the
-  characters of s[left..right-1] and they are all distinct. The while loop
-  removes s[left] and advances left until s[right] is gone from the set, so
-  after it the window with s[right] added is still all distinct; longest is then
-  updated with right - left + 1. Since left never moves backward and the loop
-  checks the longest valid window ending at every right, the maximum over all
-  right is the global answer.
-LEFT NEVER MOVES BACKWARD
-  The while loop is nested inside the for loop, but it is not quadratic work.
-  left starts at 0, only ever increases, and never passes right, so across the
-  whole run it advances at most n times in total. Each character is added to
-  windowChars once and removed at most once. That amortized argument - not the
-  shape of the loops - is what makes the pass linear.
+  After the while loop, windowChars holds exactly the chars of s[left..right-1],
+  and none of them is s[right]. After the Add, s[left..right] has no duplicates.
+  left only moves when a duplicate forces it to. So for each right, left is the
+  smallest start that gives a valid window ending at right. That means right -
+  left + 1 is the best length for windows ending at right. longest takes the
+  maximum over all right, so it is the answer.
+THE NESTED WHILE IS NOT QUADRATIC
+  The while loop inside the for loop looks like O(n^2), but it is not. Each
+  index is added to windowChars once and removed at most once. left only moves
+  forward and never passes right. So across the whole run, the while loop does
+  at most s.Length steps in total. This is called "amortized" cost: the total
+  work is spread over all iterations.
 WATCH OUT
-  The while loop is safe only because s[right] can be in windowChars just once,
-  at some index >= left; if you ever added a character without removing its old
-  copy, the loop could run past right or never stop. The order inside the while
-  matters: remove s[left] first, then increment left - swapping the two lines
-  drops the wrong character and silently corrupts the set. char in C# is a
-  UTF-16 code unit, so a character outside the Basic Multilingual Plane is two
-  chars here and its two surrogate halves are treated as separate, unrelated
-  characters. The O(1) space claim rests on a bounded alphabet; with arbitrary
-  Unicode code units windowChars can hold up to the number of distinct units. An
-  empty string returns 0 because the for loop never runs, which is correct.
+  C# char is one UTF-16 code unit, not one visible character. An emoji or other
+  surrogate pair counts as two chars here, so the length is counted in code
+  units. The O(1) space bound only holds if the character set is fixed.
+  windowChars grows with the number of distinct chars, so if the alphabet is not
+  bounded, space is really O(min(n, alphabet)). The check is case-sensitive: 'a'
+  and 'A' count as different characters.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the substring itself, not its length.
-     Record bestLeft = left whenever longest is updated, then return
-     s.Substring(bestLeft, longest). Same complexity, one extra int.
-  2. Can you remove the inner while loop entirely?
-     Keep a Dictionary<char,int> lastIndex and set left = Math.Max(left,
-     lastIndex[c] + 1) when c repeats, so left jumps in one step. Still linear,
-     but the dictionary keeps every character ever seen, not just the window.
-  3. Variant - longest substring with at most K distinct characters.
-     Replace the set with a Dictionary<char,int> of counts; after adding
-     s[right], shrink from the left while the dictionary has more than K keys,
-     removing a key when its count hits zero.
-  4. The input arrives as a stream you cannot index.
-     The algorithm is already a single forward pass, but it reads s[left] to
-     shrink, so you must buffer the current window in a queue and dequeue
-     instead of indexing; memory then grows with the window, not the input.
+  1. Can left jump straight past the duplicate instead of stepping one char at a
+  time?
+     Yes. Keep a Dictionary<char,int> from each char to its last index, and set
+     left = Math.Max(left, last[c] + 1). The Max is needed because an old index
+     may sit before left. You get the same bound with fewer operations, but you
+     must think about stale entries (old indexes that are no longer inside the
+     window).
+  2. What if the input is known to be ASCII?
+     Replace the HashSet with bool[128] or int[128] indexed by the char. This
+     removes hashing and gives a truly fixed-size table. The cost is that it
+     breaks on any char above 127 unless you make the array larger.
+  3. Longest substring with at most k distinct characters?
+     Use the same window, but store a count per char in a Dictionary<char,int>.
+     Shrink from the left while the dictionary has more than k keys, and remove
+     a key when its count reaches 0. This version needs counts because a single
+     yes/no set is not enough.
 TRIGGER
-  Longest or shortest contiguous run where the condition can only be broken by
-  the newly added element and is fixed by dropping elements from the front.
+  When you see "longest or shortest contiguous substring or subarray where some
+  condition holds", and shrinking a valid window keeps it valid, use a sliding
+  window.
 C# NOTE
-  HashSet<char> hashes every Add, Remove and Contains and allocates on the heap;
-  if the alphabet is known to be ASCII, Span<bool> seen = stackalloc bool[128]
-  indexed by s[right] gives the same three operations with a direct array index
-  and no allocation.
+  HashSet.Add returns false when the item is already in the set. So the Contains
+  check and the Add can be merged into one loop: while
+  (!windowChars.Add(s[right])) windowChars.Remove(s[left++]);
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

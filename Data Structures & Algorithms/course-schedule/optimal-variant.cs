@@ -65,81 +65,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DFS Cycle Detection on a Directed Graph (3-color)
+ PATTERN : DFS Cycle Detection - on-path marker in a directed graph
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-3.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  adj          adj[prereq] = list of courses that unlock once prereq is done
-  pair         one [course, prereq] entry from prerequisites
-  visited      visited[v] = v and everything reachable from v is fully explored
-  pathVisited  pathVisited[v] = v is on the DFS call stack right now
+  adj          adj[p] = list of courses that need course p first (edge p -> course)
+  visited      visited[v] = true once DFS has entered v at any time
+  pathVisited  pathVisited[v] = true while v is on the current DFS path (the recursion stack)
+  nei          a course that depends on the current node
 WHY THIS PATTERN
-  The problem gives pairs "course needs prereq", which is exactly a directed
-  edge, and asks whether every course can be finished. That is possible if and
-  only if the graph has no directed cycle, because a cycle means each course in
-  it waits on another one in the same cycle. The DFS walks forward along adj and
-  asks one question: did I come back to a node I am still standing on?
-  pathVisited answers that; visited keeps the walk from repeating work already
-  proven safe.
+  Each prerequisite pair says "take one course before another", so the input is
+  a directed graph. You can finish all courses only if no chain of prerequisites
+  loops back to itself. So the question is really "does this directed graph have
+  a cycle?" DFS finds a cycle when it meets a node that is still in pathVisited,
+  which means the node is still waiting for its own DFS call to finish.
 BRUTE FORCE
-  The first thing most people write is: for each course, run a fresh DFS or BFS
-  and see if it can reach itself. That is one traversal per node, so O(n * (n +
-  m)) time, and it re-walks the same subgraphs over and over. This file keeps
-  the global visited array across all starts, so every edge is followed once.
+  From every course, run a separate DFS or BFS and check whether you can get
+  back to the start course. This is correct, but it costs O(n * (n + m)),
+  because the same parts of the graph are explored again for each start course.
+  This file checks each node only once: the shared visited array means a node
+  that has been fully explored is never explored again.
 INVARIANT
-  When HasCycle(node) is running, pathVisited is true for exactly the nodes on
-  the current chain of calls from the loop's start node down to node. So
-  pathVisited[nei] being true means nei is an ancestor of node, and the edge
-  node -> nei closes a real cycle. When HasCycle returns false, node is marked
-  visited and cleared from pathVisited, meaning everything reachable from node
-  was searched and contained no cycle, so any later DFS may skip it safely.
-THE TWO ARRAYS DO DIFFERENT JOBS
-  A single visited array is the classic wrong version here. Hitting an
-  already-visited node is not a cycle by itself, since a node can be reached
-  twice by two separate branches (a diamond shape) with no cycle at all. Only a
-  node still on the active path is proof of a cycle, which is why pathVisited is
-  set on the way in and cleared on the way out, while visited is set once and
-  never cleared.
+  At every moment, pathVisited is true for exactly the nodes on the current
+  recursion stack. The code sets it on entry and clears it just before HasCycle
+  returns false. Because of this, an edge to a node with pathVisited true is a
+  back edge (an edge to a node that is still being explored). A back edge closes
+  a loop, so returning true is correct. If a node was entered before and is no
+  longer on the path, its whole subtree already finished with no cycle, so
+  skipping it cannot miss a cycle.
+A DIAMOND IS NOT A CYCLE
+  Say 0 -> 1, 0 -> 2, 1 -> 3 and 2 -> 3. Node 3 is reached twice, but there is
+  no loop. If you checked only visited, the second visit to 3 would be wrongly
+  reported as a cycle. That is why the code needs pathVisited as well. Only
+  "still on the current path" means a cycle.
 WATCH OUT
-  The recursion depth is the length of the longest path in the graph. A chain
-  like 0 -> 1 -> 2 -> ... built from a long prerequisites list will recurse that
-  deep and can overflow the stack; an iterative version or Kahn's BFS avoids it.
-  The code assumes every value in pair is in range 0..numCourses-1; a stray
-  value throws IndexOutOfRangeException rather than returning false. Duplicate
-  edges in prerequisites are stored twice in adj, which costs extra traversal
-  work but does not change the answer. A self-loop [x, x] is handled correctly:
-  pathVisited[x] is already true when the loop reads it.
+  The comment on visited says "fully explored, safe forever", but the code sets
+  visited[node] = true when it enters the node, not when it finishes. The result
+  is still correct only because the pathVisited check runs first inside the
+  loop. If someone swaps those two if-checks, the comment's promise breaks.
+  HasCycle is recursive, so a very long prerequisite chain means a very deep
+  call stack, and this can cause a StackOverflowException, which cannot be
+  caught. On an early return true, pathVisited is left dirty. That is fine here
+  only because CanFinish stops right away.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the actual course order, not just true/false?
-     Push node onto a stack right before pathVisited[node] = false; that gives
-     reverse finish order, which is a valid topological order. Pop the stack
-     into the result array. Same complexity, one extra array of size numCourses.
-  2. How would you do this without recursion?
-     Kahn's algorithm: compute an indegree count per course, put every
-     zero-indegree course in a queue, and pop and decrement. If fewer than
-     numCourses come out, a cycle exists. Same complexity, and no call stack to
-     overflow.
-  3. The graph is huge and mostly sparse, with numCourses very large but few
-  prerequisites. Anything to change?
-     The List<int>[] allocation is one List object per course whether or not it
-     has edges, so the setup loop alone touches numCourses entries. A Dictionary
-     keyed only by nodes that actually appear, or a flat CSR layout (one offsets
-     array plus one edges array), keeps memory near the edge count.
-  4. What if an edge could be dropped to make it finishable, and you had to name
-  which one?
-     Detect the cycle as here but carry the path, then report any edge on it.
-     Deciding whether removing one edge makes the whole graph acyclic in general
-     needs more care, since separate cycles may not share an edge.
+  1. How do you avoid recursion?
+     Use Kahn's algorithm (BFS on in-degrees). Count in-degrees, put every
+     course with in-degree 0 in a queue, and remove courses one by one. If the
+     number removed is less than numCourses, there is a cycle. You need an extra
+     in-degree array, but there is no stack depth risk.
+  2. Can you return a valid order of courses (Course Schedule II)?
+     Add a node to a list just before HasCycle returns false (post-order), then
+     reverse the list. With edges going prereq -> course, the reversed
+     post-order is a valid topological order (an order where every course comes
+     after its prerequisites).
+  3. Can you use one array instead of two bool arrays?
+     Yes. Use one int state array: 0 = unvisited, 1 = on the path, 2 = done. The
+     logic is the same, just in a single array.
+  4. How do you report the actual cycle?
+     Keep a parent array while you go down the DFS. When you find a back edge
+     from node to nei, follow the parents from node back up to nei.
 TRIGGER
-  Dependencies given as ordered pairs plus the question "can all of them be
-  done" or "in what order" - build the directed graph and look for a cycle.
+  The problem gives "X must come before Y" dependencies and asks whether all of
+  them can be met, or asks for an order that meets them.
 C# NOTE
-  List<int>[] gives an array of separately allocated lists, so the first loop
-  must fill every slot or adj[prereq].Add throws NullReferenceException - it is
-  not optional setup. foreach over a List<int> uses a struct enumerator, so the
-  inner loop over adj[node] does not allocate per call.
+  List<int>[] indexed by course number fits here better than a Dictionary<int,
+  List<int>>, because the courses are exactly 0..numCourses-1. Creating every
+  list up front means courses with no dependents need no null check in HasCycle.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(n + m)

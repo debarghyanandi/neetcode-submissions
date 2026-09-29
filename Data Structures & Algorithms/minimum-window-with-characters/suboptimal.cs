@@ -95,69 +95,65 @@ public class Solution
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  need         need[c] = how many copies of c the answer must contain
-  window       window[c] = count of c inside s[left..right]
-  minLength    length of the best valid window found so far
-  minIndices   minIndices[0] = start, minIndices[1] = end of that best window
+  need         need[c] = how many times c must appear (built from t)
+  window       window[c] = how many times c appears in s[left..right]
+  minLength    length of the best window so far; int.MaxValue means none found
+  minIndices   minIndices[0], minIndices[1] = start and end of the best window
   IsMatch      local function: true when window covers every count in need
 WHY THIS PATTERN
-  The task asks for the shortest substring of s that contains every character of
-  t with multiplicity, and substrings are contiguous, so a window with two
-  moving ends can visit every candidate. Growing right can only make a window
-  valid, and shrinking left can only make it invalid, so each end moves forward
-  only. need fixes the target counts once; window tracks the current contents;
-  minLength and minIndices remember the best seen.
+  The problem asks for the shortest contiguous substring of s that contains all
+  of t, with repeats counted. A substring means a contiguous range, so two
+  pointers can mark it. Moving right forward can only add characters, and moving
+  left forward can only remove them. So the code grows window with right until
+  IsMatch() is true. Then it shrinks from left to find the shortest valid window
+  that ends at right.
 BETTER APPROACH
-  The better solution keeps two integers instead of rescanning: a counter have
-  of how many distinct characters already reach their required count, and
-  required = need.Count. Increment have when window[c] hits need[c] after an
-  add, decrement when it drops below after a removal, and validity is just have
-  == required, checked in constant time. That gives O(|s| + |t|) overall. This
-  file instead calls IsMatch on every add and on every shrink step, and IsMatch
-  walks all distinct characters of t, which is where the extra factor k comes
-  from.
+  The better approach keeps an int named formed. It counts how many distinct
+  keys of need are fully met. It changes only when window[c] crosses exactly
+  need[c]: formed goes up when the count rises to need[c], and down when it
+  falls below need[c]. Then the validity check is just formed == need.Count,
+  which costs O(1) and gives O(|s| + |t|) total time. This file calls IsMatch()
+  on every step of both loops. Each call walks all of need, and that walk is the
+  extra factor k.
 INVARIANT
-  At the top of the outer loop body, window holds the exact character counts of
-  s[left..right], and no valid window starting before left exists for any
-  earlier right. The inner loop records the candidate before removing s[left],
-  so every recorded window is valid at the moment it is measured, and it stops
-  at the first left where validity breaks, so the recorded window is the
-  shortest one ending at right. Taking the minimum over all right therefore
-  gives the global minimum.
+  When the inner while loop exits, s[left..right] is not valid. Every valid
+  window that ends at right and starts at or after the old left has been
+  measured against minLength. left never needs to move back. If s[l..r] is not
+  valid, then s[l'..r] is not valid for any larger l'. If s[l..r] is valid, then
+  s[l..r+1] is valid too. So no skipped start can give a shorter valid window
+  later. Every right is visited, and each one records its shortest valid window,
+  so minIndices ends up holding the overall shortest.
 WATCH OUT
-  If t is the empty string and s is not, need is empty and need.All(...) is true
-  by definition, so the inner loop never stops: left walks past right, window is
-  emptied, and window[s[left]] on an unseen character throws
-  KeyNotFoundException. minIndices starts as {0, 0}, which would name the
-  substring s[0..0]; that is only harmless because the minLength == int.MaxValue
-  check returns early, so do not remove that guard. Note also that IsMatch reads
-  need and window by closure, so any later change to how window is emptied
-  silently changes what IsMatch reports.
+  An empty t breaks the code. need is empty, so need.All(...) returns true every
+  time. The inner loop then keeps moving left past right, calls window[s[left]]
+  on a key that is not in window, and throws. It can also go past the end of s.
+  Add a guard like "if (t.Length == 0) return string.Empty". The comment on
+  IsMatch is accurate: the code does walk every key of need on every call. That
+  comment points to the real cost, not a bug.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. s and t are ASCII only - can you drop both dictionaries?
-     Use int[128] for need and window and an int for the number of distinct
-     required characters. Lookups become array indexing with no hashing, at the
-     cost of a fixed 128-entry allocation per call.
-  2. What if you must return all minimum-length windows, not just one?
-     Keep a List<int> of start indices; clear it when currentLength < minLength,
-     append when currentLength == minLength. Same time, extra space proportional
-     to the number of ties.
-  3. What if t may contain characters absent from s?
-     The code already handles it: IsMatch never becomes true, minLength stays
-     int.MaxValue, and the method returns string.Empty. No extra check is
-     needed.
-  4. The window must contain the characters of t in order, as a subsequence?
-     That is a different problem; the two-pointer shrink no longer works because
-     validity is not preserved under removal. Use dynamic programming over
-     positions of s and t, O(|s| * |t|).
+  1. s and t use only ASCII. Can you drop the dictionaries?
+     Yes. Use two int[128] arrays indexed by the char. Each lookup is a plain
+     array index with no hashing, and you avoid the extra lookup in each
+     ContainsKey-then-index pair. The trade-off: this only works for a small,
+     known alphabet.
+  2. s is huge and most of its characters are not in t. What do you change?
+     First build a list of (index, char) pairs, only for chars that are in need.
+     Then slide the window over that list. Each step skips characters that can
+     never help. You still measure length with the real indices in s. The
+     trade-off is O(|s|) extra memory in the worst case.
+  3. What if the characters of t must appear in order, as a subsequence?
+     Counts no longer work. Scan forward from each possible start until all of t
+     is matched in order. Then scan backward from that end to find the latest
+     start that still works. That costs O(|s| * |t|), or you can use a DP table
+     over positions in s and t.
 TRIGGER
-  A question asking for the shortest or longest contiguous stretch that
-  satisfies a counting condition, where extending one end helps and trimming the
-  other end hurts.
+  The problem asks for the shortest (or longest) contiguous substring or
+  subarray that satisfies a coverage or count condition. Adding elements only
+  helps meet the condition, and removing elements only hurts it.
 C# NOTE
-  The StringBuilder loop at the end can be one call: s.Substring(minIndices[0],
-  minLength). With that, minIndices can be two plain int fields instead of a
-  List<int>, since its length is fixed at two.
+  The StringBuilder loop at the end can be replaced by
+  s.Substring(minIndices[0], minLength). That is one call and one copy.
+  minIndices can also be two plain int variables instead of a List<int>.
 COMPLEXITY
   Time  : O(n * k)
   Space : O(1)

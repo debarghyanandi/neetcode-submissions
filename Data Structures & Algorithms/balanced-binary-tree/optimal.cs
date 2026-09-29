@@ -32,71 +32,67 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Post-order DFS - return height and balance together
+ PATTERN : Tree DFS, Post-order - return (balanced, height) up
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  left     (balanced, height) result for node.left
-  right    (balanced, height) result for node.right
-  balanced true when both subtrees are balanced AND their heights differ by at most 1
-  height   1 + the taller of the two child heights
+  left      (balanced, height) result for the node.left subtree
+  right     (balanced, height) result for the node.right subtree
+  balanced  true if this whole subtree is balanced
+  height    number of nodes on the longest path from node down to a leaf
 WHY THIS PATTERN
-  The question asks about every node at once: for each node the two subtree
-  heights must differ by at most 1. Height is a bottom-up fact - a node's height
-  depends on its children, not its parent - so post-order DFS is the natural
-  order. CheckBalance computes left and right first, then folds both answers
-  into one tuple, so each node learns its own height and its own balance verdict
-  in the same visit.
+  A tree is balanced only if every node's two subtrees differ in height by at
+  most 1. So each node needs the heights of both children before it can decide
+  anything. That points to post-order DFS: go down into both children first,
+  then decide at the parent. CheckBalance returns balanced and height together,
+  so each node is visited only once.
 BRUTE FORCE
-  The first version most people write is a Height(node) helper plus an
-  IsBalanced that, at every node, calls Height on both children and then
-  recurses. That recomputes heights over and over: O(n log n) on a balanced tree
-  and O(n^2) on a skewed one. It loses because height is discarded after each
-  check instead of being passed up.
+  The first idea most people write works top-down. At each node, call a separate
+  Height(node.left) and Height(node.right), compare them, then call IsBalanced
+  on both children. This is correct, but it measures the same subtree height
+  again at every ancestor. On a skewed tree that costs O(n^2) time, and about
+  O(n log n) on a balanced tree. It is slow because height is measured in one
+  pass and balance is checked in another.
 INVARIANT
-  When CheckBalance(node) returns, height is the exact number of nodes on the
-  longest path from node down to a leaf, and balanced is true exactly when the
-  whole subtree rooted at node satisfies the rule. Both hold for the null base
-  case, (true, 0). The AND chain carries the verdict of every descendant upward
-  unchanged, so by induction the value at the root is the answer for the entire
-  tree.
+  When CheckBalance(node) returns, height is the true height of the subtree
+  under node. balanced is true exactly when every node in that subtree meets the
+  difference-of-at-most-1 rule. The null case (true, 0) makes this true for
+  empty trees. If it is true for both children, then the AND of left.balanced,
+  right.balanced and the Math.Abs check makes it true for node, and so does 1 +
+  Math.Max for height. By induction, the call on root gives the correct answer.
 WATCH OUT
-  The comment says the method "returns balanced (1 or 0) and height as 2 element
-  int array" - it does not; it returns a (bool, int) tuple. That comment is
-  stale and would confuse a reader looking for int[] indexing. The real risk
-  here is depth: recursion is not cut short, so a long skewed tree can overflow
-  the call stack. Also note balanced is computed with && but left and right are
-  both already evaluated above, so no subtree is ever skipped - the
-  short-circuit saves no work.
+  The comment says the method returns "balanced (1 or 0) and height as 2 element
+  int array". The code actually returns a named tuple (bool balanced, int
+  height), so the comment is out of date and misleading. The recursion depth
+  equals the tree height. A very deep, skewed tree (like a linked list) can
+  cause a StackOverflowException, and C# cannot catch that exception. The code
+  also does not stop early: after it finds an unbalanced subtree, it still
+  visits every other node.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you stop early once you find an unbalanced node?
-     Yes - return a sentinel height such as -1 the moment left.height or
-     right.height is -1 or the gap exceeds 1, and check for -1 at the top. The
-     asymptotic cost is the same, but it avoids walking the rest of a huge tree
-     after failure.
-  2. Deep skewed tree blows the stack. Fix it?
-     Convert to an explicit iterative post-order with a Stack<TreeNode> plus a
-     dictionary or a per-node height map, so depth costs heap memory instead of
-     stack frames. The code gets noticeably longer and you must track whether a
-     node's children have already been processed.
-  3. What if the rule loosened to "heights differ by at most k"?
-     Only the constant changes: Math.Abs(left.height - right.height) <= k.
-     Nothing about the traversal or the height computation needs to move.
-  4. How would you also return the first offending node, not just a bool?
-     Widen the tuple to (bool balanced, int height, TreeNode culprit) and set
-     culprit to node when the local check fails, preferring a child's culprit if
-     one already exists, so the deepest failure is reported.
+  1. How do you stop as soon as you find an imbalance?
+     Return only an int and use -1 as a sentinel (a special value that means
+     "unbalanced"). If either child returns -1, or the heights differ by more
+     than 1, return -1 at once. You get the same result with less work on
+     unbalanced trees, but "height" and "not balanced" now share one value,
+     which is harder to read.
+  2. How would you do this without recursion?
+     Do an iterative post-order traversal with an explicit Stack<TreeNode> and a
+     Dictionary<TreeNode, int> that stores the height of each finished node.
+     This removes the call-stack depth limit. The cost is more code and heap
+     memory for the dictionary.
+  3. What if "balanced" means the heights may differ by at most k?
+     Change only the check to Math.Abs(left.height - right.height) <= k. The
+     traversal and the complexity stay the same.
 TRIGGER
-  When a tree question asks a property of every node that depends on subtree
-  size, height or sum, return that measurement upward with the verdict in one
-  post-order pass.
+  The answer at a node depends on a value computed from both of its subtrees
+  (height, sum, depth), so compute it bottom-up in one post-order pass and
+  return several values together.
 C# NOTE
-  The named value tuple (bool balanced, int height) is a struct, so each call
-  returns by value with no heap allocation, and the field names make left.height
-  readable without an extra class - much cleaner than the int[] the comment
-  describes.
+  The named tuple (bool balanced, int height) is a ValueTuple, which is a
+  struct. So returning two values needs no out parameters and no helper class,
+  and callers can read left.height by name.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

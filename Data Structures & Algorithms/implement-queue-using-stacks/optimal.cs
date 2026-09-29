@@ -70,75 +70,71 @@ public class MyQueue
 
 /*
 ================================================================================
- PATTERN : Two Stacks - amortized queue with lazy transfer
+ PATTERN : Two Stacks as a Queue - lazy transfer on empty outbox
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  stack    input stack; Push always lands here, newest on top
-  reverse  output stack; holds the front of the queue on top, in reversed order
+  stack     the inbox; every Push lands here, so the newest item is on top
+  reverse   the outbox; it holds items in reversed order, so the oldest item is on top
 WHY THIS PATTERN
-  The problem asks for FIFO order (first in, first out) using only stack
-  operations, and a stack gives LIFO order. Pouring one stack into another
-  reverses the order, so the oldest element ends up on top. That is why Pop and
-  Peek read from reverse, and the refill from stack only happens when reverse is
-  empty.
+  The problem asks for FIFO order (first in, first out) but only lets you use
+  stacks, which are LIFO (last in, first out). If you pop every item from one
+  stack and push it onto another, the order flips. So moving items from stack to
+  reverse puts the oldest item on top of reverse, where Pop and Peek can reach
+  it.
 BRUTE FORCE
-  The simple first attempt is to move every element into reverse on each Push,
-  take the element, then move them all back, so the input stack always stays in
-  queue order. That costs O(n) per operation instead of O(1) amortized. It loses
-  because the same elements get shuffled back and forth over and over, even when
-  nobody asked for the front.
+  Keep all items in one stack. For each Pop, move every item to a second stack,
+  take the top one, then move everything back. This is correct, but every Pop
+  and Peek costs O(n), so a run of n operations costs O(n^2). This file avoids
+  the move back and only transfers when reverse is empty.
 INVARIANT
-  At every point, the queue from front to back is reverse read top-to-bottom,
-  then stack read bottom-to-top. Push preserves this because it appends to the
-  back of stack, which is the back of the queue. The transfer loop preserves it
-  because moving all of stack onto reverse when reverse is empty flips the order
-  exactly once, keeping the relative sequence intact.
-WHY THE GUARD MUST BE "EMPTY"
-  The transfer is allowed only when reverse.Count == 0. If you poured stack into
-  a non-empty reverse, the newer elements would sit on top of older ones and
-  come out first, breaking FIFO. That single condition is the whole correctness
-  argument for the lazy transfer.
-AMORTIZED COST
-  Any single Pop can cost O(n) when it triggers the drain loop, but each element
-  is pushed to stack once, popped from stack once, pushed to reverse once,
-  popped from reverse once. That is four stack operations per element over its
-  whole life, so a sequence of m operations costs O(m) total.
+  The items on reverse, read from top to bottom, are older than every item in
+  stack. Each group of items inside each stack stays in arrival order. Pop and
+  Peek refill reverse only when it is empty. So the refill never places newer
+  items above older ones, and the top of reverse is always the oldest item in
+  the whole queue. Empty() checks both stacks, because items can sit in either
+  one.
+EACH ITEM MOVES AT MOST ONCE
+  One Pop can run the while loop over many items. But each item is pushed onto
+  stack once, moved to reverse once, and popped from reverse once. Over a whole
+  sequence of operations, the cost of each call is O(1) on average. This is
+  called amortized cost: the total work split over all calls. Be ready to
+  explain this, because the worst single call is still O(n).
 WATCH OUT
-  Pop and Peek do not check whether the queue is empty; on an empty object the
-  drain loop does nothing and reverse.Pop() throws InvalidOperationException.
-  Both fields are public, so outside code can push into reverse directly and
-  destroy the ordering invariant - they should be private readonly. The if/else
-  in both methods duplicates the return line; if a future edit changes only one
-  branch the two paths will drift apart.
+  If Pop or Peek is called when both stacks are empty, the while loop does
+  nothing and reverse.Pop() or reverse.Peek() throws InvalidOperationException.
+  That is fine if the problem promises valid calls, but the code does not check
+  for it. The transfer loop is copied in both Pop and Peek. If you change one
+  copy and forget the other, the two methods will act differently. A private
+  helper method would remove this risk. Never refill reverse while it still
+  holds items. That would bury the oldest items under newer ones and break FIFO
+  order.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you write Pop without duplicating the return statement?
-     Do the transfer inside a plain if with no else, then fall through to a
-     single return reverse.Pop(). Same behaviour, one exit point, less chance of
-     the two branches drifting.
-  2. How would you implement a stack using two queues instead?
-     Mirror the idea: on Push, enqueue into an empty queue then move all of the
-     other queue behind it, so the newest element is always at the front. That
-     makes Push O(n) and Pop O(1), the opposite trade-off from this file.
-  3. What if the queue must be safe for several threads?
-     Two plain Stack<int> objects are not thread safe, and the drain loop is a
-     multi-step operation that must not be interleaved. Wrap each public method
-     in a lock on a private object, or switch to ConcurrentQueue if the
-     stack-only restriction is lifted.
-  4. How would you add a Size or Count operation?
-     Return stack.Count + reverse.Count, which is O(1) since both stacks track
-     their own count. No change to the transfer logic is needed.
+  1. Can every single operation be O(1) in the worst case, not just on average?
+     Not with this lazy design, because one Pop can move n items. You need a
+     harder scheme that moves a few items on each call, or you use a real queue
+     such as a linked list or a circular array. The trade-off is more complex
+     code for a steady cost on every call.
+  2. How do you build a stack using queues? (the reverse problem)
+     On each Push, add the new item to the queue, then take out and add back the
+     older items (count - 1 of them), so the new item is at the front. Push
+     becomes O(n) and Pop becomes O(1). This does not work in an amortized way
+     like the two-stack version.
+  3. How would you add a GetMin() that runs in O(1)?
+     Make each stack hold pairs (value, min so far in that stack). The queue
+     minimum is the smaller of the two top-of-stack minimums. When items move to
+     reverse, recompute the min values, because the order is now flipped.
 TRIGGER
-  Reach for this when a problem forces you to build one ordering (FIFO) out of a
-  container that only gives the opposite ordering (LIFO), and per-operation cost
-  may be amortized.
+  When a problem says to build FIFO behavior using only LIFO structures, or
+  needs a queue that also tracks a running stack-style value, think of an inbox
+  stack and an outbox stack.
 C# NOTE
-  Stack<int> here stores value types directly in its internal array, so no
-  boxing happens; the old non-generic System.Collections.Stack would box every
-  int. Making both fields private readonly would also let the constructor stay
-  as is while blocking outside mutation.
+  stack and reverse are public fields, so any caller can push to them directly
+  and break the order. Declare them as private readonly Stack<int>: readonly
+  still lets you add and remove items, but the fields can never be pointed at a
+  different stack.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

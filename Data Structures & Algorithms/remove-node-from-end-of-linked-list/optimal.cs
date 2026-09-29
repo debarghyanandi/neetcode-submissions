@@ -38,71 +38,69 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - fixed gap of n on a linked list
+ PATTERN : Two Pointers - fixed gap, with a dummy head node
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  dummy   fake node placed before head so removing head needs no special case
-  slow    walker that ends on the node just BEFORE the one to delete
-  fast    lead walker, started n nodes ahead of slow
-  n       reused as a countdown while building the gap; zero after the first loop
+  dummy   extra node placed before head; dummy.next is always the real head
+  slow    stops on the node just before the one to remove
+  fast    starts n nodes ahead of head; the loop ends when it passes the tail
 WHY THIS PATTERN
-  The problem asks for a position counted from the end, but a singly linked list
-  can only be walked forward. Putting a fixed gap of n between fast and slow
-  turns "n from the end" into "fast ran off the end", which you can test
-  locally. When fast becomes null, slow has been pushed exactly to the
-  predecessor of the target, so one pointer assignment does the removal.
+  The problem counts "n from the end", but a singly linked list can only be
+  walked forward. You cannot see the end until you reach it. So you move fast
+  forward first, then move slow and fast together, one step each. The gap
+  between them never changes. When fast falls off the end, slow is exactly the
+  right distance from the end, and you only walk the list once.
 BRUTE FORCE
-  The natural first attempt is two passes: walk the whole list once to get its
-  length L, then walk again L-n-1 steps to reach the predecessor and unlink.
-  That is still O(n) time but touches the list twice, and it needs the same
-  dummy trick anyway when n equals L. This file does it in one forward sweep
-  with no length variable.
+  First walk the whole list to count its length L. Then walk again for L - n
+  steps from dummy and unlink the next node. This is also correct, with O(n)
+  time and O(1) space. It loses only because it walks the list twice and needs
+  two separate loops. An interviewer usually asks for the one-pass version.
 INVARIANT
-  After the first loop, fast is exactly n nodes ahead of slow, and the second
-  loop moves both by one, so that gap never changes. Therefore at the moment
-  fast is null (one past the last node), slow.next is the node with exactly n-1
-  nodes after it - the nth from the end. Because slow starts at dummy, not head,
-  the gap still holds when the target is the head itself, and dummy.next then
-  carries the new head out.
+  After the first loop, fast is n nodes ahead of head. slow starts at dummy,
+  which is one node before head, so slow is n+1 steps behind fast. The second
+  loop moves both pointers together, so that gap stays n+1 the whole time. When
+  fast is null (one step past the last node), slow is n+1 steps back from null.
+  That makes slow the node just before the nth node from the end, so slow.next
+  is the node to remove. The code comment "slow is now n+1 th node from the end"
+  matches this.
+DUMMY NODE MAKES HEAD REMOVAL NORMAL
+  When n equals the list length, the node to remove is head. It has no node
+  before it. Because slow starts at dummy, slow simply stays on dummy, and
+  slow.next = slow.next.next skips over head. Returning dummy.next instead of
+  head then gives the new head, so there is no special case.
 WATCH OUT
-  There is no guard for n larger than the list length: the first loop would call
-  fast.next on null and throw a NullReferenceException. The same crash happens
-  if head is null with n greater than zero. The final line slow.next =
-  slow.next.next assumes slow.next is not null, which is only guaranteed because
-  the gap invariant held - if you ever change the first loop to advance n+1
-  steps, this line breaks. Also note the comment "slow is now n+1 th node from
-  the end": that is true for the real list only when n is smaller than the
-  length; when n equals the length, slow is dummy, which is not a list node at
-  all.
+  There is no guard on n. If n is larger than the list length, fast becomes null
+  inside the first loop, and the next fast.next throws a NullReferenceException.
+  If n is 0 or less, the first loop does nothing, slow ends on the last node,
+  and slow.next.next throws. An empty list (head == null) with n >= 1 also
+  throws in the first loop. The loop also counts n down to 0, so the original
+  value of n is gone after the first loop. Any later code that needs n will read
+  0.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Remove the nth node from the FRONT instead. How does the code change?
-     You no longer need fast at all - walk slow forward n-1 steps from dummy and
-     unlink. Still O(1) extra space, and dummy is still what saves you when n is
-     1.
-  2. What if you must also return the removed node, not just the new head?
-     Save ListNode removed = slow.next before the unlink, set removed.next =
-     null so it does not keep the tail alive, and return it. One extra
-     reference, same complexity.
-  3. The list is huge and stored on disk or streamed once - can you still do it?
-     Yes, this is the reason the two-pointer form matters: it reads each node
-     once in order, so it works on a forward-only stream, while the length-first
-     version would need a second read.
-  4. How would you handle n given as possibly invalid?
-     Add a counter in the first loop and return head unchanged (or throw) if
-     fast becomes null before the countdown finishes - a cheap check that
-     removes the NullReferenceException path.
+  1. Can you do it recursively?
+     Recurse to the end. On the way back, return a count of nodes from the end,
+     and unlink the next node when the count reaches n. The code is short, but
+     it uses O(n) call stack space instead of O(1), and a very long list can
+     overflow the stack.
+  2. How do you find the middle node in one pass?
+     Use the same two pointers with different speeds, not a fixed gap. fast
+     moves 2 steps and slow moves 1 step. When fast reaches the end, slow is at
+     the middle.
+  3. You get only a pointer to the node to delete, not head. How do you delete
+  it?
+     Copy node.next.val into node, then set node.next = node.next.next. This
+     needs O(1) time, but it cannot delete the tail node, and it changes which
+     node object holds each value.
 TRIGGER
-  Any singly linked list question phrased as "kth from the end" or "middle" -
-  set two pointers with a fixed gap or fixed speed ratio instead of measuring
-  length first.
+  The problem asks for the kth node from the END of a singly linked list, and
+  you want one pass.
 C# NOTE
-  LeetCode's ListNode ships a two-argument constructor, so new ListNode(0, head)
-  builds the sentinel in one line instead of assigning dummy.next afterwards.
-  Unlike C++, the unlinked node needs no delete - once nothing points at it the
-  garbage collector reclaims it.
+  new ListNode(0, head) uses the two-argument constructor, so the dummy node and
+  its link to head are made in one line. int is a value type, so decrementing n
+  changes only the method's local copy, not the caller's variable.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

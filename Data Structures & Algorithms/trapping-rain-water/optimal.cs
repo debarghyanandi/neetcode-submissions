@@ -49,80 +49,67 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - shrink from the shorter side
+ PATTERN : Two Pointers - move the lower side, keep a max per side
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  l          left scan index, walks right
-  r          right scan index, walks left
-  lMax       tallest bar seen in height[0..l]
-  rMax       tallest bar seen in height[r..end]
-  rainTotal  water collected so far, summed per column
+  l          left pointer; bars left of l are already counted
+  r          right pointer; bars right of r are already counted
+  lMax       tallest bar seen so far in height[0..l-1]
+  rMax       tallest bar seen so far in height[r+1..end]
+  rainTotal  sum of water counted at every bar already passed
 WHY THIS PATTERN
-  Water over one column is min(tallest to its left, tallest to its right) minus
-  that column's own height. That needs two facts per index, but they come from
-  opposite ends, so one pass from a single side cannot know both. Two pointers
-  fix that: whenever height[l] <= height[r], the right side is known to hold at
-  least height[r], so lMax alone decides the water at l, and the same logic
-  mirrored decides the water at r.
+  The water above one bar is min(tallest bar on its left, tallest bar on its
+  right) minus its own height. You do not need both exact maximums. You only
+  need the smaller one. The two pointers let the code always work on the side
+  whose limit is already known, so one pass with lMax and rMax is enough.
 BRUTE FORCE
-  The first idea is: for each index i, scan left for the max and scan right for
-  the max, add min of the two minus height[i]. That is correct and O(n^2) time,
-  which loses on long inputs. The usual next step is two prefix arrays,
-  leftMax[i] and rightMax[i], which is O(n) time but spends O(n) extra memory
-  that lMax and rMax replace.
+  For each index, scan left and right to find the tallest bar on each side. Then
+  add min(leftMax, rightMax) - height[i]. This is correct but takes O(n^2) time,
+  because every bar rescans the whole array. A middle step is to fill prefix-max
+  and suffix-max arrays first. That gives O(n) time but costs two extra arrays
+  of size n, and this file removes them.
 INVARIANT
-  At the top of every loop pass, lMax is the maximum of height[0..l] and rMax is
-  the maximum of height[r..end], and rainTotal is the exact water over every
-  column already passed. The branch guarantee is the key: entering the first
-  branch means height[l] <= height[r], so some bar at or right of r is at least
-  as tall as any wall lMax could be, hence min(lMax, trueRightMax) == lMax and
-  the water at l is lMax - height[l]. When the loop ends l == r, and that single
-  column can hold nothing above the shorter of the two bounding walls, so
-  nothing is missed.
-WHY THE UPDATE AND THE ADD ARE EXCLUSIVE
-  Each branch either adds water or raises the running max, never both. That is
-  correct because if height[l] >= lMax then the column is itself the new wall
-  and holds zero water, so adding (lMax - height[l]) would be zero or negative.
-  Writing it as if/else avoids ever adding a negative amount, which is what a
-  careless max-then-add order can do.
+  When height[l] <= height[r], some bar on the right, height[r], is at least as
+  tall as height[l]. Also, every earlier value of lMax was set while a right bar
+  at least that tall existed. So the true right maximum for index l is >= lMax,
+  and the water at l is exactly lMax - height[l] (or 0 when height[l] is the new
+  lMax). The right side follows the same argument with rMax. Every bar is
+  settled once, at the moment its pointer passes it, so rainTotal ends as the
+  exact total.
 WATCH OUT
-  lMax and rMax start at 0, which is safe only if no height is negative; a
-  negative value would enter the else branch and set a max lower than the true
-  wall. If height is null this throws on height.Length, and there is no explicit
-  guard. An empty array gives r == -1 and the loop body never runs, returning 0,
-  so that case is fine by accident rather than by design. The comparison must be
-  height[l] <= height[r] or height[l] < height[r] with matching branches -
-  flipping which side moves on a tie is fine, but the tie must move exactly one
-  pointer, otherwise equal walls can spin or skip.
+  rainTotal is an int. If the array is very long and the bars are tall, the sum
+  can overflow without any error, so use long if the limits allow large totals.
+  The tie height[l] == height[r] goes to the left branch. That is safe, but if
+  you change <= to <, you must check the argument again for equal heights. The
+  bar where l and r meet is never processed. That is correct, because it is the
+  tallest bar seen and holds no water, but it is easy to "fix" by mistake with l
+  <= r.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it in one forward pass with a stack instead?
-     Yes - a monotonic decreasing stack of indices pops when a taller bar
-     arrives and adds the rectangle between the popped bar and the new one.
-     Still O(n) time but O(n) space in the worst case, and it computes water in
-     horizontal slabs rather than per column.
-  2. What if you must also return the index where the deepest water sits?
-     Track a running best inside each branch: compare lMax - height[l] (or rMax
-     - height[r]) against a stored maximum depth and record l or r when it wins.
-     No extra pass and no extra memory beyond two ints.
-  3. The input arrives as a stream you can read only once, forward?
-     The two-pointer trick dies because it needs access to the right end. You
-     would buffer the array, or make two passes if you can rewind: one to build
-     rightMax, one to sum. That is back to O(n) space.
-  4. How would you handle very large heights where the sum overflows int?
-     rainTotal is an int here; change it and the return type to long. The
-     per-column terms stay small, but the total is a sum over all columns and is
-     the part that can overflow.
+  1. Can you solve it with a stack instead?
+     Yes. Keep a monotonic decreasing stack of indexes, meaning the heights on
+     the stack only go down from bottom to top. When a taller bar arrives, pop
+     the bottom of the pit and add water in horizontal layers: width times
+     (min(left wall, current) - pit height). It is also O(n) time, but it uses
+     O(n) space in the worst case.
+  2. What if the map is 2D (Trapping Rain Water II)?
+     Two pointers no longer work. Put all border cells in a min-heap and pop the
+     lowest wall each time. For each neighbor, add max(0, wall - neighbor) as
+     water, and push the neighbor with height max(wall, neighbor). This takes
+     O(mn log(mn)) time.
+  3. What if the bars arrive as a stream and you cannot go back?
+     You cannot use the right pointer, because you never see the end. Use the
+     stack method, which only looks backward, and add water as each bar arrives.
 TRIGGER
-  A value at each index depends on a max (or min) from both its left and its
-  right, and you want to drop the two precomputed arrays.
+  The value at each index depends on the maximum on its left and the maximum on
+  its right, and you only need the smaller of the two.
 C# NOTE
-  height.Length is read once into r rather than checked in the loop condition,
-  so the loop compares two locals only; and because int[] is used directly
-  instead of IList<int> or a List, every access is a plain array index with no
-  interface dispatch.
+  You can replace each if/else with lMax = Math.Max(lMax, height[l]); rainTotal
+  += lMax - height[l]; (the same for rMax on the right side). The result is the
+  same, because the added amount is 0 when the bar is the new maximum, and each
+  branch becomes two short lines.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

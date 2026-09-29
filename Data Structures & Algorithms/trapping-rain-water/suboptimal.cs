@@ -48,75 +48,62 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Prefix/Suffix Max Arrays - water = min(left,right) - h
+ PATTERN : Prefix Max / Suffix Max - water = min of both walls
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  n          height.Length, reused for both array sizes
-  rainTotal  running sum of trapped water over all columns
-  lMax       lMax[i] = tallest bar in height[0..i], inclusive
-  rMax       rMax[i] = tallest bar in height[i..n-1], inclusive
+  lMax       lMax[i] = tallest bar in height[0..i], including i
+  rMax       rMax[i] = tallest bar in height[i..n-1], including i
+  rainTotal  running sum of water trapped over every bar
 WHY THIS PATTERN
-  The water sitting on top of column i depends only on the tallest bar to its
-  left and the tallest bar to its right; the level is min of those two, and the
-  column itself takes up height[i] of it. That is a per-index question whose
-  answer needs information from both directions, which is exactly what a forward
-  scan (lMax) plus a backward scan (rMax) gives you in one pass each. Once both
-  arrays exist, the third loop is a plain independent sum into rainTotal, with
-  no ordering worries.
+  Water above bar i is set by the tallest wall on its left and the tallest wall
+  on its right. It fills up to the lower of the two walls. Both "tallest so far"
+  values can be computed once for every index: lMax in one pass from the left,
+  and rMax in one pass from the right. After that, each bar costs one Math.Min
+  and one subtraction.
 BETTER APPROACH
-  The better version is the two-pointer sweep: keep left and right indices plus
-  leftMax and rightMax scalars, always move the side whose max is smaller, and
-  add that side's max minus its height. It gets the same answer in O(1) extra
-  space instead of the two int[n] arrays this file allocates. This file loses
-  purely on memory; the time is the same, and it costs three passes instead of
-  one.
+  The better approach uses two pointers, left and right, and keeps a running
+  leftMax and rightMax. It always moves the side with the smaller max, because
+  that smaller max is already the limit for the bar there. It is still one pass
+  in O(n) time, but it uses O(1) extra space. This file loses because it
+  allocates two full arrays, lMax and rMax, of size n, when each index only
+  needs the one smaller wall.
 INVARIANT
-  After the first loop, lMax[i] is the max of height[0..i] for every i; after
-  the second, rMax[i] is the max of height[i..n-1]. Both ranges are closed and
-  both include position i itself, so min(lMax[i], rMax[i]) >= height[i] always.
-  That makes every term added to rainTotal zero or positive, and each term is
-  exactly the water above column i, so the sum is the total.
+  After the two fill loops, lMax[i] >= height[i] and rMax[i] >= height[i] for
+  every i, because both ranges include i itself. So Math.Min(lMax[i], rMax[i]) -
+  height[i] is the exact water depth above bar i, and it is never negative.
+  Adding these depths for every i gives the total, because the water above each
+  bar is counted once and only once.
 WATCH OUT
-  An empty array breaks this immediately: n is 0, so lMax[0] = height[0] throws
-  IndexOutOfRangeException, and rMax[n-1] indexes -1. A null height throws on
-  height.Length before that. The long comment block is correct and the
-  commented-out if on the line above it is genuinely redundant, but note the
-  reason is the inclusive endpoints - if you ever switch lMax to "strictly left
-  of i" (exclusive), the subtraction can go negative and you must put the guard
-  back. Both helper arrays live until the method returns, so peak memory is 2n
-  ints even though the last loop reads each slot once.
+  If height is empty, n is 0, so lMax[0] = height[0] throws
+  IndexOutOfRangeException. You need a guard like if (n == 0) return 0.
+  rainTotal is an int, so a very large total could overflow and wrap around
+  without any error. Use long if the input can be large.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Cut the extra space to O(1).
-     Two pointers from both ends with leftMax and rightMax as plain ints.
-     Advance whichever side has the smaller max, because that side's answer is
-     already decided by its own max. Same answer, one pass, no arrays - but the
-     logic is harder to read than these three loops.
-  2. Drop one array but keep the other.
-     Keep rMax as the suffix array, then replace lMax with a single running int
-     updated inside the final loop. Halves the allocation with almost no code
-     change, and is an easy middle step to offer before the full two-pointer
-     version.
-  3. Many queries of trapped water on subranges [l, r] of the same fixed height
-  array.
-     Prefix/suffix maxima no longer serve, because the walls change per query.
-     Use a sparse table or segment tree for range max and answer each query by
-     walking or by precomputing prefix sums of water only if the ranges are
-     nested.
-  4. Heights are 2D (a grid of cells) instead of a row.
-     min of left and right no longer works; water level at a cell is set by the
-     lowest point on the cheapest escape path. Use a min-heap seeded with the
-     border cells and flood inward, which is O(mn log(mn)).
+  1. Can you solve it with a stack instead?
+     Yes. Keep a monotonic stack of indices with decreasing heights. When you
+     meet a taller bar, pop the bottom bar and add water in horizontal layers:
+     (min(left wall, right wall) - bottom) * width. This is also O(n), but the
+     logic is harder to get right than the prefix/suffix arrays.
+  2. What if the heights are a 2D grid (Trapping Rain Water II)?
+     A bar's limit is no longer just its left and right walls. It is the lowest
+     point on any path out to the border. Put all border cells in a min-heap,
+     pop the lowest cell, and flood into its neighbors, keeping a running max
+     boundary. This takes O(mn log(mn)) time.
+  3. What if the heights arrive as a stream and you cannot store them?
+     rMax needs the future, so you cannot finalize the water at a bar until a
+     taller bar arrives. A stack still works, but in the worst case (heights
+     that keep decreasing) it holds everything. So O(1) memory is not possible
+     in general.
 TRIGGER
-  Each index needs a value that depends on the max (or min, or sum) of
-  everything strictly before it and everything strictly after it.
+  Reach for this when the answer at each index depends on the maximum (or
+  minimum) of everything to its left and everything to its right.
 C# NOTE
-  new int[n] in C# zero-fills both arrays before the loops overwrite every slot,
-  so you pay one write per element twice; a stackalloc int[n] span would avoid
-  the heap allocation for small n, but the two-pointer rewrite removes the
-  question entirely.
+  In C#, a line starting with /// is an XML documentation comment, not a normal
+  comment. The commented-out if should use // so tools and warnings do not read
+  it as broken doc markup.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

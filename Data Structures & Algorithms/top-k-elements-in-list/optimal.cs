@@ -62,79 +62,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Bucket Sort by Frequency - count, then scan buckets down
+ PATTERN : Bucket Sort by Frequency - count, then index by count
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  occurrences         occurrences[value] = how many times value appears in nums
-  valuesByFrequency   valuesByFrequency[f] = list of every value seen exactly f times
-  filled              how many slots of result are already written
-  frequency           the bucket index being read, used as a real frequency count
+  occurrences        occurrences[v] = how many times v appears in nums
+  currentCount       count of number so far (0 if not seen yet)
+  valuesByFrequency  valuesByFrequency[f] = all values that appear exactly f times
+  filled             how many slots of result are used so far
 WHY THIS PATTERN
-  The problem asks for the k most frequent values, not for a full ordering of
-  all values. A frequency can never exceed nums.Length, so frequencies are small
-  integers in a known range - that is exactly the condition for bucket sort,
-  where you use the value itself as an array index instead of comparing items.
-  So occurrences gives each value its count, valuesByFrequency puts each value
-  in the slot named by its count, and one downward scan from the last index
-  reaches the top k without any comparison sort.
+  The problem asks for the k values with the highest counts. It does not ask for
+  the other values in order. A count can never be larger than nums.Length, so
+  the count itself can be used as an array index. Putting each value into
+  valuesByFrequency[count] sorts the values by count without any comparisons.
+  Walking the array from the top gives the most frequent values first.
 BRUTE FORCE
-  The first thing most people write: build the same occurrences dictionary, copy
-  it to a list, sort by count descending, take the first k keys. That is O(n log
-  n) time because of the sort. A heap of size k is the usual middle step at O(n
-  log k). Both lose here because sorting or heap-ordering the counts is wasted
-  work when the counts are already bounded by nums.Length and can index an array
-  directly.
+  Build the same count map. Then sort the distinct values by count, largest
+  first, and take the first k. This is correct, but the sort costs O(d log d),
+  where d is the number of distinct values. Bucketing removes that log factor.
 INVARIANT
-  When the downward loop is at index frequency, every value whose count is
-  strictly greater than frequency has already been visited, and filled holds how
-  many of them were copied into result. So the values written into result are
-  always taken in non-increasing order of count. The loop stops the moment
-  filled == k, which means result holds k values none of which has a smaller
-  count than a value left behind.
-WHY INDEX 0 IS SKIPPED
-  The loop condition is frequency > 0, not frequency >= 0. Bucket 0 is allocated
-  and always stays empty, because a value only lands in occurrences if it
-  appeared at least once. Stopping at 1 costs nothing and makes it clear that a
-  count of zero is not a real entry.
+  After step 2, every distinct value sits in exactly one bucket, the one equal
+  to its true count. In step 3, frequency moves strictly downward. So when a
+  value is written to result, every value with a higher count has already been
+  written. The first k values written are therefore a correct top-k.
 WATCH OUT
-  The inner break only leaves the foreach; the outer for then re-checks filled <
-  k and exits, so the guard works, but it is two exits, not one - do not move
-  the break logic around carelessly. If k is larger than the number of distinct
-  values in nums, the loop runs out of buckets and returns a result array with
-  trailing zeros instead of throwing - the code assumes k is valid. Allocating
-  nums.Length + 1 List objects up front means one empty List per bucket even
-  when only a handful of distinct values exist; for a long nums with few
-  distinct values that is a lot of dead allocation. If nums is empty,
-  valuesByFrequency has length 1, the loop body never runs, and you get back an
-  array of k zeros.
+  If k is larger than the number of distinct values, the loop ends early. The
+  unused slots of result stay 0, and 0 looks like a real answer. This happens
+  silently, with no error. Also, when several values share the same count at the
+  cut-off point, which ones get picked depends on Dictionary enumeration order.
+  That order is not guaranteed, so do not rely on a specific tie result. Bucket
+  0 is allocated but can never hold a value, because every value in occurrences
+  appears at least once.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you cut the memory used by the empty buckets?
-     Allocate the List lazily - leave the array entries null and create a List
-     only in the second foreach when a value first lands in that bucket. The
-     scan loop then needs a null check per index, trading a branch for far fewer
-     allocations.
-  2. What if nums does not fit in memory and arrives as a stream?
-     Bucket sort needs the full count table, so switch to a min-heap of size k
-     keyed on count, evicting the smallest. That is O(n log k) time but only
-     O(k) extra space beyond the counts.
-  3. What if ties at the boundary frequency must be broken by value, smallest
+  1. Can you do it without the n+1 buckets?
+     Use a min-heap (a priority queue where the smallest item is removed first)
+     of size k, keyed on count. Pop the smallest whenever the size goes above k.
+     This is O(n log k) time and O(d + k) space. It is slower in theory, but it
+     only needs k extra slots on top of the map.
+  2. Can you get the top k in average linear time with no bucket array?
+     Use quickselect on the distinct values, compared by count. It partitions
+     around position d - k. Average time is O(d) after counting, but the worst
+     case is O(d^2) unless the pivot choice is randomized.
+  3. What if nums is a stream that is too large to keep a full count map in
+  memory?
+     Exact top-k is not possible in bounded memory. Use an approximate method
+     such as Misra-Gries or Count-Min Sketch plus a small heap. The trade-off is
+     less memory for counts that may be slightly wrong.
+  4. What if ties must be broken in a fixed order, for example the smaller value
   first?
-     Sort just the one bucket where the cut happens before copying from it. Only
-     that bucket needs ordering, so the cost is O(m log m) for m values sharing
-     that frequency, not a full sort.
-  4. What if you must return the k least frequent values instead?
-     Walk the same buckets upward from index 1 with the same filled guard;
-     nothing else changes.
+     Sort each bucket before you read it, or read the buckets through a
+     SortedSet. This adds a log factor only inside the buckets you actually
+     read.
 TRIGGER
-  You need the top k by a count, and that count is bounded by the input length -
-  index an array by the count instead of sorting.
+  You need a ranking by a count that cannot be larger than n, and you only need
+  the top k, not a full sort.
 C# NOTE
-  TryGetValue(number, out int currentCount) sets currentCount to 0 when the key
-  is absent, so the increment works for both first and later sightings with one
-  lookup plus one write - cleaner than ContainsKey followed by a second lookup.
+  TryGetValue followed by the indexer set does two hash lookups for each number.
+  CollectionsMarshal.GetValueRefOrAddDefault(occurrences, number, out _)++ does
+  the increment with a single lookup.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)
