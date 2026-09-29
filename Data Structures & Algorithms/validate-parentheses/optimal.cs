@@ -35,70 +35,50 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Stack - match each closer to the latest open bracket
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given a string s of only the chars ( ) { } [ ], return true if it
+           is valid. Valid means every opener is closed by the same type, in
+           the right order, and every closer has an opener before it. "([]{})"
+           -> true, "(]" -> false.
+ PATTERN : Stack (matching pairs, last opened first closed)
 ================================================================================
-VARIABLES
-  stack    open brackets seen so far that are not matched yet; the top is the newest
-  enums    closer -> its opener: ')'->'(', '}'->'{', ']'->'['
-WHY THIS PATTERN
-  Brackets must close in the reverse order they opened. So the last one opened
-  must be the first one closed. That is last-in, first-out, which is exactly
-  what a stack does. When a closer c arrives, only stack.Peek() can be its
-  partner, so each check is one look at the top.
-BRUTE FORCE
-  Search the string for an adjacent pair "()", "[]" or "{}", remove it, and
-  repeat until no pair is left. The string is valid if it ends up empty. Each
-  pass is O(n), and there can be up to n/2 passes, so the total is O(n^2) time.
-  It also builds a new string on every removal. The stack gets the same answer
-  in one pass.
-INVARIANT
-  At every step, stack holds the unmatched openers of the prefix read so far, in
-  the order they appeared. A closer is legal only if it matches stack.Peek(). If
-  it does not match, no later character can fix the order, so the early return
-  false is safe. At the end, the prefix is the whole string, and it is valid
-  only when stack.Count == 0.
-KEY THE MAP BY THE CLOSER
-  enums maps closer -> opener, not opener -> closer. This way one call,
-  enums.ContainsKey(c), tells you whether c is a closer, and enums[c] gives the
-  opener to compare with stack.Peek(). If you keyed it by the opener, you would
-  need a second set or a reverse lookup to spot closers.
-WATCH OUT
-  The else branch pushes every character that is not a closer, not only '(', '{'
-  and '['. So the comment "Anything left over is an opener" is only true if the
-  input has nothing but bracket characters. A letter like "a" gets pushed and
-  makes the result false. If the input can hold other characters, skip them
-  instead of pushing them. Also, the stack.Count > 0 check must come before
-  Peek(). Without it, a leading closer such as ")" throws an exception instead
-  of returning false. A null s also throws in the foreach.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if there is only one bracket type, like '(' and ')'?
-     Replace the stack with an int counter. Add 1 on '(' and subtract 1 on ')'.
-     Fail if it ever goes below 0, and require 0 at the end. This is O(1) space,
-     but it only works for one type, because a counter cannot remember the order
-     of different types.
-  2. Return the minimum number of brackets to add to make the string valid.
-     Keep the same scan, but do not return false on a bad closer. Count it as
-     one needed insertion and go on. The answer is that count plus stack.Count
-     at the end.
-  3. Find the length of the longest valid substring.
-     Push indexes instead of characters, and start with -1 as a base index. On a
-     match, pop, then measure i minus the new top. On a bad closer, push i as
-     the new base. This is still one pass.
-  4. Can you reject some inputs before the loop?
-     Yes. If s.Length is odd, return false right away, because every bracket
-     needs a partner. This is a cheap early exit. It does not change the worst
-     case.
-TRIGGER
-  Reach for a stack when items must be matched or undone in the reverse order
-  they appeared, and only the newest open item can be closed next.
-C# NOTE
-  enums.ContainsKey(c) followed by enums[c] looks up the key twice.
-  enums.TryGetValue(c, out char open) does both in one call and gives you the
-  opener directly.
+IDEA
+  Push every opener on stack. For a closer c, look up its partner enums[c].
+  The top of stack must be that partner; if yes pop, else return false.
+  At the end, stack must be empty, or some opener was never closed.
+  It is correct because the most recent unclosed opener is always the next
+  one that must close, and a stack gives exactly that element.
+EXAMPLE
+  s = "{[]}(": push '{', push '[', ']' matches '[' -> pop,
+  '}' matches '{' -> pop, push '(' -> stack = ['(']
+  end: stack.Count == 1 -> false. (For "]" alone: stack empty -> false.)
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each char is pushed and popped at most once
+  Space O(n)  stack can hold all n chars, e.g. "(((((("
+PATH TO OPTIMAL
+  Repeatedly delete "()", "[]", "{}" until nothing changes - O(n^2) - simple.
+  Stack of openers - O(n) - one pass instead of many rescans (this file).
+KEYWORDS
+  stack, balanced brackets, valid parentheses, matching pairs, LIFO, hash map
+WATCH OUT
+  - Dropping the stack.Count > 0 check: Peek() on an empty stack throws
+    InvalidOperationException for input like "]".
+  - Returning true after the loop without checking stack.Count == 0:
+    "((" would wrongly pass.
+  - Any char not in enums is pushed as an opener; "a" returns false only
+    because it stays on the stack. Fine here, but not a real input check.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if there is only one bracket type, "(" and ")"?
+     -> Replace the stack with an int counter; +1 for "(", -1 for ")", fail if
+        it goes below 0. Time O(n), space O(1).
+  2. What if "*" can be "(", ")" or empty (Valid Parenthesis String)?
+     -> Track a range [lo, hi] of possible open counts in one greedy pass.
+        O(n) time, O(1) space; a stack of indices also works with O(n) space.
+  3. Minimum removals to make the string valid?
+     -> Use the same stack but store indices; unmatched ")" and leftover "("
+        indices are the ones to remove. O(n) time and space.
+  4. Can you exit early?
+     -> If s.Length is odd, return false at once; still O(n) worst case.
+TRIGGER
+  Nested pairs that must close in reverse order of opening mean use a stack.
 ================================================================================
 */

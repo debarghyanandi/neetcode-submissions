@@ -66,73 +66,35 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fixed Sliding Window - count letter matches in O(1)
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : Given strings s1 and s2 of lowercase letters, return true if s2
+           contains a permutation of s1 as a contiguous substring, else false.
+           The substring must have the same letters with the same counts as
+           s1. Example: s1="ab", s2="eidbaooo" -> true (substring "ba").
+ PATTERN : Sliding Window (fixed size) + match counter
 ================================================================================
-VARIABLES
-  need     need[c] = how many times letter c appears in s1
-  window   window[c] = how many times letter c appears in the current window of s2
-  matches  number of letters c (out of 26) where need[c] == window[c]
-  left     index in s2 of the oldest char in the window, removed on the next slide
-WHY THIS PATTERN
-  A permutation of s1 is any string with the same letter counts. So the question
-  is whether some substring of s2 with length s1.Length has counts equal to
-  need. Every candidate has the same length, so a window of fixed size that
-  slides one step at a time covers all of them. Each slide changes only two
-  counts in window: one char comes in (right) and one goes out (left).
-BRUTE FORCE
-  For each start in s2, take the substring of length s1.Length, sort it, and
-  compare it with sorted s1. That costs O((m - n + 1) * n log n), where n =
-  s1.Length and m = s2.Length. It is correct, but it rebuilds each window from
-  nothing, even though two neighbor windows share all chars except two.
-INVARIANT
-  After every Add or Remove, matches equals the exact number of letters c with
-  need[c] == window[c]. It starts right because the setup loop counts every
-  letter where need[c] == 0 as already matching the empty window. So matches ==
-  26 means all 26 counts are equal, which means the current window is a
-  permutation of s1. Every window of length s1.Length is checked once: the first
-  one after the initial Add loop, and the rest inside the right loop.
-CHECK BEFORE AND AFTER THE CHANGE
-  Add and Remove do not need to know if the count moves toward need[c] or away
-  from it. They subtract 1 from matches if the letter was equal before the
-  change, and add 1 if it is equal after. This handles all cases the same way:
-  equal to not equal, not equal to equal, and not equal to still not equal (the
-  -1 and +1 do not fire, or they cancel out).
-WATCH OUT
-  The code assumes only the letters 'a' to 'z'. An uppercase letter, a digit, or
-  any other char makes ch - 'a' fall outside 0..25, and the code throws
-  IndexOutOfRangeException. An empty s1 returns true, because matches starts at
-  26. That is correct only if your problem defines an empty string as a
-  permutation that every s2 contains. All the comments match what the code does.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return every start index where a permutation of s1 begins,
-  not just true or false?
-     Keep the same loop but do not return early. When matches == 26, record the
-     start: 0 after the first fill, and left after each slide. The time stays
-     linear, and the output list is extra memory.
-  2. What if the chars can be any Unicode, not just lowercase letters?
-     Use a Dictionary<char,int> for need and window, and let matches count
-     distinct chars of s1 whose counts are equal (target = need.Count, not 26).
-     It still runs in linear time, but memory grows with the number of distinct
-     chars, and hashing costs more than indexing an array.
-  3. What if the window should be the shortest substring of s2 that contains all
-  chars of s1, with extra chars allowed?
-     That is Minimum Window Substring. The window size is no longer fixed: move
-     right until all needs are met, then move left to shrink the window while it
-     stays valid. Count a letter as satisfied when window[c] >= need[c], not
-     only when the counts are equal.
-TRIGGER
-  Look for a question about whether some substring of a fixed length is an
-  anagram or permutation of a pattern, or has the same letter counts as the
-  pattern.
-C# NOTE
-  Add and Remove are local functions. They capture need, window and matches from
-  the method, so they can update matches without ref parameters and without
-  writing the same bookkeeping in two places.
+IDEA
+  Keep a window of length s1.Length on s2 with letter counts in window.
+  Keep need for s1. matches counts how many of the 26 letters have
+  need[c] == window[c]. Add and Remove update matches only for the one
+  letter that changed, so each step costs O(1). No step compares all 26
+  counts. When matches == 26, the window is an anagram of s1, so it is
+  correct.
+EXAMPLE
+  s1="ab", s2="eidbaooo". Start: matches=24 (every letter except a, b).
+  window "ei": 22 -> "id": 22 -> "db": 24 -> "ba": 26
+  matches == 26 at left=3, so return true.
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(1)
+  Time  O(n + m)  build need over s1, then each s2 char is added once and
+                  removed once
+  Space O(1)      two fixed arrays of 26 ints, whatever the input size
+WATCH OUT
+  - Letters with need 0 must start as matches. Starting matches at 0
+    means it never reaches 26.
+  - Check matches after the first s1.Length Adds, before the loop.
+    Without this, s2="ba" with s1="ab" returns false.
+  - In Add/Remove, test equality both before and after the change.
+    A single check miscounts when a count moves away from need.
+  - ch - 'a' assumes lowercase a-z only. An uppercase letter or a space
+    gives a negative index and crashes.
 ================================================================================
 */

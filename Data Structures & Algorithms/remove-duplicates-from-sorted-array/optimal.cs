@@ -21,66 +21,56 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers (read/write) - compact unique values in place
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get an integer array nums sorted in non-decreasing order.
+           Remove the duplicates in place so each value appears once, keeping
+           the original order. Return k, the number of unique values. The
+           first k slots must hold them. Example: [1,1,2] -> 2, and nums
+           starts with [1,2].
+ PATTERN : Two Pointers (fast reader r, slow writer l)
 ================================================================================
-VARIABLES
-  l  write index: nums[0..l-1] holds the unique values found so far
-  r  read index: the next element to check
-WHY THIS PATTERN
-  The array is sorted, so equal values always sit next to each other. The task
-  is to keep one copy of each value, in place. One pointer (r) reads every
-  element. The other pointer (l) marks where the next new value goes. A value is
-  new exactly when nums[r] differs from its left neighbor nums[r - 1].
-BRUTE FORCE
-  The first idea is to shift everything left by one each time you find a
-  duplicate. That is correct but costs O(n^2) time, because each shift can move
-  up to n elements. Another idea is to copy the unique values into a new list
-  and write them back. That costs O(n) extra space, and the task wants the work
-  done in place.
-INVARIANT
-  Before each step, nums[0..l-1] holds every distinct value from nums[0..r-1],
-  each one once, in sorted order. Also, l <= r at all times, so a write never
-  lands ahead of the read pointer. When nums[r] != nums[r - 1], nums[r] is a
-  value not seen before, so placing it at nums[l] keeps the invariant true. When
-  the loop ends, r = nums.Length, so the first l slots are exactly the answer.
-COMPARING WITH NUMS[R - 1] IS SAFE
-  The code compares nums[r] with nums[r - 1], and that slot might already have
-  been written to. It is still safe. A write goes to index l, and l <= r at
-  every step. So either index r - 1 was never written, or it was written with
-  its own value when l was equal to r - 1. Comparing with nums[l - 1], the last
-  value kept, also works and is easier to explain in an interview.
-WATCH OUT
-  If nums is empty, the loop never runs and the method returns 1, not 0. You
-  need a guard: if (nums.Length == 0) return 0. The code also only works on
-  sorted input. On unsorted input, like [1,2,1], equal values are not next to
-  each other, so duplicates survive. Slots from index l to the end still hold
-  old values, and callers must not read them.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if each value may appear at most twice?
-     Start l at 2 and write nums[r] only when nums[r] != nums[l - 2]. For "at
-     most k" copies, compare with nums[l - k]. It is still one pass with no
-     extra memory.
-  2. What if the array is not sorted?
-     Keep a HashSet of values already seen, and write nums[r] at l only if the
-     set did not have it. This uses O(n) extra space. Sorting first costs O(n
-     log n) and changes the order of the elements.
-  3. What if you must return the count and leave nums unchanged?
-     Count the positions where nums[r] != nums[r - 1] and add 1 (when the array
-     is not empty). The loop is the same, just without the writes.
-TRIGGER
-  A sorted array where you must remove or filter elements in place and return
-  the new length.
-C# NOTE
-  nums.Distinct().ToArray() would be shorter, but it builds a new array. The
-  caller only sees changes made to the original nums, so it does not meet the
-  in-place contract. Writing through nums[l] changes the caller's array
-  directly, because arrays are reference types (the method gets a reference to
-  the same array, not a copy).
+IDEA
+  r reads every element. l is the next free slot for a new unique value.
+  Because nums is sorted, a new value shows up exactly when nums[r] differs
+  from nums[r - 1]. Then we copy it to nums[l] and move l forward.
+  It is correct because l never passes r, so each value is read before its
+  slot can be overwritten, and nums[0..l-1] always holds each value once.
+EXAMPLE
+  nums = [1,1,2,3,3], l = 1
+  r=1 same, skip | r=2 2!=1 nums[1]=2 l=2 | r=3 3!=2 nums[2]=3 l=3 | r=4 same
+  return 3, nums = [1,2,3,3,3] (the part after index k-1 does not matter)
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  one pass, r visits each index once, and each write is O(1)
+  Space O(1)  only two ints l and r, all writes happen inside nums
+PATH TO OPTIMAL
+  Shift the tail left on each duplicate - O(n^2) - simple, but slow.
+  Copy unique values to a new list or HashSet, then copy back - O(n) time,
+  O(n) space - one pass, but uses extra memory.
+  Reader/writer pointers in place - O(n) time, O(1) space - this file.
+  (No sibling file: optimal.cs is the only one here.)
+KEYWORDS
+  two pointers, in-place, sorted array, deduplication, read/write pointer
+WATCH OUT
+  - Empty array: l starts at 1, so this code returns 1 for []. Add
+    "if (nums.Length == 0) return 0;" if empty input is possible.
+  - Comparing with nums[r - 1] only works because l never passes r. The
+    safer check is nums[r] != nums[l - 1], which compares with the kept
+    values.
+  - Write first, then do l++. Doing l++ first leaves a gap at the old slot.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Allow each value at most twice (Remove Duplicates II)?
+     -> Start l at 2 and keep nums[r] when nums[r] != nums[l - 2]. For at most
+        k copies, compare with nums[l - k]. Still O(n) time and O(1) space.
+  2. What if the array is not sorted?
+     -> Keep a HashSet of seen values and write only unseen ones to nums[l].
+        O(n) time but O(n) space. Or sort first: O(n log n), and order is lost.
+  3. Why does l never overwrite a value we still need?
+     -> l <= r always holds, so nums[l] was already read. When l == r the
+        write copies a value onto itself.
+  4. Same idea on a sorted linked list?
+     -> Walk with one pointer and skip next nodes that have the same value.
+        O(n) time, O(1) space, and no copying of values.
+TRIGGER
+  Sorted input plus "modify in place, O(1) extra space" means reach for a
+  slow write pointer and a fast read pointer.
 ================================================================================
 */

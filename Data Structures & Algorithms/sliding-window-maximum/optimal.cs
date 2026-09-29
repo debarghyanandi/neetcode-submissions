@@ -47,70 +47,55 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Monotonic Deque - sliding window maximum
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an int array nums and a window size k, slide the window from
+           left to right one step at a time. Return the maximum of each
+           window, in order. There are n - k + 1 windows. Example:
+           nums=[1,3,-1,-3,5,3,6,7], k=3 -> [3,3,5,5,6,7]
+ PATTERN : Sliding Window (fixed size) + Monotonic Deque
 ================================================================================
-VARIABLES
-  result   result[j] = max of nums[j .. j+k-1]
-  deque    indices of the window; nums at those indices never increase from front to back
-  i - k + 1   the left edge (start index) of the window that ends at i
-WHY THIS PATTERN
-  The problem asks for the maximum of every window of size k as the window moves
-  one step at a time. A heap can find the max, but removing old items from it is
-  costly. In this code, deque keeps only the indices that could still become a
-  window maximum. So the answer for each window is at deque.First, and nothing
-  has to be searched.
-BRUTE FORCE
-  For each of the n - k + 1 window starts, scan all k elements and take the max.
-  This is O(n*k) time and O(1) extra space. It loses because neighbouring
-  windows share k - 1 elements, and the scan does that shared work again for
-  every window. When k is close to n / 2, this becomes quadratic.
-INVARIANT
-  Before the emit step, every index in deque is inside the window [i - k + 1,
-  i], and the values nums[...] never increase from front to back. An index is
-  removed only if it has left the window (step 1) or if a newer index with a
-  larger value exists (step 2). A removed index can never be the maximum of this
-  window or of any later one. So the front of deque is the largest value still
-  in the window, and result[i - k + 1] gets the right answer.
-STORE INDICES, NOT VALUES
-  With values alone you cannot tell if the front has left the window. Step 1
-  compares deque.First.Value with i - k + 1, and that check only works because
-  the deque holds positions. The value is always read back as nums[index].
-WATCH OUT
-  The comment says the values are "strictly decreasing". The code does not do
-  that. Step 2 uses a strict <, so an equal value is kept, and the values are
-  only non-increasing. The result is still correct, but the comment is wrong.
-  Also, the code never checks for k > nums.Length. If k = n + 1, the result is
-  an empty array. If k is larger than that, new int[n - k + 1] gets a negative
-  size and throws an exception.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you return the sliding window minimum instead?
-     Flip the comparison in step 2 to nums[last] > nums[i], so the values never
-     decrease from front to back. Everything else stays the same.
-  2. What if the numbers arrive as a stream and you cannot store all of nums?
-     The same loop works one element at a time. You only need to keep the last k
-     values (for example, in a ring buffer indexed by i % k) plus the deque.
-     Each answer is emitted as soon as its window is full.
-  3. Is there an O(n) method without a deque?
-     Yes. Split nums into blocks of size k. Build a prefix-max array and a
-     suffix-max array inside each block. The max of a window is then
-     max(suffix[start], prefix[end]). The logic is simpler, but it needs two
-     extra arrays of size n.
-  4. What if the window sizes differ from query to query?
-     The deque only fits a fixed window that moves in one direction. For any
-     range [l, r], build a sparse table (a table of the max for every
-     power-of-two length). It answers each query in O(1) after O(n log n) setup.
-TRIGGER
-  Reach for this pattern when a problem asks for the max or min of every
-  fixed-size window, or of a window whose edges only move forward.
-C# NOTE
-  Each LinkedList<int>.AddLast call creates a new node object. Each index is
-  added at most once, so a plain int[n] array with head and tail indices works
-  as the deque and creates no nodes.
+IDEA
+  deque holds indices whose values never increase from front to back.
+  Each step, first drop the front index if it left the window (< i-k+1).
+  Then pop from the back every index whose value is smaller than nums[i].
+  Such an index is older and smaller than i, so it can never be a max again.
+  So the front is always the max of the window, and we write it to result.
+EXAMPLE
+  nums=[1,3,-1,-3,5,3], k=3 (deque shows indices)
+  i=1: 3 pops 0 -> dq=[1]; i=2: dq=[1,2] -> 3; i=3: dq=[1,2,3] -> 3
+  i=4: index 1 expires, 5 pops 3 and 2 -> dq=[4] -> 5; i=5: dq=[4,5] -> 5
+  Answer: [3,3,5,5]
 COMPLEXITY
-  Time  : O(n)
-  Space : O(k)
+  Time  O(n)  each index is added once and removed at most once (amortized
+              O(1))
+  Space O(k)  deque never holds more than k indices
+PATH TO OPTIMAL
+  Brute force: scan every window for its max - O(n*k) - simple, but slow.
+  Max-heap of (value, index), pop stale tops lazily - O(n log k) - no rescan.
+  Monotonic deque (this file) - O(n) - drops useless items for good.
+  optimal-variant.cs is another O(n) / O(k) version of the same goal.
+KEYWORDS
+  sliding window maximum, monotonic deque, fixed window, amortized O(1)
+WATCH OUT
+  - Store indices, not values. With values you cannot tell when the front
+    has left the window.
+  - The comment says "strictly decreasing", but the code pops only on <.
+    Equal values stay, so the deque is non-increasing. Using <= is also fine.
+  - k > n+1 breaks it: nums=[1], k=3 gives new int[-1], which throws.
+  - Emit only when i >= k-1, and write to result[i-k+1], not result[i].
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is it O(n) with a while loop inside the for loop?
+     -> Each index enters the deque once and leaves at most once. So all pops
+        over the whole run add up to at most n.
+  2. Sliding window minimum instead?
+     -> Flip the compare: pop while nums[back] > nums[i]. Same O(n) / O(k).
+  3. Data comes as a stream and you must answer the max at any time?
+     -> Same deque, fed one item at a time. O(1) amortized per item, O(k)
+        memory.
+  4. Can you do it without a deque?
+     -> Split nums into blocks of size k. Build prefix max and suffix max per
+        block. Window max = max(suffix[i], prefix[i+k-1]). O(n) time, O(n) space.
+TRIGGER
+  You need the max or min of every fixed-size window, or of a window whose
+  ends only move forward.
 ================================================================================
 */

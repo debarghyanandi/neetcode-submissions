@@ -87,72 +87,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fixed-Size Sliding Window - compare character counts
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given strings s1 and s2, return true if some permutation of s1
+           appears as a contiguous substring of s2. Otherwise return false.
+           Put another way: does s2 contain a window that is an anagram of s1?
+           Example: s1 = "ab", s2 = "eidbaooo" -> true (window "ba").
+ PATTERN : Sliding Window (fixed size) + frequency map
 ================================================================================
-VARIABLES
-  s1Counts       s1Counts[c] = how many times c appears in s1
-  windowCounts   windowCounts[c] = how many times c appears in s2[left..right]; no key ever has a zero value
-  right          inclusive end of the window, so the window is always s1.Length chars long
-WHY THIS PATTERN
-  A permutation of s1 is any string that has the same character counts as s1.
-  The problem asks if some substring of s2 is such a permutation. That substring
-  must be exactly s1.Length long, so the window has a fixed size. We slide it
-  one step at a time across s2. Each step removes s2[left] and adds s2[right],
-  so windowCounts is updated in place and never rebuilt.
-BRUTE FORCE
-  For each start index in s2, take the substring of length s1.Length, sort it,
-  and compare it to sorted s1. This is correct. It costs O(m * n log n), where n
-  = s1.Length and m = s2.Length. It loses because every window is rebuilt and
-  sorted from nothing, even though two neighbor windows share all but two
-  characters.
-INVARIANT
-  At the top of each loop pass, windowCounts holds the exact counts of
-  s2[left..right], and right - left + 1 == s1.Length. Every window start from 0
-  to s2.Length - s1.Length is checked once, in order. So if any permutation of
-  s1 exists in s2, the check finds it at that window and returns true. If the
-  loop runs out, no window matched.
-COUNT CHECK NEEDS ZERO KEYS REMOVED
-  The All(...) check only looks at the keys of s1Counts. A window with extra
-  characters would still pass it. The s1Counts.Count == windowCounts.Count test
-  blocks those extra characters. That test only works because the eviction code
-  calls Remove when a count would drop to zero. If it left a zero entry in the
-  map, Count would be too high, and a real match would be missed.
-WATCH OUT
-  The code comment says optimal.cs removes the full comparison. So this file
-  compares both whole maps at every step. The per-step cost grows with the
-  number of distinct characters. The banner complexity only holds when the
-  alphabet is fixed, for example 26 lowercase letters. Also, the loop condition
-  while (right < s2.Length) never ends the loop. The inner check if (right ==
-  s2.Length) return false does. If someone moves that check, the next line reads
-  s2[right] out of range.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you make each slide O(1) no matter how big the alphabet is?
-     Keep a "matches" counter: the number of characters whose window count
-     equals their s1 count. On each add or remove, update the counter only for
-     the one character that changed. Return when matches equals the number of
-     distinct characters. The code gets harder, but you drop the full map
-     comparison.
-  2. How would you return every start index of an anagram of s1 in s2 (LeetCode
-  438)?
-     Use the same window, but add left to a result list instead of returning
-     true, and keep sliding to the end. The time stays the same, plus space for
-     the output list.
-  3. What if s2 arrives as a stream and is too large to store?
-     Keep only the last s1.Length characters in a circular buffer, so you still
-     know which character leaves the window. Memory is O(s1.Length) plus the two
-     maps, and does not grow with s2.
-TRIGGER
-  The problem asks whether some substring is a permutation or anagram of a given
-  pattern, so the window length is fixed and only the character counts matter.
-C# NOTE
-  Each ContainsKey followed by windowCounts[key]++ or Add does two hash lookups.
-  CollectionsMarshal.GetValueRefOrAddDefault(windowCounts, key, out _)++ does it
-  in one. If the input is only lowercase letters, an int[26] indexed by c - 'a'
-  removes the hashing completely.
+IDEA
+  An anagram has the same letter counts. So slide a window of size
+  s1.Length over s2 and compare counts. s1Counts holds s1's counts, and
+  windowCounts holds the counts of s2[left..right]. Each step removes
+  s2[left] and adds the new s2[right]. A key is removed when its count
+  reaches 0, so equal Count plus equal values means equal multisets.
+  Every window of length s1.Length is checked once, so no match is missed.
+EXAMPLE
+  s1="ab" s2="eidbaooo"; s1Counts={a:1,b:1}
+  win "ei"{e,i} no -> "id"{i,d} no -> "db"{d,b} no
+  -> "ba"{b:1,a:1} matches at left=3, right=4 -> true
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(1)
+  Time  O(n + m)  each char enters/leaves once; each check scans at most 26
+                  keys
+  Space O(1)      both maps hold at most 26 keys (lowercase letters)
+PATH TO OPTIMAL
+  Brute force: build all permutations of s1 and search s2 - O(n!*m).
+  Sort each window and compare to sorted s1 - O(m*n log n), no factorial.
+  This file: slide the count maps and compare them - O(26*(n+m)).
+  optimal-variant.cs likely keeps a "matches" counter - O(1) per step.
+KEYWORDS
+  sliding window, fixed-size window, anagram, frequency count, hash map
+WATCH OUT
+  - The comment says "This is the line optimal.cs removes", but THIS is
+    optimal.cs. The full All() check is still here. Fix the comment.
+  - If you decrement to 0 and do not Remove the key, the .Count test fails
+    and real matches are missed.
+  - Without the s1.Length > s2.Length guard, the seed loop reads s2[i]
+    out of range.
+  - The last window is checked before right hits s2.Length. Do not move
+    the check after the slide, or the last window is skipped.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you make each step O(1), not O(26)?
+     -> Use int[26] arrays and a "matches" count of letters whose counts are
+        equal. Update it only for the letters that enter and leave. Still O(n+m).
+  2. Return all start indices of anagrams (LeetCode 438)?
+     -> Use the same window. Add left to a list on each match, do not return.
+        O(n+m) time, plus the size of the output.
+  3. What if the alphabet is Unicode or very large?
+     -> Keep the Dictionary approach and the matches counter. Space becomes
+        O(distinct chars), and the time stays O(n+m).
+  4. The smallest window that contains all of s1, in any order?
+     -> That is Minimum Window Substring. Use a variable-size window: grow
+        right, shrink left while it is valid. Still O(n+m).
+TRIGGER
+  Reach for a fixed sliding window with counts when you must check whether
+  a substring is an anagram or permutation of a given pattern.
 ================================================================================
 */

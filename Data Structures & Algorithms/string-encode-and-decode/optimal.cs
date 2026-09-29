@@ -37,68 +37,53 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : String Encoding - length prefix plus delimiter
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-6.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Design Encode(list of strings) -> one string, and Decode(string) ->
+           the original list. Strings may contain any character, including
+           '#', and may be empty. Decode(Encode(x)) must equal x exactly.
+           Example: ["ab#", "", "c"] -> "3#ab#0#1#c" -> ["ab#", "", "c"].
+ PATTERN : Length-prefix encoding (length + delimiter + payload)
 ================================================================================
-VARIABLES
-  res      Encode: the growing encoded text. Decode: the list of decoded strings
-  i        index where the current "length#" header starts
-  j        first scans to the '#' after i, then marks the end of the current string
-  length   the number of characters in the current string, read from the header
-WHY THIS PATTERN
-  The problem asks you to pack any list of strings into one string and unpack it
-  later. The strings can hold any character, including '#'. That means no single
-  delimiter (a separator character) is safe by itself. If you write s.Length
-  before each string, the decoder knows exactly how many characters to take. So
-  it never has to guess where a string ends.
-BRUTE FORCE
-  The first correct idea most people write is escaping. You double every '#'
-  inside a string, then join the strings with a separator such as "#,". Decoding
-  it is also linear, but you must look at every character and handle the escape
-  rules. That makes it easy to get wrong. The encoded text also grows when the
-  input has many '#'. The length prefix never needs to look inside the strings,
-  so it is simpler and harder to break.
-INVARIANT
-  At the top of the outer while loop, i always points at the first digit of a
-  header "length#". A header holds only digits, so the first '#' that j finds is
-  always the end of the header, even if the string content has '#' in it. The
-  code then takes exactly length characters and sets i to the next header. Each
-  step reads exactly one record that Encode wrote, so the output list matches
-  the input list.
-WATCH OUT
-  Decode trusts its input. If there is no '#', the inner loop s[j] runs past the
-  end and throws IndexOutOfRangeException. If a header says more characters than
-  are left, Substring throws ArgumentOutOfRangeException. Encode throws
-  NullReferenceException if strs is null or holds a null string, because it
-  calls s.Length. The lines "j = i + length; ... i = j;" are only a long way to
-  write i += length. The file also has no "using System.Text;", so StringBuilder
-  compiles only because the judge adds that using for you.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How can you remove the '#' and the scan for it?
-     Write a fixed-width header, for example 4 characters or 4 bytes for each
-     length. The decoder reads the header in one step and never scans for a
-     delimiter. The trade-off is that the width limits the largest length, and
-     short strings waste header space.
-  2. What changes if the encoded text is sent over a network as bytes?
-     s.Length counts UTF-16 code units, not bytes. You must encode each string
-     to bytes first, for example UTF-8, and write the byte count. Otherwise the
-     decoder cuts through the middle of a multi-byte character.
-  3. What if the encoded text is too big to decode into one list?
-     Make Decode an iterator with yield return, so it gives back one string at a
-     time. Memory then holds only the current string, but the caller can read
-     the results only once, in order.
-TRIGGER
-  When you must turn a list of items that can contain any character into one
-  flat string or stream and get it back exactly, put each item's length in front
-  of it.
-C# NOTE
-  s.Substring(i, j - i) creates a new string just so int.Parse can read the
-  header. You can use int.Parse(s.AsSpan(i, j - i)) to read the digits in place,
-  without that extra string.
+IDEA
+  Encode writes each string as its length, then '#', then the raw string.
+  Decode reads digits from i until j hits '#', parses length, then copies
+  exactly length chars starting at j + 1. It jumps i past them.
+  It is correct because the length tells Decode where the payload ends.
+  So a '#' inside a string is never read as a separator.
+EXAMPLE
+  Input ["ab#", "", "c"] -> Encode gives "3#ab#0#1#c".
+  i=0: '#' at j=1, length=3, take "ab#", i=5.
+  i=5: '#' at j=6, length=0, take "", i=7.
+  i=7: '#' at j=8, length=1, take "c", i=10 = end -> ["ab#", "", "c"].
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(1)
+  Time  O(n + m)  each char is scanned or copied a constant number of times
+  Space O(1)      only i, j, length besides the output
+PATH TO OPTIMAL
+  Join with a delimiter - O(n+m) - fails when a string has the delimiter.
+  Escape delimiters - O(n+m) - works, but the escape logic is error-prone.
+  Header of all lengths, then data (suboptimal.cs) - O(m) extra space.
+  Inline length prefix per string (this file) - O(1) extra, one pass.
+KEYWORDS
+  serialization, length prefix, delimiter, string parsing, encode decode
+WATCH OUT
+  - Search for '#' only in the length part. Never split on '#' globally.
+    "ab#" would break into two strings.
+  - Empty strings must survive: "0#" gives length 0 and Substring(i, 0).
+  - Parse the full number: length 10 is "10#", not one digit.
+  - Bad input with no '#' makes s[j] throw IndexOutOfRange.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why not escape special characters instead?
+     -> It works, but encode and decode both get harder. Mistakes with an
+        escaped escape char are easy. Length prefix needs no escaping.
+  2. Can you avoid variable-length number parsing?
+     -> Write each length as a fixed 4-byte binary header. Time is still
+        O(n+m) and parsing is simpler, but output is not human-readable.
+  3. How do you decode from a stream, chunk by chunk?
+     -> Keep a small state: reading length or reading payload, plus remaining
+        count. Emit a string when remaining hits 0. Memory is O(one string).
+  4. Does empty list vs [""] work?
+     -> Yes. [] encodes to "" and decodes to []. [""] encodes to "0#".
+TRIGGER
+  When you must pack items with arbitrary content into one stream and split
+  them back safely, prefix each item with its length.
 ================================================================================
 */

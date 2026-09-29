@@ -60,80 +60,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window (variable size) - grow right, shrink left
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given strings s and t, return the shortest substring of s that
+           contains every character of t, counting duplicates (t = "AAB" needs
+           two A's). Return "" if no such window exists. Characters are
+           case-sensitive. Example: s = "ADOBECODEBANC", t = "ABC" -> "BANC".
+ PATTERN : Sliding Window (variable size) + frequency counts
 ================================================================================
-VARIABLES
-  need         need[ch] = how many copies of ch t asks for
-  window       window[ch] = how many copies of ch are in s[left..right]
-  have         number of distinct chars in need whose count is fully met
-  required     need.Count, the number of distinct chars in t
-  minLength    length of the best window found so far (int.MaxValue = none yet)
-  resultStart  start index of that best window in s
-  lc           the char at s[left] that is about to leave the window
-WHY THIS PATTERN
-  The problem asks for the shortest contiguous substring of s that covers all of
-  t. "Contiguous" plus "shortest that satisfies a condition" points to a sliding
-  window. Adding a char never breaks coverage, and removing one can only break
-  it. So you move right until have == required, then move left as far as you can
-  while coverage still holds. Each pointer only moves forward.
-BRUTE FORCE
-  Try every start index. For each start, extend the end and keep a count map
-  until the substring covers t, then record its length and go to the next start.
-  This is correct and takes O(n^2) time, because every start can scan to the end
-  of s. It loses because it rebuilds counts from zero for each start, while the
-  window reuses them when left moves.
-INVARIANT
-  window always holds the exact char counts of s[left..right]. have always
-  equals the number of chars ch in need where window[ch] >= need[ch]. Inside the
-  while loop the window is valid, so each length checked is a real candidate.
-  The loop stops right after the first removal that breaks coverage. So for each
-  right, the code records the shortest valid window that ends at right. The
-  minimum over all right is the answer.
-HAVE COUNTS DISTINCT CHARS, NOT COPIES
-  have moves only when a char's count crosses its target: == on the way up, < on
-  the way down. This means one integer comparison (have == required) replaces
-  checking every key in need at every step. The < check in the shrink loop is
-  also safe as a crossing test. Inside the loop every count is at least its
-  target, so a single decrement can only go from need[lc] down to need[lc]-1.
-WATCH OUT
-  An empty t breaks the code. required is 0, so the while loop runs even when
-  the window is empty. left moves past right, and on the next pass s[left] can
-  be read out of range (for example s = "a", t = ""). Add an early return for
-  t.Length == 0. Also, window stores every char of s, including chars not in t.
-  That is harmless but uses extra memory, and it means window counts are not
-  limited to need's keys.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. s is very long, and only a few of its chars appear in t. How do you speed
-  this up?
-     First build a filtered list of (index, char) pairs, keeping only chars that
-     are in need. Then run the same window over that list and use the saved
-     indices to get lengths. The time is O(n + f), where f is the filtered size.
-     The cost is extra memory for the list.
-  2. What if the window must contain t as a subsequence, in order (Minimum
-  Window Subsequence)?
-     Counts no longer work, because order matters. Scan forward to match t in
-     order. Then scan backward from the match end to find the latest start. Or
-     use DP over (i, j). This is about O(n * m) time.
-  3. How would you find the longest substring with at most k distinct chars?
-     Use the same grow and shrink shape, but reverse the roles. Shrink while the
-     distinct count is greater than k, and record the maximum length after the
-     shrink. The best window is now measured outside the while loop, not inside
-     it.
-TRIGGER
-  Look for this: find the shortest (or longest) contiguous substring or subarray
-  that meets a count-based condition, where adding elements only helps and
-  removing them only hurts.
-C# NOTE
-  Each step does several Dictionary lookups on the same key (GetValueOrDefault,
-  then the indexer, then ContainsKey and need[c]). If the input is ASCII, two
-  int[128] arrays indexed by the char give the same logic with plain array
-  access. Use need.TryGetValue to merge the ContainsKey check and the read into
-  one lookup.
+IDEA
+  need counts each char of t; window counts chars between left and right.
+  Move right one step at a time. have goes up when a char count reaches its
+  need exactly. While have == required, save the window if it is shorter,
+  then drop s[left] and move left. This is correct because every shortest
+  valid window ending at right is checked before left passes its start.
+EXAMPLE
+  s = "ADOBECODEBANC", t = "ABC", required = 3
+  r=5: "ADOBEC" is valid, minLength=6; drop A -> have=2, left=1
+  r=10: valid again, shrink to "CODEBA" (6, not < 6); drop C, left=6
+  r=12: "ODEBANC" -> "EBANC" (5) -> "BANC" (4, resultStart=9) -> "BANC"
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(1)
+  Time  O(n + m)  need is built in m steps; right and left each cross s once
+  Space O(1)      both dictionaries hold at most one key per alphabet
+                  character
+PATH TO OPTIMAL
+  Brute force: test every substring - O(n^2 * k) - simple, but far too slow.
+  Sliding window that compares the full count maps at each step - O(n * k)
+  - each index moves once (suboptimal.cs).
+  have/required counter - O(n + m) - one check per step, no map compare.
+KEYWORDS
+  sliding window, two pointers, frequency map, minimum window substring,
+  have/required counter, shrink while valid
+WATCH OUT
+  - Using >= instead of == for have++ counts the same char again for each
+    extra copy, so have reaches required too early.
+  - Record minLength BEFORE removing s[left]; after removal it may be invalid.
+  - Duplicates in t: compare window[c] with need[c], not with 1.
+  - Return s.Substring(resultStart, minLength), not (left, right) at the end.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you make it faster in practice when s has many chars not in t?
+     -> First build a list of (index, char) for chars that are in t, then
+        slide over that list. Same O(n + m), but fewer steps when t is small.
+  2. What if t must appear as a subsequence, in order?
+     -> That is Minimum Window Subsequence. Use DP or scan forward then
+        backward from each match. O(n * m) time, because the counts no longer
+        suffice.
+  3. Chars are only ASCII. Can you avoid the dictionaries?
+     -> Use int[128] arrays for need and window. Same O(1) space, faster
+        lookups, but it breaks for full Unicode input.
+  4. Why is the nested while loop still linear?
+     -> left only moves forward and never passes right, so all inner loops
+        together run at most n times. The cost is amortized O(1) per step.
+TRIGGER
+  You need the shortest (or longest) contiguous range that satisfies a
+  count-based condition, and the condition stays true as the range grows.
 ================================================================================
 */

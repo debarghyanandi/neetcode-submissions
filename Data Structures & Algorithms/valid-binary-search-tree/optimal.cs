@@ -43,85 +43,50 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS postorder - return subtree min/max upward
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, return true if it is a valid BST.
+           Every node in the left subtree must be strictly smaller than the
+           node. Every node in the right subtree must be strictly larger.
+           Duplicates fail. [5,4,6,null,null,3,7] -> false, because 3 sits in
+           the right subtree of 5.
+ PATTERN : DFS post-order (return subtree min/max upward)
 ================================================================================
-VARIABLES
-  result   the (min, max, found) tuple for the whole tree
-  found    true if the subtree is a valid BST (the name means "valid", not "found")
-  left     the (min, max, found) tuple for root.left's subtree
-  right    the (min, max, found) tuple for root.right's subtree
-  min      the smallest value in the subtree rooted at root
-  max      the largest value in the subtree rooted at root
-WHY THIS PATTERN
-  A valid BST needs every node in the left subtree to be smaller than the root,
-  not only the direct child. The same holds for the right subtree with larger
-  values. So each node needs a summary of its whole subtree, and postorder DFS
-  (children first, then the node) gives exactly that. Each call returns (min,
-  max, found). The parent then only compares left.max and right.min against
-  root.val.
-BRUTE FORCE
-  For every node, walk its entire left subtree and check that all values are
-  less than the node. Then walk its entire right subtree and check that all
-  values are greater. This is correct, but a node's subtree is scanned again for
-  each of its ancestors. On a skewed tree that costs O(n^2) time. This file
-  visits each node once because the parent reuses the child's min and max.
-INVARIANT
-  When a call returns found = true, its subtree is a valid BST, and min and max
-  are the true smallest and largest values in it. A node is accepted only if
-  both children are valid and left.max < root.val < right.min. That makes every
-  left value smaller than the root and every right value larger. The new bounds
-  are Math.Min(left.min, root.val) and Math.Max(right.max, root.val), so the
-  invariant carries up to the root.
-INVERTED RANGE FOR EMPTY SUBTREE
-  A null child returns (int.MaxValue, int.MinValue, true). This is an
-  "impossible" range where min is larger than max. The checks left.max >=
-  root.val and right.min <= root.val then pass on their own when a child is
-  missing. Also, Math.Min(left.min, root.val) falls back to root.val. So no
-  special case is needed for a node with one child.
-WATCH OUT
-  The sentinels (fixed stand-in values for "no child") are only safe because of
-  the value range stated in the top comment. If root.val is int.MinValue and
-  there is no left child, left.max >= root.val is true, and a valid tree is
-  rejected. The same happens with int.MaxValue and no right child. The leaf
-  shortcut hides this for leaves only, so the same value gives different results
-  for a leaf and for a node with one child. Also, recursion depth equals tree
-  height, so a very deep, skewed tree can overflow the call stack.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you pass bounds down instead of returning them up?
-     Yes. Call Check(node, low, high) and require low < node.val < high. The
-     left child gets (low, node.val) and the right child gets (node.val, high).
-     Use long or int? bounds (int? can be null) so that no sentinel can clash
-     with a real value. This is simpler, and it can stop at the first bad node.
-  2. How would you do it without recursion?
-     Do an iterative inorder traversal (left, node, right) with an explicit
-     stack, and keep the previous value. A BST's inorder order must be strictly
-     increasing, so return false when current <= prev. This removes the
-     call-stack risk, but the explicit stack still uses O(h) memory (h = tree
-     height).
-  3. Can it use O(1) extra space?
-     Use Morris inorder traversal. It temporarily links each node's inorder
-     predecessor back to the node, so no stack is needed. The trade-off is that
-     it changes the tree while it runs and must undo every link, even when it
-     finds a violation early.
-  4. This version checks the right subtree even after the left one fails. Can
-  you fix that?
-     Return early right after computing left when !left.found or left.max >=
-     root.val. Compute right only after that. The worst case stays the same, but
-     invalid trees finish sooner.
-TRIGGER
-  When a tree property depends on every node in a subtree (all smaller, all
-  larger, subtree sum or size), return a summary from each child and combine the
-  summaries in postorder.
-C# NOTE
-  The return type (int min, int max, bool found) is a ValueTuple, which is a
-  struct, so each call returns its three values with no heap allocation. The
-  names min, max and found exist only at compile time, so a clearer name like
-  isValid would cost nothing.
+IDEA
+  IsValidBSTWithMinMax returns (min, max, found) for each subtree.
+  A node is valid if both children are valid, left.max < root.val, and
+  right.min > root.val. It then returns min(left.min, root.val) and
+  max(right.max, root.val). A null child returns (MaxValue, MinValue, true),
+  so every check passes. This compares the node with the whole subtree,
+  not only with its direct child, so a deep bad node is caught.
+EXAMPLE
+  [5,4,6,null,null,3,7]: leaf 4 -> (4,4,T); leaves 3,7 -> (3,3,T),(7,7,T)
+  node 6: 3<6, 7>6 -> (3,7,T)
+  root 5: left.max 4<5 ok; right.min 3<=5 -> (0,0,false) -> answer false
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited once, with O(1) work
+  Space O(n)  recursion stack, depth up to n on a skewed tree
+PATH TO OPTIMAL
+  Scan each whole subtree for every node - O(n^2) - simple, but repeats work.
+  Post-order min/max (this file) - O(n) - each subtree summarised once.
+  optimal-variant.cs - O(n) - another linear way to do the same check.
+KEYWORDS
+  binary search tree, validate BST, DFS, post-order, min/max bounds, recursion
+WATCH OUT
+  - Checking only root.left.val < root.val misses the deep case above.
+  - Sentinels: a node with val int.MinValue and no left child fails,
+    because left.max (int.MinValue) >= root.val. Use long or nullable.
+  - Use >= and <=, not > and <, or duplicates are wrongly accepted.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it top-down instead?
+     -> Pass (low, high) bounds down. The left child gets high = val, the
+        right child gets low = val. Still O(n) time, O(h) space.
+  2. Another approach without bounds?
+     -> An inorder traversal of a BST is strictly increasing. Keep prev and
+        fail if val <= prev. O(n) time; stops early when it fails.
+  3. Can you use O(1) extra space?
+     -> Morris inorder traversal uses temporary thread links, not a stack.
+        O(n) time, O(1) space, but it changes the tree for a short time.
+TRIGGER
+  A tree rule that must hold for whole subtrees, not just for parent-child
+  pairs.
 ================================================================================
 */

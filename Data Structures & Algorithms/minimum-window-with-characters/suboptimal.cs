@@ -82,72 +82,38 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - expand right, shrink left while valid
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Suboptimal
+ PROBLEM : Given strings s and t, return the shortest substring of s that
+           contains every character of t, counting duplicates (t = "AAB" needs
+           two A's). Return "" if no such window exists. Matching is
+           case-sensitive. Example: s = "ADOBECODEBANC", t = "ABC" -> "BANC".
+ PATTERN : Sliding Window (variable size) + frequency maps
 ================================================================================
-VARIABLES
-  need         need[c] = how many times c must appear (built from t)
-  window       window[c] = how many times c appears in s[left..right]
-  minLength    length of the best window so far; int.MaxValue means none found
-  minIndices   minIndices[0], minIndices[1] = start and end of the best window
-  IsMatch      local function: true when window covers every count in need
-WHY THIS PATTERN
-  The problem asks for the shortest contiguous substring of s that contains all
-  of t, with repeats counted. A substring means a contiguous range, so two
-  pointers can mark it. Moving right forward can only add characters, and moving
-  left forward can only remove them. So the code grows window with right until
-  IsMatch() is true. Then it shrinks from left to find the shortest valid window
-  that ends at right.
-BETTER APPROACH
-  The better approach keeps an int named formed. It counts how many distinct
-  keys of need are fully met. It changes only when window[c] crosses exactly
-  need[c]: formed goes up when the count rises to need[c], and down when it
-  falls below need[c]. Then the validity check is just formed == need.Count,
-  which costs O(1) and gives O(|s| + |t|) total time. This file calls IsMatch()
-  on every step of both loops. Each call walks all of need, and that walk is the
-  extra factor k.
-INVARIANT
-  When the inner while loop exits, s[left..right] is not valid. Every valid
-  window that ends at right and starts at or after the old left has been
-  measured against minLength. left never needs to move back. If s[l..r] is not
-  valid, then s[l'..r] is not valid for any larger l'. If s[l..r] is valid, then
-  s[l..r+1] is valid too. So no skipped start can give a shorter valid window
-  later. Every right is visited, and each one records its shortest valid window,
-  so minIndices ends up holding the overall shortest.
-WATCH OUT
-  An empty t breaks the code. need is empty, so need.All(...) returns true every
-  time. The inner loop then keeps moving left past right, calls window[s[left]]
-  on a key that is not in window, and throws. It can also go past the end of s.
-  Add a guard like "if (t.Length == 0) return string.Empty". The comment on
-  IsMatch is accurate: the code does walk every key of need on every call. That
-  comment points to the real cost, not a bug.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. s and t use only ASCII. Can you drop the dictionaries?
-     Yes. Use two int[128] arrays indexed by the char. Each lookup is a plain
-     array index with no hashing, and you avoid the extra lookup in each
-     ContainsKey-then-index pair. The trade-off: this only works for a small,
-     known alphabet.
-  2. s is huge and most of its characters are not in t. What do you change?
-     First build a list of (index, char) pairs, only for chars that are in need.
-     Then slide the window over that list. Each step skips characters that can
-     never help. You still measure length with the real indices in s. The
-     trade-off is O(|s|) extra memory in the worst case.
-  3. What if the characters of t must appear in order, as a subsequence?
-     Counts no longer work. Scan forward from each possible start until all of t
-     is matched in order. Then scan backward from that end to find the latest
-     start that still works. That costs O(|s| * |t|), or you can use a DP table
-     over positions in s and t.
-TRIGGER
-  The problem asks for the shortest (or longest) contiguous substring or
-  subarray that satisfies a coverage or count condition. Adding elements only
-  helps meet the condition, and removing elements only hurts it.
-C# NOTE
-  The StringBuilder loop at the end can be replaced by
-  s.Substring(minIndices[0], minLength). That is one call and one copy.
-  minIndices can also be two plain int variables instead of a List<int>.
+IDEA
+  need holds the count of each character in t. window holds counts for
+  s[left..right]. Each step moves right one place and adds s[right]. While
+  IsMatch() is true, the code saves the window if it is shorter than
+  minLength, then drops s[left] and moves left forward. So for each right,
+  we record the smallest valid window that ends there, and the best of
+  these is the answer. Unlike optimal.cs, IsMatch rescans all of need each
+  time instead of keeping a running "formed" counter.
+EXAMPLE
+  s = "ADBAC", t = "ABC"; need = {A:1, B:1, C:1}
+  r=0..3: no C in window yet, so IsMatch fails. r=4 adds C, window valid.
+  Shrink: left=0 len 5, left=1 len 4, left=2 len 3 (minIndices=[2,4]);
+  removing B breaks the match. Answer: s[2..4] = "BAC".
 COMPLEXITY
-  Time  : O(n * k)
-  Space : O(1)
+  Time  O(n * k)  left and right each move at most n times; every move calls
+                  IsMatch, which scans k keys
+  Space O(1)      need and window hold at most one entry per alphabet
+                  character
+WATCH OUT
+  - t = "" crashes the code. need.All(...) on an empty map is true, so
+    the inner loop never stops and window[s[left]] throws KeyNotFound.
+  - IsMatch must test count >= pair.Value, not ==. The window may hold
+    extra copies of a needed character and still be valid.
+  - Record the window before you shrink it. If you remove s[left] first,
+    you lose the last valid window.
+  - window.Remove when a count hits 1 is required. Leaving a 0 in the map
+    still works here, but TryGetValue-only checks break if you swap them.
 ================================================================================
 */

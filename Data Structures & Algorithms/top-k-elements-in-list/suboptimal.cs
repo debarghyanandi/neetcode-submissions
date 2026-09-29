@@ -42,73 +42,33 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Heap / Top-K - min-heap of size k keyed by frequency
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Suboptimal
+ PROBLEM : Given an integer array nums and an integer k, return the k values
+           that appear most often. The answer may be in any order, and it is
+           unique. Example: nums = [1,1,1,2,2,3], k = 2 -> [1,2].
+ PATTERN : Hash Map counting + Min-Heap of size k
 ================================================================================
-VARIABLES
-  occurrences             occurrences[x] = how many times x appears in nums
-  currentCount            count of number so far; 0 when number is not yet a key
-  smallestFrequencyFirst  min-heap of values; priority = frequency; least frequent on top
-WHY THIS PATTERN
-  The problem asks for the "k most frequent" values. That means we only need the
-  top k, not a full ordering. First, occurrences turns the task into "pick the k
-  largest counts". The min-heap smallestFrequencyFirst keeps only the k best
-  seen so far. Its weakest member sits on top, so it is cheap to throw it out
-  when a better value arrives.
-BETTER APPROACH
-  The better approach is bucket sort by frequency. Make an array of lists, where
-  buckets[f] holds every value that appears exactly f times. A frequency can
-  never be larger than nums.Length, so the array has at most nums.Length + 1
-  slots. Then walk from the highest f down and collect values until you have k.
-  This takes O(n) time. This file loses because every Enqueue and Dequeue on
-  smallestFrequencyFirst costs log k. Bucket sort uses the fact that frequencies
-  are small integers, so it needs no comparisons at all.
-INVARIANT
-  After each entry of occurrences is handled, smallestFrequencyFirst holds the k
-  most frequent values seen so far (or all of them, if fewer than k have been
-  seen). Here is why. A new entry is enqueued first. Then, if Count > k, the
-  minimum is removed. The removed value has the lowest frequency among k + 1
-  candidates, so it cannot be in the top k. If the new entry is itself the
-  weakest, it is the one removed. When the loop ends, every distinct value has
-  been compared this way, so the heap holds the true top k.
-WATCH OUT
-  The comment says the heap holds "at most k entries". That is not true: right
-  after Enqueue it holds k + 1 for a moment, before Dequeue brings it back to k.
-  The result comes out in ascending frequency order, because Dequeue pops the
-  least frequent first. So result[0] is the k-th most frequent value, not the
-  most frequent. If the caller expects descending order, fill result from index
-  k - 1 down to 0. If k is larger than the number of distinct values, the Step 3
-  loop calls Dequeue on an empty queue, and that throws
-  InvalidOperationException. If two values tie at the cut-off frequency, which
-  one stays depends on the heap's internal order.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you get average O(n) without bucket sort?
-     Yes. Use quickselect (the partition step from quicksort) on the distinct
-     values, ordered by occurrences[x], to find the k-th largest count. It is
-     O(n) on average but O(n^2) in the worst case, and it reorders the array in
-     place.
-  2. What if nums arrives as a stream that is too large to keep?
-     The exact occurrences map needs memory for every distinct value. If that is
-     too much, use an approximate counter such as Count-Min Sketch (a small
-     fixed-size table of hashed counters) or the Misra-Gries algorithm (keeps a
-     limited number of counters). You get less memory in exchange for
-     approximate answers.
-  3. What if k is close to the number of distinct values?
-     Flip it. Keep a max-heap of the (distinct - k) least frequent values, and
-     return everything else. The heap stays small, and the log factor shrinks to
-     log(distinct - k).
-TRIGGER
-  The problem asks for the "k largest / most frequent / closest" items, and a
-  full sort would do more work than needed.
-C# NOTE
-  When Count == k, PriorityQueue.EnqueueDequeue(entry.Key, entry.Value) does the
-  push and pop as one call. It returns the new item right away if its priority
-  is not larger than the current minimum. This replaces the separate Enqueue
-  then Dequeue pair.
+IDEA
+  First count each value in the dictionary occurrences. Then push every
+  (value, count) pair into the min-heap smallestFrequencyFirst, where the
+  priority is the count. When the heap holds more than k items, pop the top,
+  which is the least frequent. This is correct because a value can only be
+  evicted when k values with a count at least as high are kept. optimal.cs
+  uses buckets by frequency instead of a heap.
+EXAMPLE
+  nums = [1,1,1,2,2,3], k = 2 -> occurrences {1:3, 2:2, 3:1}
+  push 1(3), push 2(2), push 3(1) -> Count 3 > 2, Dequeue removes 3
+  drain heap: Dequeue 2, then Dequeue 1 -> result = [2,1]
 COMPLEXITY
-  Time  : O(n log k)
-  Space : O(n)
+  Time  O(n log k)  one counting pass, then one push/pop per distinct value on
+                    a heap of k+1
+  Space O(n)        the dictionary can hold up to n distinct values; the heap
+                    holds k+1
+WATCH OUT
+  - The result comes out least frequent first ([2,1], not [1,2]). This is fine
+    here, but reverse it if the interviewer asks for descending order.
+  - The priority must be entry.Value (the count), not entry.Key.
+  - If you push everything and never check Count > k, time becomes O(n log n).
+  - If k is larger than the number of distinct values, Dequeue in step 3
+    throws InvalidOperationException. The problem says this never happens.
 ================================================================================
 */

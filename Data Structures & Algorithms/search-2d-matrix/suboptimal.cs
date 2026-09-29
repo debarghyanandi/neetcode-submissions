@@ -37,69 +37,35 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary Search - one search per row
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Suboptimal
+ PROBLEM : Given an m x n integer matrix, return true if target is in it, else
+           false. Each row is sorted ascending. The first value of each row is
+           greater than the last value of the row above, so the whole grid is
+           one sorted list. Example: [[1,3,5,7],[10,11,16,20],[23,30,34,60]],
+           target 3 -> true.
+ PATTERN : Binary Search (per row, recursive)
 ================================================================================
-VARIABLES
-  left, right  inclusive bounds of the part of nums still being searched
-  mid          middle index, written as left + (right - left) / 2
-  found        true if the current row holds target
-WHY THIS PATTERN
-  Each row is sorted, so a binary search can find target in one row in log time.
-  SearchMatrix runs BinarySearch on every row until one of them returns true.
-  This works, but it only uses the fact that each row is sorted. It ignores the
-  stronger rule that the first value of each row is bigger than the last value
-  of the row before it.
-BETTER APPROACH
-  The better approach is one binary search over the whole matrix, read as a
-  single sorted list of m*n values. Map a flat index mid to matrix[mid / n][mid
-  % n], where n is the row length. That takes O(log(m*n)) time. This file loses
-  because it searches every row. The rows are also sorted relative to each
-  other, so it could skip any row whose first value is greater than target or
-  whose last value is less than target.
-INVARIANT
-  In BinarySearch: if target is anywhere in nums, it is inside
-  nums[left..right]. Each step compares nums[mid] with target and removes the
-  half that cannot hold it, so the range gets smaller every call. When left >
-  right, the range is empty, and target is not in the row. In the foreach loop:
-  every row already checked does not contain target, so returning false after
-  the loop is correct.
-WATCH OUT
-  The comment "this is good but mLogn" is right about the cost, but "good" hides
-  the real miss: a row whose values are all larger than target is still
-  searched. Because the rows are ordered, once row[0] > target no later row can
-  match, and the loop could stop there. A row of length 0 is handled safely:
-  right is -1, so left > right and the method returns false at once. The code
-  does not guard against a null row, though.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you remove the recursion?
-     Yes. Use a while (left <= right) loop that moves left or right. This gives
-     O(1) extra space instead of O(log n) for the call stack. The logic stays
-     the same.
-  2. What if only each row and each column are sorted, and one row does not have
-  to start after the previous row ends?
-     A single flat binary search no longer works. Start at the top-right corner.
-     If the value is bigger than target, move left. If it is smaller, move down.
-     This takes O(m + n) time and O(1) space.
-  3. How would you do it as two searches instead of one flat search?
-     First, binary search on the first value of each row (matrix[r][0]) to find
-     the last row that starts at or below target. Then binary search inside that
-     row. This is O(log m + log n), the same as O(log(m*n)), and you never need
-     the index math with / and %.
-  4. In the flat version, what happens if m*n is very large?
-     m*n can overflow int. Compute the high bound and mid as long, then cast
-     back to int when you index the row and the column.
-TRIGGER
-  If a 2D grid, read row by row, forms one sorted sequence, treat it as a flat
-  sorted array and run a single binary search.
-C# NOTE
-  Array.BinarySearch(row, target) >= 0 does the same job as the hand-written
-  helper, and it is iterative. Also, "if (found == true) return found;" can be
-  written as "if (found) return true;".
+IDEA
+  Loop over every row and run a normal binary search on it. BinarySearch
+  takes left and right, checks nums[mid], and recurses into the half that
+  can still hold target. It stops with false when left > right. It is
+  correct because each row is sorted, so a search per row checks every
+  cell. Unlike optimal.cs, it ignores that the rows chain into one list.
+EXAMPLE
+  matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 16
+  Row 0: mid values 3, 5, 7, all < 16, then left 4 > right 3 -> false.
+  Row 1: mid 1 -> 11 < 16, mid 2 -> 16 == target -> return true.
+  Row 2 is never searched. Answer: true.
 COMPLEXITY
-  Time  : O(m log n)
-  Space : O(log n)
+  Time  O(m log n)  m rows, each binary search halves n cells down to one
+  Space O(log n)    recursion depth of BinarySearch is log n stack frames
+WATCH OUT
+  - It searches rows that cannot hold target. A cheap fix: skip a row when
+    row[^1] < target, and break when row[0] > target.
+  - Recursion uses log n stack frames. A while loop gives O(1) space, and
+    an interviewer may ask for it.
+  - Write right = row.Length - 1, not row.Length, or nums[mid] can read past
+    the end. An empty row gives right = -1 and returns false safely.
+  - Keep mid = left + (right - left) / 2. Writing (left + right) / 2 can
+    overflow int on very large indices.
 ================================================================================
 */

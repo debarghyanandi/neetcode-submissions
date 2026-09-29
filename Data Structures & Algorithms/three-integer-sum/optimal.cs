@@ -68,73 +68,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sort + Two Pointers - fix an anchor, two-sum the rest
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an int array nums, return every unique triplet [a, b, c] with
+           a + b + c == 0. The three values must come from different indices.
+           The answer must not contain the same triplet twice. Order does not
+           matter. [-1,0,1,2,-1,-4] -> [[-1,-1,2],[-1,0,1]]
+ PATTERN : Sort + Two Pointers (converging) per anchor
 ================================================================================
-VARIABLES
-  target          -nums[i]; the pair sum needed so that anchor + pair = 0
-  anchor          nums[i], the fixed first value of every triplet in this call
-  sum             nums[left] + nums[right], compared against target
-  usedLeftValue   nums[left] of the triplet just added; left skips all its copies
-  usedRightValue  nums[right] of the triplet just added; right skips all its copies
-WHY THIS PATTERN
-  The problem asks for all unique triplets that sum to zero. Fix one value and
-  it becomes two-sum on the rest, with target = -nums[i]. On a sorted array,
-  two-sum is solved by two pointers moving inward. This gives one linear scan
-  per anchor. Sorting also puts equal values next to each other, so duplicates
-  can be skipped by comparing a value with its neighbour. No hash set is needed
-  for that.
-BRUTE FORCE
-  Try every i < j < k, keep the triplets whose sum is 0, and store each sorted
-  triplet in a HashSet to remove duplicates. It is clearly correct, but it costs
-  O(n^3) time and O(number of triplets) extra space for the set. It loses
-  because the sorted order lets one pointer pass replace the whole inner pair of
-  loops.
-INVARIANT
-  Inside FindPairsWithSum, no pair that uses an index outside [left, right] can
-  still give a new triplet. If sum > target, nums[right] is too big even with
-  the smallest value left, so right can be dropped. If sum < target, nums[left]
-  is too small even with the largest value left, so left can be dropped. Each
-  anchor value is used once (the nums[i] == nums[i - 1] skip), and each (left,
-  right) value pair is added once. So every unique triplet is found exactly
-  once.
-WATCH OUT
-  Array.Sort(nums) sorts the caller's array in place. The caller's input order
-  is lost. The comment "Both pointers must clear their whole duplicate block"
-  says more than is needed. Once left moves past usedLeftValue, the pair needs
-  nums[right] = target - nums[left], which is a different value. So skipping on
-  one side alone already stops the repeat. The second loop only saves some
-  useless steps. The comments also ignore overflow: -nums[i] overflows when
-  nums[i] is int.MinValue, and nums[left] + nums[right] can overflow for very
-  large values. Nothing in the code guards against either one.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you solve 4Sum, or kSum in general?
-     Add one anchor loop per extra element, with the same duplicate skip at each
-     level, and end with this same two-pointer helper. Time is O(n^(k-1)).
-     Recursion keeps the code short.
-  2. Can you solve it without sorting or changing the input?
-     For each i, run a hash-set two-sum over the rest of the array. Time is
-     still O(n^2), but you use O(n) extra space, and you must remove duplicates
-     yourself by storing sorted triplets in a set. Or you can sort a copy, which
-     costs O(n) space.
-  3. What if you must count triplets with sum < target (3Sum Smaller)?
-     Use the same sort and pointers. When sum < target, every index from left+1
-     to right pairs with left, so add right - left and move left. Do not skip
-     duplicates here, because index triplets are counted, not value triplets.
-  4. What about 3Sum Closest?
-     Use the same loop, but track the sum with the smallest distance to the
-     target instead of collecting exact matches. There is no duplicate skipping
-     and no early break, and you can return at once if the distance is 0.
-TRIGGER
-  The problem asks for all unique groups of k numbers with a given sum, and
-  sorting the input is allowed.
-C# NOTE
-  FindPairsWithSum appends straight into the shared triplets list passed in as a
-  parameter. It does not build and return a new list for each anchor, so no
-  extra lists are created or merged.
+IDEA
+  Sort nums. Then fix each nums[i] as the anchor and solve a two-sum for
+  target -nums[i] on the window [i+1, end] with left and right pointers.
+  If sum is too big, right-- makes it smaller; if too small, left++. Sorted
+  order means each move throws away only pairs that cannot match, so no
+  triplet is missed. Skipping equal anchors and equal left/right values
+  keeps every triplet unique.
+EXAMPLE
+  sorted [-4,-1,-1,0,1,2]; i=0 anchor -4, target 4: no pair reaches 4
+  i=1 anchor -1, target 1: -1+2 hit -> [-1,-1,2]; then 0+1 hit -> [-1,0,1]
+  i=2 skipped (same -1), i=3 anchor 0: 1+2 > 0, pointers meet; i=4 is 1 > 0
+  Answer: [[-1,-1,2],[-1,0,1]]
 COMPLEXITY
-  Time  : O(n^2)
-  Space : O(log n)
+  Time  O(n^2)    n anchors, each with an O(n) two-pointer scan; sort is only
+                  n log n
+  Space O(log n)  only the sort's recursion stack; output list not counted
+PATH TO OPTIMAL
+  Brute force, three nested loops + set of sorted triplets - O(n^3).
+  Anchor + hash set for the third value - O(n^2) time, O(n) space; the
+    inner loop becomes one pass, but dedup is messy and needs extra memory.
+  Sort + two pointers (this file) - O(n^2) time, O(log n) space; sorting
+    gives adjacent duplicates, so dedup is free and no hash set is needed.
+KEYWORDS
+  3Sum, two pointers, sorting, two-sum II, deduplication, k-sum, triplets
+WATCH OUT
+  - Break on nums[i] > 0, not >= 0: with [0,0,0] the anchor 0 is valid.
+  - Skip anchors with nums[i] == nums[i-1], not nums[i] == nums[i+1];
+    the second form wrongly drops [-1,-1,2].
+  - After a hit, move BOTH pointers past their duplicate blocks. Otherwise
+    the loop never ends or the same triplet is added again.
+  - Array.Sort changes the caller's array. Copy it first if that matters.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. 3Sum Closest: return the sum nearest to a target?
+     -> Same loops. Track the best |sum - target| and move pointers the same
+        way. No dedup needed. Still O(n^2) time.
+  2. 4Sum or general k-Sum?
+     -> Recurse. Fix one value and call (k-1)-Sum until you reach this
+        two-pointer base case. Time is O(n^(k-1)). Use long for sums.
+  3. You may not sort or change the input?
+     -> For each i, run a two-sum with a hash set on the rest. Store sorted
+        triplets in a set to dedup. O(n^2) time, but O(n) extra space.
+  4. Count triplets with sum < target (3Sum Smaller)?
+     -> Sort. When nums[i]+nums[left]+nums[right] < target, add right-left to
+        the count and left++. Otherwise right--. O(n^2) time.
+TRIGGER
+  You must find unique pairs or triplets hitting a target sum and the
+  order of the input does not matter, so you can sort first.
 ================================================================================
 */

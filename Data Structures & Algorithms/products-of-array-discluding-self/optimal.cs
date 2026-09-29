@@ -33,78 +33,53 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Prefix / Suffix Products - two passes, one output array
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an int array nums, return an array where output[i] is the
+           product of every element except nums[i]. You may not use division,
+           and it must run in O(n). Example: [1,2,3,4] -> [24,12,8,6].
+ PATTERN : Prefix Product + Suffix Product (two passes)
 ================================================================================
-VARIABLES
-  result          after pass 1: result[i] = nums[0] * ... * nums[i-1]; after pass 2: the final answer
-  prefixProduct   product of nums[0..i-1], the elements to the left of i
-  suffixProduct   product of nums[i+1..length-1], the elements to the right of i
-WHY THIS PATTERN
-  The problem asks, for each index, for the product of "everything except me".
-  That splits into two parts: everything to my left and everything to my right.
-  A running product from each side gives both parts in one sweep each. Pass 1
-  stores the left part in result[i], and pass 2 multiplies in the right part
-  from suffixProduct. So there is no need for a separate suffix array.
-BRUTE FORCE
-  For each i, loop over every j != i and multiply nums[j]. This is clearly
-  correct, but it is O(n^2) time, because it computes the same partial products
-  again and again. The other obvious idea is to take the total product and
-  divide by nums[i]. That breaks when there is a zero, and the problem usually
-  forbids division anyway.
-INVARIANT
-  In pass 1, when result[i] is written, prefixProduct equals the product of
-  nums[0..i-1] exactly. In pass 2, when result[i] *= suffixProduct runs,
-  suffixProduct equals the product of nums[i+1..length-1] exactly. Each running
-  product is used first and updated second, so nums[i] is never in either
-  factor. After both passes, result[i] = (left product) * (right product), which
-  is exactly what the problem asks for.
-ZEROS NEED NO SPECIAL CASE
-  There is no division, so a zero in nums is just another factor. It turns every
-  product that includes it into 0. With one zero, only the zero's own index gets
-  a nonzero answer. With two or more zeros, every entry is 0. The code gets both
-  cases right without any branch.
-WATCH OUT
-  The order inside each loop matters. If you update prefixProduct or
-  suffixProduct before you use it, nums[i] gets counted in its own answer. All
-  the math is int. C# arithmetic is unchecked by default, so an overflow wraps
-  around silently and does not throw. The last update in each loop
-  (prefixProduct *= nums[length-1] and suffixProduct *= nums[0]) builds the
-  product of the whole array, and nothing ever reads it. That product can
-  overflow even when every answer fits, and it would throw if this code ran in a
-  checked context.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if division were allowed?
-     Count the zeros and take the product of the nonzero values. With zero
-     zeros, the answer is total / nums[i]. With exactly one zero, only the
-     zero's index gets the product and every other index gets 0. With two or
-     more zeros, every entry is 0. It is still one or two passes, but it needs
-     more branches, and it is only safe when that product fits in the type.
-  2. Why does this count as O(1) extra space when result has n entries?
-     The output array does not count by convention. The simpler version keeps
-     separate prefix[] and suffix[] arrays, which is O(n) extra. Here result is
-     reused as the prefix array, and a single scalar replaces the suffix array.
-  3. What if the answers could be larger than int?
-     Change result, prefixProduct and suffixProduct to long, or to BigInteger if
-     the values have no bound. long costs nothing in the algorithm. BigInteger
-     makes each multiplication slower as the numbers grow.
-  4. How about a 2D version: each cell gets the product of every other cell in
-  the grid?
-     Flatten the grid in row-major order (one row after another) and run the
-     same two passes on the flat index. The left and right idea does not depend
-     on the shape.
-TRIGGER
-  Look for "for each index, combine everything except this one" with no division
-  or no inverse operation allowed. Build it from a left running value and a
-  right running value.
-C# NOTE
-  new int[length] fills the array with zeros, but pass 1 writes every slot
-  before anything reads it, so that fill does not matter here. Returning result
-  directly avoids an extra copy, such as a List<int> converted with ToArray().
+IDEA
+  The answer at i is (product of everything left of i) times (product of
+  everything right of i). Pass 1 goes left to right. It writes prefixProduct
+  into result[i] before it multiplies in nums[i]. Pass 2 goes right to left
+  and multiplies result[i] by suffixProduct. It is correct because each
+  nums[j] with j != i joins exactly one of the two products, and nums[i]
+  joins neither.
+EXAMPLE
+  nums = [2,3,0,4] (a zero is the tricky case)
+  Pass 1: result = [1,2,6,0], prefixProduct ends at 0
+  Pass 2: i=3 -> 0*1=0, i=2 -> 6*4=24, i=1 -> 2*0=0, i=0 -> 1*0=0
+  Answer: [0,0,24,0]
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  two separate linear passes over nums
+  Space O(1)  only two scalars; the output array is not counted
+PATH TO OPTIMAL
+  Brute force: nested loop per i - O(n^2) - the baseline.
+  Total product / nums[i] - O(n) - but division is banned and zeros break it.
+  Separate prefix[] and suffix[] arrays - O(n) time, O(n) extra space.
+  This file: reuse result as prefix, keep suffix in one var - O(1) extra.
+KEYWORDS
+  prefix product, suffix product, no division, two passes, in-place output
+WATCH OUT
+  - Write result[i] BEFORE updating prefixProduct. Swapping the two lines
+    includes nums[i] in its own answer.
+  - Never divide by the total: one zero gives divide-by-zero, two zeros
+    make every answer 0.
+  - Products are int. If values can be large, prefixProduct overflows with
+    no error; use long if the product might not fit.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Why is this O(1) space when result has n slots?
+     -> The output array is required, so by convention it is not counted. The
+        only extra memory is prefixProduct and suffixProduct.
+  2. What if division is allowed?
+     -> Count the zeros. Two or more: all 0. One: only the zero index gets the
+        product of the non-zeros. None: total / nums[i]. Still O(n), O(1).
+  3. Many queries "product of nums[l..r]" on a fixed array?
+     -> Build a prefix product array once in O(n). With division and no zeros,
+        each query is prefix[r+1] / prefix[l] in O(1). Otherwise use a segment
+        tree for O(log n) per query.
+TRIGGER
+  When each answer needs "everything except me" or "all on my left and all
+  on my right", combine a prefix pass and a suffix pass.
 ================================================================================
 */

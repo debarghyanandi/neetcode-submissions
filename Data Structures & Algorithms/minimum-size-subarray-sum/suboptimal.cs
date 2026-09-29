@@ -34,72 +34,35 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window over Prefix Sums - shrink while sum >= target
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Suboptimal
+ PROBLEM : Given a positive integer target and an array of positive integers
+           nums, return the length of the shortest contiguous subarray whose
+           sum is >= target. Return 0 if no such subarray exists. Example:
+           target = 7, nums = [2,3,1,2,4,3] -> 2 (the subarray [4,3]).
+ PATTERN : Sliding Window (variable size) + prefix sum
 ================================================================================
-VARIABLES
-  prefix   prefix[i] = sum of nums[0..i-1], so sum of nums[l..r] = prefix[r+1] - prefix[l]
-  left     start index of the current window
-  result   shortest qualifying window length seen so far; int.MaxValue means none found
-WHY THIS PATTERN
-  The problem asks for the shortest contiguous subarray whose sum is at least
-  target. With positive numbers, a longer window never has a smaller sum. So
-  when the window nums[left..right] qualifies, we can move left forward to look
-  for a shorter answer. We never need to move left back. Each index enters the
-  window once through right and leaves once through left. The prefix array gives
-  each window sum as prefix[right + 1] - prefix[left].
-BETTER APPROACH
-  The better approach is the same window with a single running int sum: add
-  nums[right] when the window grows, and subtract nums[left] before left++. That
-  uses O(1) extra space. This file loses because it builds the whole prefix
-  array of size nums.Length + 1. The window only ever needs the sum of its
-  current range, so the array adds memory and gives nothing back. (A prefix
-  array only pays off in the O(n log n) binary-search version, which this code
-  does not use.)
-INVARIANT
-  When the while loop exits for a given right, prefix[right + 1] - prefix[left]
-  < target. This means no window that ends at right and starts at left or later
-  qualifies. Every left we skipped past was recorded in result before left++.
-  That was already the shortest window for that start, because a later right
-  would only make it longer. So every useful (left, right) pair is checked, and
-  result ends as the true minimum.
-WATCH OUT
-  If target <= 0, the while condition stays true even when left passes right + 1
-  (the window sum becomes 0 or negative but is still >= target). left keeps
-  growing until prefix[left] reads past the end of the array and throws
-  IndexOutOfRangeException. The window logic also needs every nums value to be
-  positive. With negative values, moving left forward can raise the sum, so
-  skipped windows might have qualified and the answer can be wrong. prefix is an
-  int[], so large totals can overflow and wrap to negative numbers. Then the
-  window-sum checks give wrong results.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if nums can contain negative numbers?
-     The two-pointer idea breaks. Keep the prefix array and add a monotonic
-     deque of indexes. A monotonic deque is a double-ended queue whose prefix
-     values always increase from front to back. Pop from the front while
-     prefix[right+1] - prefix[front] >= target, and pop from the back while
-     prefix[back] >= prefix[right+1]. This is still O(n) time, and now the O(n)
-     prefix array is really needed.
-  2. Can you use the prefix array you already built in another way?
-     Yes. The prefix values only increase, so for each start l you can binary
-     search for the smallest r with prefix[r] >= prefix[l] + target. This is O(n
-     log n), slower than the window, but each start is handled on its own.
-  3. What if the numbers arrive as a stream and you cannot store them?
-     Use the running-sum window, but you still have to keep the values inside
-     the current window so you can subtract them. Keep them in a queue. Memory
-     then grows with the longest window, not with the whole input.
-TRIGGER
-  The problem asks for the shortest or longest contiguous subarray under a sum
-  limit, and all values are non-negative, so the window sum only goes up as the
-  window grows.
-C# NOTE
-  C# int arithmetic is unchecked by default, so an overflow in prefix[i + 1] =
-  prefix[i] + nums[i] wraps around without any error. Put that line in
-  checked(...) while testing, or make prefix a long[], so an overflow fails with
-  an error or cannot happen.
+IDEA
+  First build prefix, where prefix[i] is the sum of the first i numbers.
+  Then the window sum nums[left..right] is prefix[right+1] - prefix[left].
+  Move right forward one step at a time. While the window sum is >= target,
+  record right - left + 1 in result and move left forward.
+  All numbers are positive, so moving left can only lower the sum. Each
+  shortest valid window is therefore seen before left passes it. Unlike
+  optimal.cs, this code reads sums from the prefix array instead of a
+  running total.
+EXAMPLE
+  target=7, nums=[2,3,1,2,4,3], prefix=[0,2,5,6,8,12,15]
+  r=3: sum 8 -> result=4, left=1. r=4: sum 10 -> 4, then sum 7 -> 3, left=3
+  r=5: sum 9 -> 3, then sum 7 -> result=2, left=5, sum 3 stops. Answer: 2
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  right and left each move at most n times, so the work is
+              amortized O(1)
+  Space O(n)  the prefix array holds n + 1 sums
+WATCH OUT
+  - If target <= 0, the while loop never stops. left passes right+1, and
+    prefix[left] then goes out of range.
+  - The sliding window needs positive numbers. With negative values,
+    shrinking can raise the sum again, and the window misses answers.
+  - prefix is int[], so large sums can overflow. Use long if values are big.
+  - Do not forget the final check: return 0 when result is int.MaxValue.
 ================================================================================
 */

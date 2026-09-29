@@ -25,68 +25,59 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers (read/write) - in-place stable partition
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : You get an integer array nums. Move all 0s to the end, in place.
+           The non-zero values must keep their original relative order. Return
+           nothing; you change nums itself. Example: [0,1,0,3,12] ->
+           [1,3,12,0,0].
+ PATTERN : Two Pointers (same direction, read/write)
 ================================================================================
-VARIABLES
-  writeIndex  the next slot for a non-zero; nums[0..writeIndex) holds all non-zeros seen so far
-  readIndex   the scan position; each element is looked at exactly once
-WHY THIS PATTERN
-  The problem asks you to move the zeroes to the end, keep the order of the
-  non-zeroes, and do it in place. "In place" rules out a second array. "Keep the
-  order" means a stable partition: the elements are split into two groups, and
-  each group stays in its original order. A read/write pointer pair does exactly
-  this. readIndex finds each non-zero, and writeIndex says where it goes.
-  Because non-zeroes are placed left to right in the order they are found, their
-  order is kept.
-BRUTE FORCE
-  The first correct idea is to copy every non-zero into a new array, fill the
-  rest with 0, and copy the result back into nums. This is O(n) time but needs
-  O(n) extra space, so it breaks the in-place rule. Another in-place idea keeps
-  its O(1) space: each time you find a zero, shift everything after it one step
-  left and put the zero at the end. That costs O(n^2) time.
-INVARIANT
-  Before each loop step, two things are true. nums[0..writeIndex) holds every
-  non-zero seen so far, in original order. nums[writeIndex..readIndex) holds
-  only zeroes. When nums[readIndex] is a non-zero, the swap moves it to the
-  front of the zero block and sends one zero to the back of that block, so both
-  statements stay true. When readIndex reaches nums.Length, the zero block
-  reaches the end of the array, and that is the answer.
-WATCH OUT
-  The swap comment says it carries "the zero that was at writeIndex". That is
-  only true when writeIndex < readIndex. Until the first zero appears, the two
-  indices are equal, so the code swaps a non-zero with itself. The result is
-  still correct, but every element is written for no reason. A null nums throws
-  a NullReferenceException at nums.Length. There is no guard for it.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you cut down the number of writes to the array?
-     Add "if (writeIndex != readIndex)" before the swap, so self-swaps are
-     skipped. Or assign nums[writeIndex] = nums[readIndex] with no swap, then
-     fill nums[writeIndex..] with 0 at the end. The assign version writes each
-     slot about once, but it needs that second pass.
-  2. Remove every copy of a value val and return the new length (Remove
-  Element).
-     Use the same loop, but test nums[readIndex] != val and assign instead of
-     swapping. Return writeIndex. The tail does not matter, so you need neither
-     the swap nor the fill.
-  3. What if the zeroes must go to the front instead?
-     Run the same idea from right to left. Start writeIndex at nums.Length - 1
-     and move it down each time you place a non-zero. The order of the
-     non-zeroes is still kept.
-  4. What if the order of the non-zeroes does not matter?
-     Use two pointers from both ends. Swap a zero on the left with a non-zero on
-     the right. This does fewer swaps, but it gives up stability.
-TRIGGER
-  Reach for this pattern when a problem says to rearrange an array in place so
-  that the elements that pass a test come first, in their original order.
-C# NOTE
-  The tuple line (nums[writeIndex], nums[readIndex]) = (nums[readIndex],
-  nums[writeIndex]) swaps two values without a temp variable. The method returns
-  void and still works, because an int[] is a reference type: the caller sees
-  the changes made to nums.
+IDEA
+  readIndex scans every element. writeIndex marks where the next non-zero
+  goes.
+  When nums[readIndex] is non-zero, swap it into nums[writeIndex] and move
+  writeIndex.
+  The zeros get pushed right by the swaps, so the tail ends up all zeros.
+  It is correct because everything before writeIndex is always the non-zeros
+  seen so far, in the order they were read.
+EXAMPLE
+  nums=[0,1,0,3,12]; r=0 is zero, skip; r=1 swap(0,1) -> [1,0,0,3,12], w=1
+  r=2 is zero, skip; r=3 swap(1,3) -> [1,3,0,0,12], w=2
+  r=4 swap(2,4) -> [1,3,12,0,0], w=3. Answer: [1,3,12,0,0]
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  readIndex visits each index once; each swap is O(1)
+  Space O(1)  only two int indices; the swap is in place
+PATH TO OPTIMAL
+  Copy non-zeros to a new array, pad with zeros - O(n) / O(n) - simple, uses
+  extra memory.
+  Bubble each zero to the end by repeated swaps - O(n^2) / O(1) - no memory,
+  but slow.
+  Read/write pointers with swap (this file) - O(n) / O(1) - one pass, no extra
+  array.
+KEYWORDS
+  two pointers, in-place, stable partition, read/write pointer, array, swap
+WATCH OUT
+  - The comment says the swap "carries the zero" out, but while no zero is
+    seen yet, readIndex == writeIndex and it just swaps a value with itself.
+  - Plain assign (nums[w]=nums[r]) without a second pass that fills zeros
+    leaves old values in the tail: [0,1] would become [1,1].
+  - Increment writeIndex only inside the if; moving it every step breaks
+    order.
+  - Do not return a new array; the caller reads nums after the call.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do fewer writes when zeros are rare?
+     -> Skip the swap when readIndex == writeIndex. Same O(n) / O(1), fewer
+        writes.
+  2. What if order of non-zeros did not matter?
+     -> Use converging pointers: swap a zero from the left with a non-zero
+        from the right. Still O(n) / O(1), fewer moves, but it is not stable.
+  3. Move all copies of a value val instead of 0 (Remove Element)?
+     -> Same loop with nums[readIndex] != val; writeIndex is the new length.
+  4. Why is the relative order kept?
+     -> Non-zeros are written to writeIndex in the order readIndex meets them,
+        and writeIndex never passes readIndex, so none is overwritten early.
+TRIGGER
+  When you must keep or remove some elements in place and preserve their
+  order,
+  use a slow write pointer behind a fast read pointer.
 ================================================================================
 */

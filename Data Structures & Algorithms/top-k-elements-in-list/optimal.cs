@@ -55,68 +55,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Bucket Sort by Frequency - count, then index by count
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an int array nums and an int k, return the k values that
+           appear most often. The answer may be in any order. The problem
+           promises the answer is unique. Example: nums=[1,1,1,2,2,3], k=2 ->
+           [1,2].
+ PATTERN : Bucket Sort by frequency (hash map counting)
 ================================================================================
-VARIABLES
-  occurrences        occurrences[v] = how many times v appears in nums
-  currentCount       count of number so far (0 if not seen yet)
-  valuesByFrequency  valuesByFrequency[f] = all values that appear exactly f times
-  filled             how many slots of result are used so far
-WHY THIS PATTERN
-  The problem asks for the k values with the highest counts. It does not ask for
-  the other values in order. A count can never be larger than nums.Length, so
-  the count itself can be used as an array index. Putting each value into
-  valuesByFrequency[count] sorts the values by count without any comparisons.
-  Walking the array from the top gives the most frequent values first.
-BRUTE FORCE
-  Build the same count map. Then sort the distinct values by count, largest
-  first, and take the first k. This is correct, but the sort costs O(d log d),
-  where d is the number of distinct values. Bucketing removes that log factor.
-INVARIANT
-  After step 2, every distinct value sits in exactly one bucket, the one equal
-  to its true count. In step 3, frequency moves strictly downward. So when a
-  value is written to result, every value with a higher count has already been
-  written. The first k values written are therefore a correct top-k.
-WATCH OUT
-  If k is larger than the number of distinct values, the loop ends early. The
-  unused slots of result stay 0, and 0 looks like a real answer. This happens
-  silently, with no error. Also, when several values share the same count at the
-  cut-off point, which ones get picked depends on Dictionary enumeration order.
-  That order is not guaranteed, so do not rely on a specific tie result. Bucket
-  0 is allocated but can never hold a value, because every value in occurrences
-  appears at least once.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without the n+1 buckets?
-     Use a min-heap (a priority queue where the smallest item is removed first)
-     of size k, keyed on count. Pop the smallest whenever the size goes above k.
-     This is O(n log k) time and O(d + k) space. It is slower in theory, but it
-     only needs k extra slots on top of the map.
-  2. Can you get the top k in average linear time with no bucket array?
-     Use quickselect on the distinct values, compared by count. It partitions
-     around position d - k. Average time is O(d) after counting, but the worst
-     case is O(d^2) unless the pivot choice is randomized.
-  3. What if nums is a stream that is too large to keep a full count map in
-  memory?
-     Exact top-k is not possible in bounded memory. Use an approximate method
-     such as Misra-Gries or Count-Min Sketch plus a small heap. The trade-off is
-     less memory for counts that may be slightly wrong.
-  4. What if ties must be broken in a fixed order, for example the smaller value
-  first?
-     Sort each bucket before you read it, or read the buckets through a
-     SortedSet. This adds a log factor only inside the buckets you actually
-     read.
-TRIGGER
-  You need a ranking by a count that cannot be larger than n, and you only need
-  the top k, not a full sort.
-C# NOTE
-  TryGetValue followed by the indexer set does two hash lookups for each number.
-  CollectionsMarshal.GetValueRefOrAddDefault(occurrences, number, out _)++ does
-  the increment with a single lookup.
+IDEA
+  First, count each value in occurrences (value -> count). No count can be
+  bigger than nums.Length. So valuesByFrequency[f] holds every value that
+  occurs exactly f times. Walk f from high to low and copy values into
+  result until filled == k. This is correct because bucket order is
+  frequency order, so no sort is needed.
+EXAMPLE
+  nums=[1,1,1,2,2,3,3], k=2 -> occurrences {1:3, 2:2, 3:2}
+  buckets: [3]=[1], [2]=[2,3], [1]=[], f=7..4 empty
+  f=3: take 1 (filled=1); f=2: take 2 (filled=2), break before taking 3
+  answer [1,2]. Value 3 ties with 2 and is dropped by the filled==k guard.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  one pass to count, one pass over n+1 buckets and distinct values
+  Space O(n)  the map plus n+1 bucket lists hold at most n entries in total
+PATH TO OPTIMAL
+  Sort (value,count) pairs by count - O(n log n) - simple baseline.
+  Min-heap of size k over the counts - O(n log k) - in suboptimal.cs.
+  It is better when k is small.
+  Buckets indexed by count - O(n) - count is bounded by n, so no compare.
+KEYWORDS
+  top k frequent, hash map, frequency count, bucket sort, min-heap,
+  quickselect
+WATCH OUT
+  - Without the filled == k check in the inner loop, a tie in the last
+    bucket writes past result: IndexOutOfRange.
+  - That break only leaves the foreach. The outer loop condition
+    filled < k is what stops it. Keep both checks.
+  - The array needs nums.Length + 1 buckets, not nums.Length. A value that
+    fills all of nums has count n. Bucket 0 is never used.
+  - If k is more than the number of distinct values, result ends in 0s.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it without O(n) buckets, or with less extra memory?
+     -> Use quickselect on the distinct values by count. It is O(n) on average
+        and O(n^2) in the worst case. It works in place on the key list.
+  2. What if nums is a stream that never ends?
+     -> Keep a count map and a min-heap of size k. Each update is O(log k).
+        For very large streams, use Count-Min Sketch, which is approximate.
+  3. What if ties must be broken, for example by smaller value first?
+     -> Sort each bucket, or use a heap with a (count, value) comparator. This
+        adds a log factor for that ordering.
+  4. Why is the bucket version O(n) when sorting is n log n?
+     -> The keys are counts in 1..n, a small integer range. Indexing by the
+        key replaces comparisons, like counting sort.
+TRIGGER
+  When you need the "top k by count" and the counts are bounded by n,
+  index buckets by count instead of sorting.
 ================================================================================
 */

@@ -60,74 +60,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Multi-source BFS - all rotten oranges start at time 0
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Grid cells are 0 (empty), 1 (fresh fruit) or 2 (rotten fruit). Each
+           minute, every fresh fruit next to a rotten one (up, down, left,
+           right) becomes rotten. Return the minutes until no fresh fruit is
+           left, or -1 if some fruit can never rot. [[2,1,1],[0,1,1],[1,0,1]]
+           -> -1
+ PATTERN : Multi-source BFS on a grid (level = minute)
 ================================================================================
-VARIABLES
-  q       queue of (row, col, time) = a rotten cell and the minute it turned rotten
-  vis     vis[r, c] = current state of cell (0 empty, 1 fresh, 2 rotten); a copy of grid
-  dRow    row offsets for the 4 neighbours (up, right, down, left)
-  dCol    column offsets, paired with dRow by index
-  tm      largest time taken from q so far = minutes until the last orange rots
-WHY THIS PATTERN
-  Rot spreads one step per minute to the 4 neighbours, from every rotten orange
-  at once. That is a shortest-distance question on a grid with unit edges, and
-  BFS answers it. Putting every starting 2 into q with time 0 is the same as one
-  BFS from a single virtual source joined to all of them. So each fresh orange
-  gets time = distance to its nearest rotten orange, and the answer is the
-  largest one, kept in tm.
-BRUTE FORCE
-  Simulate minute by minute. Each minute, scan the whole grid, find fresh cells
-  next to a cell that was rotten at the start of that minute, and rot them. Stop
-  when a minute changes nothing. Each scan costs O(m * n), and there can be up
-  to O(m * n) minutes, so the worst case is O((m * n)^2). It loses because it
-  rescans cells that have already settled, while BFS touches each cell once.
-INVARIANT
-  q always holds cells in non-decreasing order of time. A cell is set to 2 in
-  vis at the moment it is enqueued, with the time of its first discovery. BFS
-  finds each cell first from the earliest possible front, so that time is the
-  true minute it rots. When q is empty, every fresh orange that any rotten
-  orange can reach is rotten. Any 1 still left in vis is unreachable, and -1 is
-  the correct answer for it.
-MARK ON ENQUEUE, NOT ON DEQUEUE
-  The line vis[nRow, nCol] = 2 runs right after Enqueue. Two rotten neighbours
-  in the same minute can both see the same fresh cell. Because it is marked
-  right away, the second one sees 2 and skips it. If you marked on dequeue
-  instead, the cell would be enqueued twice. The answer would still be right,
-  but q would grow with duplicate work.
-WATCH OUT
-  grid[0].Length throws if grid has no rows. Add a guard before it if empty
-  input is possible. The name vis is misleading: it is not a visited flag. It is
-  a full copy of the grid state, and its values 1 and 2 carry meaning. tm =
-  Math.Max(time, tm) is safe, but because q is in time order, tm = time would
-  give the same result.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you use less extra memory?
-     Write the 2s straight into grid and drop vis. This saves the copy, but it
-     changes the caller's input, so ask first if that is allowed.
-  2. Can you avoid the last full scan for leftover fresh oranges?
-     Count fresh cells in the first loop. Subtract one each time you rot a cell.
-     At the end, return count > 0 ? -1 : tm. You can also return 0 early if the
-     count starts at 0.
-  3. How do you drop time from the tuple?
-     Process level by level. Read q.Count at the start of each round, dequeue
-     exactly that many cells, then add one minute if anything rotted in that
-     round. The trade-off is an extra inner loop and care to not count the last
-     empty round.
-  4. What if rot also spreads diagonally?
-     Add the 4 diagonal offsets to dRow and dCol and loop to 8. The BFS logic
-     stays the same.
-TRIGGER
-  Something spreads one step per unit of time from many starting cells at once,
-  and you need the time or distance until it reaches everything.
-C# NOTE
-  dRow and dCol are built as new List<int> on every call, but they never change.
-  A static readonly array such as (int dr, int dc)[] with the four pairs keeps
-  each offset pair together in one place and is allocated only once.
+IDEA
+  Put every rotten cell into q at time 0, all at once, as the BFS start.
+  Each dequeued cell rots its fresh neighbours in vis and enqueues them
+  with time + 1. tm keeps the largest time seen. At the end, any 1 left
+  in vis was never reached, so return -1. BFS reaches each cell first by
+  its shortest path, so each time is the minute it really rots.
+EXAMPLE
+  grid [[2,1,1],[1,1,0],[0,1,1]], start q = (0,0,t0)
+  (0,0) -> (0,1)t1,(1,0)t1; (0,1) -> (1,1)t2,(0,2)t2; (1,0) adds none
+  (1,1) -> (2,1)t3; (2,1) -> (2,2)t4; no 1 left in vis -> answer 4
 COMPLEXITY
-  Time  : O(m * n)
-  Space : O(m * n)
+  Time  O(m * n)  each cell is enqueued at most once, with 4 neighbour checks
+  Space O(m * n)  the vis copy of the grid plus q, both up to m * n cells
+PATH TO OPTIMAL
+  Simulate minute by minute, rescanning the whole grid - O((m*n)^2) -
+    simple, but a long snake of fruit needs about m*n full scans.
+  Multi-source BFS from all rotten cells - O(m*n) - each cell is handled
+    once, not once per minute (this file, optimal.cs).
+KEYWORDS
+  multi-source BFS, grid BFS, shortest time spread, queue, flood fill,
+  4-directional neighbours
+WATCH OUT
+  - Set vis[nRow, nCol] = 2 when you enqueue, not when you dequeue.
+    Otherwise one fruit can be enqueued twice by two rotten neighbours.
+  - Start BFS from ALL rotten cells together. BFS from each one alone
+    gives wrong times and costs O((m*n)^2).
+  - No fresh fruit at all must return 0, not -1. This code does it
+    right, because tm stays 0.
+  - grid[0].Length throws on an empty grid. Add a guard if rows can be 0.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you use O(1) extra space?
+     -> Change grid in place instead of copying it to vis. Also count the
+        fresh fruit first and stop when the count hits 0. Time stays O(m*n), but
+        this destroys the caller's input.
+  2. How do you skip storing time in each queue entry?
+     -> Process q level by level: read q.Count, pop that many, then do
+        minutes++. Same O(m*n) time, and the queue items are smaller.
+  3. What if fruit also rots diagonally, or walls block the spread?
+     -> Use 8 direction pairs in dRow/dCol, or skip wall cells in the check.
+        The BFS stays the same, still O(m*n).
+  4. Why BFS and not DFS?
+     -> BFS pops cells in time order, so the first visit is the earliest
+        minute. DFS would need to revisit cells when it finds a smaller time.
+TRIGGER
+  Many sources spread to their neighbours step by step at the same time,
+  and you need the time or distance until everything is reached.
 ================================================================================
 */
