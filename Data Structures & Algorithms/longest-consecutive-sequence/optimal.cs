@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Hash set, left-edge counting   [hashset-left-edge]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each number is visited at most once because iteration only starts from
-// -  sequence left edges where n-1 doesn't exist.
 // --------------------------------------------------------------------------
 
 public class Solution

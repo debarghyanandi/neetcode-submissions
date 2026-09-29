@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(1) space
-// -  Hash map frequency counting   [hash-map-frequency]
-// -  ties with optimal.cs on O(n) time / O(1) space
-// -
-// -  Reference solution - not one you solved yourself (was suboptimal.cs)
-// -
-// -  Dictionary space is O(1) when bounded by fixed alphabet; two
-// -  sequential passes over input strings give O(n) time.
 // --------------------------------------------------------------------------
 
 public class Solution

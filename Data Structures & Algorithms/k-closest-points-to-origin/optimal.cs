@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n log k) time / O(k) space
-// -  Max heap, maintain K closest   [max-heap-k-closest]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Heap operations on K elements cost O(log K) per point; draining K
-// -  elements adds O(K log K), dominated by O(n log K).
 // --------------------------------------------------------------------------
 
 public class Solution

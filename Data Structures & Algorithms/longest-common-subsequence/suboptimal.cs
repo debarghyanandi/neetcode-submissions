@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n * m) time / O(n * m) space
-// #  Memoization with recursion   [memoization-lcs]
-// #  ranks below optimal.cs (O(n * m) time / O(m) space)
-// #
-// #  YOU SOLVED THIS YOURSELF (from submission-0)
-// #
-// #  Memoization table caches each subproblem result to avoid
-// #  recomputation; call stack depth is at most O(n+m).
 // ##########################################################################
 
 public class Solution

@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Kadane's algorithm, space-optimized   [kadane-constant-space]
-// -  ranks above suboptimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass tracks running sum and resets when negative; updates
-// -  maximum in one pass.
 // --------------------------------------------------------------------------
 
 public class Solution

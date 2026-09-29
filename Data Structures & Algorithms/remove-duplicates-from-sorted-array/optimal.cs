@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  two-pointer in-place removal   [two-pointer]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass with two pointers: right pointer scans the array, left
-// -  pointer places unique elements, each element visited once.
 // --------------------------------------------------------------------------
 
 public class Solution

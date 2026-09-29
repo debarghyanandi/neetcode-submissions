@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Post-order DFS height calculation   [dfs-postorder-height]
-// -  ties with optimal-variant.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node visited once during recursive descent; call stack depth
-// -  equals tree height (worst case n for skewed tree).
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -35,74 +28,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS / Post-order - combine child heights at each node
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, return the length of its diameter.
+           The diameter is the longest path between any two nodes, counted in
+           EDGES, not nodes. The path does not have to pass through the root.
+           Example: [1,2,3,4,5] -> 3 (path 4-2-1-3).
+ PATTERN : DFS post-order (height) + global running max
 ================================================================================
-VARIABLES
-  res      the longest path seen so far, counted in edges
-  left     Height(root.left) = number of nodes on the longest path down from the left child
-  right    Height(root.right) = number of nodes on the longest path down from the right child
-WHY THIS PATTERN
-  The diameter is the longest path between any two nodes, and that path does not
-  have to pass through the root. Every such path has one highest node, where it
-  turns from going up to going down. At that node the path length is the left
-  depth plus the right depth. A post-order DFS (visit both children first, then
-  the node) gives left and right to each node, so every node can be tested as
-  the turning point in one pass while res keeps the best value.
-BRUTE FORCE
-  For each node, call a separate height function on its left and right subtrees
-  and compute left + right, then take the maximum over all nodes. This is
-  correct, but height is computed again and again for the same subtrees. It
-  costs O(n^2) on a skewed tree (one where every node has only one child) and
-  O(n log n) on a balanced one. This file gets each height once and uses it for
-  two things: the answer at this node and the value returned to the parent.
-INVARIANT
-  When Height(root) returns, it has given back the number of nodes on the
-  longest downward path from root. Also, res already holds the best left + right
-  over every node in that subtree. Because every path has exactly one highest
-  node, and every node gets checked once, the final res is the true diameter.
-NODES VS EDGES
-  Height counts nodes (a null child gives 0, a leaf gives 1), but res counts
-  edges. These match because left is the node count below root on the left side,
-  which equals the number of edges from root down that side. So left + right is
-  the edge length of the path through root, and no -1 or +1 fix is needed. If
-  you change Height to count edges, you must change this sum too.
-WATCH OUT
-  res is a public instance field and is never reset. If the same Solution object
-  is called on a second tree, a larger old value can be returned. Set res = 0 at
-  the start of DiameterOfBinaryTree, or make it a local passed by ref. The
-  recursion depth equals the tree height, so a very deep skewed tree can cause a
-  StackOverflowException. That cannot be caught in .NET, so the process ends.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you do this without recursion?
-     Do an iterative post-order traversal with an explicit stack and a
-     Dictionary<TreeNode,int> that maps each node to its height. It is safe for
-     deep trees, but the code is longer and the map costs O(n) memory.
-  2. What if each edge has a weight?
-     Height returns the max weighted depth instead: max(left + w(root,left
-     child), right + w(root,right child)). At each node, res compares the sum of
-     the two weighted sides. The structure stays the same.
-  3. What is the diameter of a general tree (N-ary, or an undirected graph with
-  no cycles)?
-     At each node, keep the two largest child depths and add them. Another way
-     is two BFS runs: go from any node to the farthest node, then from there to
-     the farthest again. The two-BFS method only works when all edge weights are
-     zero or positive.
-  4. How do you return the actual path, not just its length?
-     Store the node where res was last improved. Then walk down from it, always
-     taking the deeper child, once on the left side and once on the right side.
-     This needs heights you can look up, so cache them or compute them again.
-TRIGGER
-  The answer is a path that can bend at any node of a tree, and the best path
-  through a node can be built from values its children return.
-C# NOTE
-  To avoid the shared field, write a private helper with the signature int
-  Height(TreeNode node, ref int best). This keeps the state local to one call
-  and makes the method safe to call more than once.
+IDEA
+  Height(node) returns the number of nodes on the longest downward path.
+  At each node, left + right is the longest path that bends at this node,
+  in edges. We keep the best of these in res.
+  Every path has exactly one highest node where it bends. So checking
+  left + right at every node covers every possible path.
+EXAMPLE
+  [1,2,null,3,4,5,null,6]: 2 has children 3,4; 3 has 5; 4 has 6.
+  H(5)=1, H(3)=2, H(6)=1, H(4)=2 (res=1 so far)
+  H(2): left=2, right=2 -> res=4, returns 3; H(1): 3+0=3, res stays 4
+  Answer 4 (path 5-3-2-4-6). The root is not on this path.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited once by Height, with O(1) work per visit
+  Space O(n)  recursion stack depth equals tree height, n for a skewed tree
+PATH TO OPTIMAL
+  Brute - for each node, call a separate height() on both children -
+    O(n^2) on a skewed tree, because heights are recomputed many times.
+  One post-order DFS - O(n) - the height is computed once and reused for
+    both the return value and the res update (this file).
+  optimal-variant.cs gets the same O(n) bound in another form.
+KEYWORDS
+  binary tree, diameter, height, DFS, post-order, global max, recursion
+WATCH OUT
+  - Returning Height(root) instead of res. That is only the path through
+    the root, which fails on the example above.
+  - Off by one: Height counts nodes, so left + right is edges. Do not add 1.
+  - res is an instance field and is never reset. Reusing the same Solution
+    object for a second tree returns a stale result.
+  - A very deep skewed tree can overflow the call stack.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return the actual path, not just its length?
+     -> At each node also return the deepest leaf, and record the node where
+        res improved. Rebuild the path from both sides. Still O(n) / O(n).
+  2. Maximum path SUM with negative values (LC 124)?
+     -> Same shape. Return node.val + max(0, left, right) and update res with
+        val + max(0,left) + max(0,right). Still O(n).
+  3. N-ary tree, or a general tree given as a graph?
+     -> N-ary: keep the top two child heights at each node. Graph tree: BFS
+        from any node to the farthest node u, then BFS from u. The farthest
+        distance is the diameter. O(n).
+  4. Avoid recursion depth problems?
+     -> Do an iterative post-order with an explicit stack and a map from node
+        to height. Same O(n) time and space, but no call-stack overflow.
+TRIGGER
+  When a tree answer is "the best path through some node, combining both
+  subtrees", return one value up and update a global max at every node.
 ================================================================================
 */

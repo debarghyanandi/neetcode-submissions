@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pointer shrink while comparing to target   [two-pointer-sorted]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Two pointers start at ends and move inward; each passes through array
-// -  once in single pass.
 // --------------------------------------------------------------------------
 
 public class Solution

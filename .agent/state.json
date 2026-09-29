@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-29T17:11:12.314Z",
+  "updatedAt": "2026-09-29T18:18:53.280Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -40,8 +40,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"37086b798b08\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative linked list traversal with carry\",\"approachKey\":\"linked-list-carry-iteration\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(n + m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"0a1d3898deec\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive linked list traversal with carry\",\"approachKey\":\"linked-list-carry-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"37086b798b08\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative linked list traversal with carry\",\"approachKey\":\"linked-list-carry-iteration\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(n + m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"0a1d3898deec\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive linked list traversal with carry\",\"approachKey\":\"linked-list-carry-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -79,8 +79,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"37086b798b08\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative linked list traversal with carry\",\"approachKey\":\"linked-list-carry-iteration\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(n + m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"0a1d3898deec\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive linked list traversal with carry\",\"approachKey\":\"linked-list-carry-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"37086b798b08\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Iterative linked list traversal with carry\",\"approachKey\":\"linked-list-carry-iteration\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(n + m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"0a1d3898deec\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive linked list traversal with carry\",\"approachKey\":\"linked-list-carry-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -149,8 +149,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -179,8 +179,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"83ca03147a9c\",\"time\":\"O(n * k)\",\"space\":\"O(n)\",\"algorithm\":\"Character frequency signature hashing\",\"approachKey\":\"frequency-hash\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a765bb90aa15\",\"time\":\"O(n * k log k)\",\"space\":\"O(n)\",\"algorithm\":\"Sort each word to canonical form\",\"approachKey\":\"sort-canonical\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * k) time / O(n) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -221,7 +221,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -244,7 +244,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"581adeee02c4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS with single-pass height computation\",\"approachKey\":\"recursive-balance-single-pass\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -286,7 +286,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -309,7 +309,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6a2357968a06\",\"time\":\"O(log n)\",\"space\":\"O(log n)\",\"algorithm\":\"Binary search, recursive\",\"approachKey\":\"binary-search-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -354,8 +354,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -394,8 +394,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f4e4e8e76ef5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"dd102e06d6f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Post-order DFS height calculation\",\"approachKey\":\"dfs-postorder-height\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -433,10 +433,10 @@
         "8b1c7c0463c094e6e2175047092cc1b24effacf921dd6d3a9d22780dd759209f": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single pass with minimum tracking\",\"approachKey\":\"single-pass-min-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single pass with minimum tracking\",\"approachKey\":\"single-pass-min-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single pass with minimum tracking\",\"approachKey\":\"single-pass-min-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6e67c7355596\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single pass with minimum tracking\",\"approachKey\":\"single-pass-min-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -498,7 +498,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -521,7 +521,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -566,8 +566,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -603,8 +603,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"13325f5d4769\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized Fibonacci iteration\",\"approachKey\":\"fibonacci-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"8ff770dbe692\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"fibonacci-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -644,7 +644,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -668,7 +668,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"449bab0fc1fb\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"DFS with memoization\",\"approachKey\":\"dfs-memoization-clone\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -721,9 +721,9 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bedf65e4c708\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"space-optimized rolling array\",\"approachKey\":\"space-optimized-rolling-array\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"4079265e743e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"recursive memoization\",\"approachKey\":\"recursive-memoization\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
-        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"01bdf203ea0e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"iterative bottom-up tabulation\",\"approachKey\":\"iterative-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"bedf65e4c708\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"space-optimized rolling array\",\"approachKey\":\"space-optimized-rolling-array\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"4079265e743e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"recursive memoization\",\"approachKey\":\"recursive-memoization\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"01bdf203ea0e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"iterative bottom-up tabulation\",\"approachKey\":\"iterative-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -781,9 +781,9 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bedf65e4c708\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"space-optimized rolling array\",\"approachKey\":\"space-optimized-rolling-array\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
-        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"01bdf203ea0e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"iterative bottom-up tabulation\",\"approachKey\":\"iterative-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"4079265e743e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"recursive memoization\",\"approachKey\":\"recursive-memoization\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"bedf65e4c708\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"space-optimized rolling array\",\"approachKey\":\"space-optimized-rolling-array\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"01bdf203ea0e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"iterative bottom-up tabulation\",\"approachKey\":\"iterative-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"4079265e743e\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"recursive memoization\",\"approachKey\":\"recursive-memoization\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -834,8 +834,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -874,8 +874,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -923,8 +923,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -963,8 +963,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"af387f4f21d8\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, BFS topological sort\",\"approachKey\":\"kahn-bfs-topological\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(n + m) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"9b82cd8f682a\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"DFS cycle detection, path-visit tracking\",\"approachKey\":\"dfs-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(n + m) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1005,7 +1005,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1029,7 +1029,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d1b9b0a92692\",\"time\":\"O(n + m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Kahn's algorithm, topological sort BFS\",\"approachKey\":\"topological-sort-kahn-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1068,7 +1068,7 @@
         "78deb0263cc2b06a57a9ef834f698a01304cd053b8fe9d96be4ed44f51a9dbfb": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1091,7 +1091,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"618bc1836acb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack, pop while warmer\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -1148,8 +1148,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1188,8 +1188,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"fc6a6c822bc6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive depth-first search\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e63c1520fd78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative breadth-first search\",\"approachKey\":\"iterative-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1247,8 +1247,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -1275,8 +1275,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"04893c3ee615\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet with early exit\",\"approachKey\":\"hashset-early-exit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"256ee4307930\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"HashSet size comparison\",\"approachKey\":\"hashset-size-compare\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -1330,7 +1330,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1352,7 +1352,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"a6ef6f5741d5\",\"time\":\"O(n log k)\",\"space\":\"O(1)\",\"algorithm\":\"binary search on answer\",\"approachKey\":\"binary-search-answer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1398,8 +1398,8 @@
         "e75d7d26be22d9090e46d1aac75a38c06583d3d23f3f778c63fb7af9dd326b40": "optimal-variant.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1438,8 +1438,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8705b4e06944\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack-based RPN evaluation\",\"approachKey\":\"stack-rpn\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"3424e5a4dc18\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Doubly linked list with pointer rewiring\",\"approachKey\":\"doubly-linked-list-rpn\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -1494,7 +1494,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1516,7 +1516,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d9a525f26493\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search on rotated array\",\"approachKey\":\"binary-search-rotated-array\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1568,8 +1568,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1606,8 +1606,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5e9a14979a64\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Binary search with rotation awareness\",\"approachKey\":\"binary-search-rotated-direct\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(log n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"42ca10874282\",\"time\":\"O(log n)\",\"space\":\"O(1)\",\"algorithm\":\"Find pivot point, then binary search\",\"approachKey\":\"find-pivot-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(log n) time / O(1) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1653,8 +1653,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1692,8 +1692,8 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"34219e23d560\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming space optimization\",\"approachKey\":\"dp-space-optimized\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"befda3bfc2de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Dynamic programming tabulation\",\"approachKey\":\"dp-tabulation\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1733,7 +1733,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1755,7 +1755,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2a36fe2eb985\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming, space-optimized, circular split\",\"approachKey\":\"dp-space-optimized-circular\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1792,7 +1792,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1815,7 +1815,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0e0ae31fbdee\",\"time\":\"O(L)\",\"space\":\"O(1)\",\"algorithm\":\"Trie prefix tree\",\"approachKey\":\"trie\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -1855,7 +1855,7 @@
         "1c66d694702212d24c5daf74b8c15efc33d668dc7dab475511d71cb6a98474f0": "optimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -1877,7 +1877,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"fe742774dbb5\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Two-stack FIFO queue\",\"approachKey\":\"two-stack-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "lint": {
         "optimal.cs": {
@@ -1946,9 +1946,9 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS tree inversion\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS with queue\",\"approachKey\":\"iterative-bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"eb5f76e2a52e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS tree inversion\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"f6f65284be4d\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS with queue\",\"approachKey\":\"iterative-bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":4,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"9b65703a785f\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2074,8 +2074,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ddf705890445\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Fixed-size array character balance\",\"approachKey\":\"array-balance-fixed\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"36e22936a298\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hash-map-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ddf705890445\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Fixed-size array character balance\",\"approachKey\":\"array-balance-fixed\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"36e22936a298\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hash-map-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -2170,7 +2170,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5a0fe1057baf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, converging ends\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5a0fe1057baf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, converging ends\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -2228,7 +2228,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Max heap, maintain K closest\",\"approachKey\":\"max-heap-k-closest\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"9dc695fc5a28\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Max heap, maintain K closest\",\"approachKey\":\"max-heap-k-closest\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2289,7 +2289,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap with size constraint\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"7ac2d53d1f52\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap with size constraint\",\"approachKey\":\"min-heap-kth-largest\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2348,7 +2348,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(k)\",\"space\":\"O(n)\",\"algorithm\":\"In-order traversal with early termination\",\"approachKey\":\"bst-inorder-early-return\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d7fd1f9a1680\",\"time\":\"O(k)\",\"space\":\"O(n)\",\"algorithm\":\"In-order traversal with early termination\",\"approachKey\":\"bst-inorder-early-return\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2409,7 +2409,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap greedy simulation\",\"approachKey\":\"max-heap-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"04449d586ae7\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"max-heap greedy simulation\",\"approachKey\":\"max-heap-greedy\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2481,8 +2481,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion, pre-order traversal\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-order traversal\",\"approachKey\":\"bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8bf36e8e529a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS recursion, pre-order traversal\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"e3520d78f033\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS with queue, level-order traversal\",\"approachKey\":\"bfs-queue\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2567,7 +2567,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bab210c59bb3\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer cycle detection\",\"approachKey\":\"two-pointer-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"bab210c59bb3\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer cycle detection\",\"approachKey\":\"two-pointer-cycle-detection\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2640,9 +2640,9 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"40dcaa47f253\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"Space-optimized tabulation, rolling array\",\"approachKey\":\"space-optimized-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"500b48143a75\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Memoization with recursion\",\"approachKey\":\"memoization-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
-        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"fbd7cb886e74\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Tabulation, bottom-up DP\",\"approachKey\":\"tabulation-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"40dcaa47f253\",\"time\":\"O(n * m)\",\"space\":\"O(m)\",\"algorithm\":\"Space-optimized tabulation, rolling array\",\"approachKey\":\"space-optimized-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"500b48143a75\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Memoization with recursion\",\"approachKey\":\"memoization-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"fbd7cb886e74\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Tabulation, bottom-up DP\",\"approachKey\":\"tabulation-lcs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(m) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2748,7 +2748,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash set, left-edge counting\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"711ff7adff41\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash set, left-edge counting\",\"approachKey\":\"hashset-left-edge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -2836,11 +2836,11 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3270102ef368\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy approach with binary search\",\"approachKey\":\"greedy-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n^2) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"3ff3ad8eb570\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Space-optimized bottom-up DP with rolling arrays\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
-        "suboptimal-2.cs": "{\"v\":3,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"00b653ff292d\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP with nested iteration over preceding elements\",\"approachKey\":\"lis-ending-position\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
-        "suboptimal-3.cs": "{\"v\":3,\"name\":\"suboptimal-3.cs\",\"codePrint\":\"a971c3fe592c\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Recursive memoization, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
-        "suboptimal-4.cs": "{\"v\":3,\"name\":\"suboptimal-4.cs\",\"codePrint\":\"79096a129dad\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Bottom-up tabulation, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"3270102ef368\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy approach with binary search\",\"approachKey\":\"greedy-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n^2) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"3ff3ad8eb570\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Space-optimized bottom-up DP with rolling arrays\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"00b653ff292d\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"1D DP with nested iteration over preceding elements\",\"approachKey\":\"lis-ending-position\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-3.cs": "{\"v\":4,\"name\":\"suboptimal-3.cs\",\"codePrint\":\"a971c3fe592c\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Recursive memoization, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}",
+        "suboptimal-4.cs": "{\"v\":4,\"name\":\"suboptimal-4.cs\",\"codePrint\":\"79096a129dad\",\"time\":\"O(n^2)\",\"space\":\"O(n^2)\",\"algorithm\":\"Bottom-up tabulation, pick or not pick\",\"approachKey\":\"pick-not-pick-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n log n) time / O(n) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -2981,7 +2981,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"4914366afc22\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"expand around center\",\"approachKey\":\"expand-around-center\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"4914366afc22\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"expand around center\",\"approachKey\":\"expand-around-center\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3057,8 +3057,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bf1a8a6b1e82\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window, fixed max frequency\",\"approachKey\":\"sliding-window-fixed-maxfreq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"696e4b6c8ada\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window per distinct character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"bf1a8a6b1e82\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window, fixed max frequency\",\"approachKey\":\"sliding-window-fixed-maxfreq\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"696e4b6c8ada\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window per distinct character\",\"approachKey\":\"sliding-window-per-char\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -3154,8 +3154,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d051b5e92c81\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, hash-map position jump\",\"approachKey\":\"hashmap-lastindex\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"529409e826f5\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, hash-set incremental shrink\",\"approachKey\":\"hashset-sliding-shrink\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d051b5e92c81\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, hash-map position jump\",\"approachKey\":\"hashmap-lastindex\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"529409e826f5\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, hash-set incremental shrink\",\"approachKey\":\"hashset-sliding-shrink\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -3245,8 +3245,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"BST traversal, iterative descent\",\"approachKey\":\"bst-iterative\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BST traversal, recursive descent\",\"approachKey\":\"bst-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6b934e271ac0\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"BST traversal, iterative descent\",\"approachKey\":\"bst-iterative\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"5ba2247c9f92\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BST traversal, recursive descent\",\"approachKey\":\"bst-recursive\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3329,7 +3329,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"87b40f0cd6b4\",\"time\":\"O(1)\",\"space\":\"O(k)\",\"algorithm\":\"Doubly-linked list with hash map\",\"approachKey\":\"lru-doubly-linked-list\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"87b40f0cd6b4\",\"time\":\"O(1)\",\"space\":\"O(k)\",\"algorithm\":\"Doubly-linked list with hash map\",\"approachKey\":\"lru-doubly-linked-list\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3392,7 +3392,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3458,7 +3458,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, shrink shorter\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"d6040c070cce\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, shrink shorter\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -3533,8 +3533,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, space-optimized\",\"approachKey\":\"kadane-constant-space\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's algorithm with explicit DP table\",\"approachKey\":\"kadane-explicit-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"66de7d2dfc7c\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Kadane's algorithm, space-optimized\",\"approachKey\":\"kadane-constant-space\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"c1ca1d30ac1a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Kadane's algorithm with explicit DP table\",\"approachKey\":\"kadane-explicit-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -3618,8 +3618,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5c7c0c5ec04d\",\"time\":\"O(log(min(m, n)))\",\"space\":\"O(1)\",\"algorithm\":\"binary search on partition\",\"approachKey\":\"binary-search-partition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(1) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"e86ca9a2c6c3\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(log(min(m, n))) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5c7c0c5ec04d\",\"time\":\"O(log(min(m, n)))\",\"space\":\"O(1)\",\"algorithm\":\"binary search on partition\",\"approachKey\":\"binary-search-partition\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"e86ca9a2c6c3\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(log(min(m, n))) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3701,7 +3701,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort and greedy merge\",\"approachKey\":\"sort-and-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ffd9e2faee07\",\"time\":\"O(n log n)\",\"space\":\"O(log n)\",\"algorithm\":\"sort and greedy merge\",\"approachKey\":\"sort-and-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -3768,8 +3768,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log k)\",\"algorithm\":\"Divide and conquer merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-priority-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log k) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e06392c2ad28\",\"time\":\"O(n log k)\",\"space\":\"O(log k)\",\"algorithm\":\"Divide and conquer merge\",\"approachKey\":\"divide-conquer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(k) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"f6fd640c8c4d\",\"time\":\"O(n log k)\",\"space\":\"O(k)\",\"algorithm\":\"Min-heap priority queue merge\",\"approachKey\":\"heap-priority-queue\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n log k) time / O(log k) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3854,7 +3854,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"264c17ed1c3f\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"264c17ed1c3f\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer merge\",\"approachKey\":\"two-pointer-merge\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -3930,8 +3930,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"3b0e84ebfabf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, shrink while valid\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"c93b14ab0dee\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window with prefix sum\",\"approachKey\":\"sliding-window-prefix-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"3b0e84ebfabf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window, shrink while valid\",\"approachKey\":\"two-pointer-shrink\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"c93b14ab0dee\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"sliding window with prefix sum\",\"approachKey\":\"sliding-window-prefix-sum\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4011,7 +4011,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"edabe91e9859\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"parallel stack tracking minimum\",\"approachKey\":\"parallel-stack-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"edabe91e9859\",\"time\":\"O(1)\",\"space\":\"O(n)\",\"algorithm\":\"parallel stack tracking minimum\",\"approachKey\":\"parallel-stack-min\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4086,8 +4086,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"bfe9106c0fc0\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window with match counter\",\"approachKey\":\"sliding-window-match-counter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a0b38bcaaf0d\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window with dictionary scan validation\",\"approachKey\":\"sliding-window-dictionary-scan\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"bfe9106c0fc0\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window with match counter\",\"approachKey\":\"sliding-window-match-counter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * k) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a0b38bcaaf0d\",\"time\":\"O(n * k)\",\"space\":\"O(1)\",\"algorithm\":\"Sliding window with dictionary scan validation\",\"approachKey\":\"sliding-window-dictionary-scan\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4170,7 +4170,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eb7a14bc9901\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer swap in-place\",\"approachKey\":\"two-pointer-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"eb7a14bc9901\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer swap in-place\",\"approachKey\":\"two-pointer-swap\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4245,8 +4245,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2edda7136511\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window with dictionary comparison\",\"approachKey\":\"sliding-window-dict-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(1) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2664c64e9078\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window with frequency counter\",\"approachKey\":\"sliding-window-match-counter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(1) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2edda7136511\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window with dictionary comparison\",\"approachKey\":\"sliding-window-dict-compare\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n + m) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2664c64e9078\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"sliding window with frequency counter\",\"approachKey\":\"sliding-window-match-counter\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n + m) time / O(1) space\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4337,7 +4337,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"eeb48d2a7bff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pass prefix-suffix products\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"eeb48d2a7bff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pass prefix-suffix products\",\"approachKey\":\"prefix-suffix-product\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -4395,7 +4395,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer in-place removal\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5fe33e928c63\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer in-place removal\",\"approachKey\":\"two-pointer\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4458,7 +4458,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1e262d2b762f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, fast and slow\",\"approachKey\":\"two-pointer-linked-list\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"1e262d2b762f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer, fast and slow\",\"approachKey\":\"two-pointer-linked-list\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4521,7 +4521,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"slow-fast pointers, reverse recursively, interleave\",\"approachKey\":\"slow-fast-recursive-reverse-interleave\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"dbb7370936f4\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"slow-fast pointers, reverse recursively, interleave\",\"approachKey\":\"slow-fast-recursive-reverse-interleave\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4597,8 +4597,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f45ab5828eca\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive pointer reversal\",\"approachKey\":\"recursive-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f45ab5828eca\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterative pointer reversal\",\"approachKey\":\"iterative-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"cc7b45fbbcf2\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive pointer reversal\",\"approachKey\":\"recursive-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4677,7 +4677,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"80ee9c3253e1\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS with time tracking\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"80ee9c3253e1\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Multi-source BFS with time tracking\",\"approachKey\":\"multi-source-bfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4760,9 +4760,9 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS traversal\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
-        "optimal-variant-2.cs": "{\"v\":3,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS level-order traversal\",\"approachKey\":\"iterative-bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"06a6c0453e9e\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Recursive DFS traversal\",\"approachKey\":\"recursive-dfs\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant-2.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0801c6b09dbf\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative DFS with explicit stack\",\"approachKey\":\"iterative-dfs-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}",
+        "optimal-variant-2.cs": "{\"v\":4,\"name\":\"optimal-variant-2.cs\",\"codePrint\":\"689324c4e7fa\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Iterative BFS level-order traversal\",\"approachKey\":\"iterative-bfs-level-order\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4878,8 +4878,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, treat 2D as 1D\",\"approachKey\":\"virtual-1d-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"per-row-recursive-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"1fe0243b4ec5\",\"time\":\"O(log(m*n))\",\"space\":\"O(1)\",\"algorithm\":\"binary search, treat 2D as 1D\",\"approachKey\":\"virtual-1d-binary-search\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(m log n) time / O(log n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"10e131c67162\",\"time\":\"O(m log n)\",\"space\":\"O(log n)\",\"algorithm\":\"recursive binary search per row\",\"approachKey\":\"per-row-recursive-search\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(log(m*n)) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4960,7 +4960,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2233829b72dd\",\"time\":\"O(m * n * 4^L)\",\"space\":\"O(m * n)\",\"algorithm\":\"Trie with DFS backtracking\",\"approachKey\":\"trie-dfs-backtrack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2233829b72dd\",\"time\":\"O(m * n * 4^L)\",\"space\":\"O(m * n)\",\"algorithm\":\"Trie with DFS backtracking\",\"approachKey\":\"trie-dfs-backtrack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -5042,8 +5042,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"f90a987c5e3f\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"Monotonic deque, sliding window\",\"approachKey\":\"monotonic-deque\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(k) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0f47330c0418\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"Monotonic deque, sliding window\",\"approachKey\":\"monotonic-deque\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(k) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f90a987c5e3f\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"Monotonic deque, sliding window\",\"approachKey\":\"monotonic-deque\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(k) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"0f47330c0418\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"Monotonic deque, sliding window\",\"approachKey\":\"monotonic-deque\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(k) space\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -5126,8 +5126,8 @@
         "bdf9c8ff38369582bca50bc65f2c346a50bdacef60f53f51f1b78661da85fcd1": "suboptimal.cs"
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"1ff27499b86d\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Length-prefix inline encoding\",\"approachKey\":\"length-prefix-inline\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(m) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"584f9cc2424a\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"Two-phase encoding with collected metadata\",\"approachKey\":\"two-phase-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"1ff27499b86d\",\"time\":\"O(n + m)\",\"space\":\"O(1)\",\"algorithm\":\"Length-prefix inline encoding\",\"approachKey\":\"length-prefix-inline\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n + m) time / O(m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"584f9cc2424a\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"Two-phase encoding with collected metadata\",\"approachKey\":\"two-phase-encoding\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n + m) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -5217,7 +5217,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(n * m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive DFS tree comparison\",\"approachKey\":\"recursive-dfs-subtree-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"67281e8f59a4\",\"time\":\"O(n * m)\",\"space\":\"O(n + m)\",\"algorithm\":\"Recursive DFS tree comparison\",\"approachKey\":\"recursive-dfs-subtree-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -5283,7 +5283,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"ce0637d27283\",\"time\":\"O(n^2)\",\"space\":\"O(log n)\",\"algorithm\":\"Sorting with two-pointer scan\",\"approachKey\":\"sort-two-pointer\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ce0637d27283\",\"time\":\"O(n^2)\",\"space\":\"O(log n)\",\"algorithm\":\"Sorting with two-pointer scan\",\"approachKey\":\"sort-two-pointer\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -5358,8 +5358,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"8d0903e0e7b7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Frequency buckets, highest-first traversal\",\"approachKey\":\"bucket-by-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"ea1cc8905e6b\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"Min-heap with size-k limit\",\"approachKey\":\"min-heap-k-limit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8d0903e0e7b7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Frequency buckets, highest-first traversal\",\"approachKey\":\"bucket-by-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n log k) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"ea1cc8905e6b\",\"time\":\"O(n log k)\",\"space\":\"O(n)\",\"algorithm\":\"Min-heap with size-k limit\",\"approachKey\":\"min-heap-k-limit\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(n) space)\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -5445,8 +5445,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"aba9b9dc04b4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer converging from ends\",\"approachKey\":\"two-pointer-trap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
-        "suboptimal.cs": "{\"v\":3,\"name\":\"suboptimal.cs\",\"codePrint\":\"a21e2e29f4de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Prefix and suffix maximum arrays\",\"approachKey\":\"prefix-suffix-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"aba9b9dc04b4\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer converging from ends\",\"approachKey\":\"two-pointer-trap\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a21e2e29f4de\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Prefix and suffix maximum arrays\",\"approachKey\":\"prefix-suffix-max\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -5532,7 +5532,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"2a33cc8cf19c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map complement lookup\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2a33cc8cf19c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map complement lookup\",\"approachKey\":\"hashmap-complement\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -5597,7 +5597,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"7443ea4decbf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer shrink while comparing to target\",\"approachKey\":\"two-pointer-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"7443ea4decbf\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer shrink while comparing to target\",\"approachKey\":\"two-pointer-sorted\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {
@@ -5665,8 +5665,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with return tuple\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
-        "optimal-variant.cs": "{\"v\":3,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with parameters\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"327d55c799c7\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with return tuple\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"2156d092b67a\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"recursive bounds validation with parameters\",\"approachKey\":\"recursive-bounds-check\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -5751,7 +5751,7 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"60fd91a31780\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"60fd91a31780\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"stack-based bracket matching\",\"approachKey\":\"stack-matching\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "classification": {
         "optimal.cs": {

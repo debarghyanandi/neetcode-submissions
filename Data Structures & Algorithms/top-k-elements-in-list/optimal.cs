@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Frequency buckets, highest-first traversal   [bucket-by-frequency]
-// -  ranks above suboptimal.cs (O(n log k) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Bucket array sized by frequency range avoids sorting; single pass
-// -  through descending frequencies collects k values in linear time.
 // --------------------------------------------------------------------------
 
 public class Solution

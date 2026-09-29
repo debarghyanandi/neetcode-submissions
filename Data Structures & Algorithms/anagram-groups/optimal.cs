@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n * k) time / O(n) space
-// -  Character frequency signature hashing   [frequency-hash]
-// -  ranks above suboptimal.cs (O(n * k log k) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each word processes through its characters once and builds a
-// -  constant-size signature, avoiding sorting overhead.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -54,77 +47,55 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Hashing / Grouping - letter-count signature as the key
- SOURCE  : Reference solution - not one you solved yourself - your own
-           annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : Given an array of strings strs, group the words that are anagrams
+           of each other. Anagrams use the same letters with the same counts.
+           Return the list of groups; the order of groups and of words inside
+           a group does not matter. ["eat","tea","tan","ate","nat","bat"] ->
+           [[eat,tea,ate],[tan,nat],[bat]]
+ PATTERN : Hash Map grouping by canonical key (letter counts)
 ================================================================================
-VARIABLES
-  groupsByKey    signature -> list of all words that have that signature
-  letterCounts   letterCounts[x] = how many times letter ('a' + x) appears in word
-  keyBuilder     builds the text form of letterCounts, like "1,0,2,..."
-  signature      the finished key string; words with the same signature are anagrams
-  group          the list in groupsByKey for this signature (new or existing)
-WHY THIS PATTERN
-  The task says "put words into groups when they are anagrams of each other".
-  Grouping by a shared property is a job for a hash map from a key to a bucket.
-  Two words are anagrams exactly when they have the same count of each letter.
-  So letterCounts, written as signature, is a key that all anagrams share and no
-  other word has. One pass puts each word into its bucket in groupsByKey.
-BRUTE FORCE
-  The first correct version most people write sorts each word's letters and uses
-  the sorted string as the dictionary key. It costs O(n * k log k), because each
-  word of length k must be sorted. It loses the log k factor that counting
-  avoids. An even simpler version compares every pair of words, which costs
-  O(n^2 * k).
-INVARIANT
-  After each word is handled, every word seen so far sits in exactly one list in
-  groupsByKey, and that list is under the key made from its own letter counts.
-  Two words get the same signature if and only if their 26 counts are all equal,
-  which is the definition of an anagram. So at the end, each list in
-  groupsByKey.Values is one complete anagram group. No group is split in two and
-  no two groups are mixed.
-WHY THE COMMA SEPARATOR
-  Without the ',' the numbers run together, and the key stops being unique.
-  Counts [1, 11] and [11, 1] would both become "111", so two words that are not
-  anagrams would share a group. The separator makes each count's edges clear, so
-  the string maps back to exactly one count array.
-WATCH OUT
-  letterCounts[c - 'a'] only works for lowercase 'a' to 'z'. An uppercase
-  letter, a digit or a space gives an index outside 0..25 and throws
-  IndexOutOfRangeException. The order of the groups comes from the Dictionary's
-  internal order, so do not write tests that expect a fixed order. The file has
-  no using lines, so ToList() only compiles if System.Linq is imported somewhere
-  else (for example, by the judge's implicit usings).
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if the input can contain any Unicode characters?
-     A fixed array of 26 no longer works. Count into a Dictionary<char, int>,
-     then build the key from its entries sorted by character, or just use the
-     sorted-characters key. This works for any alphabet, but each key costs more
-     to build.
-  2. Can the key be shorter?
-     Yes. Cast each count to a char and build new string(char[26]). That gives a
-     fixed 26-character key with no separators. It only works while every count
-     fits in a char (up to 65535).
-  3. Why not use a product of primes (one prime per letter) as the key?
-     It is unique in theory, but the product overflows long for long words, and
-     then different words can share a key. You would need BigInteger, which is
-     slower than the string key.
-  4. What if the input is too large for one machine's memory?
-     Treat it as map-reduce. Each worker computes the signature for its words
-     and sends each word to the machine that owns that signature (chosen by
-     hash). Each machine then groups its words on its own. You pay network cost,
-     but no single dictionary has to hold every word.
-TRIGGER
-  When items must be put into groups where "equal up to reordering" (or any
-  other equivalence) matters, find a canonical key that all members share and
-  use it as a hash map key.
-C# NOTE
-  The TryGetValue-then-assign pattern does two hash lookups when a signature is
-  new. CollectionsMarshal.GetValueRefOrAddDefault(groupsByKey, signature, out _)
-  returns a ref to the slot and does it in one lookup.
+IDEA
+  Two words are anagrams exactly when their 26 letter counts are equal.
+  For each word, fill letterCounts, then join the counts with commas into
+  signature. signature is the key in groupsByKey, and the word is added to
+  that key's list. Equal counts give equal strings, so anagrams always land
+  in the same group, and non-anagrams never do.
+EXAMPLE
+  strs = ["eat","tea","tan","ate","nat","bat"]
+  eat, tea, ate -> "1,0,0,0,1,...,1(t),..." (a=1, e=1, t=1) -> same key
+  tan, nat -> a=1, n=1, t=1 -> new key; bat -> a=1, b=1, t=1 -> new key
+  Result: [[eat,tea,ate],[tan,nat],[bat]]
 COMPLEXITY
-  Time  : O(n * k)
-  Space : O(n)
+  Time  O(n * k)  each char is counted once, plus a fixed 26-count key per
+                  word
+  Space O(n)      every word is stored once in groupsByKey, plus one key per
+                  group
+PATH TO OPTIMAL
+  Compare every pair with a count check - O(n^2 * k) - slow, many pairs.
+  Sort each word as its key (suboptimal.cs) - O(n * k log k) - one pass.
+  Count letters as the key (this file) - O(n * k) - no sort per word.
+KEYWORDS
+  group anagrams, hash map, canonical form, frequency count, signature key
+WATCH OUT
+  - No separator in the key: counts 1,11 and 11,1 both become "111" and
+    wrong words get grouped. Keep the ',' after each count.
+  - Using int[] letterCounts as the key: arrays hash by reference, so every
+    word ends up in its own group.
+  - Uppercase or non a-z input: c - 'a' goes out of range and throws.
+  - "" is valid: its key is 26 zeros, and all empty strings group together.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if words contain Unicode or any characters?
+     -> Use the sorted word as the key, or a Dictionary<char,int> turned into
+        a sorted string. Time becomes O(n * k log k), but it works on any
+        alphabet.
+  2. Can you avoid building a 26-part string per word?
+     -> Map letters to primes and multiply them for the key. It is fast, but
+        the product overflows on long words, so it is risky.
+  3. What if the words arrive as a stream?
+     -> Keep groupsByKey alive and add each word as it comes, O(k) per word.
+        Memory grows with the number of distinct groups and stored words.
+TRIGGER
+  When items must be grouped by "same content, any order", build a canonical
+  key for each one and bucket them in a hash map.
 ================================================================================
 */

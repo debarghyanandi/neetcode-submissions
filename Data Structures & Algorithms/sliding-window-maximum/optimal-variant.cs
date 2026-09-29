@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(k) space
-// -  Monotonic deque, sliding window   [monotonic-deque]
-// -  ties with optimal.cs on O(n) time / O(k) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each element is added and removed from the deque at most once; expiry
-// -  uses if instead of while since l advances by at most 1 per iteration.
 // --------------------------------------------------------------------------
 
 public class Solution

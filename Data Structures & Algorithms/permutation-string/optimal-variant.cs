@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n + m) time / O(1) space
-// -  sliding window with frequency counter   [sliding-window-match-counter]
-// -  ties with optimal.cs on O(n + m) time / O(1) space
-// -
-// -  Reference solution - not one you solved yourself (was optimal.cs)
-// -
-// -  Constant-time validity check via character frequency match counter
-// -  eliminates repeated multiset comparisons each iteration.
 // --------------------------------------------------------------------------
 
 public class Solution

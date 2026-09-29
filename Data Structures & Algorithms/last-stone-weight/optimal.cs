@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n log n) time / O(n) space
-// #  max-heap greedy simulation   [max-heap-greedy]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each enqueue and dequeue operation on the heap is O(log n), and O(n)
-// #  such operations are performed during initialization and simulation.
 // ##########################################################################
 
 public class Solution

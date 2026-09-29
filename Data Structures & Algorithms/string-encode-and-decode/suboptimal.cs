@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n + m) time / O(m) space
-// -  Two-phase encoding with collected metadata   [two-phase-encoding]
-// -  ranks below optimal.cs (O(n + m) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Collects all sizes into auxiliary list before encoding, requiring
-// -  extra space and passes.
 // --------------------------------------------------------------------------
 
 public class Solution

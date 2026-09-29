@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  two-pointer, shrink shorter   [two-pointer-shrink]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each pointer moves at most n times total as they converge from
-// #  opposite ends; each iteration is O(1).
 // ##########################################################################
 
 public class Solution

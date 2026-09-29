@@ -1,14 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  slow-fast pointers, reverse recursively, interleave
-// -  [slow-fast-recursive-reverse-interleave]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Recursion depth for ReverseList equals second-half length, and all
-// -  three phases (find middle, reverse, interleave) traverse the list
-// -  once.
 // --------------------------------------------------------------------------
 
 public class Solution

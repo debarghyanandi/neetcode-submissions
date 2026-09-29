@@ -1,11 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  recursive bounds validation with parameters   [recursive-bounds-check]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node visited once; recursion depth O(n) in worst case.
 // --------------------------------------------------------------------------
 
 public class Solution

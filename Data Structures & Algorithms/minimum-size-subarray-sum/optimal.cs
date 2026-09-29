@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  sliding window, shrink while valid   [two-pointer-shrink]
-// #  ranks above suboptimal.cs (O(n) time / O(n) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each element is added and removed from the sum at most once as the two
-// #  pointers traverse the array.
 // ##########################################################################
 
 public class Solution

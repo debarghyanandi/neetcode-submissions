@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pointer cycle detection   [two-pointer-cycle-detection]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Fast pointer moves at 2x speed; if cycle exists, pointers meet within
-// -  n iterations; if no cycle, fast reaches null in O(n) time.
 // --------------------------------------------------------------------------
 
 public class Solution

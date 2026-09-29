@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  recursive pointer reversal   [recursive-reverse]
-// -  ranks below optimal.cs (O(n) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Recursion depth equals the length of the list, requiring O(n)
-// -  call-stack space.
 // --------------------------------------------------------------------------
 
 public class Solution

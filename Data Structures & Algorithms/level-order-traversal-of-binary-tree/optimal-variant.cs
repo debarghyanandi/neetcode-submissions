@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  BFS with queue, level-order traversal   [bfs-queue]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node visited once; queue holds maximum tree width, worst case
-// -  O(n).
 // --------------------------------------------------------------------------
 
 public class Solution

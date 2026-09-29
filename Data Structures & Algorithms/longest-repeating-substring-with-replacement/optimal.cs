@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Sliding window, fixed max frequency   [sliding-window-fixed-maxfreq]
-// -  ranks above suboptimal.cs (O(n * k) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass through string; maxFrequency never decreases, so window
-// -  validity checked in amortized O(n) total.
 // --------------------------------------------------------------------------
 
 public class Solution

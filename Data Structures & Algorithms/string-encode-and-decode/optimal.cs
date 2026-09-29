@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(1) space
-// -  Length-prefix inline encoding   [length-prefix-inline]
-// -  ranks above suboptimal.cs (O(n + m) time / O(m) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass encodes length and content together; decode parses
-// -  on-demand without auxiliary storage.
 // --------------------------------------------------------------------------
 
 public class Solution

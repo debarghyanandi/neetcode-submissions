@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(1) space
-// -  Sliding window with match counter   [sliding-window-match-counter]
-// -  ranks above suboptimal.cs (O(n * k) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  O(1) validity checks via counter increment/decrement eliminate
-// -  repeated dictionary scans on each iteration.
 // --------------------------------------------------------------------------
 
 public class Solution

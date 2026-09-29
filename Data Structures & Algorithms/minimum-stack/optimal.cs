@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(1) time / O(n) space
-// #  parallel stack tracking minimum   [parallel-stack-min]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each operation (push, pop, top, getMin) performs constant work by
-// #  delegating to synchronized stack operations.
 // ##########################################################################
 
 public class MinStack

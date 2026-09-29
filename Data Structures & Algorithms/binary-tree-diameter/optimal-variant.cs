@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  Post-order DFS height calculation   [dfs-postorder-height]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node visited once; returns tuple instead of global variable; call
-// -  stack depth equals tree height (worst case n for skewed tree).
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -35,74 +28,35 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS (post-order) - return height and best together
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : Given the root of a binary tree, return its diameter. The diameter
+           is the number of EDGES on the longest path between any two nodes.
+           The path does not have to pass through the root. Example:
+           [1,2,3,4,5] -> 3 (path 4-2-1-3).
+ PATTERN : DFS (post-order) returning (height, diameter)
 ================================================================================
-VARIABLES
-  left                 (height, diameter) tuple for the left subtree
-  right                (height, diameter) tuple for the right subtree
-  height               number of nodes on the longest downward path from node; null = 0, leaf = 1
-  diameterThroughHere  length in edges of the longest path that bends at node
-  diameter             longest path in edges found anywhere inside this subtree
-WHY THIS PATTERN
-  The longest path between any two nodes must bend at exactly one highest node.
-  At that node, the path is the deepest path down the left side joined to the
-  deepest path down the right side. So each node needs its children's heights
-  first. That is post-order DFS: finish both children, then work on the parent.
-  The file also returns the best diameter seen so far in the same tuple, so it
-  needs no shared variable.
-BRUTE FORCE
-  For every node, call a separate Height function on its left and right child,
-  add the two results, and keep the maximum. This is correct, but it measures
-  each subtree again for every ancestor above it. On a skewed tree (a tree that
-  is really one long chain) this costs O(n^2) time. The version here computes
-  each height once and reuses it on the way back up.
-INVARIANT
-  When DFS(node) returns, height is the true height of that subtree. diameter is
-  the longest path that lies fully inside that subtree. The longest path either
-  bends at node (diameterThroughHere) or stays fully inside one child. The child
-  case is already correct in left.diameter or right.diameter. So taking the max
-  of the three values is correct, and by induction the value at root is the
-  answer.
-HEIGHT IN NODES, DIAMETER IN EDGES
-  height counts nodes: null gives 0 and a leaf gives 1. Because of this,
-  left.height + right.height is exactly the number of edges on the path through
-  node, and you do not need +1 or -1. If you change the base case to return -1
-  (height counted in edges), the sum becomes wrong and you must add 2.
-WATCH OUT
-  The recursion goes as deep as the tree is tall. On a long chain, a very deep
-  tree can overflow the call stack. An empty tree (root == null) correctly
-  returns 0. The problem normally wants the answer in edges. If an interviewer
-  asks for the answer in nodes, you must add 1 to diameterThroughHere.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you do this without recursion?
-     Do an iterative post-order walk with an explicit Stack<TreeNode>, and store
-     each finished node's height in a Dictionary<TreeNode,int>. There is no
-     stack-overflow risk now, but the code is longer and uses a dictionary on
-     top of the stack.
-  2. What if the tree is N-ary (a node can have any number of children)?
-     At each node, keep only the two largest child heights. diameterThroughHere
-     is their sum. The cost is still one pass over all children.
-  3. What if the edges have weights?
-     height becomes the heaviest downward path sum: max(child height + edge
-     weight). diameterThroughHere adds the best two of those. The structure
-     stays the same. With negative weights you may also need to stop a branch at
-     0.
-  4. How do you return the actual path and not just its length?
-     Store the node where the best bend happens. Then walk down from that node,
-     following the taller child on each side, and join the two chains.
-TRIGGER
-  The answer is a path that can bend at any node in a tree, and each node needs
-  a combined result from both of its children.
-C# NOTE
-  The named value tuple (int height, int diameter) lets you write left.height
-  and right.diameter clearly. ValueTuple is a struct, so it passes both results
-  up without a mutable class field that you would have to reset between calls to
-  DiameterOfBinaryTree.
+IDEA
+  DFS returns a pair for each subtree: its height (counted in nodes, with
+  null = 0) and the best diameter found inside it. At each node,
+  left.height + right.height is the longest path that bends at this node.
+  diameter is the max of that path and both child diameters. It is correct
+  because every path has exactly one highest node, where it bends, and
+  every node is checked as that highest node. Unlike a shared max field,
+  the answer travels up inside the tuple, so there is no mutable state.
+EXAMPLE
+  Tree: 1.left=2; 2.left=3, 2.right=4; 3.left=5; 4.right=6 (1 has no right)
+  5,6 -> (1,0); 3 -> (2,1); 4 -> (2,1); 2 -> h=3, through=2+2=4, d=4
+  1 -> h=4, through=3+0=3, d=max(3,4)=4
+  Answer 4 (path 5-3-2-4-6). It does not pass through the root.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited once by DFS, with O(1) work per node
+  Space O(n)  recursion stack depth equals tree height, up to n when skewed
+WATCH OUT
+  - Edges, not nodes: height counts nodes, so left.height + right.height is
+    already the edge count. Adding +1 here makes the answer off by one.
+  - Returning only diameterThroughHere at the root is wrong. You must carry
+    Math.Max of left.diameter and right.diameter up, or the example gives 3.
+  - A very deep skewed tree (a linked-list shape) can overflow the C# stack.
+    An iterative post-order traversal avoids this.
+  - The null base case must be (0, 0). A height of -1 would change the sum.
 ================================================================================
 */

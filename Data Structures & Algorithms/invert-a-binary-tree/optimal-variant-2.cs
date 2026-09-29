@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant-2.cs  O(n) time / O(n) space
-// -  Iterative DFS with explicit stack   [iterative-dfs-stack]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Manual stack replaces recursion; visits each node once, stack size
-// -  worst case O(n) on skewed tree.
 // --------------------------------------------------------------------------
 
 public class Solution

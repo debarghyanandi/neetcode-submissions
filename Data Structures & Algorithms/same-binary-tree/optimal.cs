@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  Recursive DFS traversal   [recursive-dfs]
-// #  ties with optimal-variant-2.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Recursion depth equals tree height; worst case O(n) for completely
-// #  skewed tree.
 // ##########################################################################
 
 public class Solution

@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  Kadane's algorithm with explicit DP table   [kadane-explicit-dp]
-// -  ranks below optimal.cs (O(n) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  DP table stores best subarray sum ending at each position; trade space
-// -  for clarity.
 // --------------------------------------------------------------------------
 
 public class Solution

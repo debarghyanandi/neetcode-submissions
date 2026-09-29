@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  DFS recursion, pre-order traversal   [dfs-recursion]
-// #  ties with optimal-variant.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each node visited once; space bounded by call stack depth, worst case
-// #  O(n) in skewed tree.
 // ##########################################################################
 
 public class Solution

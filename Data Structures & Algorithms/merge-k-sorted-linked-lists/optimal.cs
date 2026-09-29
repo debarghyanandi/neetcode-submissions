@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n log k) time / O(log k) space
-// -  Divide and conquer merge   [divide-conquer-merge]
-// -  ranks above suboptimal.cs (O(n log k) time / O(k) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Recursively divides k lists in half, merging pairs at each of log(k)
-// -  recursion levels.
 // --------------------------------------------------------------------------
 
 public class Solution

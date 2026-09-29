@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(log(m*n)) time / O(1) space
-// -  binary search, treat 2D as 1D   [virtual-1d-binary-search]
-// -  ranks above suboptimal.cs (O(m log n) time / O(log n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single binary search using virtual indexing converts between 1D
-// -  positions and 2D coordinates, traversing log(m*n) comparisons.
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  Single pass with minimum tracking   [single-pass-min-tracking]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  One pass through prices tracks minimum and computes maximum profit in
-// #  constant auxiliary space.
 // ##########################################################################
 
 public class Solution
@@ -38,65 +31,53 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Greedy / One Pass - track the cheapest buy day so far
- SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
- STATUS  : Optimal
+ PROBLEM : prices[i] is the price of one coin on day i. Buy on one day and
+           sell on a LATER day, at most once. Return the max profit, or 0 if
+           no trade gains. Example: [7,1,5,3,6,4] -> 5 (buy at 1, sell at 6).
+ PATTERN : Greedy one pass: running min (or two pointers)
 ================================================================================
-VARIABLES
-  buyIndex    index of the lowest price seen in prices[0..sellIndex-1]
-  maxProfit   best profit from any buy day before any sell day so far
-  sellIndex   the day we test as the sell day
-WHY THIS PATTERN
-  You must buy once and then sell once on a later day. So for each sell day, the
-  only buy day that matters is the cheapest day before it. Keep that day in
-  buyIndex while you scan. Then each prices[sellIndex] needs only one
-  subtraction to find its best profit.
-BRUTE FORCE
-  Try every pair (i, j) with i < j, compute prices[j] - prices[i], and keep the
-  largest result, or 0 if none is positive. It is clearly correct, but it runs
-  in O(n^2) time because it checks every pair. The one-pass version skips all
-  pairs whose buy day is not the cheapest so far, because those pairs can never
-  win.
-INVARIANT
-  At the start of each loop step, prices[buyIndex] is the minimum of
-  prices[0..sellIndex-1]. maxProfit is the best profit from any buy-then-sell
-  pair that ends before sellIndex. Every sell day is paired with its cheapest
-  earlier buy day, and that pair is the best one for that sell day. So after the
-  loop, maxProfit is the best profit over all pairs. It starts at 0, which means
-  "never trade".
-WATCH OUT
-  The else branch runs when prices[sellIndex] <= prices[buyIndex], so a price
-  that only ties the minimum also moves buyIndex. The comment "A new all-time
-  low" is therefore not exactly true on ties. The answer is still right, because
-  an equal price gives the same profit later. If prices is null, prices.Length
-  throws. An empty or one-element array returns 0, which is correct.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if you can buy and sell many times, holding at most one share?
-     Add every positive step prices[i] - prices[i-1]. It is still one pass, but
-     it is a different greedy idea: take every rise instead of the single best
-     gap.
-  2. What if you may make at most two transactions (or k transactions)?
-     Use a small state machine DP (dynamic programming, where each state stores
-     the best result so far): buy1, sell1, buy2, sell2, updated each day. For k
-     transactions this costs O(nk) time and O(k) space.
-  3. What if you must also return which days to buy and sell?
-     Save buyIndex and sellIndex whenever maxProfit gets a new best value. The
-     work is the same, plus two more integers.
-  4. What if prices arrive as a stream?
-     The code already keeps only the running minimum and the best profit. It
-     works as-is by storing the minimum price instead of an index.
-TRIGGER
-  The answer is the best "later value minus earlier value" (or a pair where one
-  element must come before the other), so a running minimum or maximum of the
-  prefix removes the inner loop.
-C# NOTE
-  buyIndex holds an index, but it is only used to read prices[buyIndex]. Storing
-  int minPrice directly would remove one array read per step and make the
-  invariant easier to see. prices[sellIndex] - prices[buyIndex] cannot overflow
-  here, because that line only runs when the result is positive and the two
-  values are ints of the same sign range.
+IDEA
+  buyIndex always points to the cheapest day seen so far. sellIndex walks
+  forward. If today is higher than the buy price, record the profit in
+  maxProfit. If not, today is the new cheapest day, so buyIndex jumps here.
+  It is correct because the best sale on any day uses the lowest price before
+  that day, and buyIndex holds exactly that price.
+EXAMPLE
+  [7,1,5,3,6,0,2]: s=1 buy->1(price 1); s=2 +4; s=3 +2; s=4 +5 max=5;
+  s=5 price 0 is lower, buy->5; s=6 2-0=2, max stays 5.
+  Answer 5. A new low after the peak does not erase the best profit.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  sellIndex visits each day once, O(1) work per day
+  Space O(1)  only buyIndex and maxProfit, no extra arrays
+PATH TO OPTIMAL
+  Brute force: try every (buy, sell) pair - O(n^2) - simple but slow.
+  Running min, this file - O(n) / O(1) - keep the best buy day so far,
+  instead of testing every earlier day again for each sell day.
+KEYWORDS
+  stock buy sell, running minimum, greedy, one pass, Kadane, two pointers
+WATCH OUT
+  - Do not use global max minus global min. The max can come BEFORE the min:
+    [5,1] would give 4, but the answer is 0.
+  - Start maxProfit at 0, not int.MinValue. Falling prices [5,4,3] must give
+    0.
+  - The comment says "a new all-time low", but the else branch also runs on an
+    equal price. That is harmless: same price, so same future profits.
+  - Empty or single-day input: the loop never runs, so 0 is returned. Good.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Unlimited transactions (Stock II)?
+     -> Add every positive step prices[i]-prices[i-1]. O(n) time, O(1) space.
+        It works because a long rise is the sum of its small daily rises.
+  2. At most 2 trades, or at most k trades?
+     -> DP with states buy1, sell1, buy2, sell2 updated per day, O(n) / O(1).
+        For k trades use arrays of size k: O(nk) time, O(k) space.
+  3. Cooldown after a sale, or a fee per trade?
+     -> State machine DP (hold, sold, rest) per day, O(n) / O(1). Subtract the
+        fee when you sell. Same one pass, just more states.
+  4. How is this like Kadane's algorithm?
+     -> Turn prices into daily differences. The answer is the max subarray sum
+        of those differences, floored at 0. Same O(n) / O(1).
+TRIGGER
+  When you need the best pair i < j scoring on a[j] - a[i], keep a running
+  min.
 ================================================================================
 */

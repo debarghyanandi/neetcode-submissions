@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n^2) time / O(log n) space
-// #  Sorting with two-pointer scan   [sort-two-pointer]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Sorting O(n log n); nested iteration with two-pointer traversal across
-// #  all anchors is O(n²).
 // ##########################################################################
 
 public class Solution

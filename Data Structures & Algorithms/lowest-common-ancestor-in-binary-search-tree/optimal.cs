@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  BST traversal, iterative descent   [bst-iterative]
-// -  ranks above suboptimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Traverses down the BST by comparing target values with current node;
-// -  worst case height is O(n) for skewed tree.
 // --------------------------------------------------------------------------
 
 public class Solution

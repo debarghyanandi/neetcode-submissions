@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n + m) time / O(1) space
-// -  two-pointer merge   [two-pointer-merge]
-// -  ranks below optimal.cs (O(log(min(m, n))) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-0)
-// -
-// -  Both arrays are walked exactly once with two pointers, merging in
-// -  sorted order.
 // --------------------------------------------------------------------------
 
 public class Solution

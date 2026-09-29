@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n + m) time / O(n + m) space
-// #  Kahn's algorithm, topological sort BFS   [topological-sort-kahn-bfs]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each node and edge processed once in BFS; adjacency list storage
-// #  dominates space.
 // ##########################################################################
 
 public class Solution
@@ -66,71 +59,59 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Topological Sort (Kahn's BFS) - peel off in-degree 0 nodes
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : There are numCourses courses labeled 0..numCourses-1. Each pair [a,
+           b] in prerequisites means you must take b before a. Return any
+           valid order to take all courses, or an empty array if a cycle makes
+           it impossible. Example: 2, [[1,0]] -> [0,1]; 2, [[1,0],[0,1]] ->
+           [].
+ PATTERN : Topological Sort (BFS, Kahn's algorithm)
 ================================================================================
-VARIABLES
-  adj      adj[p] = list of courses that need course p first
-  inDeg    inDeg[c] = number of prerequisites of course c that are not taken yet
-  q        courses whose prerequisites are all taken, so they can be taken now
-  topo     the course order built so far, one course per dequeue
-WHY THIS PATTERN
-  The problem asks for an order in which to take courses, where some courses
-  must come before others. That is a directed graph. A valid order is a
-  topological order: every edge goes from earlier to later. Kahn's algorithm
-  builds that order directly. It starts with the courses in q that have inDeg 0.
-  Each time it takes one, it lowers inDeg for the courses in adj[node].
-BRUTE FORCE
-  The simple first idea is to scan all courses again and again. On each pass,
-  pick any course not yet taken whose prerequisites are all in the order
-  already, and add it. If a full pass adds nothing, stop. Each pass can cost O(n
-  + m), and you may need up to n passes, so this is O(n * (n + m)). It is slower
-  because it re-checks courses that did not change. Kahn's algorithm only
-  touches a course when one of its prerequisites is finished.
-INVARIANT
-  At every step, inDeg[c] equals the number of prerequisites of c that are not
-  yet in topo. A course is put into q only when that number drops to 0. So every
-  course in topo comes after all of its prerequisites. A course that sits on a
-  cycle, or depends on one, never reaches inDeg 0. That is why the check
-  topo.Count == numCourses tells you if a full order exists.
-EDGE DIRECTION
-  For each pair, pair[1] is the prerequisite and pair[0] is the course. The edge
-  goes prereq -> course: adj[prereq].Add(course) and inDeg[course]++. If you
-  reverse this, you get the reverse order, and inDeg counts the wrong thing.
-WATCH OUT
-  The code assumes every pair has exactly two entries and both are in
-  0..numCourses-1. Any other input throws an IndexOutOfRangeException. A
-  duplicate pair is safe: it adds the edge twice and counts it twice in inDeg,
-  so the counts still match. A self-loop like [0,0] gives inDeg[0] = 1, so
-  course 0 never enters q and the code correctly returns an empty array. The
-  comment "Kanhs" is a typo for Kahn's, not a different algorithm.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you solve it with DFS instead of BFS?
-     Yes. Use DFS with three states per node (unvisited, visiting, done). Add
-     each node to the order after all its neighbours are done, then reverse the
-     order. A back edge to a "visiting" node means there is a cycle. The
-     trade-off: recursion depth can reach n, so a long chain may overflow the
-     stack unless you use an explicit stack.
-  2. What if many valid orders exist and you must return the smallest one in
-  dictionary order?
-     Replace q with a min-heap, for example PriorityQueue<int,int>. You always
-     take the smallest available course. Time becomes O(m + n log n).
-  3. How do you find the minimum number of semesters if every course with no
-  remaining prerequisites can be taken in the same semester?
-     Process q one level at a time. Take the current q.Count nodes as one
-     semester, and count the levels. If there is a cycle, return -1 as before.
-TRIGGER
-  Reach for this when a problem gives "A must happen before B" pairs and asks
-  for a valid order, or asks whether one exists (cycle detection in a directed
-  graph).
-C# NOTE
-  You know the answer has at most numCourses items. So you could fill a
-  preallocated int[numCourses] with an index counter instead of List<int> topo.
-  That skips the extra copy that topo.ToArray() makes.
+IDEA
+  Build adj with an edge prereq -> course, and count inDeg for each course.
+  Put every course with inDeg 0 in queue q, since it has no blockers.
+  Pop a node, append it to topo, and decrease inDeg of each neighbor.
+  A neighbor that reaches 0 is now unblocked, so it enters q.
+  Nodes on a cycle never reach inDeg 0, so topo.Count < numCourses means [].
+EXAMPLE
+  4, [[1,0],[2,0],[3,1],[3,2]]: adj[0]=[1,2], adj[1]=[3], adj[2]=[3]
+  inDeg=[0,1,1,2], q=[0]. Pop 0: inDeg[1]=0, inDeg[2]=0, q=[1,2].
+  Pop 1: inDeg[3]=1. Pop 2: inDeg[3]=0, q=[3]. Pop 3. topo=[0,1,2,3].
+  Cycle case 2, [[0,1],[1,0]]: inDeg=[1,1], q starts empty, topo=[] -> [].
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(n + m)
+  Time  O(n + m)  each node is enqueued once and each edge is relaxed once
+  Space O(n + m)  adj holds every edge, plus inDeg, q and topo per node
+PATH TO OPTIMAL
+  Brute force: try orderings and check each - O(n! * m) - hopeless.
+  Repeatedly scan all courses for one with no unmet prereq - O(n * (n+m)).
+  Kahn's BFS with an inDeg count (this file) - O(n + m) - no rescans needed.
+KEYWORDS
+  topological sort, Kahn's algorithm, indegree, DAG, cycle detection, BFS
+WATCH OUT
+  - Edge direction: pair[0] is the course and pair[1] is the prereq. Adding
+    adj[course].Add(prereq) builds the reversed graph and gives reversed
+    order.
+  - Do not skip the topo.Count == numCourses check. Without it a cycle
+    returns a partial order instead of an empty array.
+  - A self-loop [0,0] sets inDeg[0]=1 forever. The code correctly returns [].
+  - Seed q with ALL inDeg-0 nodes, not only node 0. The graph can be split
+    into several parts (disconnected).
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you solve it with DFS instead?
+     -> Use three colors (unvisited, visiting, done). Reaching a "visiting"
+        node means a cycle. Append each node when it finishes, then reverse the
+        list. It is still O(n + m), but recursion depth can reach n.
+  2. How do you return the lexicographically smallest order?
+     -> Replace q with a min-heap (PriorityQueue). The cost becomes O(m + n
+        log n). The order is unique, but you pay the log factor.
+  3. How do you find the minimum number of semesters if you can take any
+     number of courses at once?
+     -> Process q level by level. Each BFS level is one semester, so count the
+        levels. It stays O(n + m).
+  4. How do you only check if finishing is possible (Course Schedule I)?
+     -> Run the same code but keep a counter instead of topo. Return counter
+        == numCourses. This saves the O(n) output list.
+TRIGGER
+  Items have "must come before" dependencies and you need a valid order or
+  must detect a cycle.
 ================================================================================
 */

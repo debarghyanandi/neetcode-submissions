@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pointer, converging ends   [two-pointer]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each character is visited at most once by the converging pointers, and
-// -  all character checks are constant-time operations.
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,13 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal-2.cs       O(n^2) time / O(n) space
-// -  1D DP with nested iteration over preceding elements
-// -  [lis-ending-position]
-// -  ranks below optimal.cs (O(n log n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-11)
-// -
-// -  dp[i] stores max LIS ending at position i; for each i, check all j < i
-// -  in nested loop.
 // --------------------------------------------------------------------------
 
 public class Solution

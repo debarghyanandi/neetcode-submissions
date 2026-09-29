@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(log n) time / O(log n) space
-// #  Binary search, recursive   [binary-search-recursive]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each recursive call halves the search space; the call stack depth
-// #  reaches logarithmic maximum.
 // ##########################################################################
 
 public class Solution
@@ -36,77 +29,57 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary Search - recursive halving of a sorted range
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : You get an array nums sorted in ascending order and an int target.
+           Return the index of target in nums, or -1 if it is not there. You
+           must do it in O(log n) time. Values are distinct. Example: nums =
+           [-1,0,3,5,9,12], target = 9 -> 4.
+ PATTERN : Binary Search (recursive, closed interval [left, right])
 ================================================================================
-VARIABLES
-  left          first index of the range still being searched
-  right         last index of the range still being searched (inclusive)
-  mid           middle index of [left, right], the one element compared each call
-  searchTarget  the target value, passed down unchanged through every call
-WHY THIS PATTERN
-  The problem gives a sorted array and asks for the index of one value. Because
-  the array is sorted, one comparison with nums[mid] tells you which half cannot
-  hold the target. You can throw that half away. Each call then searches only
-  [left, mid - 1] or [mid + 1, right].
-BRUTE FORCE
-  A linear scan checks nums[0], nums[1], and so on, and returns the first index
-  that equals target. It takes O(n) time and O(1) space. It is correct, but it
-  ignores the sorted order. It looks at every element, while binary search looks
-  at only about log2(n) of them.
-INVARIANT
-  If the target is anywhere in nums, it is inside [left, right]. At the start
-  this is true, because the range is 0 to nums.Length - 1. If searchTarget <
-  nums[mid], then every index from mid up holds a value that is too large, so
-  the recursion keeps [left, mid - 1]. In the other branch every index from mid
-  down is too small, so it keeps [mid + 1, right]. The range gets smaller on
-  every call. So either the code finds nums[mid] == searchTarget, or the range
-  becomes empty (left > right) and returning -1 is correct.
-SAFE MIDPOINT
-  The code computes mid = left + (right - left) / 2, not (left + right) / 2.
-  When left and right are both large, left + right can go past int.MaxValue.
-  Then it overflows to a negative number and gives a bad index. The subtraction
-  form never goes above right, so it cannot overflow.
-WATCH OUT
-  The code only works if nums is sorted in ascending order. On unsorted input it
-  can return -1 even when the target is in the array. If the value appears more
-  than once, the code returns whatever matching index it hits first, which is
-  not always the first or the last copy. An empty array works: right becomes -1,
-  so left > right on the first call and the answer is -1. The private helper has
-  the same name, Search, as the public method. It is an overload (same name,
-  different parameters). This is legal, but it is easy to mix up the two when
-  you read the code.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without recursion?
-     Yes. Use a while (left <= right) loop that moves left or right instead of
-     calling itself. The logic stays the same, and extra space drops from the
-     call stack to O(1).
-  2. What if there are duplicates and you need the first index of target?
-     Search for the lower bound instead. When nums[mid] >= target, set right =
-     mid and keep going. Do not return early. Stop when left == right, then
-     check whether nums[left] == target.
-  3. What if the sorted array was rotated at some unknown pivot?
-     At each mid, one half, [left, mid] or [mid, right], is still sorted. Check
-     whether the target falls inside that sorted half's range. If it does,
-     search that half. If not, search the other half. It is still O(log n).
-  4. What if you do not know the array's length, for example a stream or a
-  reader interface?
-     Start with right = 1 and double it until the value there is at least
-     target, or until you go out of bounds. Then binary search inside [right /
-     2, right]. This costs O(log p), where p is the target's position.
-TRIGGER
-  The input is sorted (or you can check something that only goes one way, like
-  true for small values and false for large ones), and you need to find a value
-  or a boundary faster than a linear scan.
-C# NOTE
-  Array.BinarySearch(nums, target) does the same job in one line. When the value
-  is not found, it returns a negative number, not -1: the bitwise complement (~)
-  of the index where the value would be inserted. So map any negative result to
-  -1 if the problem asks for -1.
+IDEA
+  Keep a range [left, right] that must hold target if target exists.
+  Look at mid. If nums[mid] equals target, return mid.
+  If target is smaller, recurse on [left, mid - 1], else on [mid + 1, right].
+  When left > right the range is empty, so return -1.
+  It is correct because the array is sorted: each step drops only the
+  half that cannot hold target, so target is never thrown away.
+EXAMPLE
+  nums = [-1,0,3,5,9,12], target = 9:
+  (0,5) mid=2 nums=3 <9 -> (3,5) mid=4 nums=9 -> return 4.
+  target = 2: (0,5) mid=2 nums=3 -> (0,1) mid=0 nums=-1 -> (1,1) mid=1
+  nums=0 -> (2,1) left > right -> return -1.
 COMPLEXITY
-  Time  : O(log n)
-  Space : O(log n)
+  Time  O(log n)  each call halves the range, so about log2(n) calls
+  Space O(log n)  one stack frame per call, recursion depth is log2(n)
+PATH TO OPTIMAL
+  Linear scan - O(n) time, O(1) space - simple, but ignores the sorting.
+  Recursive binary search (this file) - O(log n) time, O(log n) space -
+  uses the sorting to drop half the range each step.
+  Iterative binary search - O(log n) time, O(1) space - same steps, loop
+  instead of recursion, so there is no stack.
+KEYWORDS
+  binary search, sorted array, divide and conquer, halving, O(log n), lower
+  bound
+WATCH OUT
+  - Recursing on (left, mid) or (mid, right) instead of mid - 1 / mid + 1
+    can loop forever when left == right: the range never shrinks.
+  - Stopping at left >= right instead of left > right skips a 1-item range.
+  - (left + right) / 2 can overflow for huge indices; the code avoids it
+    with left + (right - left) / 2.
+  - With duplicates this returns some matching index, not the first one.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it in O(1) space?
+     -> Use a while (left <= right) loop that updates left and right. Same
+        O(log n) time, no call stack, and no risk of stack overflow.
+  2. The array has duplicates. Return the first index of target.
+     -> On a match, save mid and keep searching left (right = mid - 1). Still
+        O(log n); it is the lower bound search.
+  3. The sorted array is rotated at an unknown point.
+     -> At each mid, one half is sorted. Check if target is inside that half
+        and go there, else go to the other half. Still O(log n) time.
+  4. What if target is missing? Where would it go?
+     -> Return left when the loop ends: it is the insert position, O(log n).
+TRIGGER
+  The input is sorted (or the answer is monotonic), and you must find a
+  value faster than O(n).
 ================================================================================
 */

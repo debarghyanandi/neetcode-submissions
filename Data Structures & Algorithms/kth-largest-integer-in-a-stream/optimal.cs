@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n log k) time / O(k) space
-// #  Min-heap with size constraint   [min-heap-kth-largest]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Constructor processes n elements with O(log k) heap operations; Add
-// #  maintains k-sized heap with O(log k) enqueue/dequeue.
 // ##########################################################################
 
 public class KthLargest

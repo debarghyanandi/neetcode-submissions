@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant-2.cs  O(n) time / O(n) space
-// -  Iterative BFS level-order traversal   [iterative-bfs-level-order]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Queue stores widest level of tree; worst case O(n) for complete binary
-// -  tree.
 // --------------------------------------------------------------------------
 
 public class Solution

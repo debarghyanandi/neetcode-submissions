@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  Stack-based RPN evaluation   [stack-rpn]
-// #  ties with optimal-variant.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Single pass iterates through tokens; stack stores operands, each
-// #  operation is O(1).
 // ##########################################################################
 
 public class Solution
@@ -42,77 +35,56 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Stack - evaluate postfix (RPN) expressions
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-1.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : You get tokens, a string array holding an expression in Reverse
+           Polish Notation: each operator comes after its two operands.
+           Operators are +, -, *, /. Integer division truncates toward zero.
+           Return the int value. Example: ["2","1","+","3","*"] -> 9, because
+           (2 + 1) * 3.
+ PATTERN : Stack (operand stack for postfix evaluation)
 ================================================================================
-VARIABLES
-  stack       numbers not used yet, plus results of earlier operations
-  operations  maps each operator string to a function (a, b) => result
-  b           the right operand, popped first from the top of the stack
-  a           the left operand, popped second
-  op          the result of a applied to b (the value, not the operator)
-WHY THIS PATTERN
-  In Reverse Polish Notation (postfix), each operator comes after its two
-  operands. The operator always acts on the two most recent values that have not
-  been used yet. "Most recent first" is last-in-first-out, and that is what a
-  stack gives. When the loop finds an operator in operations, it pops two
-  values, computes op, and pushes op back so a later operator can use it.
-BRUTE FORCE
-  A simple approach without a stack scans the list for the first operator. It
-  computes that operator with the two tokens just before it, replaces those
-  three tokens with the result, and scans again from the start. This is correct,
-  but each reduction costs O(n) for the scan and the list shift, so the total is
-  O(n^2). The stack version does each reduction in O(1).
-INVARIANT
-  After each token is handled, stack holds the values of all complete
-  sub-expressions seen so far, in order, with the newest on top. A number is
-  already a complete sub-expression. An operator joins the top two complete
-  sub-expressions into one, so the rule still holds. For a valid expression, the
-  whole input reduces to exactly one value, and the final stack.Pop() returns
-  it.
-OPERAND ORDER
-  The first Pop gives the right operand, so the code stores it in b and then
-  pops a. It then calls operations[c](a, b). If you swap them, "+" and "*" still
-  work, but "-" and "/" give wrong answers. For example, ["4","2","-"] must give
-  2, not -2.
-DIVISION TRUNCATES TOWARD ZERO
-  The problem asks that division truncate toward zero, meaning the fraction is
-  cut off. C# int division a / b already does this. So -7 / 2 gives -3, not -4.
-  You need no special rounding code here. Other languages differ: in Python, //
-  rounds down (toward minus infinity).
-WATCH OUT
-  The comment "Prev result is this." on a is not always true. The value in a can
-  be a plain number that was pushed from the input, not a result. It is simply
-  the left operand. The name op is also misleading, because it holds a result,
-  not an operator. The arithmetic is unchecked, so a * b can overflow int
-  without an error. Bad input breaks the code: Pop on an empty stack throws, and
-  int.Parse throws on a token that is not a number.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you avoid the Stack class?
-     Yes. Use an int[] of size tokens.Length and an index as the top pointer.
-     The stack never holds more values than there are tokens. The cost is the
-     same, but it has no collection overhead, and you must manage the index
-     yourself.
-  2. What if the input is infix with parentheses, like "(1 + 2) * 3"?
-     Use two stacks, one for numbers and one for operators. Apply operators by
-     precedence and by parentheses. Or use the shunting-yard algorithm to
-     convert the input to RPN first, then run this code. The extra cost is the
-     precedence logic.
-  3. How would you add a unary operator such as negation or abs?
-     The dictionary would need to store each operator's arity (how many operands
-     it takes), and the loop would pop that many values. The current Func<int,
-     int, int> type only fits binary operators.
-TRIGGER
-  When an operator or closing token must act on the most recent unfinished
-  items, and its result feeds back in as a new item, use a stack.
-C# NOTE
-  ContainsKey followed by operations[c] looks up the key twice.
-  operations.TryGetValue(c, out var f) does one lookup and gives you the
-  function directly.
+IDEA
+  Read tokens left to right. A number is pushed onto stack. An operator
+  pops b (the top) and then a, computes operations[c](a, b), and pushes
+  the result. At the end, the only value left on stack is the answer.
+  This is correct because in postfix, an operator always applies to the
+  two most recent values that are not yet used, and those sit on top.
+EXAMPLE
+  tokens = ["4","-13","5","/","+"] ("-13" is a number, not the "-" key)
+  push 4, push -13, push 5 -> "/": b=5, a=-13, -13/5 = -2 (toward zero)
+  "+": b=-2, a=4 -> 2. stack = [2], so the answer is 2.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each token is pushed or popped a constant number of times
+  Space O(n)  the stack can hold up to about n/2 numbers
+PATH TO OPTIMAL
+  Rescan the list for the first operator, then replace it and its two
+  operands with the result - O(n^2) - every rescan and shift costs O(n).
+  One pass with a stack - O(n) - each token is handled only once.
+  optimal-variant.cs uses the same stack idea with other operator dispatch.
+KEYWORDS
+  reverse polish notation, postfix, stack, expression evaluation, parsing
+WATCH OUT
+  - Pop order matters: the first pop is b, the right operand. If you swap
+    a and b, then "-" and "/" give wrong answers.
+  - The comment on a ("Prev result") is wrong. a is just the value below
+    the top, and it can be a plain number, as with 3 in ["3","4","-"].
+  - Division by zero throws DivideByZeroException. * and + can overflow
+    int without an error. Bad input makes stack.Pop() throw.
+  - C# / truncates toward zero, which is correct here. Python's // floors.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How do you evaluate a normal infix string with parentheses?
+     -> Convert it to postfix with the shunting-yard algorithm, using an
+        operator stack and precedence, then evaluate it as here. O(n) / O(n).
+  2. Can you do it without an extra stack?
+     -> Reuse tokens as the stack, with a write index that you overwrite. O(1)
+        extra space, but it destroys the input and is harder to read.
+  3. Can you solve it recursively?
+     -> Evaluate from the end. An operator recursively evaluates its right
+        operand, then its left. Still O(n), but the call stack can get deep.
+  4. How would you add unary minus or other operators like ^?
+     -> Add an entry to the operations dictionary. Unary operators pop one
+        value. The loop stays the same.
+TRIGGER
+  Reach for a stack when each operator must act on the latest values that
+  have not been used yet, as in postfix or nested expressions.
 ================================================================================
 */

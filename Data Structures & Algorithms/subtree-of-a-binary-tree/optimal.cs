@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n * m) time / O(n + m) space
-// #  Recursive DFS tree comparison   [recursive-dfs-subtree-check]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each of m nodes in root triggers IsSameTree comparison on n nodes of
-// #  subRoot; call stack accumulates height of both trees.
 // ##########################################################################
 
 public class Solution

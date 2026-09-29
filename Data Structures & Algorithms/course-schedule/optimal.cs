@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(n + m) space
-// -  Kahn's algorithm, BFS topological sort   [kahn-bfs-topological]
-// -  ties with optimal-variant.cs on O(n + m) time / O(n + m) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node and edge processed exactly once: O(numCourses) nodes +
-// -  O(prerequisites) edges via queue.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -64,78 +57,50 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Topological Sort (Kahn's BFS) - detect a cycle
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You get numCourses (courses 0..n-1) and pairs [course, prereq].
+           Each pair means prereq must be taken before course. Return true if
+           you can finish all courses, meaning the graph has no cycle.
+           Example: 2, [[1,0],[0,1]] -> false.
+ PATTERN : Topological Sort (Kahn's algorithm, BFS on in-degree)
 ================================================================================
-VARIABLES
-  adj       adj[p] = list of courses that need course p first
-  inDeg     inDeg[c] = number of prerequisites of course c not yet taken
-  q         courses whose prerequisites are all taken, ready to take now
-  topoCnt   number of courses taken so far (removed from the graph)
-WHY THIS PATTERN
-  The problem says "course A needs course B first" and asks whether all courses
-  can be finished. That is a directed graph, and the question is really: "does
-  this graph have a cycle?" Kahn's algorithm takes courses from q only when
-  inDeg reaches 0. A course inside a cycle never reaches inDeg 0, so it is never
-  counted in topoCnt. This means topoCnt == numCourses is true exactly when
-  there is no cycle.
-BRUTE FORCE
-  Repeat this: scan all courses, find one that is not taken and has no untaken
-  prerequisites, then mark it taken. If a full scan finds no such course before
-  every course is taken, return false. Each scan costs O(n + m), and you may do
-  n scans, so the total is O(n * (n + m)). It loses because it searches for the
-  next ready course again and again. Kahn's algorithm keeps the ready courses in
-  q, so it never has to search.
-INVARIANT
-  Every course in q, or already counted in topoCnt, has all of its prerequisites
-  already counted. inDeg[c] always equals the number of prerequisites of c that
-  are not yet counted. So a course is added to q exactly once, at the moment its
-  last prerequisite is counted. If a cycle exists, every course in the cycle
-  keeps inDeg of at least 1, because one of its prerequisites is never counted.
-  So topoCnt stays below numCourses.
-EDGE DIRECTION
-  The code adds the edge prereq -> course (adj[prereq].Add(course)) and
-  increments inDeg[course]. Nodes with no prerequisites start in q. For this
-  yes/no question, reversing every edge would give the same answer, because a
-  reversed cycle is still a cycle. It would not give the same answer if you
-  needed the actual order.
-WATCH OUT
-  Nothing checks the values in pair. A course number outside 0..numCourses-1
-  throws IndexOutOfRangeException. A self-loop like [3,3] is handled correctly:
-  inDeg[3] never reaches 0. Duplicate pairs are also safe, because each copy
-  adds one to inDeg and also gets its own entry in adj, so the counts still
-  match. The comment "Kanhs" is a typo for Kahn's, but the code does what the
-  comment says.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return a valid order of the courses (Course Schedule II).
-     Add each dequeued node to a result list instead of only incrementing
-     topoCnt. If the list has fewer than numCourses items, return an empty
-     array. The extra cost is O(n) space for the list.
-  2. Can you solve it with DFS instead?
-     Yes. Use three colors per node: unvisited, on the current path, done. If
-     you reach a node that is on the current path, you found a cycle. This needs
-     no inDeg array, but deep chains can overflow the call stack unless you
-     write the DFS with your own stack.
-  3. Does it matter that q is a queue?
-     No. Any container works here, for example a Stack<int>, because we only
-     count the nodes. A min-heap (PriorityQueue) gives the smallest valid order
-     in dictionary order, at O(log n) per operation.
-  4. Find the minimum number of semesters if you can take any number of courses
-  at once.
-     Process q one level at a time: take all nodes in q as one semester and
-     count the levels. The answer is the length of the longest chain. If there
-     is a cycle, the answer is -1.
-TRIGGER
-  Items with "X must come before Y" dependencies, and the question is whether an
-  order exists or what the order is.
-C# NOTE
-  Course numbers are dense (0..numCourses-1), so an array of List<int> indexed
-  by course is a good fit. It avoids the hashing and key checks a
-  Dictionary<int, List<int>> would need.
+IDEA
+  Build adj with an edge prereq -> course, and count inDeg for each course.
+  Put every course with inDeg 0 in q, because it is ready to take now.
+  Pop a node, add 1 to topoCnt, and lower inDeg of each nei in adj[node].
+  A nei that reaches 0 joins q. Nodes on a cycle never reach 0.
+  So topoCnt == numCourses holds exactly when no cycle exists.
+EXAMPLE
+  n=4, pairs [[1,0],[2,1],[3,2],[2,3]]: edges 0->1, 1->2, 2->3, 3->2
+  inDeg=[0,1,2,1], q=[0]. Pop 0: cnt=1, inDeg[1]=0, push 1.
+  Pop 1: cnt=2, inDeg[2]=1, not 0. q is empty. Cycle 2<->3 is stuck.
+  topoCnt=2 != 4 -> false
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(n + m)
+  Time  O(n + m)  each node is enqueued once and each edge is relaxed once
+  Space O(n + m)  adj holds all m edges, plus inDeg and q of size n
+PATH TO OPTIMAL
+  Check a path from each node to itself - O(n*(n+m)) - baseline.
+  DFS with 3 colors (unvisited / on stack / done) finds a back edge in
+  O(n+m) - one pass - see optimal-variant.cs if it is that DFS.
+  Kahn's BFS (this file) - O(n+m) - no recursion depth risk.
+KEYWORDS
+  topological sort, Kahn's algorithm, in-degree, cycle detection, DAG, BFS
+WATCH OUT
+  - Compare topoCnt to numCourses, not to prerequisites.Length. Courses
+    with no edges still count, and they start in q.
+  - A course id outside 0..numCourses-1 throws IndexOutOfRange in adj.
+  - The comment says "Kanhs". It is Kahn's algorithm.
+  - In a DFS version, a 2-state visited set is wrong. You need "on stack".
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Return a valid order (Course Schedule II)?
+     -> Append each dequeued node to a list. Return it if its size is
+        numCourses, else return empty. Still O(n+m).
+  2. Minimum number of semesters if you take any ready courses together?
+     -> Run the BFS level by level. The number of levels is the answer. Return
+        -1 on a cycle. Same O(n+m).
+  3. Why does a cycle leave topoCnt short?
+     -> Every node on a cycle has an in-edge from another cycle node. That
+        node is never popped, so its in-degree never drops to 0.
+TRIGGER
+  The problem has "X before Y" dependencies and asks if an order exists.
 ================================================================================
 */

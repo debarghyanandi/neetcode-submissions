@@ -1,13 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n + m) time / O(n + m) space
-// -  Recursive linked list traversal with carry
-// -  [linked-list-carry-recursion]
-// -  ranks below optimal.cs (O(n + m) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Recursion depth equals max list length; call stack accumulates
-// -  O(max(m,n)) frames.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -51,75 +43,36 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Linked List Digit Math - recursive add with carry
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Suboptimal
+ PROBLEM : Two non-empty linked lists hold two non-negative numbers. The
+           digits are stored in reverse order, one digit per node (the head is
+           the ones digit). Return their sum as a linked list in the same
+           reverse format. Example: [2,4,3] + [5,6,4] -> [7,0,8] (342 + 465 =
+           807).
+ PATTERN : Linked List Traversal (recursive) + carry
 ================================================================================
-VARIABLES
-  carry      the carry coming in from the less significant digit (0 or 1)
-  v1         digit of l1 at this position, or 0 if l1 has ended
-  v2         digit of l2 at this position, or 0 if l2 has ended
-  newCarry   sum / 10, the carry passed to the next position
-  nodeValue  sum % 10, the digit stored in the node built now
-  nextNode   head of the sum list for all later positions
-WHY THIS PATTERN
-  The digits are stored in reverse order, so the head of each list is the ones
-  digit. This means you can walk both lists from the front and add digits the
-  way you add numbers on paper, one column at a time. Each call to Add handles
-  one column: it adds v1 + v2 + carry, keeps nodeValue, and passes newCarry to
-  the call for the next column. The recursion builds the answer list in the same
-  order as the input lists.
-BETTER APPROACH
-  The better approach is an iterative loop with a dummy head node and a tail
-  pointer. It moves through both lists once, adds each new node at the tail, and
-  uses only O(1) extra memory besides the output list. This file loses because
-  every column adds one stack frame to Add. So the call stack grows to max(n, m)
-  + 1 frames. That stack is where the extra space in the reported complexity
-  comes from.
-INVARIANT
-  Add(l1, l2, carry) returns the digit list of (number left in l1) + (number
-  left in l2) + carry. The base case is correct: when both lists are empty and
-  carry is 0, the sum is 0, which is the empty list. In every other case, the
-  call builds the correct lowest digit, nodeValue. The rest of the sum is
-  exactly the rest of both lists plus newCarry, and the recursive call returns
-  that. So the full result is correct by induction on the remaining length.
-CARRY IN THE BASE CASE
-  The stop check tests carry == 0 as well as both lists being null. Because of
-  this, a final carry (for example 5 + 5 = 10) goes into one more call. That
-  call makes the extra node with value 1. You do not need a separate "if carry >
-  0, add a node" step after the loop.
-WATCH OUT
-  Each digit uses one recursive call, so a very long list can cause a
-  StackOverflowException. In .NET you cannot catch that exception, and it ends
-  the process. Also, the ternaries (l1 != null ? l1.next : null) are required:
-  when one list is shorter, the code keeps recursing with that side as null, and
-  reading .next on it directly would throw a NullReferenceException.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if the digits are stored most significant digit first (Add Two Numbers
-  II)?
-     Push both lists onto two stacks, or reverse both lists, then add from the
-     ones digit. Put each new node at the front of the result. Stacks use O(n +
-     m) extra memory. Reversing uses O(1) extra memory but changes the input
-     lists.
-  2. Can you avoid allocating a new list?
-     Yes. Write each sum digit into l1's existing nodes. When l1 runs out, link
-     to l2's remaining nodes, and allocate only the final carry node. This saves
-     memory, but it destroys the caller's input, and the caller may not expect
-     that.
-  3. How would it change for a different base, such as base 16?
-     Only the constant changes: newCarry = sum / base and nodeValue = sum %
-     base. The carry can still only be 0 or 1, because the largest sum is
-     (base-1) + (base-1) + 1.
-TRIGGER
-  Two numbers stored as digit lists with the ones digit first, and you must
-  return their sum as a list: add column by column and pass a carry.
-C# NOTE
-  The expression new ListNode(nodeValue) { next = nextNode } is an object
-  initializer. It runs the constructor first and then sets the public next
-  field. This only works because next is a writable public member of ListNode.
+IDEA
+  Add(l1, l2, carry) handles one digit position per call. A missing node
+  counts as 0, so sum = v1 + v2 + carry. The call keeps nodeValue = sum % 10
+  and passes newCarry = sum / 10 to the recursive call on the next nodes.
+  It stops only when both lists are null and carry is 0, so a final carry
+  still becomes a node. This is correct because it is grade-school addition,
+  done from the lowest digit up. Unlike optimal.cs it uses recursion, not a
+  loop.
+EXAMPLE
+  l1 = [9,9], l2 = [1] (99 + 1)
+  Add(9,1,0): sum=10 -> node 0, carry 1; Add(9,null,1): sum=10 -> node 0,
+  carry 1
+  Add(null,null,1): sum=1 -> node 1, carry 0; Add(null,null,0) -> null
+  Answer: [0,0,1] (100)
 COMPLEXITY
-  Time  : O(n + m)
-  Space : O(n + m)
+  Time  O(n + m)  one call per digit position, max(n, m) + 1 calls
+  Space O(n + m)  the recursion stack holds one frame per digit position
+WATCH OUT
+  - The base case must also check carry == 0. If it stops when both lists
+    are null, then 5 + 5 returns [0] instead of [0,1].
+  - Very long lists can cause a stack overflow here. The iterative
+    optimal.cs does not have this risk. Expect the interviewer to ask.
+  - Advance with l1 != null ? l1.next : null. Calling l1.next directly
+    throws when the lists have different lengths.
 ================================================================================
 */

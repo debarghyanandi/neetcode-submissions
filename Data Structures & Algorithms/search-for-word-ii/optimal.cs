@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(m * n * 4^L) time / O(m * n) space
-// -  Trie with DFS backtracking   [trie-dfs-backtrack]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself (from submission-0)
-// -
-// -  DFS explores up to 4^L branching paths from each of m×n starting
-// -  cells, with visited array for backtracking.
 // --------------------------------------------------------------------------
 
 public class Solution

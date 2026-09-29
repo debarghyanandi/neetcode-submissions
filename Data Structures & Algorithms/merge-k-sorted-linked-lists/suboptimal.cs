@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n log k) time / O(k) space
-// #  Min-heap priority queue merge   [heap-priority-queue]
-// #  ranks below optimal.cs (O(n log k) time / O(log k) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Priority queue maintains k list heads, extracting minimum and
-// #  enqueueing successors n times.
 // ##########################################################################
 
 public class Solution

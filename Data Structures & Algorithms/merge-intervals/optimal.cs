@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
-// -  optimal.cs            O(n log n) time / O(n) space
-// -  sort and greedy merge   [sort-and-merge]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Sorting by start point ensures overlaps are adjacent; single pass
-// -  merges in-place with Math.Max for contained intervals.
+// -  optimal.cs            O(n log n) time / O(log n) space
 // --------------------------------------------------------------------------
 
 public class Solution

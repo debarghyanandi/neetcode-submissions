@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(1) space
-// -  sliding window, hash-set incremental shrink   [hashset-sliding-shrink]
-// -  ties with optimal.cs on O(n) time / O(1) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Two-pointer window; each character added/removed at most once despite
-// -  nested while loop, giving O(n) total.
 // --------------------------------------------------------------------------
 
 public class Solution

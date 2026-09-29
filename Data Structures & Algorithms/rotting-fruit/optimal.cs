@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(m * n) time / O(m * n) space
-// #  Multi-source BFS with time tracking   [multi-source-bfs]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Every cell visited once via BFS queue; time propagates from all rotten
-// #  oranges simultaneously.
 // ##########################################################################
 
 public class Solution

@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  Recursive DFS tree inversion   [recursive-dfs]
-// #  ties with optimal-variant-2.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Recursively visits each node once; call stack depth is O(h), worst
-// #  case O(n) on skewed tree.
 // ##########################################################################
 
 public class Solution

@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal-3.cs       O(n^2) time / O(n^2) space
-// -  Recursive memoization, pick or not pick   [pick-not-pick-dp]
-// -  ranks below optimal.cs (O(n log n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-5)
-// -
-// -  Explores n^2 states recursively, each computed once with memoization;
-// -  call stack adds O(n) but dominated by DP table.
 // --------------------------------------------------------------------------
 
 public class Solution

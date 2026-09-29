@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n^2) time / O(n) space
-// -  Space-optimized bottom-up DP with rolling arrays   [pick-not-pick-dp]
-// -  ranks below optimal.cs (O(n log n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-9)
-// -
-// -  Same nested loop structure as submission-6 but keeps only current and
-// -  next rows, reducing space to O(n).
 // --------------------------------------------------------------------------
 
 public class Solution

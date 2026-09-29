@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  recursive bounds validation with return tuple
-// #  [recursive-bounds-check]
-// #  ties with optimal-variant.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each node visited once; recursion depth O(n) in worst case.
 // ##########################################################################
 
 // Sentinel values are safe only because Node.val is restricted to [-1000000000, 1000000000];

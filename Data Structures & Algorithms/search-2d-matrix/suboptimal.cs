@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(m log n) time / O(log n) space
-// #  recursive binary search per row   [per-row-recursive-search]
-// #  ranks below optimal.cs (O(log(m*n)) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Iterates m rows and recursively binary searches each row; recursion
-// #  depth is log n on row length.
 // ##########################################################################
 
 public class Solution

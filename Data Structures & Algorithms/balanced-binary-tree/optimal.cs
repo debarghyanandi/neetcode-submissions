@@ -1,13 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Post-order DFS with single-pass height computation
-// -  [recursive-balance-single-pass]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node visited exactly once, height computed and returned alongside
-// -  balance status; worst-case call-stack depth is n for skewed trees.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -32,69 +24,58 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS, Post-order - return (balanced, height) up
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, return true if it is
+           height-balanced. Balanced means: at EVERY node, the heights of the
+           left and right subtrees differ by at most 1. An empty tree is
+           balanced. Example: [1,2,2,3,null,null,null,4] -> false (node 2 has
+           heights 2 vs 0).
+ PATTERN : Post-order DFS returning (balanced, height) tuple
 ================================================================================
-VARIABLES
-  left      (balanced, height) result for the node.left subtree
-  right     (balanced, height) result for the node.right subtree
-  balanced  true if this whole subtree is balanced
-  height    number of nodes on the longest path from node down to a leaf
-WHY THIS PATTERN
-  A tree is balanced only if every node's two subtrees differ in height by at
-  most 1. So each node needs the heights of both children before it can decide
-  anything. That points to post-order DFS: go down into both children first,
-  then decide at the parent. CheckBalance returns balanced and height together,
-  so each node is visited only once.
-BRUTE FORCE
-  The first idea most people write works top-down. At each node, call a separate
-  Height(node.left) and Height(node.right), compare them, then call IsBalanced
-  on both children. This is correct, but it measures the same subtree height
-  again at every ancestor. On a skewed tree that costs O(n^2) time, and about
-  O(n log n) on a balanced tree. It is slow because height is measured in one
-  pass and balance is checked in another.
-INVARIANT
-  When CheckBalance(node) returns, height is the true height of the subtree
-  under node. balanced is true exactly when every node in that subtree meets the
-  difference-of-at-most-1 rule. The null case (true, 0) makes this true for
-  empty trees. If it is true for both children, then the AND of left.balanced,
-  right.balanced and the Math.Abs check makes it true for node, and so does 1 +
-  Math.Max for height. By induction, the call on root gives the correct answer.
-WATCH OUT
-  The comment says the method returns "balanced (1 or 0) and height as 2 element
-  int array". The code actually returns a named tuple (bool balanced, int
-  height), so the comment is out of date and misleading. The recursion depth
-  equals the tree height. A very deep, skewed tree (like a linked list) can
-  cause a StackOverflowException, and C# cannot catch that exception. The code
-  also does not stop early: after it finds an unbalanced subtree, it still
-  visits every other node.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you stop as soon as you find an imbalance?
-     Return only an int and use -1 as a sentinel (a special value that means
-     "unbalanced"). If either child returns -1, or the heights differ by more
-     than 1, return -1 at once. You get the same result with less work on
-     unbalanced trees, but "height" and "not balanced" now share one value,
-     which is harder to read.
-  2. How would you do this without recursion?
-     Do an iterative post-order traversal with an explicit Stack<TreeNode> and a
-     Dictionary<TreeNode, int> that stores the height of each finished node.
-     This removes the call-stack depth limit. The cost is more code and heap
-     memory for the dictionary.
-  3. What if "balanced" means the heights may differ by at most k?
-     Change only the check to Math.Abs(left.height - right.height) <= k. The
-     traversal and the complexity stay the same.
-TRIGGER
-  The answer at a node depends on a value computed from both of its subtrees
-  (height, sum, depth), so compute it bottom-up in one post-order pass and
-  return several values together.
-C# NOTE
-  The named tuple (bool balanced, int height) is a ValueTuple, which is a
-  struct. So returning two values needs no out parameters and no helper class,
-  and callers can read left.height by name.
+IDEA
+  CheckBalance visits the children first, then the node (post-order).
+  Each call returns two facts: is this subtree balanced, and its height.
+  A node is balanced if left.balanced, right.balanced, and the heights
+  differ by at most 1. Its height is 1 + Math.Max(left.height, right.height).
+  Correct because a subtree is balanced only if every node inside it is.
+EXAMPLE
+  Tree: 1 -> left 2 -> left 3 -> left 4; 1 -> right 2 (a leaf).
+  4:(T,1) 3: heights 1 vs 0 -> (T,2) left 2: heights 2 vs 0 -> (F,3)
+  right 2:(T,1) root: left.balanced is false -> (F,4)
+  Answer: false, even though the root's own heights (3 vs 1) are checked too.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited once, O(1) work per node
+  Space O(n)  recursion stack, depth equals tree height (n for a skewed tree)
+PATH TO OPTIMAL
+  Top-down: at each node call a separate Height() on both sides - O(n^2) on
+  a skewed tree - simple but recomputes heights again and again (no file).
+  Bottom-up (this file, optimal.cs) - O(n) - height and balance come back
+  together in one pass, so no height is computed twice.
+KEYWORDS
+  binary tree, height-balanced, post-order DFS, bottom-up recursion, tree
+  height
+WATCH OUT
+  - Checking only the root's two heights is wrong. The example above passes
+    at the root side-by-side logic only if you forget left.balanced.
+  - The comment says "1 or 0 ... 2 element int array", but the code returns
+    a (bool, int) tuple. The comment is stale.
+  - No early exit: after a subtree is unbalanced, the code still walks the
+    whole tree. Correct, but wasted work.
+  - A very deep skewed tree can cause a stack overflow with this recursion.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you stop early once you find an unbalanced subtree?
+     -> Return height -1 as a flag and return -1 at once if a child gives -1.
+        Still O(n) worst case, but faster in practice and uses a single int.
+  2. The tree is very deep. Recursion may overflow. What now?
+     -> Do an iterative post-order with an explicit stack and a dictionary of
+        node -> height. Same O(n) time and space, but on the heap.
+  3. Why is the top-down approach O(n^2)?
+     -> On a skewed tree each node calls Height() over all nodes below it, so
+        the sum is n + (n-1) + ... = O(n^2).
+  4. How is this like Diameter of Binary Tree?
+     -> Same shape: post-order returns height, and you update an extra answer
+        (here a bool, there a max of left + right heights) at each node.
+TRIGGER
+  When a tree answer at a node depends on facts from both subtrees (height,
+  size, sum), return those facts upward in one post-order DFS.
 ================================================================================
 */

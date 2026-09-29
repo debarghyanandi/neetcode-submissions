@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pointer converging from ends   [two-pointer-trap]
-// -  ranks above suboptimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-1)
-// -
-// -  Each element visited once as pointers move inward; maxima tracked in
-// -  scalars as convergence proceeds.
 // --------------------------------------------------------------------------
 
 public class Solution

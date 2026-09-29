@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(1) time / O(k) space
-// -  Doubly-linked list with hash map   [lru-doubly-linked-list]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Hash map provides O(1) access to nodes; doubly-linked list maintains
-// -  recency order and enables O(1) eviction of least-recently-used item
 // --------------------------------------------------------------------------
 
 public class Node

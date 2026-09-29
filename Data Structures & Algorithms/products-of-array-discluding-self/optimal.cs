@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Two-pass prefix-suffix products   [prefix-suffix-product]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  First pass accumulates prefix products left-to-right, second pass
-// -  multiplies suffix products right-to-left in a single pass each.
 // --------------------------------------------------------------------------
 
 public class Solution

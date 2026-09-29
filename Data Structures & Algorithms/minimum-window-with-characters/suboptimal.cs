@@ -1,13 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n * k) time / O(1) space
-// #  Sliding window with dictionary scan validation
-// #  [sliding-window-dictionary-scan]
-// #  ranks below optimal.cs (O(n + m) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  IsMatch() scans all k distinct characters in t on each iteration,
-// #  adding a k-factor to the sliding window baseline.
 // ##########################################################################
 
 public class Solution

@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  sliding window, hash-map position jump   [hashmap-lastindex]
-// #  ties with optimal-variant.cs on O(n) time / O(1) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Single pass with O(1) dictionary lookups; left pointer jumps directly
-// #  past previous duplicate occurrence.
 // ##########################################################################
 
 public class Solution

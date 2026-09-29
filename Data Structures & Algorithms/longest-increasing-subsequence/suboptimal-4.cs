@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal-4.cs       O(n^2) time / O(n^2) space
-// -  Bottom-up tabulation, pick or not pick   [pick-not-pick-dp]
-// -  ranks below optimal.cs (O(n log n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-6)
-// -
-// -  Double nested loop fills an (n+1)×(n+1) DP table iteratively from
-// -  bottom up.
 // --------------------------------------------------------------------------
 
 public class Solution

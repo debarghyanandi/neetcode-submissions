@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n) time / O(n) space
-// #  sliding window with prefix sum   [sliding-window-prefix-sum]
-// #  ranks below optimal.cs (O(n) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Prefix array precomputation uses O(n) space to enable O(1) range sum
-// #  queries, unlike the running sum approach.
 // ##########################################################################
 
 public class Solution

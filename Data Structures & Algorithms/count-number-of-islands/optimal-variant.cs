@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(m * n) time / O(m * n) space
-// -  Iterative BFS island search   [bfs-grid-islands]
-// -  ties with optimal.cs on O(m * n) time / O(m * n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each cell visited once via BFS queue; queue holds frontier nodes at
-// -  maximum capacity.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -56,78 +49,36 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Graph BFS / Flood Fill - count connected components
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal variant - ties the best complexity by another route
+ PROBLEM : You get a 2D grid of chars: '1' is land and '0' is water. Return
+           how many islands there are. An island is land cells joined up,
+           down, left or right. Diagonal cells do not join.
+           [["1","1","0"],["0","0","0"],["0","1","1"]] -> 2
+ PATTERN : Grid BFS (flood fill) + visited matrix
 ================================================================================
-VARIABLES
-  vis      vis[r,c] = true once cell (r,c) has been put in some queue
-  cnt      number of islands found so far (one per new BFS start)
-  dRow     row offsets for up, down, left, right
-  dCol     column offsets that go with dRow at the same index
-  nRow     row of the neighbor being checked
-  nCol     column of the neighbor being checked
-WHY THIS PATTERN
-  The problem asks how many groups of '1' cells touch each other up, down, left
-  or right. That is the number of connected components in a grid graph. Each
-  land cell is a node, and each pair of touching land cells is an edge. The
-  outer loops find a land cell that is not yet in vis, add 1 to cnt, and run a
-  BFS (breadth-first search: visit cells level by level using a queue). The BFS
-  marks the whole island, so no later start can count it again.
-BRUTE FORCE
-  The simplest correct approach is union-find (a structure that merges sets).
-  Give each land cell its own set, then union it with its right and down land
-  neighbors. The answer is the number of distinct roots. With path compression
-  it is about O(m * n) too, but it needs more code and a parent array. A more
-  naive approach restarts a full search from every land cell and removes
-  duplicates. That costs O((m * n)^2) and loses badly.
-INVARIANT
-  When a BFS starts, every cell already in vis belongs to an island that cnt has
-  already counted. During the BFS, a cell goes into the queue only if it is
-  land, inside the grid, and not yet in vis, and it is marked at that moment. So
-  each land cell is enqueued exactly once, in total. When the queue is empty,
-  every land cell reachable from (row, col) is in vis. So each island adds
-  exactly 1 to cnt.
-MARK ON ENQUEUE
-  vis is set when a cell is enqueued, both for the start cell and inside the
-  neighbor loop. If you marked it only on dequeue, the same cell could be
-  enqueued by two neighbors before it is processed. The result would still be
-  correct, but the queue could hold duplicates and do extra work. The code
-  matches its own comment here.
-WATCH OUT
-  grid[0].Length throws if grid is empty (rows == 0), because there is no row 0.
-  Add a guard that returns 0 before reading cols. The code also assumes the grid
-  is rectangular, because cols comes from row 0 only. A jagged grid with a
-  shorter later row would throw at grid[nRow][nCol].
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you drop the vis array to save memory?
-     Yes. Write '0' into grid when you enqueue a cell. This saves the O(m * n)
-     bool array, but it changes the caller's input. Ask first if that is
-     allowed.
-  2. Why BFS and not recursive DFS?
-     Recursive DFS is shorter, but one long island can make the recursion very
-     deep and overflow the call stack. BFS with a queue keeps that state on the
-     heap. The queue grows only to about the width of the BFS frontier.
-  3. What if diagonal cells also connect?
-     Extend dRow and dCol to 8 entries by adding the four diagonal offsets.
-     Nothing else changes.
-  4. What if land cells are added one at a time and you must report the count
-  after each?
-     Use union-find. Each add makes a new set (cnt++), and each union with a
-     land neighbor does cnt--. Each step costs almost O(1), instead of a full
-     rescan.
-TRIGGER
-  When a grid question asks you to count or measure groups of touching cells,
-  run a flood fill from each unvisited cell and count how many times you start
-  one.
-C# NOTE
-  bool[,] is one rectangular block indexed as vis[r, c], while grid is a jagged
-  char[][] indexed as grid[r][c]. Keep the two index styles apart when you edit.
-  The value tuple (int, int) in Queue avoids allocating a new object for each
-  cell, and var (r, c) unpacks it in one line.
+IDEA
+  Scan every cell. When a cell is '1' and not yet in vis, it starts a new
+  island,
+  so cnt++. A BFS from that cell visits the whole island through a queue. It
+  uses dRow/dCol for the 4 moves and marks each cell in vis when it is
+  enqueued.
+  Every land cell is marked exactly once, so each island is counted once, by
+  its first cell in scan order. This file uses a separate vis array and does
+  not change grid, so the input stays intact.
+EXAMPLE
+  grid = 110 / 010 / 101
+  (0,0): cnt=1, BFS (0,0)->(0,1)->(1,1), then the queue is empty
+  (2,0): cnt=2. It touches (1,1) only diagonally, so it is a new island
+  (2,2): cnt=3. Answer = 3
 COMPLEXITY
-  Time  : O(m * n)
-  Space : O(m * n)
+  Time  O(m * n)  each cell is enqueued at most once and checks 4 neighbours
+  Space O(m * n)  the vis array, plus a queue that can hold many cells of one
+                  island
+WATCH OUT
+  - Mark vis when you ENQUEUE, not when you dequeue. Otherwise one cell can
+    be added many times by its neighbours. That is still correct, but slower.
+  - An empty grid (rows == 0) crashes on grid[0].Length. Guard it if asked.
+  - Compare with the char '1', not the int 1. grid[r][c] == 1 is always false.
+  - Check the bounds before you read vis or grid. The code relies on && to
+    short-circuit (skip the rest once one test is false).
 ================================================================================
 */

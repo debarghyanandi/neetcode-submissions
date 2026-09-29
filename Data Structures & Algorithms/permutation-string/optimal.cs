@@ -1,13 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n + m) time / O(1) space
-// #  sliding window with dictionary comparison
-// #  [sliding-window-dict-compare]
-// #  ties with optimal-variant.cs on O(n + m) time / O(1) space
-// #
-// #  YOU SOLVED THIS YOURSELF (was suboptimal.cs)
-// #
-// #  Each iteration performs full multiset comparison via .All() over
-// #  dictionary entries, adding constant but measurable overhead.
 // ##########################################################################
 
 public class Solution

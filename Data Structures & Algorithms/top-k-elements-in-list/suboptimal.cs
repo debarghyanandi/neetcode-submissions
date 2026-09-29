@@ -1,13 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n log k) time / O(n) space
-// -  Min-heap with size-k limit   [min-heap-k-limit]
-// -  ranks below optimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Frequency map stores all unique elements (O(n) worst case); heap
-// -  maintains at most k entries with O(log k) per insertion over unique
-// -  elements.
 // --------------------------------------------------------------------------
 
 public class Solution

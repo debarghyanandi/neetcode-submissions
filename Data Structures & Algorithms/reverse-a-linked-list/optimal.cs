@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  iterative pointer reversal   [iterative-reverse]
-// -  ranks above suboptimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass iterating through the linked list with constant auxiliary
-// -  pointers.
 // --------------------------------------------------------------------------
 
 public class Solution

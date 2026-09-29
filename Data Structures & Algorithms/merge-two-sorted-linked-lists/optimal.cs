@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n + m) time / O(1) space
-// -  Two-pointer merge   [two-pointer-merge]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each node from both lists is visited exactly once; comparison at each
-// -  step determines which node to append.
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n) time / O(n) space
-// #  BST traversal, recursive descent   [bst-recursive]
-// #  ranks below optimal.cs (O(n) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Recursively traverses BST using the same property; call stack depth
-// #  equals tree height, O(n) worst case for skewed tree.
 // ##########################################################################
 
 public class Solution

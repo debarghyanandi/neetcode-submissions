@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n^2) time / O(1) space
-// -  expand around center   [expand-around-center]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself (from submission-1)
-// -
-// -  Each of n center positions expands outward until characters mismatch,
-// -  taking O(n) per position in worst case
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(k) space
-// -  Monotonic deque, sliding window   [monotonic-deque]
-// -  ties with optimal-variant.cs on O(n) time / O(k) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Each element is added and removed from the deque at most once, giving
-// -  amortized linear time.
 // --------------------------------------------------------------------------
 
 public class Solution

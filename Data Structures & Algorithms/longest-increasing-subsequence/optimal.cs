@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n log n) time / O(n) space
-// -  Greedy approach with binary search   [greedy-binary-search]
-// -  ranks above suboptimal.cs (O(n^2) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-12)
-// -
-// -  Maintains list of smallest tails for each LIS length; each element
-// -  either appends or binary-searches for replacement.
 // --------------------------------------------------------------------------
 
 public class Solution

@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(m * n) time / O(m * n) space
-// #  Recursive DFS island search   [dfs-grid-islands]
-// #  ties with optimal-variant.cs on O(m * n) time / O(m * n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each cell visited once via recursive DFS; call stack depth bounded by
-// #  grid dimensions.
 // ##########################################################################
 
 public class Solution
@@ -71,75 +64,53 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Grid Flood Fill (DFS) - count connected components
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : You get a 2D grid of chars: '1' is land and '0' is water. Return
+           how many islands there are. An island is land cells joined up,
+           down, left or right. Diagonal cells do NOT join. Example:
+           ["11","01","10"] -> 2
+ PATTERN : Grid DFS flood fill + connected components count
 ================================================================================
-VARIABLES
-  vis        vis[r,c] = 1 if cell (r,c) is already part of a counted island
-  cnt        number of islands found so far (one per new DFS start)
-  delRow     row step to a neighbour, from -1 to 1
-  delCol     column step to a neighbour, from -1 to 1
-  nRow       row of the neighbour cell being checked
-  nCol       column of the neighbour cell being checked
-WHY THIS PATTERN
-  An island is a group of '1' cells joined up, down, left or right. In graph
-  terms, each cell is a node and each shared edge is a link, so each island is
-  one connected component (a group of nodes you can reach from each other). The
-  outer loops look for a land cell with vis == 0. From there, Dfs marks the
-  whole island, and cnt goes up by one. Each island is counted exactly once,
-  because after its first cell starts a DFS, every other cell of it is already
-  marked.
-BRUTE FORCE
-  A simple correct first idea: for each land cell, run a new search with a fresh
-  visited set. This finds its whole island. Count the cell only if it is the
-  top-left-most cell of that island. This is correct, but it costs O((m*n)^2),
-  because every cell can walk the whole island again. The shared vis array
-  removes this repeated work. Each cell is visited once in the whole run.
-INVARIANT
-  When the outer loop reaches (row, col), every land cell of every island
-  already counted has vis = 1. No cell of an island not yet found has been
-  marked. So a cell with vis == 0 and grid == '1' must be the first cell seen of
-  a new island. Dfs marks a cell before it recurses, so no cell is entered
-  twice. It stops only at water, at the grid edge, or at cells already marked,
-  so it marks exactly one island.
-3X3 LOOP WITH ABS FILTER
-  Dfs loops delRow and delCol over -1..1 (9 pairs). It skips a pair when
-  Math.Abs(delRow) == Math.Abs(delCol). That one test removes the centre (0,0)
-  and the 4 diagonals (|1| == |1|). Only the 4 side neighbours are left. If you
-  remove the filter and skip only (0,0), you get the 8-direction version.
-WATCH OUT
-  The comment "visit all 6 neighbours" is wrong. The code visits 4 neighbours
-  (up, down, left, right), and the 3x3 loop checks 9 pairs in total.
-  grid[0].Length throws an exception if grid is empty (rows == 0), and
-  NumIslands reads it before any check. Dfs is recursive, so one very large
-  island (for example, a grid of all '1') can make the call stack very deep and
-  cause a StackOverflowException. In .NET you cannot catch that exception.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without the extra vis array?
-     Yes. Set grid[r][c] = '0' when you visit a cell, and test only grid == '1'.
-     This saves the O(m*n) visited memory, but it changes the caller's input.
-     Ask if that is allowed.
-  2. What if land cells are added one at a time, and you must report the count
-  after each one?
-     Use Union-Find (disjoint set: each cell points to a leader for its group).
-     Each new cell adds 1 to the count, and each merge with a land neighbour
-     takes 1 away. Each add is close to O(1), so you do not run a full flood
-     fill again every time.
-  3. How would you return the size of the largest island instead?
-     Make Dfs return 1 plus the sum of what its neighbour calls return. Keep a
-     running max in the outer loop instead of cnt++. The traversal stays the
-     same.
-TRIGGER
-  A grid or graph where you must count or measure groups of cells that are
-  "connected" should make you think of flood fill with a visited mark.
-C# NOTE
-  vis only ever holds 0 or 1, so bool[,] shows the intent better, and each
-  element uses 1 byte instead of 4. Also, Dfs computes rows and cols again on
-  every call. Keep them in fields, or pass them in as parameters.
+IDEA
+  Scan every cell with row and col. When a cell is '1' and vis is 0, it is a
+  new island: call Dfs and add 1 to cnt. Dfs marks the whole island in vis,
+  so no later cell of that island starts a new count. The delRow/delCol loop
+  skips cells where |delRow| == |delCol| (the center and 4 diagonals).
+  Correct because each Dfs covers exactly one connected component.
+EXAMPLE
+  grid: 110 / 010 / 101
+  (0,0) new -> Dfs marks (0,0),(0,1),(1,1); cnt=1
+  (2,0) new -> cnt=2; (2,2) new -> cnt=3 (diagonal to (1,1) does not join)
+  Answer: 3
 COMPLEXITY
-  Time  : O(m * n)
-  Space : O(m * n)
+  Time  O(m * n)  each cell is marked once, and each check looks at 9 offsets
+  Space O(m * n)  vis matrix, plus a recursion stack as deep as one island
+PATH TO OPTIMAL
+  Flood from every '1' with no shared visited set - O((m*n)^2) - repeats work.
+  Shared vis matrix, count each Dfs start - O(m*n) - each cell done once.
+  optimal-variant.cs - same O(m*n) with a different traversal choice.
+KEYWORDS
+  flood fill, DFS, BFS, connected components, grid graph, union-find, visited
+WATCH OUT
+  - The comment "visit all 6 neighbours" is wrong. The loop checks 9 offsets
+    and skips 5 of them, so it visits 4 neighbours.
+  - A large all-'1' grid makes recursion depth m*n. This can cause a stack
+    overflow in C#. Use an explicit stack or BFS queue instead.
+  - An empty grid (rows == 0) crashes on grid[0].Length. Return 0 first.
+  - Mark vis before you recurse. If you mark after, cells get pushed twice.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. Can you do it with less extra memory?
+     -> Set grid cells to '0' when you visit them, and drop vis. Extra space
+        is then only the stack. The trade-off is that the input gets changed.
+  2. What if land cells are added one at a time (Number of Islands II)?
+     -> Use union-find, and union each new cell with its land neighbours. Each
+        add is near O(1) amortized, so you never re-scan the grid.
+  3. Return the size of the largest island instead?
+     -> Make Dfs return 1 plus the sum of its neighbours' results, and keep a
+        max. Time and space stay O(m*n).
+  4. Should diagonals count as connected?
+     -> Loop all 8 offsets and skip only (0,0). Time and space stay the same.
+TRIGGER
+  When a grid asks you to count or measure groups of touching cells, use a
+  flood fill with DFS or BFS.
 ================================================================================
 */

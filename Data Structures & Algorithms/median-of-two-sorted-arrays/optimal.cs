@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(log(min(m, n))) time / O(1) space
-// -  binary search on partition   [binary-search-partition]
-// -  ranks above suboptimal.cs (O(n + m) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-1)
-// -
-// -  Binary search on the smaller array determines valid partition point in
-// -  logarithmic iterations.
 // --------------------------------------------------------------------------
 
 public class Solution

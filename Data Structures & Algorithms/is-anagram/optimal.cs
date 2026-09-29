@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Fixed-size array character balance   [array-balance-fixed]
-// -  ties with optimal-variant.cs on O(n) time / O(1) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Fixed 26-slot array bounds space to constant; single pass processes
-// -  both strings in O(n) time.
 // --------------------------------------------------------------------------
 
 public class Solution

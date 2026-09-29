@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal-variant.cs    O(n) time / O(n) space
-// -  Iterative BFS with queue   [iterative-bfs-queue]
-// -  ties with optimal.cs on O(n) time / O(n) space
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Level-order traversal visits each node once; queue width is O(n) worst
-// -  case on complete tree.
 // --------------------------------------------------------------------------
 
 public class Solution

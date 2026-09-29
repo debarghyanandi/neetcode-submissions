@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(1) space
-// -  Space-optimized Fibonacci iteration   [fibonacci-space-optimized]
-// -  ranks above suboptimal.cs (O(n) time / O(n) space)
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Rolling variables track only the last two values, eliminating array
-// -  storage.
 // --------------------------------------------------------------------------
 
 public class Solution
@@ -33,67 +26,55 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 1D DP / Fibonacci - keep only the last two values
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-1.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : You climb a staircase with n steps. Each move is 1 step or 2 steps.
+           Return how many distinct ways reach the top. Order matters: 1+2 and
+           2+1 are two different ways. Example: n = 3 -> 3.
+ PATTERN : 1-D Dynamic Programming (Fibonacci, rolling variables)
 ================================================================================
-VARIABLES
-  prev2    ways to reach step i-2 (starts at 1, the count for step 1)
-  prev1    ways to reach step i-1 (starts at 2, the count for step 2)
-  curr     ways to reach step i, built as prev1 + prev2
-WHY THIS PATTERN
-  You can climb 1 or 2 steps at a time. So the last move onto step i came from
-  step i-1 or from step i-2. That means ways(i) = ways(i-1) + ways(i-2), which
-  is the Fibonacci rule. Each new value needs only the two values before it, so
-  prev1 and prev2 can stand in for a full dp array.
-BRUTE FORCE
-  The first idea is plain recursion: ways(n) = ways(n-1) + ways(n-2), stopping
-  at n <= 2. It gives the right answer, but it solves the same smaller steps
-  again and again, so it takes about O(2^n) time. Adding memoization (saving
-  each answer the first time you compute it) or a dp array brings it down to
-  O(n) time, but it still uses O(n) extra memory. This file keeps the O(n) time
-  and drops the array.
-INVARIANT
-  At the start of the loop body for index i, prev1 = ways(i-1) and prev2 =
-  ways(i-2). The body sets curr = ways(i), then moves the pair one step forward:
-  prev2 becomes the old prev1 and prev1 becomes curr. This is true before the
-  first pass (i = 3: prev1 = 2, prev2 = 1). So when the loop ends after i = n,
-  prev1 holds ways(n).
-WATCH OUT
-  The order of the two updates matters. If you write prev1 = curr before prev2 =
-  prev1, the old prev1 is lost and both variables end up equal. The early return
-  uses n itself as the answer. That is right for n = 1 and n = 2, but it returns
-  0 for n = 0 and a negative number for negative n. Whether ways(0) should be 1
-  or 0 depends on the problem, so check it. The count grows like Fibonacci, so
-  int overflows once n goes past about 45.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if you can take 1, 2, or 3 steps at a time?
-     ways(i) = ways(i-1) + ways(i-2) + ways(i-3). Keep three rolling variables
-     instead of two. Space is still O(1).
-  2. What if the allowed step sizes are a given list, like {1, 3, 5}?
-     Use a dp array where dp[i] = sum of dp[i-s] for each step s in the list.
-     The rolling-variable trick only works when the largest step is a small
-     fixed number. Otherwise the array costs O(n) space and the time is O(n *
-     number of steps).
-  3. Can you do better than O(n) time for very large n, with the answer taken
-  modulo some number?
-     Yes. Raise the 2x2 matrix [[1,1],[1,0]] to a power by repeated squaring.
-     That takes O(log n) time. It is harder to write, and you need the modulo so
-     the numbers stay small.
-  4. What if some steps are broken and you cannot stand on them?
-     Set ways(i) = 0 for a broken step and use the same rule for the rest. The
-     rolling variables still work.
-TRIGGER
-  When the answer for size n is built from a fixed, small number of answers for
-  smaller sizes, use bottom-up DP and keep only those few past values.
-C# NOTE
-  The variable curr is declared outside the loop and set to 0, but it is only
-  used inside the loop body. You could write "int curr = prev1 + prev2;" inside
-  the loop, or swap without it using a tuple: (prev2, prev1) = (prev1, prev1 +
-  prev2);
+IDEA
+  The last move onto step i is either 1 step (from i-1) or 2 steps (from i-2).
+  So ways(i) = ways(i-1) + ways(i-2), the Fibonacci rule.
+  prev1 holds ways(i-1) and prev2 holds ways(i-2). Each loop computes curr,
+  then shifts both values forward by one step. The two cases never overlap
+  and cover every path, so adding them counts each way exactly once.
+EXAMPLE
+  n = 5, start prev2 = 1, prev1 = 2
+  i=3: curr=3 -> prev2=2, prev1=3 | i=4: curr=5 -> prev2=3, prev1=5
+  i=5: curr=8 -> prev2=5, prev1=8
+  return prev1 = 8
 COMPLEXITY
-  Time  : O(n)
-  Space : O(1)
+  Time  O(n)  one loop from 3 to n, O(1) work per step
+  Space O(1)  only prev2, prev1, curr, whatever n is
+PATH TO OPTIMAL
+  Plain recursion ways(n-1)+ways(n-2) - O(2^n) - base, repeats subproblems.
+  Memoization or dp array - O(n) / O(n) - each step solved once
+  (suboptimal.cs).
+  Two rolling variables - O(n) / O(1) - dp[i] needs only the last two values.
+KEYWORDS
+  dynamic programming, Fibonacci, recurrence, memoization, bottom-up,
+  tabulation
+WATCH OUT
+  - Update order: set prev2 = prev1 BEFORE prev1 = curr, or you lose a value.
+  - int overflows: n = 46 gives 2971215073 > int.MaxValue. Use long or
+    BigInteger.
+  - n <= 2 returns n, so n = 0 returns 0 and negative n returns negative.
+    Some define ways(0) = 1. Say your base case out loud.
+  - Return prev1, not curr: curr is 0 whenever the loop body never runs.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. What if you may climb 1, 2, ..., k steps at a time?
+     -> ways(i) = sum of the last k values. Keep a sliding window sum over a
+        size-k buffer: O(n) time, O(k) space.
+  2. What if some steps are broken and cannot be stepped on?
+     -> Set ways(i) = 0 for a broken step and keep the same recurrence. Still
+        O(n) time, O(1) space.
+  3. n is huge, like 10^18, answer modulo a prime?
+     -> Use matrix power of [[1,1],[1,0]] with fast exponentiation. O(log n)
+        time, O(1) space; more code, only worth it for huge n.
+  4. Why does this work?
+     -> The final move splits all paths into two disjoint groups, ending with
+        a 1-step or a 2-step, so the counts add.
+TRIGGER
+  Count the ways to reach a state when each step depends only on a fixed
+  number of previous states.
 ================================================================================
 */

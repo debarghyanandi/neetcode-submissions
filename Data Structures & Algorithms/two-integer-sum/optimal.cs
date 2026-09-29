@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(n) time / O(n) space
-// -  Hash map complement lookup   [hashmap-complement]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Single pass through array with O(1) dictionary lookups and insertions;
-// -  stores seen values to find complements.
 // --------------------------------------------------------------------------
 
 public class Solution

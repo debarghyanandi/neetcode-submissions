@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  Two-pointer, fast and slow   [two-pointer-linked-list]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Two passes over the list with pointers spaced n apart position slow
-// #  one node before removal point.
 // ##########################################################################
 
 //My solution

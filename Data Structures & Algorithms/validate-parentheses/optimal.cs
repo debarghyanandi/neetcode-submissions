@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  stack-based bracket matching   [stack-matching]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each character is processed once with O(1) stack operations; stack
-// #  size scales with input in worst case.
 // ##########################################################################
 
 public class Solution

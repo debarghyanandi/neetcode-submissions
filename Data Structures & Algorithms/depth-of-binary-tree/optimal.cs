@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(n) space
-// #  Recursive depth-first search   [recursive-dfs]
-// #  ties with optimal-variant.cs on O(n) time / O(n) space
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Recursively visits each of n nodes; call stack depth equals tree
-// #  height, worst case O(n) in a skewed tree.
 // ##########################################################################
 
 public class Solution
@@ -22,63 +15,52 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Tree DFS (post-order) - depth = 1 + max of child depths
- SOURCE  : YOUR OWN SOLUTION - marker check on submission-2.cs when it was
-           first processed
- STATUS  : Optimal
+ PROBLEM : Given the root of a binary tree, return its maximum depth. Depth is
+           the number of nodes on the longest path from the root down to a
+           leaf. An empty tree has depth 0. Example: [3,9,20,null,null,15,7]
+           -> 3.
+ PATTERN : DFS (recursive, post-order) on a tree
 ================================================================================
-VARIABLES
-  root  the node of the current subtree; null means an empty subtree with depth 0
-WHY THIS PATTERN
-  The depth of a tree is defined through its subtrees: it is one more than the
-  deeper of the left and right subtrees. A definition like this, built from
-  itself, fits recursion directly. MaxDepth(root.left) and MaxDepth(root.right)
-  solve the two smaller problems. The current call adds 1 for root itself.
-BRUTE FORCE
-  A first try might list every root-to-leaf path as its own list of nodes and
-  then take the longest list. The answer is correct, but copying each path costs
-  up to h nodes, where h is the tree height. That is O(n*h) time and memory, and
-  O(n^2) on a tree shaped like a chain. It loses because you only need the
-  length of each path, not the nodes on it.
-INVARIANT
-  Each call to MaxDepth(root) returns the exact number of nodes on the longest
-  downward path that starts at root. For null this is 0, which is correct. For a
-  real node, if both child calls are correct, then the longest path goes through
-  the deeper child, so Math.Max(...) + 1 is correct too. By induction on subtree
-  size, the top call returns the depth of the whole tree.
-WATCH OUT
-  The code counts nodes, not edges. So a single node returns 1. If the problem
-  defines depth in edges, the answer is off by one. The recursion goes as deep
-  as the tree is tall. On a very skewed tree, for example a long chain of only
-  left children, it can throw a StackOverflowException, and a try/catch cannot
-  recover from that. The comment "my solution" says nothing about the method, so
-  it is not wrong, but it adds nothing.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it without recursion?
-     Yes. Use a BFS (level-order walk) with a Queue<TreeNode>. Take one full
-     level from the queue at a time and add 1 to a counter for each level.
-     Memory is then the widest level, not the tallest path. Or use an explicit
-     stack of (node, depth) pairs and keep the largest depth seen.
-  2. How would you find the minimum depth instead?
-     You cannot just change Max to Min. A node with only one child would then
-     count the null side as depth 0. Only recurse into the child that is not
-     null, or use BFS and stop at the first leaf. BFS can finish early on wide
-     trees.
-  3. How do you find the diameter (the longest path between any two nodes)?
-     Keep this same recursion, which returns height. At each node, also update a
-     shared best value with leftHeight + rightHeight. It is still one pass.
-  4. What if each node can have many children (an N-ary tree)?
-     Take the max over all children in a loop, then add 1. The structure stays
-     the same.
-TRIGGER
-  When a tree answer for a node is built only from the answers of its children,
-  reach for post-order recursive DFS.
-C# NOTE
-  The body can be one expression-bodied member: public int MaxDepth(TreeNode
-  root) => root == null ? 0 : 1 + Math.Max(MaxDepth(root.left),
-  MaxDepth(root.right)); The logic is the same, just shorter.
+IDEA
+  MaxDepth(root) asks each child for its own depth, then adds 1 for root.
+  The base case is root == null, which returns 0, so a leaf gets
+  Math.Max(0, 0) + 1 = 1. It is correct because the longest path through
+  root must continue into the deeper of root.left and root.right.
+EXAMPLE
+  Tree [3,9,20,null,null,15,7]: 9, 15 and 7 are leaves, so each returns 1.
+  Node 20 = Max(1, 1) + 1 = 2. Node 9 = 1.
+  Root 3 = Max(1, 2) + 1 = 3. Answer: 3.
 COMPLEXITY
-  Time  : O(n)
-  Space : O(n)
+  Time  O(n)  each node is visited exactly once, with O(1) work per call
+  Space O(n)  call stack holds one frame per level, and height is n if skewed
+PATH TO OPTIMAL
+  List all root-to-leaf paths, take the longest - O(n*h) - wasteful copies.
+  Recursive DFS returning depth - O(n) - no path lists, each node once.
+  Iterative BFS/stack version - O(n) - no recursion limit
+  (optimal-variant.cs).
+KEYWORDS
+  binary tree, max depth, height, DFS, recursion, post-order, BFS level order
+WATCH OUT
+  - Returning 1 for null gives depth + 1. Returning 0 for a leaf measures
+    edges, not nodes. Check which one the problem wants.
+  - A very deep skewed tree (a linked list) can cause a stack overflow here.
+    In C#, this crashes the process and cannot be caught.
+  - Do not copy this into Min Depth. There, a node with one null child
+    must use the other child. Math.Min would wrongly return 1.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How do you avoid recursion?
+     -> Use BFS with a queue and count levels, or push (node, depth) pairs on
+        a stack. Still O(n) time. Space is O(width) or O(h) on the heap.
+  2. Find the minimum depth instead.
+     -> Use BFS and stop at the first leaf you reach. This is fast when a leaf
+        is shallow. In DFS, ignore a null child when the other is not null.
+  3. Check if the tree is height-balanced.
+     -> Use the same DFS, but return -1 when the children's heights differ by
+        more than 1. Pass the -1 up. One pass, O(n) time.
+  4. Find the diameter (longest path between any two nodes).
+     -> In the same DFS, update a global best with left + right at each node.
+        Return max + 1 as before. Still O(n) time.
+TRIGGER
+  The answer for a node depends only on the same answer for its children.
 ================================================================================
 */

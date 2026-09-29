@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal-2.cs       O(n * m) time / O(n * m) space
-// #  Tabulation, bottom-up DP   [tabulation-lcs]
-// #  ranks below optimal.cs (O(n * m) time / O(m) space)
-// #
-// #  YOU SOLVED THIS YOURSELF (from submission-2)
-// #
-// #  Two nested loops fill the complete 2D table row by row, each cell
-// #  computed exactly once.
 // ##########################################################################
 
 public class Solution

@@ -1,13 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(L) time / O(1) space
-// -  Trie prefix tree   [trie]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself (from submission-0)
-// -
-// -  Each operation traverses characters in sequence; trie nodes created
-// -  during insertion are part of the persistent data structure, not
-// -  auxiliary space
 // --------------------------------------------------------------------------
 
 public class TrieNode
@@ -74,73 +66,60 @@ public class PrefixTree
 
 /*
 ================================================================================
- PATTERN : Trie (Prefix Tree) - one child slot per letter
- SOURCE  : Reference solution - not one you solved yourself - marker check on
-           submission-0.cs when it was first processed
- STATUS  : Optimal
+ PROBLEM : Build a trie class with Insert(word), Search(word) and
+           StartsWith(prefix). Search is true only if the exact word was
+           inserted before. StartsWith is true if any inserted word begins
+           with prefix. Words are lowercase a-z. Insert("apple");
+           Search("app") -> false; StartsWith("app") -> true.
+ PATTERN : Trie (prefix tree) with fixed 26-slot child array
 ================================================================================
-VARIABLES
-  node   the trie node for the characters read so far
-  i      child slot for char c: i = c - 'a', so 'a' -> 0 and 'z' -> 25
-WHY THIS PATTERN
-  The problem asks for exact-word lookup and also "does any word start with this
-  prefix". Words that share a prefix should share storage and share work. A trie
-  stores each prefix once as a path from root. Each char picks one of 26
-  children, so a query only walks down the path for its own characters. It never
-  looks at other words.
-BRUTE FORCE
-  Keep every inserted word in a List<string>. Search compares against each word,
-  and StartsWith calls word.StartsWith(prefix) on each one. Both cost O(N * L)
-  for N stored words. A HashSet<string> makes Search fast, but StartsWith must
-  still scan every word. The trie makes both queries depend only on the query
-  length.
-INVARIANT
-  After the loop reads k characters, node is the unique node for the string of
-  those first k characters. That node exists only if some inserted word starts
-  with that string. So hitting a null child means no stored word has this
-  prefix, and false is correct. isWord is set only at the node where an Insert
-  loop ended. So it is true exactly when that full string was inserted.
-SEARCH VS STARTSWITH
-  The two walks are the same. They differ only in the last line. Search returns
-  node.isWord, and StartsWith returns true. After Insert("apple"), Search("app")
-  is false because the 'p' node has isWord false. StartsWith("app") is true
-  because the path exists.
-WATCH OUT
-  The index c - 'a' assumes lowercase a-z only. An uppercase letter, digit or
-  space gives an index below 0 or above 25, and children[i] throws
-  IndexOutOfRangeException. An empty string is not rejected. Insert("") sets
-  root.isWord to true, so Search("") then returns true, and StartsWith("") is
-  always true. The same walk loop is copied three times, so a fix in one copy
-  can easily be missed in the others. Insert also allocates up to one new
-  TrieNode per character. Only Search and StartsWith use no extra memory.
-FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you support Delete(word)?
-     Walk the path and clear isWord. To free memory, also remove nodes that have
-     no children and are not words. Do this bottom-up, with recursion or a stack
-     of visited nodes. Another option is a per-node count of words passing
-     through, which is simpler but costs one int per node.
-  2. How would you count how many words start with a prefix?
-     Add a prefixCount field and increment it on every node Insert passes
-     through. The query then walks the prefix and returns that count. This is
-     one extra int per node.
-  3. What if the alphabet is large, for example Unicode?
-     Replace the fixed array with a Dictionary<char, TrieNode>. Memory now grows
-     only with the children that really exist. The cost is a hash lookup per
-     step instead of an array index.
-  4. What if Search allows '.' to match any letter?
-     At a '.', try all non-null children with a DFS (depth-first search: go deep
-     on one branch, then back up). The worst case becomes branching over 26
-     children at every dot.
-TRIGGER
-  Many queries that ask "is this a word" or "does anything start with this" over
-  a shared set of strings.
-C# NOTE
-  The initializer isWord = false is redundant. C# fields default to false, and
-  new TrieNode[26] already fills every slot with null. A private helper that
-  walks a string and returns the final node (or null) would remove the three
-  copied loops.
+IDEA
+  Each TrieNode has children[26], one slot per letter, and an isWord flag.
+  Insert walks from root and creates a missing child for each char (index
+  i = c - 'a'), then sets isWord on the last node. Search and StartsWith walk
+  the same path and fail on the first null child. At the end, Search returns
+  node.isWord and StartsWith returns true. It is correct because each path
+  from root spells exactly one prefix, so shared prefixes share nodes.
+EXAMPLE
+  Insert("apple") -> path a-p-p-l-e is created; only the 'e' node has isWord.
+  Search("app") -> walk a,p,p fine, but node.isWord = false -> false.
+  StartsWith("app") -> same walk -> true. Search("apx") -> 'x' null -> false.
+  Insert("app") -> no new nodes, sets isWord on 2nd 'p'; Search("app") ->
+  true.
 COMPLEXITY
-  Time  : O(L)
-  Space : O(1)
+  Time  O(L)  one step per char of word or prefix; each step is an array
+              lookup
+  Space O(1)  walks use one node pointer; Insert adds at most L nodes of 26
+              slots
+PATH TO OPTIMAL
+  List of words, scan all for each call - O(N*L) per call - simple baseline.
+  HashSet of words + set of all prefixes - O(L) hash, O(sum L^2) memory -
+  fast.
+  Trie (optimal.cs) - O(L) per call, shared prefixes stored once - less
+  memory.
+KEYWORDS
+  trie, prefix tree, children array, isWord flag, prefix search, autocomplete
+WATCH OUT
+  - Search must return node.isWord, not true. Otherwise "app" matches after
+    only "apple" was inserted. That is the StartsWith logic, not Search.
+  - c - 'a' assumes lowercase a-z. An uppercase letter or digit gives an
+    index outside 0..25 and throws IndexOutOfRangeException.
+  - Empty string: StartsWith("") returns true even on an empty trie, and
+    Search("") is true only after Insert(""). Say so if asked.
+FOLLOW-UP AN INTERVIEWER WILL ASK
+  1. How do you add Delete(word)?
+     -> Walk down, clear isWord, then on the way back prune child nodes that
+        have no children and no isWord. O(L) time, recursion or a stack.
+  2. What if the alphabet is large, like Unicode?
+     -> Use Dictionary<char, TrieNode> for children. Memory is only the edges
+        that exist, but each step is a hash lookup instead of an array index.
+  3. Search with '.' as a wildcard (Add and Search Words)?
+     -> DFS: on '.', try all non-null children. Worst case O(26^L) per search,
+        but normal letters stay O(1) per step.
+  4. Return all words with a given prefix (autocomplete)?
+     -> Walk to the prefix node, then DFS below it and collect words where
+        isWord is true. Cost is O(L + size of that subtree).
+TRIGGER
+  Many lookups by prefix over a set of strings, or letter-by-letter matching.
 ================================================================================
 */

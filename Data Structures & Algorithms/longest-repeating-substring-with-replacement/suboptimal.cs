@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  suboptimal.cs         O(n * k) time / O(1) space
-// #  Sliding window per distinct character   [sliding-window-per-char]
-// #  ranks below optimal.cs (O(n) time / O(1) space)
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Runs a separate sliding window for each of k distinct characters in
-// #  the input; k ≤ 26 for lowercase English.
 // ##########################################################################
 
 public class Solution

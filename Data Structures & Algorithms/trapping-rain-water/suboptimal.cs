@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  suboptimal.cs         O(n) time / O(n) space
-// -  Prefix and suffix maximum arrays   [prefix-suffix-max]
-// -  ranks below optimal.cs (O(n) time / O(1) space)
-// -
-// -  Reference solution - not one you solved yourself (from submission-0)
-// -
-// -  Three linear passes: build left maxima, build right maxima, compute
-// -  trapped water per position.
 // --------------------------------------------------------------------------
 
 public class Solution

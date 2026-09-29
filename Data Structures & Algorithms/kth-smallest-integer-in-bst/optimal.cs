@@ -1,12 +1,5 @@
 // --------------------------------------------------------------------------
 // -  optimal.cs            O(k) time / O(n) space
-// -  In-order traversal with early termination   [bst-inorder-early-return]
-// -  the only solution in this folder
-// -
-// -  Reference solution - not one you solved yourself
-// -
-// -  Early termination after visiting k nodes in sorted order; space is
-// -  recursion depth, O(n) worst case for unbalanced trees
 // --------------------------------------------------------------------------
 
 public class Solution

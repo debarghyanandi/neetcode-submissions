@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(m * n) time / O(m * n) space
-// #  DFS island traversal   [dfs-island-area]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Each cell visited once during DFS traversal; visited matrix and
-// #  recursion depth both O(m*n) in worst case
 // ##########################################################################
 
 public class Solution

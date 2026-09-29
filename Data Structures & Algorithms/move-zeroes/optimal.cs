@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n) time / O(1) space
-// #  Two-pointer swap in-place   [two-pointer-swap]
-// #  the only solution in this folder
-// #
-// #  YOU SOLVED THIS YOURSELF
-// #
-// #  Single pass with swap operations moves non-zeroes forward; zeroes
-// #  naturally settle at the end.
 // ##########################################################################
 
 public class Solution

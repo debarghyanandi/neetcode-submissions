@@ -1,12 +1,5 @@
 // ##########################################################################
 // #  optimal.cs            O(n * m) time / O(m) space
-// #  Space-optimized tabulation, rolling array   [space-optimized-lcs]
-// #  ranks above suboptimal.cs (O(n * m) time / O(n * m) space)
-// #
-// #  YOU SOLVED THIS YOURSELF (from submission-4)
-// #
-// #  Rolling window maintains only current and previous row, reducing
-// #  auxiliary space from O(n*m) to O(m).
 // ##########################################################################
 
 public class Solution
