@@ -63,82 +63,68 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary search twice - find rotation pivot, then search halves
+ PATTERN : Binary Search - find the pivot, then search one sorted half
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  l        left bound of the range that still contains the smallest element
-  r        right bound of that range; when l == r it is the smallest element
-  m        midpoint of the pivot hunt, compared against nums[r], not nums[l]
-  pivot    index of the smallest element, so the start of the second sorted run
-  result   -1 or the index found in the left run, used to decide if the right run is searched
+  l, r     search bounds while looking for the pivot. The loop ends when l == r.
+  m        midpoint used to decide which side holds the minimum
+  pivot    index of the smallest value, where the rotated array starts over
+  result   index found in the left part [0, pivot-1], or -1
 WHY THIS PATTERN
-  The input is a sorted array that was cut once and the two pieces swapped, so
-  it is not sorted as a whole but it is made of exactly two sorted runs. A plain
-  binary search fails on the whole array, but it works on each run. So this file
-  first spends one binary search to find where the cut is (pivot), then runs the
-  ordinary BinarySearch on 0..pivot-1 and, if that misses, on
-  pivot..nums.Length-1.
+  The array was sorted and then rotated. So it is really two sorted runs joined
+  together, and the problem asks for better than a linear scan. Binary search
+  can find where the runs meet, which is the smallest value, stored in pivot.
+  Each run is fully sorted, so a normal BinarySearch works on nums[0..pivot-1]
+  and on nums[pivot..end].
 BRUTE FORCE
-  The first thing most people write is a for loop over nums comparing each
-  element to target and returning the index. That is O(n) time and always
-  correct, including with duplicates. It loses because it ignores the fact that
-  both halves are still sorted, which is the only structure the problem gives
-  you.
+  Scan every index and return i when nums[i] == target. This takes O(n) time. It
+  is correct, but it ignores that the data is sorted inside each run, and every
+  lookup reads the whole array.
 INVARIANT
-  Through the first loop, the smallest element's index always lies inside [l,
-  r]. If nums[m] > nums[r], then the run containing m keeps rising past the end,
-  so the cut is strictly after m and l = m + 1 is safe. Otherwise nums[m] <=
-  nums[r] means m is already inside the final rising run, so the smallest
-  element is at m or before it, and r = m keeps it in range. The window shrinks
-  every step, so it ends at l == r == pivot, and from there each of the two
-  ranges passed to BinarySearch is plain sorted.
-WHY COMPARE WITH NUMS[R] AND NOT NUMS[L]
-  Comparing the midpoint to the right end also handles the not-rotated case for
-  free. If nums is already fully sorted, nums[m] <= nums[r] holds every time, so
-  r walks down to 0, pivot becomes 0, the first BinarySearch gets the empty
-  range 0..-1 and returns -1, and the second one searches the whole array.
-  Comparing against nums[l] instead would need a separate check for that case.
+  In the first loop, the minimum always stays inside [l, r]. If nums[m] >
+  nums[r], the drop happens after m, so l = m + 1 is safe. If not, nums[m..r] is
+  sorted, so the minimum is at m or to its left, and r = m keeps it. When l ==
+  r, pivot is the minimum. In BinarySearch, the target, if it is present, always
+  stays inside [left, right].
+COMPARE AGAINST NUMS[R], NOT NUMS[L]
+  Comparing nums[m] with nums[r] also works when the array is not rotated at
+  all. Then pivot ends at 0, and the first search gets the empty range [0, -1].
+  If you compare with nums[l], a sorted array gives no drop to follow, and you
+  need a special case.
 WATCH OUT
-  The pivot loop is the one place where r must move to m and not m - 1; m itself
-  can be the smallest element, and m - 1 would skip it and loop forever or land
-  wrong. The loop condition is l < r, not l <= r, on purpose - with l <= r the
-  window would never close. Duplicate values break the pivot hunt: with
-  something like [3,3,1,3] the test nums[m] > nums[r] gives no information and
-  the found pivot can be wrong; this code assumes distinct values. Also note (l
-  + r) / 2 and (left + right) / 2 add before dividing, so they would overflow on
-  an array long enough for the two indices to sum past int.MaxValue; left +
-  (right - left) / 2 avoids that.
+  The pivot loop assumes all values are distinct. With duplicates, nums[m] ==
+  nums[r] tells you nothing, and r = m can throw away the real minimum. The code
+  often runs both searches: when the target is in the right part, the left
+  search runs first and fails. This is still correct, but it is extra work. An
+  empty array does not crash. r starts at -1, the loop is skipped, and both
+  searches get empty ranges.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it in one pass instead of finding the pivot first?
-     Yes. In a single loop, check whether nums[left] <= nums[mid] to learn which
-     side is the sorted one, then test whether target falls inside that sorted
-     side and keep it, else keep the other side. Same complexity, one loop
-     instead of up to three, but the branch logic is harder to get right than
-     this file's two clean phases.
-  2. What if the array may contain duplicates?
-     When nums[m], nums[l] and nums[r] are equal you cannot tell which side is
-     sorted, so you shrink the ends by one and the worst case degrades to O(n),
-     for example an array of all equal values with one different.
-  3. The question only asks for the number of times the array was rotated - what
-  changes?
-     Delete both BinarySearch calls and return pivot; the first while loop alone
-     is the whole answer.
-  4. Why not make BinarySearch recursive?
-     It would read the same but add O(log n) stack frames; the while loop here
-     keeps space flat, which is why the recursive form is the version to avoid
-     if the interviewer asks for constant space.
+  1. Can you search only one half?
+     Yes. If target >= nums[pivot] and target <= nums[nums.Length - 1], search
+     [pivot, end]. Otherwise search [0, pivot-1]. It needs one more comparison,
+     but it never runs a search that will fail.
+  2. Can you do it in a single binary search, without finding the pivot first?
+     Yes. At each m, one of the two sides [l, m] or [m, r] is sorted. Check
+     whether target falls inside the sorted side's range, and move toward it.
+     This makes one pass instead of two, but there are more branches to get
+     wrong.
+  3. What if duplicates are allowed?
+     When nums[m] == nums[r], you cannot tell which side the minimum is on, so
+     you do r-- and continue. The worst case becomes O(n), for example an array
+     of all equal values.
+  4. What if you only need the minimum value?
+     Stop after the first loop and return nums[l]. That loop is the whole
+     solution to "find minimum in rotated sorted array".
 TRIGGER
-  An array that is sorted except for one wrap-around point, with a lookup or
-  minimum asked for in better than linear time.
+  A sorted array was rotated or shifted, and you must find something in less
+  than linear time.
 C# NOTE
-  BinarySearch is declared public and takes nums as a parameter, so it leaks as
-  part of the Solution API - make it private static, since it touches no
-  instance state. Note also that Array.BinarySearch from the base library cannot
-  be used on nums directly here, because it requires the whole array to be
-  sorted; it would only work on the two sub-ranges after pivot is known.
+  The helper BinarySearch can be replaced by Array.BinarySearch(nums, pivot,
+  length, target). It returns a negative number when the target is not found, so
+  check for idx < 0 rather than -1.
 COMPLEXITY
   Time  : O(log n)
   Space : O(1)

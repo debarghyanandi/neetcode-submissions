@@ -36,80 +36,65 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : BFS level-order traversal - swap children in place
+ PATTERN : Tree BFS - swap children level by level with a queue
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  queue       nodes seen but not yet swapped
-  leftChild   temporary copy of node.left, so the swap does not lose it
+  queue      nodes that are still waiting to have their children swapped
+  leftChild  saved copy of node.left, kept so the swap does not lose it
 WHY THIS PATTERN
-  The task asks for the same small edit at every node: exchange its two
-  children. Nothing at a node depends on what happened at its parent or its
-  siblings, so any order that reaches every node works. A queue gives that order
-  without recursion: each node is dequeued once, swapped, and its two (now
-  swapped) children are pushed for later. When the queue empties, every node has
-  been touched exactly once, and root still points at the same top node.
+  Inverting a tree means doing the same small job at every node: swap its left
+  and right child. The order does not matter, so any full traversal works. This
+  file visits nodes with a queue, so it goes level by level. Each node is
+  swapped exactly once when it leaves the queue.
 BRUTE FORCE
-  The first version most people write is recursive: swap root.left and
-  root.right, then call yourself on both children. It is also O(n) time, but it
-  uses the call stack, which is as deep as the tree height - a degenerate chain
-  of nodes can overflow it. Another naive idea is to build a whole new tree with
-  mirrored children; correct, but it allocates n new nodes and leaves the caller
-  with two trees.
+  The simplest correct version is recursive: swap root.left and root.right, then
+  call InvertTree on both children. It is also O(n) time. Its space is O(h),
+  where h is the tree height, because each open call sits on the call stack. It
+  does not lose on complexity. Its risk is stack overflow on a very deep, skewed
+  tree. The queue version keeps its work on the heap, so it has no such limit.
 INVARIANT
-  At the top of each while iteration, every node already dequeued has had its
-  children swapped, and every node of the tree is either already dequeued or
-  reachable from some node still in queue. The swap of node.left and node.right
-  through leftChild is complete before the node's children are enqueued, so no
-  node is ever swapped twice and none is skipped. When queue.Count hits 0 the
-  second half of the invariant leaves nothing unreachable, so every node has
-  been mirrored.
-ENQUEUE AFTER SWAP IS STILL CORRECT
-  The code swaps first and then enqueues node.left and node.right, which are now
-  the old right and old left. That is fine: the swap changes the order of the
-  pair, not its membership, so the same two children get queued either way. Only
-  their arrival order in queue changes, and this algorithm never depends on
-  visit order.
+  When a node is dequeued, it has not been swapped yet, and every node already
+  dequeued has been swapped. Each non-null child is enqueued exactly once, by
+  its parent. So every node in the tree is dequeued and swapped exactly once. A
+  tree where every node has its children swapped is the mirror image, so root is
+  the correct answer.
+ENQUEUE AFTER THE SWAP
+  The children are enqueued after the swap, so node.left here is the old right
+  child. This does not change correctness, because every child is still visited.
+  It only changes the visit order, and this problem does not care about order.
 WATCH OUT
-  This mutates the input tree in place and returns the same root reference, so a
-  caller holding the original tree no longer has the un-inverted version. The
-  null guard only covers root being null; the two if checks inside the loop are
-  what keep null children out of the queue, so removing either one causes a
-  NullReferenceException on the next Dequeue. The queue can hold close to half
-  the nodes at once when the bottom level is full, so peak memory is not small
-  for a wide tree. If the structure is not a real tree and some node is
-  reachable twice, the loop never ends.
+  The swap needs the temporary leftChild. If you write node.left = node.right
+  before saving the old left child, you lose it and the tree breaks. The early
+  return for root == null is required. Without it, null is enqueued and the loop
+  throws a NullReferenceException on node.left. The code changes the input tree
+  in place and returns the same root. A caller that still needs the original
+  tree must copy it first.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it with less extra memory?
-     Swap Queue for Stack and the code is otherwise identical; depth-first keeps
-     only the nodes along one root-to-leaf path plus their siblings, which is
-     much less than a full level on a wide tree. On a deep skewed tree the stack
-     is no better.
-  2. How would you mirror only the subtree below a given depth?
-     Enqueue pairs of (node, depth) instead of bare nodes, and run the swap only
-     when depth is at or past the cutoff; you still enqueue children at depth +
-     1 so the traversal reaches everything.
-  3. How would you produce the mirrored tree without touching the input?
-     Walk the original and build new nodes as you go, setting the new node's
-     left from the original's right and vice versa; same O(n) time, but you pay
-     n allocations and must return the new root instead of root.
-  4. How do you check two trees are mirrors of each other without inverting
-  either one?
-     Push pairs into the queue - (a.left, b.right) and (a.right, b.left) - and
-     compare values at each step, failing on the first mismatch or null shape
-     difference.
+  1. Can you do it with less memory than the queue?
+     The queue can hold a whole level, up to about n/2 nodes in a full tree. A
+     Stack (iterative DFS) holds O(h) nodes instead, which is less for a
+     balanced tree. Morris traversal gives O(1) extra space, but it temporarily
+     rewires pointers, which is harder to get right while you are also swapping
+     them.
+  2. How would you check if a tree is symmetric, using this idea?
+     Do not invert anything. Compare the tree with its own mirror: enqueue pairs
+     (left, right) and check that a.left matches b.right and a.right matches
+     b.left. This leaves the tree unchanged.
+  3. What if the original tree must not change?
+     Build a new mirrored tree. For each node, create a copy whose left is the
+     mirror of the old right and whose right is the mirror of the old left. This
+     costs O(n) extra memory for the new nodes.
 TRIGGER
-  Reach for this when every node of a tree needs the same local edit that
-  depends on no other node, so traversal order is free and an explicit queue
-  replaces recursion.
+  Use this when every node needs the same local change, independent of the
+  others, and any traversal order will do.
 C# NOTE
-  The three-line swap with leftChild can be written as one tuple assignment,
-  (node.left, node.right) = (node.right, node.left), which removes the temporary
-  entirely. Also note Queue<T>.Dequeue throws InvalidOperationException on an
-  empty queue, so the while (queue.Count > 0) guard is doing real work here;
-  TryDequeue would be the alternative.
+  Queue<T> in System.Collections.Generic is a circular buffer, so Enqueue and
+  Dequeue are O(1) amortized, which means O(1) on average over many calls. To
+  switch this to DFS, swap Queue for Stack and use Push/Pop; the rest of the
+  code stays the same.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

@@ -32,77 +32,66 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - read/write index with swap
+ PATTERN : Two Pointers (read/write) - in-place stable partition
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  writeIndex   next slot for a non-zero; nums[0..writeIndex-1] are the non-zeroes seen so far
-  readIndex    the element currently being inspected
+  writeIndex  the next slot for a non-zero; nums[0..writeIndex) holds all non-zeros seen so far
+  readIndex   the scan position; each element is looked at exactly once
 WHY THIS PATTERN
-  The task is to push every zero to the end while keeping the non-zero values in
-  their original relative order, and to do it in place. That is a partition of
-  the array into two groups where one group must stay stable, which a read
-  pointer plus a write pointer solves in one sweep: readIndex scans, writeIndex
-  marks the boundary of the kept prefix. Because writeIndex only advances when a
-  non-zero is found, it can never pass readIndex, so no unread element is ever
-  overwritten.
+  The problem asks you to move the zeroes to the end, keep the order of the
+  non-zeroes, and do it in place. "In place" rules out a second array. "Keep the
+  order" means a stable partition: the elements are split into two groups, and
+  each group stays in its original order. A read/write pointer pair does exactly
+  this. readIndex finds each non-zero, and writeIndex says where it goes.
+  Because non-zeroes are placed left to right in the order they are found, their
+  order is kept.
 BRUTE FORCE
-  The first thing most people write is a second array: copy all non-zeroes into
-  it in order, then pad with zeroes, then copy back. That is O(n) time but O(n)
-  extra space, and the problem asks for in-place. The other naive try is
-  repeatedly finding a zero and shifting the rest of the array left by one,
-  which is O(n^2) when the array starts with many zeroes.
+  The first correct idea is to copy every non-zero into a new array, fill the
+  rest with 0, and copy the result back into nums. This is O(n) time but needs
+  O(n) extra space, so it breaks the in-place rule. Another in-place idea keeps
+  its O(1) space: each time you find a zero, shift everything after it one step
+  left and put the zero at the end. That costs O(n^2) time.
 INVARIANT
-  At the top of each iteration, nums[0..writeIndex-1] holds exactly the non-zero
-  elements of nums[0..readIndex-1] in their original order, and
-  nums[writeIndex..readIndex-1] holds only zeroes. The swap keeps both halves of
-  this true: it moves the new non-zero into the boundary slot and sends whatever
-  sat there (necessarily a zero, or the same cell) out to readIndex. When the
-  loop ends readIndex equals nums.Length, so the statement covers the whole
-  array, which is the required answer.
-WHY SWAP AND NOT ASSIGN
-  Plain assignment nums[writeIndex] = nums[readIndex] would also build the
-  correct prefix, but it duplicates values and leaves garbage in
-  nums[writeIndex..n-1], so you then need a second loop to write zeroes over the
-  tail. The swap keeps the multiset of values unchanged at every step, so the
-  tail is already all zeroes when the loop ends. The cost is that when
-  writeIndex == readIndex the code swaps a cell with itself, which is harmless
-  but is a real write.
+  Before each loop step, two things are true. nums[0..writeIndex) holds every
+  non-zero seen so far, in original order. nums[writeIndex..readIndex) holds
+  only zeroes. When nums[readIndex] is a non-zero, the swap moves it to the
+  front of the zero block and sends one zero to the back of that block, so both
+  statements stay true. When readIndex reaches nums.Length, the zero block
+  reaches the end of the array, and that is the answer.
 WATCH OUT
-  The method returns void and mutates the caller's array, so any test that
-  expects a fresh array back will look like it did nothing. An empty array works
-  because the loop body never runs, but nums == null throws
-  NullReferenceException at nums.Length - there is no guard. The comment says
-  the prefix before writeIndex is "a non-zero", singular; it means all cells
-  there are non-zero, not one cell.
+  The swap comment says it carries "the zero that was at writeIndex". That is
+  only true when writeIndex < readIndex. Until the first zero appears, the two
+  indices are equal, so the code swaps a non-zero with itself. The result is
+  still correct, but every element is written for no reason. A null nums throws
+  a NullReferenceException at nums.Length. There is no guard for it.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Move all zeroes to the front instead, keeping the non-zeroes in order?
-     Scan from the right with both pointers starting at nums.Length - 1 and
-     decrement writeIndex on each non-zero; the mirror image of this loop
-     preserves order the same way.
-  2. Remove all instances of a given value val and return the new length, order
-  of the rest not important?
-     Same writeIndex, but assign instead of swap and return writeIndex; you no
-     longer care what lands in the tail, so you save the extra write per
-     non-zero.
-  3. Minimise the number of writes, not just the number of passes?
-     Guard the swap with if (writeIndex != readIndex); an array with no zeroes
-     then does zero writes instead of n self-swaps, at the cost of one
-     comparison per non-zero element.
-  4. The array is huge and lives on disk or in a stream you can only read
-  forward once?
-     Count zeroes while streaming the non-zeroes straight to the output, then
-     emit that many zeroes at the end; still O(1) extra memory but it needs a
-     separate output sink instead of in-place mutation.
+  1. How would you cut down the number of writes to the array?
+     Add "if (writeIndex != readIndex)" before the swap, so self-swaps are
+     skipped. Or assign nums[writeIndex] = nums[readIndex] with no swap, then
+     fill nums[writeIndex..] with 0 at the end. The assign version writes each
+     slot about once, but it needs that second pass.
+  2. Remove every copy of a value val and return the new length (Remove
+  Element).
+     Use the same loop, but test nums[readIndex] != val and assign instead of
+     swapping. Return writeIndex. The tail does not matter, so you need neither
+     the swap nor the fill.
+  3. What if the zeroes must go to the front instead?
+     Run the same idea from right to left. Start writeIndex at nums.Length - 1
+     and move it down each time you place a non-zero. The order of the
+     non-zeroes is still kept.
+  4. What if the order of the non-zeroes does not matter?
+     Use two pointers from both ends. Swap a zero on the left with a non-zero on
+     the right. This does fewer swaps, but it gives up stability.
 TRIGGER
-  An in-place array rearrangement that splits elements into "keep" and "push
-  aside" while the kept ones must stay in their original order.
+  Reach for this pattern when a problem says to rearrange an array in place so
+  that the elements that pass a test come first, in their original order.
 C# NOTE
-  The tuple form (nums[writeIndex], nums[readIndex]) = (nums[readIndex],
-  nums[writeIndex]) is the idiomatic C# 7+ swap and removes the need for a temp
-  variable; note that int[] is passed by reference so the caller sees the
-  mutation even though the parameter itself is not ref.
+  The tuple line (nums[writeIndex], nums[readIndex]) = (nums[readIndex],
+  nums[writeIndex]) swaps two values without a temp variable. The method returns
+  void and still works, because an int[] is a reference type: the caller sees
+  the changes made to nums.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

@@ -39,75 +39,66 @@ public class Solution
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  maxSum      best subarray sum seen so far over the whole array
-  currentSum  best sum of a subarray that ends at the element just added
+  maxSum      the best subarray sum seen so far; it starts at nums[0]
+  currentSum  the sum of the best subarray that ends at the current number
 WHY THIS PATTERN
-  The problem asks for the largest sum over contiguous elements, so every
-  candidate subarray is fixed by its right end. That lets you scan once and keep
-  only one number per right end: currentSum, the best sum ending here. The
-  recurrence is local - the best subarray ending at this element is either this
-  element alone or this element glued to the best one ending just before it - so
-  no array of past states is needed, only maxSum as the running answer.
+  The problem asks for the largest sum of a contiguous subarray (a block of
+  neighbours with no gaps). Every such subarray ends at some index. So it is
+  enough to know, at each index, the best sum that ends exactly there. That
+  value only depends on the value at the index before, so currentSum carries it
+  forward and maxSum keeps the best one.
 BRUTE FORCE
-  The first thing most people write is two nested loops: for every start index,
-  extend the end index and keep a running total, taking the max. That is O(n^2)
-  time and correct, but it recomputes the same prefix sums again and again.
-  Kadane's keeps the single fact those loops rediscover - that a negative prefix
-  is never worth carrying - and collapses the inner loop away.
+  Try every start index i. Then extend the end index j one step at a time, keep
+  a running sum, and track the largest. This is O(n^2) time and O(1) space, and
+  it is correct. It loses because it checks every pair (i, j) again, even though
+  a start with a negative prefix sum can never beat starting later.
 INVARIANT
-  After the body runs for element number, currentSum equals the maximum sum of
-  any subarray whose last element is number, and maxSum equals the maximum over
-  all subarrays that end at or before it. The reset `if (currentSum < 0)
-  currentSum = 0;` preserves the first half: if the best sum ending before this
-  element was negative, starting fresh at this element beats extending. Since
-  every subarray has exactly one last element, and maxSum is updated at every
-  element, the final maxSum has seen every candidate.
-WHY MAXSUM STARTS AT NUMS[0] AND NOT 0
-  Initialising maxSum to 0 would silently allow the empty subarray and return 0
-  for input like [-3, -1, -5], where the true answer is -1. Seeding with nums[0]
-  guarantees the answer is the sum of at least one real element. The reset only
-  zeroes currentSum, never maxSum, so an all-negative array still ends with the
-  largest single element: each iteration sets currentSum to that element alone,
-  and maxSum keeps the biggest.
+  After each step of the loop, currentSum equals the best sum of a subarray that
+  ends at number. This holds because the best subarray ending here is either
+  number alone, or number added to the best subarray ending one step before. The
+  code picks the first option exactly when the old currentSum is below 0. maxSum
+  is the largest of all these values, so it covers every possible end index and
+  is the answer.
+RESET BEFORE ADD, MAX AFTER ADD
+  The check "if (currentSum < 0) currentSum = 0" runs before number is added.
+  Because of this, maxSum is always compared with a sum that includes at least
+  one real element. This is why an all-negative input still returns its largest
+  single element and not 0.
 WATCH OUT
-  The first line reads nums[0] with no guard, so an empty array throws
-  IndexOutOfRangeException and a null nums throws NullReferenceException.
-  currentSum and maxSum are int, so a long array of large values can overflow
-  and wrap to a negative sum without any error - a long accumulator would be the
-  safe change. The reset sits before the add, which is what makes the invariant
-  hold at the top of each step; moving it after `currentSum += number` still
-  works only because maxSum is taken before the reset, so do not reorder these
-  three lines casually.
+  An empty array throws IndexOutOfRangeException at nums[0]. The code never
+  checks for this. The comment on currentSum is not true at the start: before
+  the loop, 0 is not the sum of any subarray. It only becomes true after the
+  first number is added. If you move the reset so it comes after the Math.Max
+  line, all-negative input still works. But if you reset after adding and before
+  Math.Max, the answer becomes 0, which is wrong.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the start and end indices of the best subarray, not just the sum.
-     Track a candidate start that is set to the current index whenever
-     currentSum is reset to 0, and copy it plus the current index into
-     bestStart/bestEnd only when maxSum is updated. That needs the index, so the
-     foreach becomes a plain for loop.
-  2. What if the array is circular, so a subarray may wrap from the end to the
-  front?
-     Run this scan twice - once for the maximum sum, once for the minimum sum -
-     and compare maxSum against totalSum - minSum. Special case: if every
-     element is negative, minSum equals the total and the wrap answer is an
-     empty subarray, so return maxSum.
-  3. The array does not fit in memory and arrives as a stream.
-     This code already works unchanged, because it keeps only two ints and
-     touches each element once; you just need the first element to seed maxSum
-     before the loop starts.
-  4. What changes for maximum product of a contiguous subarray?
-     A single running value is not enough, because a negative times a negative
-     can become the largest product. You carry both the running max and the
-     running min ending here and swap them when the element is negative.
+  1. How do you return the start and end indices of the best subarray, not just
+  the sum?
+     Use a for loop instead of foreach. Keep a tempStart variable and set it to
+     i each time currentSum is reset. When maxSum improves, save tempStart and
+     i. It is still O(1) extra space, with a few more variables.
+  2. What if the array is circular, so a subarray can wrap from the end back to
+  the start?
+     The answer is the larger of two things: the normal Kadane result, or the
+     total sum minus the minimum subarray sum. If every number is negative,
+     return the normal result, because total minus minimum would mean an empty
+     subarray.
+  3. What about the largest-sum rectangle in a 2D matrix?
+     Fix a pair of top and bottom rows. Add up each column between them into a
+     1D array, then run this same loop on it. This costs O(rows^2 * cols) time.
+  4. Can you solve it with divide and conquer?
+     Yes. Split the array in half. The best subarray is in the left half, in the
+     right half, or it crosses the middle. The crossing case is found by the
+     best suffix sum of the left plus the best prefix sum of the right. This is
+     O(n log n), which is slower, but each half can be solved in parallel.
 TRIGGER
-  A question asks for the best contiguous run in a one-dimensional array and the
-  quantity is additive, so each element only needs to know the best run ending
-  at its neighbour.
+  Reach for this when a problem asks for the best contiguous subarray, and the
+  best answer ending at index i can be built from the best answer ending at i-1.
 C# NOTE
-  Math.Max(int, int) is a plain non-generic overload here, so there is no
-  comparer or boxing involved; the idiomatic hardening is a guard such as `if
-  (nums is null or { Length: 0 }) throw new ArgumentException(nameof(nums));`
-  before the nums[0] read, using C# pattern matching instead of two separate if
-  statements.
+  In C#, int addition is unchecked by default. If currentSum += number goes past
+  int.MaxValue, it wraps to a negative number with no error. Wrap the loop in a
+  checked block to make it throw, or use long for both sums to hold larger
+  totals.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

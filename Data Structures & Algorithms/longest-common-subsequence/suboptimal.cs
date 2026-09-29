@@ -46,79 +46,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Top-down DP on two string indices (LCS memoization)
+ PATTERN : 2D DP / Memoized recursion on two string prefixes
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-0.cs when it was
            first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  n     text1.Length, the starting row index is n - 1
-  m     text2.Length, the starting column index is m - 1
-  dp    dp[i, j] = length of the LCS of text1[0..i] and text2[0..j], -1 means not computed
-  i, j  in Lcs: the last index still in play in s and t
+  dp     dp[i, j] = LCS length of s[0..i] and t[0..j], or -1 if not computed yet
+  s, t   text1 and text2, passed down under shorter names
+  i, j   the last index of the current prefix of s and of t
 WHY THIS PATTERN
-  The question asks for the longest subsequence common to both strings, and a
-  subsequence lets you skip characters freely. So at each pair of ends (i, j)
-  there are only two moves: if s[i] == t[j] both characters must pair up,
-  otherwise you drop one of them and try both drops. That branching repeats the
-  same (i, j) pairs many times, so dp caches each pair once and the recursion
-  becomes linear in the number of pairs.
+  The problem asks for the best result over two sequences, and a subsequence
+  keeps the original order. So each step only asks about the last character of
+  each prefix: use both, drop one from s, or drop one from t. The same (i, j)
+  pair comes up again and again through different paths. The dp table stores
+  each answer, so Lcs does the real work only once per (i, j).
 BETTER APPROACH
-  The better version is the bottom-up table: fill dp[i, j] with two nested loops
-  from the small indices up, no recursion at all. It does the same work but has
-  no call overhead and, more importantly, cannot blow the stack. Even better,
-  the bottom-up form only ever reads row i - 1 and row i, so it can be reduced
-  to two int arrays of length m and drop the space to O(m). This file keeps the
-  whole n by m table and a recursion depth of up to n + m.
+  The better approach is bottom-up tabulation. It fills the table in a loop with
+  no recursion, and keeps only two rows (or one row plus a saved diagonal
+  value), each of length min(n, m) + 1. That cuts extra space to O(min(n, m)).
+  This file loses because it keeps the full n x m table, which is only needed to
+  rebuild the actual subsequence. It also uses a call stack that can grow to
+  about n + m frames, and it spends one extra pass setting every cell to -1.
 INVARIANT
-  Every time Lcs(i, j) returns, dp[i, j] holds the true LCS length of the two
-  prefixes ending at i and j, and it is never overwritten with a different
-  value. This holds because each call either hits the base case (one prefix is
-  empty, answer 0), reads a cell already proven correct, or builds its answer
-  from strictly smaller subproblems: (i-1, j-1) on a match, (i-1, j) and (i,
-  j-1) otherwise. The match branch is safe because if the last characters are
-  equal there is always an optimal LCS that pairs them, so nothing is lost by
-  not also trying the two drops.
+  When dp[i, j] is set, it equals the LCS length of s[0..i] and t[0..j]. If s[i]
+  == t[j], you can always put that shared last character at the end of some best
+  LCS. So 1 + Lcs(i - 1, j - 1) is correct, and the code does not need to try
+  the two "skip" options. If they differ, at least one of s[i] or t[j] is not in
+  the LCS, so the Math.Max of the two smaller cases covers every option. The
+  base case i < 0 or j < 0 (an empty prefix) returns 0. So by induction the top
+  call Lcs(n - 1, m - 1) is correct.
 WATCH OUT
-  If either string is empty, n or m is 0, and new int[0, 0] is fine, but the
-  first call is Lcs(-1, -1, ...) which hits the i < 0 guard and returns 0 before
-  touching dp - correct, only by one line. The comment says "Memoization" but
-  the initialisation loop is a full n * m pass that runs even for inputs that
-  barely recurse. The base check must stay i < 0 || j < 0 and not i == 0 || j ==
-  0; with the latter you would silently ignore the first character of both
-  strings. Deep recursion is the real risk here: two long strings with few
-  matches push the call chain toward n + m frames and can throw
-  StackOverflowException, which .NET does not let you catch.
+  The recursion can go about n + m levels deep, for example when no characters
+  match and it walks one index at a time. On long strings this can throw
+  StackOverflowException, which C# cannot catch. The -1 sentinel (a special
+  value meaning "not computed") is safe only because a real LCS length is never
+  negative. Empty input works: n or m is 0, the table is empty, and Lcs(-1, ...)
+  returns 0 before it touches dp.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you return the actual subsequence, not just its length?
-     Keep the filled dp and walk back from (n-1, m-1): on s[i] == t[j] prepend
-     the character and move to (i-1, j-1), otherwise step to whichever of
-     dp[i-1, j] or dp[i, j-1] is larger. That is O(n + m) extra time and the
-     string buffer as extra space, but it forces you to keep the full table, so
-     it is incompatible with the two-row trick.
-  2. What if the problem changed to longest common substring (contiguous)?
-     The recurrence loses the two-drop branch: on a mismatch the value is 0, on
-     a match it is 1 + dp[i-1, j-1], and the answer is the maximum cell instead
-     of dp[n-1, m-1]. Same table size, but you must track the running max
-     separately.
-  3. How would you remove the recursion without changing the answer?
-     Rewrite as two loops over i and j ascending, with an extra leading row and
-     column of zeros so that the i - 1 and j - 1 reads need no bounds test. That
-     removes the stack risk and the -1 sentinel fill entirely.
-  4. What if only the length matters and memory is tight?
-     Roll the table to two int rows of length m + 1, swapping them each outer
-     iteration, since dp[i, j] only depends on the previous row and the current
-     row to the left.
+  1. How do you return the subsequence itself, not just its length?
+     Keep the full table and walk back from (n - 1, m - 1). On a match, take the
+     character and move diagonally. Otherwise, move toward the larger neighbor.
+     This takes O(n + m) extra time, but you can no longer use the two-row
+     memory saving.
+  2. How do you rebuild the subsequence when the strings are too long for an n x
+  m table?
+     Use Hirschberg's algorithm. It is divide and conquer: split s in half and
+     run linear-space DP forward on one half and backward on the other to find
+     where to split t. Then recurse on both halves. Memory is linear, and time
+     is still O(n * m), about twice the constant.
+  3. What changes for the LCS of three strings?
+     Make the state (i, j, k). A match needs all three characters equal, and
+     otherwise you take the max over dropping one of the three. Time and space
+     become O(n * m * p).
+  4. How does this connect to Shortest Common Supersequence or delete-only edit
+  distance?
+     Both come straight from the LCS length. SCS length = n + m - LCS.
+     Delete-only distance = n + m - 2 * LCS.
 TRIGGER
-  Two sequences compared position by position where you may skip elements in
-  either one - that pairs-of-indices shape is the signal for a two-dimensional
-  DP table.
+  Two strings or sequences, and a question about the best way to match or align
+  them in order: think of a dp[i, j] over prefix pairs.
 C# NOTE
-  int[,] is a true rectangular array, so dp[i, j] is one bounds-checked access
-  and the whole block is one allocation; it is the right choice over int[][]
-  here. The manual -1 fill exists only because new int[n, m] zero-fills, and 0
-  is a legal LCS answer - if you instead stored "length + 1" you could use 0 as
-  the sentinel and delete the loop.
+  new int[n, m] already fills the table with 0. If you store LCS + 1 in each
+  cell, then 0 can mean "not computed", and you can delete the nested -1 fill
+  loop.
 COMPLEXITY
   Time  : O(n * m)
   Space : O(n * m)

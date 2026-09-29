@@ -52,83 +52,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Take/Skip DP with prev-index state, two rolled rows
+ PATTERN : DP on subsequences - pick/skip with previous index
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-9.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  next        next[p+1] = longest increasing run buildable from index i+1 on, when the last kept element sits at index p
-  curr        same meaning for row i, being filled now
-  prevIndex   index of the last element already kept; -1 means nothing kept yet
-  notPick     answer if we skip nums[i] and keep prevIndex unchanged
-  pick        answer if we keep nums[i], which makes i the new prevIndex
+  next       next[p+1] = LIS length from index i+1 onward, when the last picked index is p
+  curr       curr[p+1] = LIS length from index i onward, when the last picked index is p
+  prevIndex  index of the last element already taken; -1 means none taken yet
+  notPick    best length if nums[i] is skipped
+  pick       best length if nums[i] is taken; stays 0 when taking it is not allowed
 WHY THIS PATTERN
-  "Longest increasing subsequence" means every element is either kept or
-  dropped, and whether we may keep nums[i] depends only on the last element we
-  kept. That is exactly a two-state decision with one piece of carried context,
-  so the state is (i, prevIndex) and the transition is Math.Max(pick, notPick).
-  The +1 shift on prevIndex exists only so the value -1 ("nothing kept yet") can
-  be stored at column 0 of an int array.
+  The problem asks for the longest subsequence, and a subsequence is built by
+  making a take-or-skip choice at each element. Whether you may take nums[i]
+  depends only on the last value you took. So the state is (i, prevIndex), and
+  each state picks the larger of pick and notPick. Row i only reads row i+1, so
+  the code keeps two rows, next and curr, instead of the full n x (n+1) table.
 BETTER APPROACH
-  The better solution is patience sorting: keep a growing list tails where
-  tails[L] is the smallest possible tail value of an increasing subsequence of
-  length L+1, binary search each nums[i] for the first element >= it, and
-  overwrite or append. That is O(n log n) time and the answer is tails.Count.
-  This file loses because it evaluates every (i, prevIndex) pair; the inner loop
-  over prevIndex alone costs i+1 steps per i. A cheaper middle ground also
-  exists: drop the prevIndex dimension entirely and use dp[i] = LIS starting at
-  i, one array, same time but far fewer reads.
+  A faster method keeps a "tails" list, sometimes called patience sorting.
+  tails[k] holds the smallest possible last value of an increasing subsequence
+  of length k+1. For each number, a binary search finds the first tail that is
+  >= the number and replaces it. If no such tail exists, the number is appended.
+  That runs in O(n log n) time. This file loses because it tries every (i,
+  prevIndex) pair, which is O(n^2) work.
 INVARIANT
-  When the loop body for index i starts, next holds the fully solved row i+1:
-  for every p <= i, next[p+1] is the correct answer for the suffix starting at
-  i+1 given last-kept index p. The body only ever reads next[prevIndex+1] with
-  prevIndex <= i-1 and next[i+1], both of which were written during the previous
-  iteration, so the row is complete where it is touched. After the swap, next is
-  row i, and by induction the final next[0] is the answer for the whole array
-  with nothing kept yet.
-THE SWAP LEAVES GARBAGE BEHIND
-  (next, curr) = (curr, next) does not clear anything, so after a few iterations
-  curr still contains values from row i+2. This is safe only because iteration i
-  writes columns 0..i and never reads a column above i+1. Anyone who widens the
-  inner loop, or reads next[j] for some j > i+1, will silently read stale
-  numbers instead of zeros.
+  After the outer loop has finished row i and swapped the arrays, next[p+1] is
+  the true LIS length of nums[i..n-1] when every element must be greater than
+  nums[p]. With p = -1 there is no such limit. The claim holds for row n because
+  all cells start at 0. Each row is correct if the row below it is correct,
+  because the best choice at i is either to skip it (notPick) or to take it and
+  continue from i+1 with prevIndex = i (pick). So next[0] at the end is the LIS
+  of the whole array with no limit.
+COLUMN SHIFT FOR PREVINDEX -1
+  prevIndex can be -1, and an array has no index -1. So every access adds 1:
+  column 0 means nothing taken yet. In pick, the lookup next[i + 1] is really
+  "prevIndex becomes i", after the shift. It is not "move to row i+1 at the same
+  column". Mixing up these two meanings is the most likely bug to make when you
+  rewrite this from memory.
 WATCH OUT
-  The comparison nums[i] > nums[prevIndex] is strict, so this counts strictly
-  increasing runs; for a "non-decreasing" variant you must change it to >=, and
-  nothing else in the code signals that choice. The comment saying the base row
-  is already 0 by default is only true for the very first iteration i = n-1;
-  from then on the arrays hold old rows, not zeros. n = 0 is handled by luck:
-  the arrays have length 1, the outer loop never runs, and next[0] is the
-  default 0. The two arrays must be length n+1, not n, because column i+1 is
-  read when i = n-1.
+  The code returns next[0], not curr[0]. The swap at the end of each row moves
+  the newest row into next, so returning curr would give an old row. After a
+  swap, curr still holds values from two rows back in columns above i+1. This is
+  safe only because row i writes columns 0..i and reads only columns up to i+1.
+  If you change the loop bounds, you can read those stale values. The check
+  nums[i] > nums[prevIndex] is strict, so equal values do not extend the
+  sequence. Changing it to >= turns the answer into the longest non-decreasing
+  subsequence.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Print the actual subsequence, not just its length.
-     You need the choice made at each state, so keep the full 2-D table or a
-     parent array; with only two rolled rows the history is gone after each
-     swap, and memory goes back to O(n^2) unless you re-run the recurrence
-     forward.
-  2. Count how many longest increasing subsequences exist.
-     Carry a second array of counts beside next and curr: when pick and notPick
-     tie, add the counts; when one wins, copy its count. Same O(n^2) time, one
-     more array.
-  3. Rewrite it top-down.
-     Recurse on (i, prevIndex) with a memo of size n x (n+1); same time, but the
-     memo costs O(n^2) space and deep recursion risks a stack overflow on a long
-     nums, which is why this bottom-up rolled version is preferred.
-  4. Make it work when only the length matters and n is very large.
-     Switch to the tails + binary search method; the prevIndex dimension
-     disappears completely because the smallest tail per length is all the
-     context you need.
+  1. Can you write a simpler O(n^2) DP?
+     Yes. Let dp[i] = the LIS that ends at index i, and set dp[i] = 1 + the max
+     of dp[j] over all j < i with nums[j] < nums[i]. The time is the same and it
+     uses one array, but the answer is max(dp), not the last cell.
+  2. How do you return the subsequence itself, not only its length?
+     Keep a parent[i] array in the dp[i] version, or keep the index of each tail
+     in the tails version, and follow the links back from the end. This costs
+     O(n) extra memory.
+  3. How do you count how many LIS exist?
+     Next to dp[i], keep cnt[i]. When a j gives a longer length, set cnt[i] =
+     cnt[j]. When it ties the best length, add cnt[j] to cnt[i]. This stays
+     O(n^2). The simple tails method cannot count.
 TRIGGER
-  Reach for prev-index take/skip DP when each element may be kept only if it
-  compares correctly against the last element you kept.
+  Reach for this pattern when you must choose a subsequence and whether you can
+  take an element depends only on the last element you took.
 C# NOTE
-  (next, curr) = (curr, next) is tuple deconstruction and swaps two references,
-  so no array data is copied per row. If you later move to the O(n log n)
-  version, List<int>.BinarySearch returns the bitwise complement ~insertionPoint
-  when the value is absent, so the usual idiom is int idx =
-  tails.BinarySearch(x); if (idx < 0) idx = ~idx;.
+  The line (next, curr) = (curr, next) swaps two array references with a tuple.
+  It copies no elements, so rolling the rows costs O(1) per row. This is simpler
+  than Array.Copy and does less work.
 COMPLEXITY
   Time  : O(n^2)
   Space : O(n)

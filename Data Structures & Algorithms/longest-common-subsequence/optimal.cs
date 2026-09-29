@@ -49,76 +49,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : 2-D DP over two strings, rolling two rows
+ PATTERN : 2D DP / LCS - tabulation with two rolling rows
  SOURCE  : YOUR OWN SOLUTION - marker check on submission-4.cs when it was
            first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  n       length of text1, the row dimension
-  m       length of text2, the column dimension
-  prev    prev[j] = LCS length of text1[0..i-2] and text2[0..j-1] (previous row)
-  curr    curr[j] = LCS length of text1[0..i-1] and text2[0..j-1] (row being built)
+  n     length of text1 (the number of DP rows)
+  m     length of text2 (the number of DP columns)
+  prev  prev[j] = LCS of text1[0..i-2] and text2[0..j-1] (the row above)
+  curr  curr[j] = LCS of text1[0..i-1] and text2[0..j-1] (the row being built)
 WHY THIS PATTERN
-  The question asks for the longest subsequence common to both strings, so at
-  every pair of positions you make one of two choices: the characters match and
-  both advance, or they do not and you drop one character from one side. That is
-  a grid of subproblems indexed by (i, j), which is exactly a 2-D table. Row i
-  of that table only ever reads row i-1 and the cell to its left, so the whole
-  table collapses to prev and curr.
+  The problem asks for the best result over two sequences, where you can skip
+  characters but must keep their order. That points at a 2D prefix DP: the
+  answer for prefixes i and j depends only on smaller prefixes. If text1[i-1] ==
+  text2[j-1], that character extends the diagonal answer prev[j-1]. If not, you
+  drop one character from one of the strings, so you take Math.Max(prev[j],
+  curr[j-1]).
 BRUTE FORCE
-  The first thing most people write is recursion on (i, j): if text1[i-1] ==
-  text2[j-1] return 1 + f(i-1, j-1), else return max(f(i-1, j), f(i, j-1)).
-  Without memoization that branches twice per call and is exponential, roughly
-  O(2^(n+m)). It loses because the same (i, j) pair is recomputed a huge number
-  of times; adding a memo table gives the same work as this loop but pays for
-  recursion frames.
+  The first correct idea is plain recursion. Compare the last characters. If
+  they match, add 1 and recurse on both shorter strings. If not, take the max of
+  dropping from text1 or dropping from text2. This recomputes the same (i, j)
+  pairs again and again, so it is exponential, up to O(2^(n+m)). Memoizing it
+  gives the same O(n * m) time, but it keeps a full table and uses deep
+  recursion.
 INVARIANT
-  At the moment the inner loop is about to compute curr[j], prev holds the
-  complete answer row for prefix text1[0..i-2] over all j, and curr[0..j-1]
-  holds the finished part of row i. So 1 + prev[j-1] is the true diagonal value
-  and Math.Max(prev[j], curr[j-1]) is the true "skip one character" value. Since
-  every cell is filled left to right and every row from top to bottom, the
-  invariant holds at every step, and after the last swap prev[m] is the
-  full-string answer.
-WHY CURR[0] AND PREV[0] STAY ZERO
-  The base case of this DP is "one string is empty, so the common subsequence is
-  empty". The j loop starts at 1, so index 0 of both arrays is never written
-  after allocation and keeps its default 0 forever, even across swaps. That is
-  what makes prev[j-1] and curr[j-1] safe when j == 1 without any extra guard.
+  At the start of row i, prev holds the full DP row i-1. Index 0 of both arrays
+  is always 0, because the empty prefix has LCS 0 and the code never writes to
+  it. Inside the row, curr[1..j-1] is already final for row i, and prev is
+  untouched. So the three cells each cell reads (diagonal, up, left) are exactly
+  the values the recurrence needs. After the last row, the swap moves row n into
+  prev, so prev[m] is the answer.
+WHY A STALE CURR IS SAFE
+  After the swap, curr holds the old row i-2, which is stale data. This is safe
+  because every curr[j] for j >= 1 is written before it is read as curr[j-1] in
+  the same row. The only cell read without a write first is curr[0], and that
+  cell is always 0.
 WATCH OUT
-  The comment "I know swapping is not necessary / we only want prev to become
-  curr" is misleading: plain prev = curr would make both names point at the same
-  array, and the next row would read the row it is writing. The swap is what
-  keeps two distinct buffers alive. The explicit loop that sets prev[j] = 0 is
-  dead code and the comment next to it admits this. Also, the row reuse is only
-  safe because every index 1..m of curr is overwritten each row; if you ever
-  added an early break or a partial inner range, old values from two rows back
-  would leak through.
+  The comment "I know swapping is not necessary" is misleading. A plain prev =
+  curr would make both names point to one array. The next row would then read
+  cells it had already overwritten, and the answer would be wrong. The swap, or
+  a copy, is required. The loop that sets prev[j] = 0 is dead code, as its own
+  comment says, because new int[] is already zero-filled. If you move the return
+  to read curr[m], you get the stale row, not the answer. The swap has already
+  moved the last row into prev, as the final comment explains.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you do it with a single array instead of prev and curr?
-     Yes. Keep one int[] dp and one scalar holding the old dp[j-1] (the
-     diagonal) before you overwrite dp[j]. Same time, half the memory, but the
-     code is harder to read and easy to get wrong.
-  2. How do you return the actual subsequence, not just its length?
-     Reconstruction needs the full table, so you go back to int[n+1, m+1] and
-     walk from (n, m) backwards, which costs O(n*m) memory. If memory matters,
-     Hirschberg's divide-and-conquer builds the string in O(min(n, m)) space at
-     about twice the time.
-  3. What if text2 is far longer than text1?
-     Memory here is tied to m, so swap the arguments first so that m is the
-     shorter length. The answer is symmetric, so the result is unchanged.
-  4. What changes for longest common substring (contiguous)?
-     Drop the else branch entirely: on a mismatch set curr[j] = 0, and track a
-     running maximum over all cells instead of reading the last cell, because
-     the best substring can end anywhere.
+  1. Can you use even less memory?
+     Yes. Use one array plus one saved int for the diagonal. Before you
+     overwrite dp[j], save its old value, because it becomes the diagonal for
+     j+1. You can also make the shorter string the column string, which gives
+     O(min(n, m)) space. The cost is code that is harder to read.
+  2. How do you return the subsequence itself, not only its length?
+     Keep the full (n+1) x (m+1) table. Walk back from (n, m): on a match, take
+     the character and move diagonally. Otherwise, move toward the larger
+     neighbor. This needs O(n * m) space, or Hirschberg's divide-and-conquer if
+     you need linear space.
+  3. How does this change for edit distance or shortest common supersequence?
+     The grid and the rolling rows stay the same. Only the cell rule and the row
+     0 / column 0 base values change. For example, in edit distance, dp[0][j] =
+     j instead of 0.
 TRIGGER
-  Two sequences compared position by position, where a match lets both advance
-  and a mismatch means dropping one element from one side.
+  Two strings or arrays, order must be kept, characters may be skipped, and you
+  want a max or min over matchings: build a DP grid over prefix pairs.
 C# NOTE
-  The tuple form (prev, curr) = (curr, prev) swaps two references in place, so
-  no array contents are copied per row; writing Array.Copy(curr, prev, m + 1)
-  instead would add real O(m) copying work on every row.
+  The tuple swap (prev, curr) = (curr, prev) swaps only the two array
+  references. No elements are copied, so each row costs O(1) extra work, while
+  Array.Copy would cost O(m) per row.
 COMPLEXITY
   Time  : O(n * m)
   Space : O(m)

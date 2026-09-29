@@ -103,90 +103,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Trie + backtracking DFS over grid (Word Search II)
+ PATTERN : Trie + Backtracking DFS - walk the grid and the trie together
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-0.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  root      trie root holding all of words, built once per call
-  Children  Children[ch] = next trie node for letter ch
-  IsWord    true if the path from root to this node spells a whole word
-  Index     Index = position in words of the word ending at this node, -1 if none
-  visited   visited[row,col] = cell is on the current DFS path
-  node      in Dfs, the trie node matching the letters already walked
+  root       the empty trie node; every word in words hangs below it
+  Index      in a TrieNode, the position in words of the word that ends here (-1 if none)
+  IsWord     true while a word ends at this node and has not been reported yet
+  visited    visited[row, col] = true while that cell is on the current DFS path
+  node       in Dfs, the trie node for the letters on the path so far (before this cell)
 WHY THIS PATTERN
-  The problem asks for every word in words that can be spelled on the board, so
-  a plain per-word search repeats the same grid walk once per word. A trie
-  merges all words into one shared prefix tree, so a single DFS from each cell
-  advances the board position and the trie position together. The line `if
-  (!node.Children.ContainsKey(ch)) return;` is the whole point: the moment the
-  letters on the path stop being a prefix of any word, the branch dies. visited
-  gives the "same cell may not be used twice in one word" rule.
+  The problem asks which of many words can be traced on the board, using
+  adjacent cells and no cell twice. Many words share prefixes. A trie (a tree
+  where each edge is one letter) lets one DFS path check all words at once. Dfs
+  moves on the board and down the trie together. It stops as soon as
+  board[row][col] is not in node.Children, so no path is followed that no word
+  can use.
 BRUTE FORCE
-  The first version most people write is: for each word in words, run the
-  classic Word Search DFS from every cell. That costs O(words.Length * m * n *
-  4^L) and it re-walks identical prefixes over and over - "oath" and "oaths"
-  each pay for the "oat" walk. The trie pays for shared prefixes once, which
-  drops the words.Length factor out of the exponential part.
+  Run the classic single-word search for each word in words: start a
+  backtracking DFS from every cell and match the word letter by letter. This
+  costs O(W * m * n * 4^L) for W words. It loses because words with the same
+  prefix search the same board paths again and again. The trie shares that work
+  across all words.
 INVARIANT
-  When Dfs(row, col, node, ...) is entered, node is the trie node for the exact
-  letter sequence of the cells already marked in visited, and those cells form a
-  simple path ending at the previous cell. Marking visited[row,col] = true
-  before the four recursive calls and clearing it right after keeps that path
-  property exact on entry and on exit. So whenever node.IsWord is true after the
-  descent, the path really spells words[node.Index] with no repeated cell, and
-  the answer is sound.
-SETTING ISWORD = FALSE IS THE DE-DUPLICATION
-  The same word can be spelled on the board from many start cells, but result
-  must list it once. Instead of a HashSet, the code clears node.IsWord (and
-  Index) the first time it collects a word, so later hits on that node add
-  nothing. The side effect is that the trie is consumed: after FindWords
-  returns, root no longer reports any found word, so the trie cannot be cached
-  and reused across calls.
+  When Dfs is called at (row, col) with node, node spells exactly the letters on
+  the current path of visited cells. So when the code steps to
+  node.Children[ch], that child spells the path plus this cell. If IsWord is
+  true there, the path really spells words[node.Index] on the board. Setting
+  visited to true before the four recursive calls and back to false after them
+  keeps each path simple (no cell used twice). It also leaves the cell free for
+  other paths.
+CLEAR THE FLAG TO AVOID DUPLICATES
+  The same word can be found by many different paths or from many start cells.
+  After adding it, the code sets node.IsWord = false and node.Index = -1, so
+  later finds are ignored. You need no HashSet for the result. This does change
+  the trie, but that is safe because FindWords builds a new root on every call.
 WATCH OUT
-  `int cols = board[0].Length;` and `board[0].Length` inside Dfs both throw if
-  board is empty or its first row is empty - there is no guard. The bounds test
-  also uses board[0].Length per call rather than the cols local, so a ragged
-  board (rows of different lengths) would index out of range on a shorter row.
-  Order matters in Dfs: visited is written only after the trie check passes, and
-  every path that writes it also clears it, so the single shared visited array
-  is safe across the top-level loop - move the marking earlier and you would
-  leak state on the early returns. Finally, Index = -1 is written together with
-  IsWord = false; since IsWord alone stops the node from being read, that write
-  is dead but harmless.
+  int cols = board[0].Length and the bounds check in Dfs both read board[0]. An
+  empty board throws an exception before any search runs. If words has
+  duplicates, Insert overwrites Index with the last one. Only one copy is
+  reported, which is right for a set of words but can surprise you. Found words
+  stay in the trie as dead branches. Dfs keeps walking into them even when no
+  word is left to find below.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. The search still walks deep into trie branches whose words were all already
-  found. How would you fix that?
-     Return a child count or prune on the way out - after the four recursive
-     calls, if node has no children and is not a word, remove that character
-     from the parent's Children. Dead branches then fail the ContainsKey test
-     immediately. Cost is passing the parent node down or returning a flag.
+  1. How do you stop searching branches that have no words left?
+     After the four recursive calls, if the child node has no Children and
+     IsWord is false, remove it from its parent's Children. Later searches then
+     stop early. The cost is more code, and you must keep a reference to the
+     parent node.
   2. Can you drop the visited array?
-     Yes - write a sentinel such as '#' into board[row][col] before recursing
-     and restore ch after. That saves the m*n bool array but mutates the
-     caller's input during the run, and it breaks if '#' can legally appear in
-     words.
-  3. Why store Index instead of the string itself in the node?
-     Storing the word directly (public string Word) removes the dependency on
-     the words array being passed down through every Dfs frame and lets you
-     shrink the signature. The trade-off is one extra string reference per
-     terminal node instead of one int.
-  4. The word list is huge and the board is small. What changes?
-     Build time O(total characters of words) starts to dominate, and memory
-     grows with the Dictionary per node; switch to a fixed 26-slot array or drop
-     words whose letter multiset is not covered by the board before inserting
-     them.
+     Yes. Save board[row][col] in a local, write a marker such as '#' into the
+     cell, recurse, then put the letter back. That saves O(m * n) memory, but
+     the input board is changed while the search runs.
+  3. What if the words are very long and deep recursion is a risk?
+     Use an explicit stack of frames (row, col, node, next direction to try).
+     You must undo visited yourself when a frame is popped. It is harder to
+     read, but there is no call-stack limit.
 TRIGGER
-  Many patterns to be matched at once against the same search space, where the
-  patterns share prefixes - merge them into a trie and walk the trie alongside
-  the search.
+  Many words to find at once in a grid or a text, where the words share
+  prefixes: build a trie and let one search walk it.
 C# NOTE
-  `node.Children.ContainsKey(ch)` followed by `node.Children[ch]` hashes ch
-  twice on every step; `if (!node.Children.TryGetValue(ch, out var next))
-  return;` does it once, and the same applies to the ContainsKey/indexer pair in
-  Insert. Returning IList<string> instead of the concrete List<string> would
-  also match the usual LeetCode signature without changing the body.
+  ContainsKey followed by the indexer does two dictionary lookups in both Insert
+  and Dfs. TryGetValue(ch, out var next) does it in one. For lowercase-only
+  input, a TrieNode[26] array indexed by ch - 'a' avoids hashing altogether.
 COMPLEXITY
   Time  : O(m * n * 4^L)
   Space : O(m * n)

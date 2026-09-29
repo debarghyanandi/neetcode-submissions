@@ -41,77 +41,63 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Two Pointers - shrink from the shorter wall
+ PATTERN : Two Pointers / Greedy - drop the shorter wall
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  left      index of the left wall, starts at 0
-  right     index of the right wall, starts at the last index
-  maxArea   best water area seen so far
-  width     right - left, the index gap for the current pair
-  height    Math.Min of the two walls, the water level the pair can hold
+  left     index of the left wall in the current pair
+  right    index of the right wall in the current pair
+  height   the water level for this pair = the shorter of the two walls
 WHY THIS PATTERN
-  The problem asks for the best pair of lines, and the area of a pair is (right
-  - left) * min of the two heights. Starting with left = 0 and right =
-  heights.Length - 1 gives the widest possible pair, so width can only go down
-  from there. That means the only way a later pair can win is by having a taller
-  minimum, which tells you exactly which side to move: the shorter one. Each
-  step throws away one wall, so the two pointers meet after scanning every
-  element once.
+  The problem asks for the best pair of walls, and a pair's value depends on two
+  things: the distance between the walls and the shorter wall. We start with
+  left and right at the two ends, which gives the widest pair. After that, every
+  move makes the width smaller. So the only way to get a bigger area is to find
+  a taller shorter wall. That means we should always move the pointer on the
+  shorter side.
 BRUTE FORCE
-  The first thing most people write is two nested loops over every pair (i, j)
-  and take the max of (j - i) * Math.Min(heights[i], heights[j]). That is
-  correct but O(n^2) time, which is too slow on a long array. It loses because
-  it re-checks pairs that can never beat what is already found - once the wider
-  pair with the same short wall has been measured, every narrower pair sharing
-  that wall is provably worse.
+  Try every pair with two nested loops, i < j. Compute (j - i) *
+  Math.Min(heights[i], heights[j]) and keep the largest value. This is correct
+  and simple, but it takes O(n^2) time because it checks about n^2 / 2 pairs. It
+  loses because it never uses the fact that a shorter wall limits every pair it
+  is part of.
 INVARIANT
-  At the top of every loop pass, maxArea is the best area over all pairs that
-  contain at least one of the discarded walls, plus everything measured so far.
-  When heights[left] < heights[right] we advance left: any pair (left, j) with j
-  < right has width smaller than right - left and height at most heights[left],
-  so its area cannot exceed the area just computed. Discarding that wall
-  therefore loses no candidate, and when left meets right every pair has either
-  been measured or been proven not better.
+  Before each loop step, the best pair is either already counted in maxArea or
+  it lies fully inside [left, right]. Say heights[left] < heights[right]. Pair
+  left with any inner wall: the width is smaller, and the height is still at
+  most heights[left]. So none of those pairs can beat the area we just recorded,
+  and removing left loses nothing. The loop stops when left meets right, and at
+  that point every pair has been counted or safely ruled out.
 WATCH OUT
-  If heights is null this throws a NullReferenceException on heights.Length, and
-  if the array has 0 or 1 elements right becomes -1 or 0, the loop never runs,
-  and the method returns 0 - check whether 0 is the answer you want for those
-  inputs. The tie case heights[left] == heights[right] falls into the else and
-  moves right; that is safe here because with equal walls both sides are equally
-  binding, but be ready to explain why moving only one side is enough. width *
-  height is int arithmetic, so a very long array of very tall walls can overflow
-  silently into a negative number - a long accumulator would remove that risk.
+  width * height uses int. If the heights and the array length are both large,
+  the product can overflow and wrap to a negative number. If that can happen,
+  compute area as a long. When heights[left] == heights[right], the else branch
+  moves right. This is correct, because both walls cap every inner pair at the
+  same level, but do not "fix" it with a third branch that moves nothing, or the
+  loop never ends. The comment on the discard step matches the code.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Can you prove the greedy move more formally, or would you rather show it by
-  contradiction?
-     Assume the optimal pair is (a, b) with left <= a < b <= right, and that we
-     are about to discard left because heights[left] < heights[right]. If a ==
-     left, then the optimal pair has height at most heights[left] and width at
-     most right - left, so the pair we just measured is at least as good - no
-     loss. Otherwise a > left and the optimal pair survives the move.
-  2. What changes if you must also return the two indices, not just the area?
-     Keep two extra fields, bestLeft and bestRight, and assign them inside the
-     same if (area > maxArea) block. No change to time or the pointer logic; you
-     just carry two more ints.
-  3. What if the input arrives as a stream and you cannot index from the right?
-     The two-pointer move needs random access from both ends, so a one-pass
-     stream breaks it. You would buffer the values into a list first, or fall
-     back to a different formulation, which costs the extra space.
-  4. What if the walls had width too - each bar holds water between itself and
-  its neighbours?
-     That is the trapping-rain-water problem, not this one. The answer is a sum
-     over every index of min(maxLeft, maxRight) - height[i], still solvable with
-     two pointers but carrying running maxima instead of a single best area.
+  1. How would you return the two indices instead of the area?
+     When area > maxArea, also save left and right into two extra variables. The
+     time stays the same, and you only need two more ints.
+  2. Can you skip some steps?
+     After you drop a wall of height h, keep moving that pointer past every wall
+     with height <= h. None of those walls can do better, because the width is
+     smaller and the height is no higher. This saves area calculations, but the
+     worst case is still linear.
+  3. How is this different from Trapping Rain Water?
+     Here only two walls hold the water, and the walls in between do not matter.
+     In Trapping Rain Water, every bar holds its own water, so you must track
+     leftMax and rightMax and add up the water at each index. It is still two
+     pointers, but it builds a running total instead of keeping one best pair.
 TRIGGER
-  The value of a pair depends on a span (distance) times a min or max over its
-  endpoints, and you start at the extreme span - move the endpoint that is
-  limiting the value.
+  When you must pick the best pair (i, j) in an array and the score is limited
+  by the smaller of the two ends, start pointers at both ends and move the
+  weaker side inward.
 C# NOTE
-  Math.Min on two ints is the clear idiom here and keeps the "shorter wall" rule
-  visible in the code. Taking int[] rather than IEnumerable<int> matters: the
-  algorithm needs O(1) indexing at both ends, which IEnumerable cannot give.
+  The if (area > maxArea) block can be written as maxArea = Math.Max(maxArea,
+  area). The result is the same, and the one-line form is the usual C# idiom and
+  is easier to read quickly in an interview.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

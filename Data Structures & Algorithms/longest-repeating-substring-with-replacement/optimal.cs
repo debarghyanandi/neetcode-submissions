@@ -45,85 +45,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Sliding Window - never-shrinking max frequency count
+ PATTERN : Sliding Window - grow-only window, stale max count
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  windowCounts    windowCounts[c] = times c appears in s[left..right]
-  count           old count of s[right] before this step, from TryGetValue
-  maxFrequency    highest single-char count seen in ANY window so far, never lowered
-  left            left edge of the current window
-  longest         best window length found so far = the answer
+  windowCounts   windowCounts[c] = how many times c appears in s[left..right]
+  maxFrequency   highest count of one character seen in any window so far; it never goes down
+  count          count of s[right] in the window before this step (0 if the key is new)
+  longest        largest window size right - left + 1 seen so far
 WHY THIS PATTERN
-  The problem asks for the longest substring you can make uniform using at most
-  k replacements. A substring is feasible when (length - count of its most
-  common character) <= k, and that cost only grows as the substring grows, so
-  the feasible set is a window property: extend right, and pull left forward
-  when the cost passes k. windowCounts gives the character counts of the current
-  window, maxFrequency stands in for "most common character", and longest
-  records the widest window that ever satisfied the test.
+  The problem asks for the longest substring (a contiguous run) that you can
+  make all one letter with at most k changes. A window is valid when (right -
+  left + 1) - maxFrequency <= k: every character except the most common one must
+  be replaced. Moving right one step and moving left forward only when needed
+  means each index enters and leaves the window once. There is no need to test
+  every substring.
 BRUTE FORCE
-  Try every substring: two nested loops over start and end, counting characters
-  inside and checking length - maxCount <= k. That is O(n^2) time with an
-  O(alphabet) count array, or O(n^3) if you recount from scratch each time. It
-  loses because it re-derives counts for windows that the single left/right pass
-  already knows are hopeless.
+  For each start index, move the end forward and keep a count of each character
+  in the substring and its top count. Record the length while (length - top
+  count) <= k, and stop at the first failure. This is always correct, but it is
+  O(n^2) time, because every start scans again from scratch. The sliding window
+  reuses the counts from the previous window.
 INVARIANT
-  maxFrequency only ever rises, and it rises only to count + 1, the true count
-  of s[right] inside the current window at that moment. So each time the window
-  is allowed to grow past its previous size, the window really does hold
-  maxFrequency copies of one character, and after the while loop it satisfies
-  size - maxFrequency <= k, i.e. it is genuinely feasible. Windows that stay the
-  same size cannot increase longest, so longest is only ever set from a real
-  feasible window - and it can never miss the optimum, because the optimum
-  window would force maxFrequency up to its own majority count.
-THE WHILE LOOP RUNS AT MOST ONCE
-  Each iteration adds exactly one character, so the cost (size - maxFrequency)
-  rises by at most one, and maxFrequency never falls. The condition can
-  therefore be violated by at most one, and a single left++ fixes it. Replacing
-  while with if is equivalent here; this is also why left moves at most n times
-  in total.
+  The window size (right - left + 1) never gets smaller. At each step it either
+  grows by one or slides one place to the right. It can only grow when some
+  window reaches a new, higher maxFrequency. So longest only goes up when a
+  truly valid window of that size exists. Windows that look valid only because
+  maxFrequency is stale cannot be longer than one that was valid earlier, so
+  they never raise the answer by mistake.
+WHY MAXFREQUENCY IS NEVER LOWERED
+  When s[left] leaves the window, the real top count can drop, but maxFrequency
+  is not updated. This is safe: a smaller top count can only allow a shorter
+  window, and we already found a longer one. To beat longest, the window needs a
+  count higher than maxFrequency, and that updates the variable right away.
+  Because of this, the while loop runs at most once per step, so it could be an
+  if.
 WATCH OUT
-  The comment says "see the note below" but there is no note below in the file -
-  the explanation was lost, so write it back or drop the reference. Because
-  maxFrequency is stale (possibly larger than the real max of the current
-  window), left and right are NOT guaranteed to bound a feasible substring at
-  every step; only longest is trustworthy, so do not print s.Substring(left,
-  right - left + 1) at the end and expect a valid answer.
-  windowCounts[s[left]]-- leaves keys with value 0 in the dictionary, so
-  windowCounts.Count is the number of distinct characters seen, not distinct
-  characters in the window. Empty s returns 0 correctly, but s is dereferenced
-  without a null check.
+  The comment "see the note below" points to a note that does not exist. The
+  explanation is missing from the file. The comment "Replacements needed =
+  window size - the most common character" is true only when maxFrequency is up
+  to date. With a stale value the code underestimates the replacements, so the
+  final s[left..right] may not be a valid window. Return longest and never the
+  window itself. A null s throws on s.Length.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the substring, not just its length.
-     You cannot read left/right at the end. Record bestLeft = left inside the
-     same if that updates longest - at that moment the window is provably
-     feasible - then Substring(bestLeft, longest).
-  2. Make maxFrequency exact, so the window is always valid?
-     On each left++ recompute the maximum over the counts, O(alphabet) per
-     shrink, or keep a count-of-counts bucket array to do it in O(1) amortized.
-     The final answer is unchanged; you pay extra work only to get a valid
-     window at every step.
-  3. Variant - all k replacements must turn characters into one specific target
-  letter, chosen in advance.
-     Then the window test is simply "number of characters != target <= k", one
-     linear pass per candidate target, so O(alphabet * n) total with a single
-     counter instead of a map.
-  4. The string arrives as a stream you cannot index twice.
-     The algorithm already works: it reads s[right] once, and the only backward
-     reference is windowCounts[s[left]], so you need a buffer of just the
-     current window rather than the whole input.
+  1. How would you return the substring itself, not only its length?
+     Keep maxFrequency exact. After each shrink, recompute it as the max over
+     windowCounts, with a real while loop. Then every window is truly valid, and
+     you save left when longest changes. The cost is an extra scan over the
+     alphabet at each step.
+  2. What if the replacements must all be to one given letter c?
+     Count only the characters that are not c in the window, and shrink while
+     that count is > k. This is the same as "Max Consecutive Ones III", and you
+     do not need maxFrequency.
+  3. Is there another approach besides the sliding window?
+     Binary search on the answer length L. For each L, slide a window of fixed
+     size L and check if (L - top count) <= k for some window. This takes O(n
+     log n) time, which is slower but easy to prove correct.
 TRIGGER
-  "Longest substring where at most k positions may be changed or violated" - a
-  feasibility test that gets monotonically harder as the window widens.
+  Look for this: the longest contiguous substring where at most k elements break
+  a rule that depends on counts inside the window.
 C# NOTE
-  TryGetValue(s[right], out int count) followed by windowCounts[s[right]] =
-  count + 1 is the right way to avoid ContainsKey plus a read plus a write, but
-  it still hashes twice; since the alphabet here is characters, an int[26]
-  indexed by s[right] - 'A' (or int[128]) removes the hashing and the leftover
-  zero-valued keys entirely.
+  TryGetValue followed by windowCounts[s[right]] = count + 1 does two hash
+  lookups per character.
+  CollectionsMarshal.GetValueRefOrAddDefault(windowCounts, s[right], out _)++
+  does one. If the alphabet is known to be small, a fixed int array indexed by
+  the character works too.
 COMPLEXITY
   Time  : O(n)
   Space : O(1)

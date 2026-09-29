@@ -80,90 +80,87 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary Search on Partition - median of two sorted arrays
+ PATTERN : Binary Search on Partition - split both arrays at once
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  n         total length n1 + n2, used only for the odd/even test
-  left      how many elements must land in the left half: (n1 + n2 + 1) / 2
-  low/high  search range for how many elements to take from nums1 (0..n1)
-  mid1      count taken from nums1 (also the index of the first right-side element)
-  mid2      count taken from nums2, forced to left - mid1
-  l1, l2    last element on the left side from nums1 / nums2
-  r1, r2    first element on the right side from nums1 / nums2
+  left     how many elements the combined left half must hold: (n1 + n2 + 1) / 2
+  low      smallest cut position in nums1 still possible
+  high     largest cut position in nums1 still possible
+  mid1     how many elements of nums1 go to the left half
+  mid2     how many elements of nums2 go to the left half, equal to left - mid1
+  l1, l2   last element on the left side of the cut in nums1 / nums2 (int.MinValue if that side is empty)
+  r1, r2   first element on the right side of the cut in nums1 / nums2 (int.MaxValue if that side is empty)
 WHY THIS PATTERN
-  Both inputs are already sorted and we only need the middle value, not the
-  merged array. So the real question is "where do I cut each array so that every
-  left element is <= every right element", and once mid1 is chosen, mid2 = left
-  - mid1 is forced. That turns a two-dimensional choice into a one-dimensional
-  search over mid1 in [0, n1], and the condition l1 <= r2 && l2 <= r1 is
-  monotone: too big a mid1 makes l1 > r2, too small makes l2 > r1, so binary
-  search finds the cut.
+  Both arrays are already sorted, and the median only depends on where the "left
+  half" ends. It does not depend on the full merged order. Once you pick mid1,
+  the value of mid2 is fixed by left - mid1, so there is only one free choice.
+  Moving that choice gives a monotonic answer: l1 > r2 means too many elements
+  came from nums1, and l2 > r1 means too few. This makes binary search on mid1
+  possible.
 BRUTE FORCE
-  Merge the two arrays with two pointers into one sorted list, then read the
-  middle element (or average the two middle ones). That is O(n1 + n2) time and
-  O(n1 + n2) extra space, and it is easy to get right. It loses because it
-  builds the whole array when only one or two values near the center are ever
-  needed.
+  Merge the two arrays with two pointers, like the merge step of merge sort.
+  Stop at index n/2 and read the middle one or two values. This takes O(m + n)
+  time and can use O(1) space if you only keep the last two values you saw. It
+  is simple and correct, but it is linear, and the problem asks for logarithmic
+  time.
 INVARIANT
-  At every iteration, mid1 + mid2 == left, so the left side always holds exactly
-  the number of elements the median needs, whatever mid1 is. The loop keeps the
-  correct cut inside [low, high]: when l1 > r2 the cut is too far right in nums1
-  so high = mid1 - 1, otherwise it is too far left so low = mid1 + 1. When both
-  cross-checks pass, every left element is <= every right element, so
-  Math.Max(l1, l2) is the element at position left - 1 of the merged array -
-  exactly the median for odd n, and the lower of the two middles for even n.
-SENTINELS REPLACE EMPTY-SIDE CHECKS
-  mid1 can be 0 (nothing taken from nums1) or n1 (everything taken), and the
-  same for mid2. Instead of special-casing those, l1/l2 start at int.MinValue
-  and r1/r2 at int.MaxValue, so a missing neighbour never blocks the comparison
-  l1 <= r2 && l2 <= r1. This is why the code works when one array is entirely on
-  one side of the cut, including when nums1 is empty and the whole answer comes
-  from nums2.
-THE (DOUBLE) CAST GUARDS THE SUM
-  In the even branch the cast is on Math.Max(l1, l2), before the addition, so
-  Math.Min(r1, r2) is widened too and the sum happens in floating point. Writing
-  (Math.Max(l1, l2) + Math.Min(r1, r2)) / 2.0 instead would add two ints first
-  and can overflow when both middles are large positive values.
+  The correct mid1 always stays inside [low, high]. When l1 > r2, every cut at
+  mid1 or larger also takes too much from nums1, so high = mid1 - 1 is safe.
+  When l2 > r1, every cut at mid1 or smaller takes too little, so low = mid1 + 1
+  is safe. When both l1 <= r2 and l2 <= r1 hold, every left element is less than
+  or equal to every right element. So max(l1, l2) and min(r1, r2) are exactly
+  the values next to the median.
+WHY LEFT ROUNDS UP
+  Because left = (n1 + n2 + 1) / 2, the left half gets the extra element when
+  the total length is odd. That is why the odd case returns only Math.Max(l1,
+  l2) and never looks at r1 or r2. If you round down instead, the odd case must
+  return Math.Min(r1, r2).
+SEARCH THE SMALLER ARRAY
+  The swap when n1 > n2 does more than save time. It guarantees that mid2 = left
+  - mid1 stays in the range [0, n2] for every mid1 in [0, n1]. If you search the
+  larger array, mid2 can become negative or go past n2, and the index checks
+  break.
 WATCH OUT
-  If both arrays are empty the loop still runs once with mid1 = mid2 = 0, all
-  four sentinels stay in place, n % 2 == 0, and the method returns (int.MinValue
-  + int.MaxValue) / 2.0 = -0.5 instead of failing loudly. The trailing return 0
-  is dead code for any real input, so a wrong answer from it would be silent
-  rather than an exception. Also note the comment "Took too many elements from
-  nums1" sits on the l1 > r2 branch, which is right, but the else branch is
-  entered for both "too few" and the impossible case, so do not read it as a
-  proof that l2 > r1 held.
+  If both arrays are empty, the loop runs once with all four sentinels (the
+  int.MinValue / int.MaxValue stand-ins). It then returns (int.MinValue +
+  int.MaxValue) / 2.0 = -0.5 instead of failing clearly. The final return 0 can
+  only run if the input is not sorted, so bad input gives a silent wrong answer,
+  not an error. The sentinels assume real data never needs a value outside the
+  int range. If you change the element type to long, you must also change the
+  sentinels to long.MinValue and long.MaxValue.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Turn this into "kth smallest of two sorted arrays".
-     Replace left = (n1 + n2 + 1) / 2 with left = k and return Math.Max(l1, l2)
-     once the cut is valid; drop the even/odd branch entirely. Same search range
-     and same complexity.
-  2. What about the median of k sorted arrays?
-     The partition trick does not extend, because with k cuts the choice is no
-     longer one-dimensional. Use a min-heap merge that stops at the middle, O(N
-     log k) time, or binary search on the value instead of the index and count
-     elements <= it in O(k log(maxLen)) per step.
-  3. The numbers arrive as a stream and I must report the median after each
-  insert.
-     Different problem - keep a max-heap for the lower half and a min-heap for
-     the upper half, rebalance so their sizes differ by at most one, O(log n)
-     per insert and O(n) space.
-  4. Can you drop the recursive call?
-     Yes - assign the smaller array to a local variable pair and swap them once,
-     then run the same loop. It removes the extra stack frame and the second
-     entry into the public method; the recursion here is only ever one level
-     deep, so it is a readability choice.
+  1. How do you find the k-th smallest element of the two arrays, not only the
+  median?
+     Keep the same partition search, but use k in place of left. Clamp the range
+     to low = max(0, k - n2) and high = min(k, n1). The answer is max(l1, l2).
+     It is still logarithmic, but the bounds need more care.
+  2. What if the numbers arrive as a stream and you need the median after each
+  one?
+     Use two heaps. A max-heap holds the lower half and a min-heap holds the
+     upper half, and you keep their sizes within one of each other. Each insert
+     costs O(log n), and reading the median costs O(1). You lose the benefit of
+     sorted input, but you can handle data that is never fully stored in order.
+  3. How would you find the median of k sorted arrays?
+     The partition trick does not extend well to k arrays. Binary search on the
+     answer value instead. For each candidate value, count the elements less
+     than or equal to it with one binary search per array. This costs about O(k
+     log n log range). The other option is a k-way merge with a heap up to the
+     middle position, which costs O(total/2 * log k).
+  4. Can you remove the recursive swap call?
+     Yes. Swap the references in local variables (for example with (nums1,
+     nums2) = (nums2, nums1)) and swap n1 and n2 too. It is a small readability
+     choice. The recursion is only one level deep either way.
 TRIGGER
-  Two (or few) already sorted inputs plus a request for an order statistic - a
-  median or a kth element - with a complexity target better than merging them.
+  Two sorted arrays and a question about an order statistic (median or k-th
+  element) that must be answered faster than a merge.
 C# NOTE
-  The final return 0 exists only because C# requires every code path to return a
-  value and the compiler cannot prove the while loop always exits through a
-  return; throwing new ArgumentException there would document the intent better
-  than a silent 0.
+  The (double) cast on Math.Max(l1, l2) happens before the + Math.Min(r1, r2).
+  Because of this, the addition is done in double and cannot overflow int. If
+  you write (Math.Max(l1, l2) + Math.Min(r1, r2)) / 2.0, the int sum can wrap
+  around for large values.
 COMPLEXITY
   Time  : O(log(min(m, n)))
   Space : O(1)

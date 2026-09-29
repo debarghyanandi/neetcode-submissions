@@ -54,90 +54,68 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Monotonic Deque - sliding window maximum in one pass
+ PATTERN : Monotonic Deque - sliding window maximum
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  result   result[i - k + 1] = max of the window ending at index i
-  deque    indices into nums, kept in order so nums[...] never increases front to back
+  result   result[j] = max of nums[j .. j+k-1]
+  deque    indices of the window; nums at those indices never increase from front to back
+  i - k + 1   the left edge (start index) of the window that ends at i
 WHY THIS PATTERN
-  The problem asks for the maximum of every window of fixed width k as the
-  window slides one step at a time. Consecutive windows share k-1 elements, so
-  rescanning them is wasted work; what changes each step is one index entering
-  and one index leaving. A monotonic deque (a double-ended queue whose stored
-  values stay ordered) lets you drop, at the moment i arrives, every older index
-  that nums[i] beats, because those can never win again. What survives at
-  deque.First is exactly the current window's maximum, so result[i - k + 1] is
-  one read.
+  The problem asks for the maximum of every window of size k as the window moves
+  one step at a time. A heap can find the max, but removing old items from it is
+  costly. In this code, deque keeps only the indices that could still become a
+  window maximum. So the answer for each window is at deque.First, and nothing
+  has to be searched.
 BRUTE FORCE
-  The first thing most people write is two nested loops: for each start
-  position, scan the k values and keep the largest. That is O(n*k) time and O(1)
-  extra space beyond the output. It loses because every window re-reads the k-1
-  elements it shares with the previous window; when k is large this repeated
-  scanning dominates.
+  For each of the n - k + 1 window starts, scan all k elements and take the max.
+  This is O(n*k) time and O(1) extra space. It loses because neighbouring
+  windows share k - 1 elements, and the scan does that shared work again for
+  every window. When k is close to n / 2, this becomes quadratic.
 INVARIANT
-  At the top of each iteration, after the two while loops and the AddLast, deque
-  holds exactly the indices in [i-k+1, i] that are not beaten by any later index
-  in that range, ordered by index and with non-increasing nums values. Step 1
-  guarantees no index older than the window survives; step 2 guarantees no index
-  whose value is smaller than a newer one survives. So deque.First is the
-  newest-oldest surviving candidate with the largest value, i.e. the true
-  maximum of the window ending at i, which is what gets written once i >= k - 1.
-INDICES, NOT VALUES
-  The deque stores i, not nums[i], because expiry is a question about position:
-  deque.First!.Value < i - k + 1 can only be tested if the position is
-  available. Values alone would make it impossible to know whether the front has
-  slid out of the window. Everywhere a value is needed, the code dereferences
-  through nums[deque.Last!.Value] or nums[deque.First!.Value].
-ONE PUSH AND ONE POP PER INDEX
-  The two while loops look like they could be expensive, but each index is added
-  by AddLast exactly once and removed at most once, by either RemoveFirst or
-  RemoveLast. Total deque operations over the whole run are therefore bounded by
-  2n, which is why the inner loops do not multiply the cost. This amortized
-  argument is the standard interview answer for why the nested whiles are still
-  linear.
+  Before the emit step, every index in deque is inside the window [i - k + 1,
+  i], and the values nums[...] never increase from front to back. An index is
+  removed only if it has left the window (step 1) or if a newer index with a
+  larger value exists (step 2). A removed index can never be the maximum of this
+  window or of any later one. So the front of deque is the largest value still
+  in the window, and result[i - k + 1] gets the right answer.
+STORE INDICES, NOT VALUES
+  With values alone you cannot tell if the front has left the window. Step 1
+  compares deque.First.Value with i - k + 1, and that check only works because
+  the deque holds positions. The value is always read back as nums[index].
 WATCH OUT
-  The comment says values are "strictly decreasing from front to back", but the
-  pop condition is nums[deque.Last!.Value] < nums[i], which keeps duplicates;
-  the real invariant is non-increasing. That choice is correct and deliberate -
-  popping on <= would still work here, but keeping equals is safer if you later
-  need the oldest maximum - yet the comment is wrong as written. The guard does
-  not check k > nums.Length, so new int[n - k + 1] gets a negative length and
-  throws instead of returning an empty array. The expiry loop runs before the
-  current index is pushed, so it can never remove i itself; reordering steps 1
-  and 2 after AddLast would break that.
+  The comment says the values are "strictly decreasing". The code does not do
+  that. Step 2 uses a strict <, so an equal value is kept, and the values are
+  only non-increasing. The result is still correct, but the comment is wrong.
+  Also, the code never checks for k > nums.Length. If k = n + 1, the result is
+  an empty array. If k is larger than that, new int[n - k + 1] gets a negative
+  size and throws an exception.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you get the sliding window minimum instead?
-     Flip the comparison in step 2 to nums[deque.Last!.Value] > nums[i] so the
-     deque becomes non-decreasing; everything else is unchanged. Running both at
-     once needs two independent deques.
-  2. The input arrives as a stream and you cannot hold nums in memory. What
-  changes?
-     Store the pair (index, value) in the deque instead of the index alone,
-     since nums[...] is no longer indexable, and emit each maximum as soon as
-     the counter reaches k - 1. Memory stays bounded by the deque, which never
-     holds more than k entries.
-  3. What if k changes between queries on a fixed array?
-     The deque pass is tied to one k, so you would rebuild per query. For many
-     queries, precompute a sparse table for range maximum: O(n log n) build,
-     O(1) per query, at the cost of O(n log n) memory.
-  4. Can you avoid the deque entirely?
-     Yes - the block prefix/suffix maximum trick. Split nums into blocks of size
-     k, compute prefix maxima left to right and suffix maxima right to left
-     inside each block, then each window's answer is max(suffix[start],
-     prefix[end]). Same linear time but two extra n-sized arrays instead of a
-     k-sized deque.
+  1. How would you return the sliding window minimum instead?
+     Flip the comparison in step 2 to nums[last] > nums[i], so the values never
+     decrease from front to back. Everything else stays the same.
+  2. What if the numbers arrive as a stream and you cannot store all of nums?
+     The same loop works one element at a time. You only need to keep the last k
+     values (for example, in a ring buffer indexed by i % k) plus the deque.
+     Each answer is emitted as soon as its window is full.
+  3. Is there an O(n) method without a deque?
+     Yes. Split nums into blocks of size k. Build a prefix-max array and a
+     suffix-max array inside each block. The max of a window is then
+     max(suffix[start], prefix[end]). The logic is simpler, but it needs two
+     extra arrays of size n.
+  4. What if the window sizes differ from query to query?
+     The deque only fits a fixed window that moves in one direction. For any
+     range [l, r], build a sparse table (a table of the max for every
+     power-of-two length). It answers each query in O(1) after O(n log n) setup.
 TRIGGER
-  A fixed-width window slides by one and you need an extreme value (max or min)
-  of each window - reach for the monotonic deque.
+  Reach for this pattern when a problem asks for the max or min of every
+  fixed-size window, or of a window whose edges only move forward.
 C# NOTE
-  C# has no built-in deque - Queue<T> only removes from the front - so
-  LinkedList<int> is used here, and it allocates a LinkedListNode<int> object
-  per push. An int[] of length k with head and tail indices used as a ring
-  buffer gives the same operations with one allocation, since the deque provably
-  never exceeds k entries.
+  Each LinkedList<int>.AddLast call creates a new node object. Each index is
+  added at most once, so a plain int[n] array with head and tail indices works
+  as the deque and creates no nodes.
 COMPLEXITY
   Time  : O(n)
   Space : O(k)

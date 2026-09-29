@@ -36,74 +36,72 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Kadane / DP over subarray end index
+ PATTERN : 1D DP (Kadane) - best subarray sum ending at each index
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  bestEndingAt   bestEndingAt[i] = largest sum of a subarray that ends exactly at index i
-  maxSum         running best over all end positions seen so far
+  bestEndingAt  bestEndingAt[i] = largest sum of any subarray that ends exactly at i
+  maxSum        the best value seen so far across all bestEndingAt entries
+  sum           one bestEndingAt entry, read in the second pass
 WHY THIS PATTERN
-  The problem asks for the best contiguous block, and every block ends at
-  exactly one index. So if you can answer "best block ending at i" for every i,
-  the answer is the biggest of those. That subproblem has a one-line recurrence:
-  bestEndingAt[i] is either nums[i] alone or nums[i] glued onto
-  bestEndingAt[i-1], which is why one left-to-right pass is enough.
+  The problem asks for the best contiguous subarray. Every subarray ends at some
+  index. So if you know the best sum ending at each index, the answer is the
+  largest of those. The best sum ending at i depends only on the best sum ending
+  at i-1. That is a one-step recurrence, so a simple DP works: bestEndingAt[i] =
+  max(nums[i], nums[i] + bestEndingAt[i - 1]).
 BETTER APPROACH
-  The better version is the same recurrence with no array: keep one int current
-  = nums[0] and one int maxSum, and inside the loop do current =
-  Math.Max(nums[i], nums[i] + current) then maxSum = Math.Max(maxSum, current).
-  That is O(1) extra space and one pass. This file loses because it materialises
-  a whole int[] copy of nums it never needs again, and then walks it a second
-  time in the foreach to take the maximum - the max could have been folded into
-  the first loop.
+  The better approach is classic Kadane with two scalars: a running "current"
+  and a running "best". That uses O(1) extra space and one pass. This file loses
+  on two points. It allocates the full bestEndingAt array, but each step only
+  reads bestEndingAt[i - 1]. It also makes a second foreach pass to find the
+  max, when maxSum could be updated inside the first loop.
 INVARIANT
-  After iteration i of the first loop, bestEndingAt[i] holds the true maximum
-  sum over all subarrays whose last element is nums[i]. It holds because such a
-  subarray is either just nums[i], or nums[i] plus a subarray ending at i-1, and
-  the best of those is already stored in bestEndingAt[i-1]. Since every
-  non-empty subarray ends somewhere, the maximum over the whole bestEndingAt
-  array is the global answer.
-ALL-NEGATIVE INPUT
-  Seeding bestEndingAt with a copy of nums, and starting maxSum at
-  bestEndingAt[0] rather than 0, is what makes the all-negative case correct.
-  The recurrence can never drop below nums[i] itself, so for [-3,-1,-7] it
-  returns -1, not 0. A version that starts maxSum at 0 would silently return the
-  empty subarray.
+  After step i, bestEndingAt[i] holds the true maximum sum over all subarrays
+  that end at i. This holds because such a subarray is either just [nums[i]], or
+  it extends a subarray ending at i-1. In that second case, the best choice is
+  the best one ending at i-1. The base case bestEndingAt[0] = nums[0] comes from
+  the Clone. Every subarray ends at some index, so the max over all of
+  bestEndingAt is the answer.
+DROP A NEGATIVE PREFIX
+  Math.Max(nums[i], nums[i] + bestEndingAt[i - 1]) picks "start fresh" exactly
+  when bestEndingAt[i - 1] < 0. A negative prefix can only make the sum smaller,
+  so you cut it. Seeding maxSum from bestEndingAt[0] and not from 0 is what
+  makes an all-negative input return its largest element, not 0.
 WATCH OUT
-  An empty nums throws IndexOutOfRangeException at maxSum = bestEndingAt[0],
-  because the loop and the foreach are both safely skipped but that line is not
-  guarded. The sum nums[i] + bestEndingAt[i - 1] is int arithmetic and will wrap
-  around silently if the running sum overflows int; it is not checked. Also note
-  nums.Clone() returns object, so the (int[]) cast is required - drop it and the
-  file does not compile.
+  An empty nums throws IndexOutOfRangeException at bestEndingAt[0], because the
+  loop is skipped but the read is not. The expression nums[i] + bestEndingAt[i -
+  1] is unchecked int math, so it can silently overflow and wrap to a negative
+  number when values are large. The foreach loop compares bestEndingAt[0] with
+  itself once. That is harmless, but it is wasted work.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. Return the start and end indices of the best subarray, not just the sum.
-     Track a start pointer: when you choose nums[i] over nums[i] + previous, set
-     curStart = i; when maxSum improves, record bestStart = curStart and bestEnd
-     = i. Same time, a few more variables.
-  2. What if the array is circular, so the subarray may wrap around the end?
-     Answer is max(normal Kadane, totalSum - minimum subarray sum), computed
-     with a second Kadane run on the minimum. Special case: if every number is
-     negative the wrap formula gives 0, so fall back to the normal Kadane
-     result.
-  3. Many queries asking for the best subarray inside a given range [l, r].
-     Kadane per query is too slow; build a segment tree where each node stores
-     total sum, best prefix, best suffix and best inner sum, and merge those
-     four values. Build is O(n), each query O(log n).
-  4. The array does not fit in memory and arrives as a stream.
-     The O(1)-space variant already handles it - you only ever need the previous
-     value and the running maximum, so nothing has to be stored.
+  1. Can you return the start and end indices of the best subarray, not only its
+  sum?
+     Keep a "start" index and reset it to i whenever you choose nums[i] alone.
+     When maxSum improves, record start and i. The time is the same, and you add
+     two ints of state.
+  2. What if the array is circular (the subarray can wrap around the end)?
+     The answer is max(normal Kadane, total sum - minimum subarray sum). Run a
+     second Kadane for the minimum. If every element is negative, return the
+     normal Kadane result, because total - min would describe an empty subarray.
+  3. Can you solve it with divide and conquer?
+     Split at mid. The answer is the best of the left half, the right half, or
+     the best subarray crossing mid. This takes O(n log n) time, so it is
+     slower. But each half can be solved on its own, and it is the base of the
+     segment-tree version that answers range queries.
+  4. What if the input comes as a stream you can only read once?
+     Kadane already needs only the previous value. Keep current and best as
+     scalars and update them per element. There is no array and no second pass.
 TRIGGER
-  The problem asks for the best contiguous run in a sequence and you can define
-  the answer "ending exactly at index i" from the answer at i-1.
+  When a problem asks for the best contiguous subarray and extending or
+  restarting depends only on the previous element's result, reach for "best
+  ending here" DP (Kadane).
 C# NOTE
-  (int[])nums.Clone() does a full array allocation and copy just to seed the DP;
-  if you keep the array form, int[] bestEndingAt = new int[nums.Length] with
-  bestEndingAt[0] = nums[0] is clearer, since every other slot is overwritten by
-  the loop anyway. The final foreach could also be written as bestEndingAt.Max()
-  with System.Linq, but that adds an enumerator over the array for no gain here.
+  (int[])nums.Clone() returns object, so it needs a cast. It makes a shallow
+  copy (only the top-level array is copied), which is fine for ints. You could
+  drop the copy completely by writing into nums in place, if the caller allows
+  it to change, or by using the two-scalar form.
 COMPLEXITY
   Time  : O(n)
   Space : O(n)

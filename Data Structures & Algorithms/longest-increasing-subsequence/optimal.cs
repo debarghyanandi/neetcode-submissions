@@ -38,77 +38,69 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Patience sorting - tails array with binary search
+ PATTERN : Patience Sorting / Binary Search - smallest tail per length
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-12.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  dp     dp[i] = smallest possible tail of an increasing subsequence of length i+1
-  LIS    current length of dp, returned as the answer
-  idx    insertion point for nums[i] in dp, from BinarySearch (bit-complemented if not found)
+  dp     dp[k] = smallest tail value of any increasing subsequence of length k+1 seen so far
+  LIS    length of the longest increasing subsequence found; always equal to dp.Count
+  idx    position in dp where nums[i] replaces the old tail
 WHY THIS PATTERN
-  The problem asks only for the LENGTH of the longest strictly increasing
-  subsequence, not the subsequence itself. That lets us throw away shape and
-  keep one number per length: dp[i] is the best (smallest) ending value for a
-  subsequence of length i+1. dp stays sorted by construction, so finding where
-  nums[i] belongs is a binary search instead of a scan, and LIS grows only when
-  nums[i] beats the whole of dp.
+  The problem asks only for the length of the longest strictly increasing
+  subsequence, not the subsequence itself. So we do not need to remember every
+  subsequence. For each length we only need its smallest possible last value,
+  because a smaller tail leaves more room to extend. The list dp stays sorted,
+  so each nums[i] can find its place with a binary search instead of a scan.
 BRUTE FORCE
-  The natural first answer is O(n^2) dynamic programming: best[i] = 1 +
-  max(best[j]) over all j < i with nums[j] < nums[i], then take the max of best.
-  It is correct and easy to argue, but every i rescans all earlier indices.
-  Replacing the inner scan with dp.BinarySearch over a sorted array of tails is
-  what drops the inner work to log n.
+  The first correct version is the classic DP. Let best[i] be the LIS that ends
+  at index i. Then best[i] = 1 + max(best[j]) over all j < i with nums[j] <
+  nums[i]. This is O(n^2) time, because every element looks back at all earlier
+  elements. The tails list replaces that backward scan with one binary search.
 INVARIANT
-  After processing nums[0..i], dp is strictly increasing and dp[k] holds the
-  smallest tail value over all increasing subsequences of length k+1 seen so
-  far. Overwriting dp[idx] = nums[i] never changes the length of dp, it only
-  lowers a tail, which can never make a future extension harder. So dp.Count is
-  always exactly the best length reachable so far, and at the end LIS is that
-  length.
-WHY OVERWRITING IS SAFE
-  dp is not an actual subsequence of nums - its entries can come from unrelated
-  positions and the final contents are usually not a valid answer. Only its
-  length is meaningful. That is why the code can freely stomp dp[idx] without
-  tracking where the value came from.
+  After processing nums[0..i], dp is strictly increasing. dp[k] is the smallest
+  value that can end an increasing subsequence of length k+1. If nums[i] is
+  larger than dp's last value, it extends the longest chain, so dp grows by one.
+  Otherwise nums[i] replaces the first tail that is greater than or equal to it.
+  That keeps the tail for that length as small as possible and does not break
+  the sorted order. dp.Count only grows when a truly longer chain exists, so LIS
+  is correct.
+THE ~IDX FROM BINARYSEARCH
+  List.BinarySearch returns a negative number when the value is missing. That
+  number is the bitwise complement (all bits flipped) of the index of the first
+  larger element. So ~idx is the lower bound, which is the exact slot to
+  overwrite. When nums[i] is already in dp, the returned index points to that
+  equal value. Writing it again changes nothing, and this is right for a
+  strictly increasing subsequence.
 WATCH OUT
-  nums[0] is read before any length check, so an empty array throws
-  IndexOutOfRangeException; the O(n^2) DP version would return 0 without special
-  casing. LIS is kept as a separate counter that must stay in sync with dp.Count
-  - the two are only equal because every Add is paired with LIS++; returning
-  dp.Count directly would remove that risk. List.BinarySearch on a list with
-  duplicates may return any matching index, but here an exact match means idx
-  points at an equal value and writing nums[i] over it is a no-op, so strict
-  increase is preserved. If the problem ever asked for non-decreasing
-  subsequences, this exact-match path would be wrong and you would need an
-  upper-bound search instead.
+  dp.Add(nums[0]) throws an exception when nums is empty. Add a guard that
+  returns 0. The name dp suggests a normal DP table, and dp at the end looks
+  like an answer, but it is usually NOT a real subsequence. Only its length
+  means something. LIS is a second copy of dp.Count. If you edit one path and
+  forget LIS++, the two numbers drift apart. Returning dp.Count is safer.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. How do you return the actual subsequence, not just its length?
-     Keep a parallel array pos where pos[i] records which dp slot nums[i] landed
-     in, plus a prev array pointing at the element that was at dp[idx-1] at that
-     moment, then walk the links back from the last element added. Costs O(n)
-     extra memory and some care, since dp itself is not a real subsequence.
-  2. What if the array is huge and streamed, so you cannot hold nums?
-     This algorithm already works online - it only ever looks at nums[i] once
-     and keeps dp, whose size is at most the answer. You would just drop the
-     indexed loop and read values one at a time.
-  3. Could you use an array instead of List<int>?
-     Yes - allocate int[] of length nums.Length, keep an explicit size counter
-     (LIS already is one), and call Array.BinarySearch(dp, 0, LIS, nums[i]).
-     That removes List growth and resizing at the cost of always paying
-     full-length allocation.
-  4. What changes for longest NON-DECREASING subsequence?
-     You need the first index with dp[idx] > nums[i], not >=. BinarySearch
-     cannot express that directly, so write a manual binary search for the upper
-     bound; the rest of the loop is unchanged.
+     Store indices in dp instead of values, and keep a parent[i] array that
+     points to the index in the slot before. At the end, walk back from the last
+     tail. This costs O(n) extra space for parent.
+  2. What changes for the longest non-decreasing subsequence?
+     Equal values must now extend a chain. Use an upper bound (the first element
+     strictly greater) instead of a lower bound, and use <= in the append check.
+     List.BinarySearch does not give an upper bound directly, so write your own
+     binary search.
+  3. How would you count how many longest increasing subsequences there are?
+     Tails alone cannot count. Use the O(n^2) DP with a count[i] array. For O(n
+     log n), use a Fenwick tree (an array that answers prefix queries fast) over
+     compressed values that stores (length, count) pairs.
 TRIGGER
-  A subsequence question that asks only for a length or a count of piles, where
-  each new element either extends the best chain or improves an existing one.
+  When a problem asks for the length of a longest increasing (or chained, like
+  nested envelopes) subsequence and O(n^2) is too slow, keep the smallest tail
+  for each length and binary search into it.
 C# NOTE
-  List<int>.BinarySearch returns the bitwise complement of the insertion point
-  when there is no exact match, which is why idx = ~idx is needed; forgetting it
-  leaves idx negative and the indexer throws.
+  dp can never grow past nums.Length. So a preallocated int[] plus a length
+  counter, searched with Array.BinarySearch(tails, 0, len, nums[i]), gives the
+  same ~idx behavior and never has to regrow the list.
 COMPLEXITY
   Time  : O(n log n)
   Space : O(n)

@@ -95,83 +95,70 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Fixed-Size Sliding Window - compare two char multisets
+ PATTERN : Fixed-Size Sliding Window - compare character counts
  SOURCE  : YOUR OWN SOLUTION - your own annotation at c76939d
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  s1Counts       s1Counts[c] = how many times c appears in s1 (never changes after seeding)
-  windowCounts   windowCounts[c] = count of c inside s2[left..right]; key is deleted at zero
-  left           first index of the current window in s2
-  right          last index of the current window in s2, inclusive
+  s1Counts       s1Counts[c] = how many times c appears in s1
+  windowCounts   windowCounts[c] = how many times c appears in s2[left..right]; no key ever has a zero value
+  right          inclusive end of the window, so the window is always s1.Length chars long
 WHY THIS PATTERN
-  A permutation of s1 has exactly s1.Length characters and exactly the same
-  character counts, so only windows of that one fixed length can match, and
-  order inside the window does not matter. That turns the question into "does
-  any window of length s1.Length have the same multiset as s1", where a multiset
-  is just a bag of characters with counts. Sliding a fixed window means each
-  move is one eviction of s2[left] and one insertion of s2[right], so
-  windowCounts is rebuilt in two dictionary operations instead of from scratch.
+  A permutation of s1 is any string that has the same character counts as s1.
+  The problem asks if some substring of s2 is such a permutation. That substring
+  must be exactly s1.Length long, so the window has a fixed size. We slide it
+  one step at a time across s2. Each step removes s2[left] and adds s2[right],
+  so windowCounts is updated in place and never rebuilt.
 BRUTE FORCE
-  The first thing most people write is: for every start index in s2, take the
-  substring of length s1.Length, sort it, and compare it with a sorted copy of
-  s1. That is O(m * n log n) for m = s2.Length and n = s1.Length, and it throws
-  away the fact that two neighbouring windows differ by only two characters.
-  Counting fresh per window instead of sorting is still O(m * n).
+  For each start index in s2, take the substring of length s1.Length, sort it,
+  and compare it to sorted s1. This is correct. It costs O(m * n log n), where n
+  = s1.Length and m = s2.Length. It loses because every window is rebuilt and
+  sorted from nothing, even though two neighbor windows share all but two
+  characters.
 INVARIANT
-  At the top of every while iteration, windowCounts holds the exact character
-  counts of s2[left..right], it contains no key mapped to zero, and right - left
-  + 1 == s1.Length. Because zero counts are erased, two equal multisets must
-  have the same number of keys, so the s1Counts.Count == windowCounts.Count test
-  plus the per-key value check is a correct full comparison. Every window of
-  that length is visited in order, so returning false after the loop means no
-  window matched.
-WHY THE KEY IS REMOVED AT ZERO
-  The eviction branch decrements only when the count is above 1 and calls Remove
-  otherwise. If it decremented to 0 and left the key, windowCounts.Count would
-  grow forever and the Count == Count guard would start rejecting real matches,
-  while the All check alone would still pass. The Remove is not a tidy-up; it is
-  what makes the cheap size test sound.
+  At the top of each loop pass, windowCounts holds the exact counts of
+  s2[left..right], and right - left + 1 == s1.Length. Every window start from 0
+  to s2.Length - s1.Length is checked once, in order. So if any permutation of
+  s1 exists in s2, the check finds it at that window and returns true. If the
+  loop runs out, no window matched.
+COUNT CHECK NEEDS ZERO KEYS REMOVED
+  The All(...) check only looks at the keys of s1Counts. A window with extra
+  characters would still pass it. The s1Counts.Count == windowCounts.Count test
+  blocks those extra characters. That test only works because the eviction code
+  calls Remove when a count would drop to zero. If it left a zero entry in the
+  map, Count would be too high, and a real match would be missed.
 WATCH OUT
-  The comment says "This is the line optimal.cs removes", so this file is the
-  teaching version: the All comparison costs O(distinct characters) per step, a
-  constant factor the sibling file drops with a running match counter. The
-  leading s1.Length > s2.Length guard is load-bearing - without it the seeding
-  loop indexes s2[i] past the end. The inner if (right == s2.Length) return
-  false is also load-bearing: after right++ the code reads s2[right] before the
-  while condition is rechecked. An empty s1 returns true, because both
-  dictionaries are empty and Enumerable.All on an empty sequence is true - check
-  whether that is the answer you want. windowCounts[s2[left]] is a raw indexer,
-  so any drift in the bookkeeping surfaces as a KeyNotFoundException rather than
-  a wrong answer.
+  The code comment says optimal.cs removes the full comparison. So this file
+  compares both whole maps at every step. The per-step cost grows with the
+  number of distinct characters. The banner complexity only holds when the
+  alphabet is fixed, for example 26 lowercase letters. Also, the loop condition
+  while (right < s2.Length) never ends the loop. The inner check if (right ==
+  s2.Length) return false does. If someone moves that check, the next line reads
+  s2[right] out of range.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you remove the O(distinct) comparison per step?
-     Keep an int matches counter of how many characters currently have
-     windowCounts[c] == s1Counts[c]. Each insertion or eviction touches one
-     character, so you adjust matches in O(1) and answer true when matches
-     equals the number of distinct characters in s1. Same memory, more careful
-     update code.
-  2. The variant asks for all start indices where a permutation of s1 occurs.
-     Do not return on the first match; add left to a List<int> and keep sliding
-     to the end. Output size can be O(m), so extra space stops being O(1).
-  3. What if the input is a stream of characters you cannot index twice?
-     A fixed window only needs the last s1.Length characters, so hold them in a
-     circular buffer of that size and evict the oldest as each new one arrives;
-     the counting logic is unchanged.
-  4. What if s1 can contain any Unicode character, not just letters?
-     The dictionary version already handles it unchanged, which is the reason to
-     keep it; swapping to a fixed int[26] array would break on anything outside
-     lowercase a-z.
+  1. How do you make each slide O(1) no matter how big the alphabet is?
+     Keep a "matches" counter: the number of characters whose window count
+     equals their s1 count. On each add or remove, update the counter only for
+     the one character that changed. Return when matches equals the number of
+     distinct characters. The code gets harder, but you drop the full map
+     comparison.
+  2. How would you return every start index of an anagram of s1 in s2 (LeetCode
+  438)?
+     Use the same window, but add left to a result list instead of returning
+     true, and keep sliding to the end. The time stays the same, plus space for
+     the output list.
+  3. What if s2 arrives as a stream and is too large to store?
+     Keep only the last s1.Length characters in a circular buffer, so you still
+     know which character leaves the window. Memory is O(s1.Length) plus the two
+     maps, and does not grow with s2.
 TRIGGER
-  The question asks whether some contiguous piece of one string is a
-  rearrangement of another - a window of known fixed length where only counts
-  matter.
+  The problem asks whether some substring is a permutation or anagram of a given
+  pattern, so the window length is fixed and only the character counts matter.
 C# NOTE
-  The s1Counts.All(pair => ...) lambda captures windowCounts, so a closure plus
-  an enumerator is created on every iteration of the while loop; a plain foreach
-  over s1Counts with TryGetValue does the same work with no allocation. If the
-  alphabet is known to be lowercase a-z, two int[26] arrays indexed by s1[i] -
-  'a' replace both dictionaries and all the ContainsKey/Add branching.
+  Each ContainsKey followed by windowCounts[key]++ or Add does two hash lookups.
+  CollectionsMarshal.GetValueRefOrAddDefault(windowCounts, key, out _)++ does it
+  in one. If the input is only lowercase letters, an int[26] indexed by c - 'a'
+  removes the hashing completely.
 COMPLEXITY
   Time  : O(n + m)
   Space : O(1)

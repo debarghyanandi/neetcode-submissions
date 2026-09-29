@@ -39,74 +39,73 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Binary Search on a flattened 2D matrix
+ PATTERN : Binary Search - treat the 2D matrix as one sorted array
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-1.cs when it was first processed
  STATUS  : Optimal
 ================================================================================
 VARIABLES
-  left    lowest virtual index still possible (0 .. rows*cols-1)
-  right   highest virtual index still possible
-  mid     virtual index, as if the matrix were one long sorted array
-  row     mid / cols = the real row of mid
-  col     mid % cols = the real column of mid
+  rows    number of rows, matrix.Length
+  cols    number of columns, matrix[0].Length
+  left    lowest virtual index still possible (starts at 0)
+  right   highest virtual index still possible (starts at rows * cols - 1)
+  mid     virtual index into the flattened matrix
+  row     mid / cols, the real row of mid
+  col     mid % cols, the real column of mid
 WHY THIS PATTERN
-  Each row is sorted, and the first value of each row is bigger than the last
-  value of the row before it. So if you read the rows one after another, you get
-  one long sorted list of rows*cols values. A sorted list with a "find the
-  target" question points straight to binary search. The code never builds that
-  list. It searches the virtual index range [left, right] and turns each mid
-  into (row, col) only when it needs to read a value.
+  Each row is sorted, and the first value of a row is larger than the last value
+  of the row before it. So if you read the matrix row by row, you get one long
+  sorted list of rows * cols values. Searching a sorted list points to binary
+  search. The code never builds that list. It keeps a virtual index mid and maps
+  it back to matrix[row][col] with division and remainder.
 BRUTE FORCE
-  Check every cell with two nested loops and return true on a match. This is
-  O(m*n) time. It is correct, but it ignores both sorted properties, so it reads
-  every cell when a halving search reads only a few. A middle step is to scan
-  each row's first and last value to find the right row, then binary search that
-  row. This is O(m + log n), and it is still slower than one search over the
-  whole range.
+  The simplest correct approach scans every cell and compares it with target.
+  That is O(m*n) time and O(1) space. It ignores the sorted order completely. A
+  better first attempt is two binary searches: one over the rows to find the row
+  whose range could hold target, then one inside that row. That is also O(log m
+  + log n) = O(log(m*n)), but it needs two loops and more edge cases, so the
+  single flattened search is cleaner.
 INVARIANT
   If target is in the matrix, its virtual index is always inside [left, right].
-  When target > matrix[row][col], every index up to mid holds a value that is
-  too small, so left = mid + 1 is safe. When target < matrix[row][col], every
-  index from mid up is too big, so right = mid - 1 is safe. The range gets
-  smaller on every step. When left > right, the range is empty, so returning
-  false is correct.
-DIVIDE BY COLS, NOT ROWS
-  The mapping is row = mid / cols and col = mid % cols. Each full row holds cols
-  values, so the row length is the number to divide by. Using rows here reads
-  the wrong cell on any non-square matrix. On a square matrix it still looks
-  correct, which makes this bug easy to miss in tests.
+  Each step compares target with matrix[row][col]. If target is larger, every
+  index up to mid is too small, so left = mid + 1. If target is smaller, every
+  index from mid up is too large, so right = mid - 1. The range gets smaller
+  every step. If it becomes empty (left > right), target cannot be anywhere, so
+  returning false is correct.
+INDEX MAPPING USES COLS, NOT ROWS
+  Row-major order means the virtual index is row * cols + col. So row = mid /
+  cols and col = mid % cols. Both must divide by cols, the row length. If you
+  use rows here by mistake, it still works on square matrices and fails on
+  non-square ones. That makes the bug easy to miss in tests.
 WATCH OUT
-  matrix[0].Length throws if the matrix has no rows. It needs a guard like "if
-  (matrix.Length == 0) return false". The code takes cols from row 0 only. If
-  the jagged array has rows of different lengths, the index mapping is wrong and
-  matrix[row][col] can go out of range. rows * cols is int math, so a very large
-  matrix could overflow and give a negative right. The inline comments match
-  what the code does.
+  matrix[0].Length throws if matrix is empty (no rows). Add a guard like rows ==
+  0 if the input can be empty. rows * cols is computed in int. For a very large
+  matrix it could overflow before the minus 1. mid = left + (right - left) / 2
+  avoids overflow in the midpoint, but it does not protect that product.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. What if each row is sorted and each column is sorted, but a row's first
-  value can be smaller than the previous row's last value?
-     The flat list is no longer sorted, so this search fails. Start at the
-     top-right corner. Move left if the value is too big, and move down if it is
-     too small. That is O(m + n) time with O(1) space.
-  2. Return the (row, col) position instead of a bool.
-     Return new[] { row, col } where the code now returns true, and return { -1,
-     -1 } at the end. The cost does not change.
-  3. If the target is missing, where would it be inserted?
-     Keep the same loop. When it ends, left is the first virtual index whose
-     value is bigger than target. Map it with left / cols and left % cols. If
-     left == rows*cols, the target goes after the last cell.
-  4. Can you do it as two separate binary searches?
-     Yes. First binary search on the first column to find the last row whose
-     first value is <= target. Then binary search inside that row. The time is
-     the same, and it avoids the rows*cols product entirely.
+  1. What if each row is sorted and each column is sorted, but a row does not
+  have to start above the end of the previous row (Search a 2D Matrix II)?
+     The flattened list is no longer sorted. Start at the top-right corner. If
+     the value is bigger than target, move left. If it is smaller, move down.
+     This takes O(m + n) time and O(1) space, which is slower than O(log(m*n)).
+  2. How would you return the position, or the insert position, instead of a
+  bool?
+     Return (mid / cols, mid % cols) on a match. For an insert position, run the
+     loop until it ends and use left as the virtual index where target would go.
+     Then map left back with the same / and %.
+  3. What if the rows have different lengths?
+     The simple / and % mapping breaks. Build a prefix-sum array of row lengths,
+     which costs O(m) extra space. Then binary search that array to turn a
+     virtual index into a row. Or do the two-step search: first find the row,
+     then search inside it.
 TRIGGER
-  A 2D grid where reading the rows in order gives one fully sorted sequence, and
-  the question is "does this value exist" or "where is it".
+  A 2D grid where reading it row by row gives one fully sorted sequence, and you
+  need to find a value in it.
 C# NOTE
-  C# integer math is unchecked by default, so rows * cols wraps around silently
-  instead of throwing. Writing checked(rows * cols), or doing the index math in
-  long, turns a hidden wrong answer into a clear error.
+  int[][] is a jagged array, so each row can have its own length. This code
+  assumes every row has matrix[0].Length columns. It would crash with
+  IndexOutOfRangeException on a shorter row. A rectangular int[,] would enforce
+  equal row lengths through its type.
 COMPLEXITY
   Time  : O(log(m*n))
   Space : O(1)

@@ -35,69 +35,71 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : DP on subsequences - LIS ending at each index
+ PATTERN : 1D DP - LIS by checking every earlier index
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-11.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  dp       dp[i] = length of the longest increasing subsequence that ends exactly at index i
-  prev     index of an earlier element we try to extend from
-  maximum  best dp value seen so far
+  dp        dp[i] = length of the longest increasing subsequence that ends exactly at nums[i]
+  prev      an earlier index whose value might come right before nums[i]
+  maximum   the best dp[i] seen so far, which is the answer
 WHY THIS PATTERN
-  The problem asks for the longest strictly increasing subsequence, so elements
-  can be skipped but order must be kept. That makes a natural subproblem: fix
-  the last element. dp[i] answers "if the subsequence must end at nums[i], how
-  long can it be", and any such subsequence is some shorter one ending at an
-  earlier prev with nums[prev] < nums[i], plus nums[i]. The full answer is the
-  largest dp[i], which maximum collects.
+  The problem asks for the longest strictly increasing subsequence. A
+  subsequence keeps the original order but may skip items. Any such subsequence
+  that ends at index i is a shorter one ending at some earlier index prev, plus
+  nums[i]. So the answer for i is built from answers that are already known, and
+  that is dynamic programming. dp[i] tries every prev with nums[prev] < nums[i]
+  and keeps the best 1 + dp[prev].
 BETTER APPROACH
-  The better approach is patience sorting: keep a list tails where tails[k] is
-  the smallest possible tail value of an increasing subsequence of length k+1,
-  and for each number binary search for the first tail >= it, replacing it or
-  appending. That runs in O(n log n) time with the same O(n) space. This file
-  loses because the inner prev loop rescans every earlier index for every i,
-  which is the full quadratic work; the binary search replaces that scan with
-  about log n comparisons.
+  A faster method is patience sorting, which runs in O(n log n). Keep a list
+  tails, where tails[k] is the smallest value that can end an increasing
+  subsequence of length k+1. For each number, binary search tails for the first
+  entry >= that number and replace it, or append the number if no entry is big
+  enough. The final length of tails is the answer. This file is slower because
+  of its inner prev loop: for every i it scans all earlier indices, while tails
+  needs only one binary search per number.
 INVARIANT
-  Before the outer loop body for index i runs, dp[prev] is already final and
-  correct for every prev < i, because i moves left to right and dp[i] only reads
-  smaller indices. So taking the maximum of 1 + dp[prev] over all valid prev
-  gives the true best for i. Since every increasing subsequence ends at some
-  index, the maximum over all dp[i] is the global answer.
+  When the outer loop finishes index i, dp[i] is exactly the length of the
+  longest increasing subsequence that ends at nums[i]. This holds because every
+  such subsequence is either nums[i] alone (length 1, the fill value) or ends
+  with some nums[prev] < nums[i], and the inner loop checks every one of those
+  prev values. All dp[prev] with prev < i are already final. The best
+  subsequence must end somewhere, so the maximum over all dp[i] is the answer.
+ANSWER IS NOT DP[N-1]
+  dp[i] is the best subsequence that ends at i, not the best one inside 0..i.
+  The longest subsequence may end before the last index, for example nums = [3,
+  4, 1]. This is why the code keeps maximum across all i and does not return
+  dp[n - 1].
 WATCH OUT
-  If nums is empty, n is 0, both loops never run, and the method returns maximum
-  = 1, which is wrong - the answer should be 0. The seed value 1 and the comment
-  "Lowest Lis is 1" are only right when at least one element exists. The
-  comparison nums[prev] < nums[i] is strict, which is correct for strictly
-  increasing; changing it to <= silently solves the non-decreasing variant
-  instead. Also note dp[i] is initialized to 1 by Array.Fill, so the inner loop
-  never needs a separate "no predecessor" case.
+  If nums is empty, maximum starts at 1, so the method returns 1 when the
+  correct answer is 0. The comment "Lowest Lis is 1" is only true when n >= 1.
+  The check nums[prev] < nums[i] uses strict less-than on purpose. Changing it
+  to <= would count equal values and give the longest non-decreasing
+  subsequence, which is a different problem.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How would you also return the actual subsequence, not just its length?
-     Keep a second array parent where parent[i] is the prev that produced dp[i],
-     remember the index where maximum was achieved, and walk parent backwards,
-     then reverse. Costs one more O(n) array and no extra time.
-  2. What changes if you want the number of longest increasing subsequences?
-     Add a count array; when 1 + dp[prev] beats dp[i] set count[i] =
-     count[prev], when it ties add count[prev] to count[i]. Same two loops, same
-     complexity.
-  3. Can this be done without the dp array at all?
-     Not for this formulation - dp[i] reads every earlier entry, so all n values
-     must stay live. The patience-sorting version does shrink memory in
-     practice, since tails only grows to the length of the answer.
-  4. What if the numbers arrive one at a time in a stream?
-     The tails-plus-binary-search version handles that directly, appending or
-     replacing per element in O(log n); this file would have to re-run its inner
-     loop over all stored history for each arrival.
+  1. How do you return the subsequence itself, not only its length?
+     Add a parent array. When dp[i] improves through prev, set parent[i] = prev.
+     Then start from the index with the largest dp and follow parent back. This
+     costs O(n) more memory, and the time stays the same.
+  2. How many different longest increasing subsequences are there?
+     Keep count[i] next to dp[i]. When 1 + dp[prev] is bigger than dp[i], set
+     count[i] = count[prev]. When it is equal, add count[prev]. At the end, sum
+     count[i] for every i where dp[i] equals maximum. The time stays O(n^2), and
+     the fast tails method cannot easily count.
+  3. How does this change for Russian Doll Envelopes, which is a 2D version?
+     Sort by width ascending. For equal widths, sort height descending, so two
+     envelopes with the same width can never be chained. Then run LIS on the
+     heights, with the O(n log n) tails method if n is large.
 TRIGGER
-  Reach for it when the answer is the best chain you can build by picking
-  elements in their original order under a pairwise condition, and the natural
-  subproblem is "best chain ending here".
+  Look for this pattern when a problem asks for the longest chain in a sequence,
+  kept in original order, where each item must be bigger than (or compatible
+  with) the one before it.
 C# NOTE
-  Array.Fill(dp, 1) is the clean way to seed the base case; without it you would
-  need a loop, since new int[n] in C# zero-fills and a dp of 0 would make 1 +
-  dp[prev] off by one for elements with no valid predecessor.
+  Array.Fill(dp, 1) is needed here because new int[n] starts every entry at 0,
+  not 1. In the O(n log n) version, Array.BinarySearch gives the insert point
+  directly: when the value is not found, it returns the bitwise complement (~)
+  of that index.
 COMPLEXITY
   Time  : O(n^2)
   Space : O(n)

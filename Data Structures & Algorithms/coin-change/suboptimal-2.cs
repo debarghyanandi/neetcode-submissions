@@ -53,85 +53,75 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Unbounded Knapsack DP - 2D coin/target table
+ PATTERN : DP / Unbounded Knapsack - min coins, reuse the same row
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-3.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  INF       1_000_000_000, stands for "this target is unreachable"
-  dp        dp[i, target] = fewest coins from coins[0..i] that sum to exactly target
-  notTake   dp[i - 1, target], the answer if coin i is never used
-  take      1 + dp[i, target - coins[i]], reuse coin i once more on the same row
-  ans       dp[n - 1, amount], the final cell before the -1 translation
+  INF      1_000_000_000, the "cannot make this amount" value
+  dp       dp[i, target] = fewest coins to make target using only coins[0..i]
+  notTake  dp[i-1, target], the best result when coins[i] is never used
+  take     1 + dp[i, target - coins[i]], the best result when coins[i] is used at least once
+  ans      dp[n-1, amount] before it is turned into -1 if it is INF
 WHY THIS PATTERN
-  The problem asks for the minimum number of coins for an exact amount, and each
-  coin may be used any number of times. That is an unbounded knapsack: at every
-  cell there are only two choices, skip coin i forever, or take coin i and stay
-  on coin i. Both choices point at strictly smaller sub-targets, so a table over
-  (coin index, target) covers every case with no repeated work. dp[n - 1,
-  amount] is the answer for all coins and the full amount.
+  The problem asks for the fewest coins, and each coin can be used any number of
+  times. That is an unbounded knapsack with "min count" as the value. Greedy
+  fails for some coin sets, so you must try every choice. For each coin i and
+  each target, you either skip coins[i] (notTake) or use one more coins[i]
+  (take). dp stores the best result for each smaller problem, so no work is done
+  twice.
 BETTER APPROACH
-  The better version keeps one int[] dp of length amount + 1 and loops the coins
-  on the outside, writing dp[target] = Math.Min(dp[target], 1 + dp[target -
-  coins[i]]). Because take reads dp[i, ...] on the same row, never the previous
-  row, the row can be updated in place - the old row is not needed. That is the
-  same number of operations but drops the space from n rows to one, and this
-  file loses only on memory.
+  The better approach uses a 1D array: dp[t] = min over all coins c of dp[t - c]
+  + 1, with dp[0] = 0. The time is the same, but it needs only O(amount) memory.
+  This file keeps all n rows. But row i only reads row i-1 (notTake) and row i
+  itself (take). So all the older rows are memory it never needs again.
 INVARIANT
-  When the loop finishes row i, every dp[i, target] holds the true minimum coin
-  count using only coins[0..i], or INF if that target cannot be made. Row 0 is
-  set directly by the divisibility test on coins[0]. Each later cell combines
-  notTake (row i - 1, already final) and take (same row, smaller target, already
-  final in this left-to-right pass), so the induction holds and the last row is
-  correct for all coins.
+  After row i is filled, dp[i, target] is the true minimum number of coins from
+  coins[0..i] that sum to target, or INF if no mix of them can. Row 0 is exact:
+  target is possible only if coins[0] divides it, and then it takes target /
+  coins[0] coins. For row i, every valid mix either uses zero copies of coins[i]
+  (covered by dp[i-1, target]) or at least one (one copy plus the best mix for
+  target - coins[i]). The code takes the min of these two, so it covers every
+  case, and row n-1 at amount is the answer.
 TAKE READS THE SAME ROW
-  take uses dp[i, target - coins[i]], not dp[i - 1, ...]. That one index is what
-  allows a coin to be used many times. Change it to i - 1 and the code silently
-  becomes 0/1 knapsack - each coin usable once - which still compiles and still
-  returns numbers, just wrong ones.
-WHY 1 + INF NEVER OVERFLOWS
-  take can be 1 + 1_000_000_000, which fits in int with room to spare. More
-  important, Math.Min with notTake clamps the stored value back to at most INF,
-  since row 0 never exceeds INF and each row inherits that bound. So INF never
-  grows row by row and the final test ans >= INF is safe.
+  take reads dp[i, target - coins[i]], not dp[i - 1, ...]. This is what lets one
+  coin be used many times. The target loop goes upward, so that cell is already
+  filled for row i. If you read row i-1 here, you get 0/1 knapsack (each coin
+  used at most once), and the answer is wrong.
+INF IS NOT INT.MAXVALUE
+  1 + dp[...] is computed even when that cell is INF. With INF = 1_000_000_000,
+  the result 1_000_000_001 still fits in an int. With int.MaxValue it would
+  overflow to a negative number and win the Math.Min. The final check is ans >=
+  INF, not ans == INF, so a value just above INF would still become -1.
 WATCH OUT
-  An empty coins array breaks this immediately: dp is allocated as new int[0,
-  amount + 1] and the first loop writes dp[0, target], throwing
-  IndexOutOfRangeException, and coins[0] would throw too. A zero or negative
-  value inside coins would also break things - target % coins[0] divides by
-  zero, and a coin of 0 makes take read its own cell. amount = 0 is fine and
-  returns 0 through the target % coins[0] == 0 branch. The comment "Base case:
-  using only coins[0]" is accurate, but note it also does the unbounded logic by
-  division rather than by the recurrence, so a bug fixed in the main loop must
-  be checked against this loop separately.
+  The base case reads coins[0] with no check. An empty coins array throws
+  IndexOutOfRangeException, even when amount is 0. A coin of value 0 in coins[0]
+  causes a divide-by-zero in target % coins[0]. A 0 coin at a later index makes
+  take read dp[i, target], the same cell that is being computed.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you report which coins were used, not just how many?
-     Keep a parallel choice table, or walk back from dp[n - 1, amount]: if dp[i,
-     t] equals dp[i - 1, t] move up a row, otherwise record coins[i] and move to
-     t - coins[i]. The walk-back costs no extra memory but needs the full 2D
-     table, so it conflicts with the 1D rolling version.
-  2. What changes if the question asks for the number of ways to make the amount
-  instead of the fewest coins?
-     Replace Math.Min with addition, set the base row to 1 where target %
-     coins[0] == 0, and drop INF entirely. The shape of the loops and the
-     same-row read stay identical.
-  3. What if each coin may be used at most once?
-     take becomes 1 + dp[i - 1, target - coins[i]], and if you then compress to
-     1D you must loop target downward so a coin is not reused inside the same
-     pass.
-  4. amount is large but the coin values are small - any other angle?
-     Treat it as a shortest path and run BFS from 0 over edges of length
-     coins[i], stopping at the first time amount is reached. Same worst case,
-     but it can stop early when the answer is small, at the cost of a visited
-     array and a queue.
+  1. Return how many different ways make amount (Coin Change II), not the fewest
+  coins.
+     Replace min with sum: dp[i, t] = dp[i-1, t] + dp[i, t - coins[i]], with
+     dp[., 0] = 1. In the 1D version the coin loop must be the outer loop. If
+     the amount loop is outer, you count orderings (permutations) instead of
+     sets of coins.
+  2. Return which coins were used, not just the count.
+     Keep the full 2D table (a good use for this file's extra memory). Start at
+     (n-1, amount). If dp[i, t] == dp[i-1, t], move up a row. If not, record
+     coins[i] and move to t - coins[i]. With a 1D table, store the last coin
+     chosen for each t instead.
+  3. Can you solve it as a shortest path?
+     Yes. Use BFS (breadth-first search: visit nodes level by level) from 0,
+     where each edge adds one coin. The first level that reaches amount is the
+     answer. It can stop early when the answer is small, but it needs a visited
+     array of size amount + 1 and a queue.
 TRIGGER
-  Reach for this when an exact target must be hit by items that can be picked an
-  unlimited number of times and you must minimise or count the picks.
+  When a problem asks for the fewest (or number of) items to reach an exact
+  total and items can be reused, reach for unbounded knapsack DP.
 C# NOTE
-  int[,] is a single rectangular block, so you cannot swap or reassign rows the
-  way you can with int[][] or a plain int[] - if you later compress to the
-  rolling version, the type has to change too.
+  int[,] is a rectangular array. It is one block, indexed as dp[i, target]. A
+  jagged int[][] would need n + 1 separate allocations for the same table.
 COMPLEXITY
   Time  : O(n * m)
   Space : O(n * m)

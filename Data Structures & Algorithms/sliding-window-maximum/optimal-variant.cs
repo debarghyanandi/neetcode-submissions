@@ -53,83 +53,74 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Monotonic Deque - decreasing indices, front is window max
+ PATTERN : Monotonic Deque - keep indices with non-increasing values
  SOURCE  : Reference solution - not one you solved yourself - your own
            annotation at c76939d
  STATUS  : Optimal variant - ties the best complexity by another route
 ================================================================================
 VARIABLES
-  n        nums.Length
-  output   output[l] = maximum of the window that starts at index l
-  q        indices into nums, kept so nums[q] is non-increasing front to back
-  l        left edge of the current window, and also the next slot to write in output
-  r        right edge of the current window, the index being added this step
+  output   output[l] = max of nums[l..l+k-1]
+  q        indices of the window; their nums values never go up from front to back
+  l        left edge of the current window, and also the output slot to fill next
+  r        right edge; the index being added in this step
 WHY THIS PATTERN
-  The problem asks for the maximum of every window of fixed width k, and
-  consecutive windows overlap in k-1 elements, so rescanning each window throws
-  away work. A value can only ever be the answer if no later value inside the
-  window is larger than it, so q drops any index whose nums value is beaten by
-  the new nums[r] - those indices can never win again. What is left in q is a
-  non-increasing chain of candidates, and its front is the current answer.
+  The problem asks for the max of every window of size k while the window slides
+  by one. Each step adds one element on the right and drops one on the left. A
+  monotonic deque is a queue that stays sorted and can be changed at both ends.
+  The deque q keeps only the indices that could still become a window max, so
+  the answer is always nums[q.First.Value]. Each index goes into q once and
+  leaves once.
 BRUTE FORCE
-  The first thing most people write is two loops: for each start l from 0 to
-  n-k, scan nums[l..l+k-1] and keep the largest. It is correct and needs no
-  extra structure, but it costs O(n*k) time because every element is re-read up
-  to k times. A max-heap of (value, index) with lazy popping of out-of-window
-  tops is the middle ground at O(n log n); the deque wins because each index is
-  pushed once and popped once.
+  For every start l from 0 to n-k, scan nums[l..l+k-1] and keep the largest
+  value. This takes O(n*k) time and O(1) extra space. It loses because windows
+  next to each other share k-1 elements, and it scans all of them again every
+  time.
 INVARIANT
-  At the end of every iteration: all indices in q lie in [l, r], they increase
-  from front to back, and nums of those indices never increases from front to
-  back. So q.First.Value is the index of the maximum over [l, r], and once r+1
-  >= k that range is exactly a full window of width k, which is what gets stored
-  in output[l]. Indices removed from the back were strictly smaller than
-  nums[r], which stays in the window at least as long as they would, so removing
-  them cannot lose an answer.
-WHY THE SWAPPED ORDER IS STILL CORRECT
-  The usual write-up evicts the stale front first and then does the domination
-  pops; this file does domination, then AddLast(r), then the front check. It
-  still holds because the two operations touch opposite ends: domination only
-  ever removes indices larger than the front, and if the single stale index is
-  also the only element, domination removes it and r takes its place - and l > r
-  is never true, so the front check simply does nothing. Doing AddLast before
-  the front check also guarantees q is non-empty, so q.First is never null.
+  Before the answer is written in each step, q holds indices in increasing
+  order, all inside [l, r], and their values never go up from front to back. An
+  index is dropped from the back only when a newer, larger nums[r] arrives. The
+  dropped index can never be the max again, because r is larger and stays in the
+  window longer. So the front index is the largest value still in the window,
+  and output[l] = nums[q.First.Value] is correct.
+WHY POPPING THE BACK FIRST IS SAFE
+  The code pops from the back before it checks the front for a stale index (an
+  index that has left the window). If the back loop removes the stale front too,
+  then q.First is r, and l > r is false, so nothing breaks. If the back loop
+  does not reach the stale front, the if removes it. The new index r is never
+  stale, so the order of the two steps does not change the result.
 WATCH OUT
-  new int[n - k + 1] runs before anything is validated, so k > n gives a
-  negative length and throws, and a null nums throws on nums.Length. With k = 0
-  and empty nums the array has length 1 and the loop body never runs, so it
-  returns a silent 0 instead of failing. The `if (l > q.First.Value)` is only
-  safe in this position: if you ever move it above q.AddLast(r), q can be empty
-  and q.First is null, giving a NullReferenceException on the very first
-  iteration. The domination test uses strict `<`, so equal values are all kept -
-  that is deliberate, since the later duplicate outlives the earlier one and
-  must stay as a candidate.
+  The comment says "See the note below", but there is no note below it in this
+  file. The explanation lives in optimal.cs or nowhere, so you will not find it
+  here. If k > n, new int[n - k + 1] gets a negative size and throws an
+  exception. If k = 0, the output size and the window meaning are both wrong,
+  and nothing in the code checks the input. The plain if (not while) is correct
+  only because l at the check always equals r-k+1 (or 0 before the first full
+  window). So at most one index, l-1, can be stale. If you change when l is
+  incremented, that guarantee breaks.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you get the minimum of every window instead?
-     Flip one comparison to nums[q.Last.Value] > nums[r]; q then becomes
-     non-decreasing and the front is the minimum. Nothing else changes.
-  2. The stream is endless and you cannot allocate output up front - what
-  changes?
-     Turn the method into IEnumerable<int> and yield nums[q.First.Value] where
-     output[l] is assigned; drop output and use a counter in place of l for the
-     eviction test, which needs the running window start anyway. Memory stays at
-     the deque only.
-  3. Can you drop the LinkedList and still keep the same bounds?
-     Yes - an int[] of capacity k (or n) with head and tail indices gives the
-     same push-back, pop-back, pop-front operations by index arithmetic, so no
-     per-element node objects are created.
-  4. What if k changes between queries over the same fixed array?
-     A deque pass is tied to one k, so re-running it per k costs O(n) each time;
-     if there are many queries, precompute a sparse table (O(n log n) build,
-     O(1) per range max) instead.
+  1. How do you get the sliding window minimum instead?
+     Flip the comparison to nums[q.Last.Value] > nums[r], so the values in q
+     never go down. Nothing else changes.
+  2. Can you do it in O(n) without a deque?
+     Split nums into blocks of size k. Build prefix-max and suffix-max arrays
+     for the blocks. Then each window max is max(suffixMax[l],
+     prefixMax[l+k-1]). This uses O(n) extra memory instead of O(k), but it is
+     simple array work and easy to run in parallel.
+  3. What if the numbers arrive as a stream that is too big to store?
+     The deque only needs the last k indices. Keep a running counter for r,
+     store values next to indices in q, and emit each max as soon as it is ready
+     instead of filling output.
+  4. Where else does this deque idea show up?
+     Shortest subarray with sum at least K (a deque over prefix sums), and DP
+     where dp[i] needs the max of the last k dp values. In both, the deque turns
+     an O(k) scan into O(1) amortized, meaning O(1) on average per step.
 TRIGGER
-  A fixed-width window slides over a sequence and you need an extreme value (max
-  or min) for every position.
+  When you need the max or min over a fixed-size window that moves one step at a
+  time, and a nested scan is too slow, use a monotonic deque of indices.
 C# NOTE
-  LinkedList<int> is chosen because it is the only built-in list that removes
-  from both ends cheaply - Queue<int> cannot pop from the back - but note that
-  q.Last.Value is the node's payload, which here is an index, so the real
-  comparison is nums[q.Last.Value] and never q.Last.Value itself.
+  LinkedList<int> allocates a new node object on every AddLast. An int[] of size
+  n with head and tail pointers does the same deque job with no allocation per
+  element. Since each index is pushed only once, the tail never goes past n.
 COMPLEXITY
   Time  : O(n)
   Space : O(k)

@@ -50,56 +50,61 @@ public class Solution
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  found    true if the current row holds target
-  mid      middle index of nums between left and right
+  left, right  inclusive bounds of the part of nums still being searched
+  mid          middle index, written as left + (right - left) / 2
+  found        true if the current row holds target
 WHY THIS PATTERN
-  Each row is sorted, so a value can be found in one row by halving the range.
-  SearchMatrix walks every row with foreach and calls BinarySearch on it.
-  BinarySearch compares nums[mid] with target and keeps only the half that can
-  still hold it. The loop stops as soon as found is true.
+  Each row is sorted, so a binary search can find target in one row in log time.
+  SearchMatrix runs BinarySearch on every row until one of them returns true.
+  This works, but it only uses the fact that each row is sorted. It ignores the
+  stronger rule that the first value of each row is bigger than the last value
+  of the row before it.
 BETTER APPROACH
-  The better approach uses the fact that each row starts after the previous row
-  ends. That makes the whole matrix one sorted list of m*n values. Run one
-  binary search over index idx from 0 to m*n - 1, and read matrix[idx / n][idx %
-  n], where n is the row length. That costs O(log(m*n)) time. This file loses
-  because it runs a full search on all m rows. It never uses the order between
-  rows, so it also searches rows whose first value is already larger than
-  target.
+  The better approach is one binary search over the whole matrix, read as a
+  single sorted list of m*n values. Map a flat index mid to matrix[mid / n][mid
+  % n], where n is the row length. That takes O(log(m*n)) time. This file loses
+  because it searches every row. The rows are also sorted relative to each
+  other, so it could skip any row whose first value is greater than target or
+  whose last value is less than target.
 INVARIANT
-  In every BinarySearch call, if target is in nums, it lies inside
-  nums[left..right]. When nums[mid] < target, everything at or left of mid is
-  too small, so mid + 1 becomes the new left. When nums[mid] > target, the same
-  logic moves right to mid - 1. When left > right, the range is empty, so target
-  is not in this row. Since every row is checked, returning false after the loop
-  is correct.
+  In BinarySearch: if target is anywhere in nums, it is inside
+  nums[left..right]. Each step compares nums[mid] with target and removes the
+  half that cannot hold it, so the range gets smaller every call. When left >
+  right, the range is empty, and target is not in the row. In the foreach loop:
+  every row already checked does not contain target, so returning false after
+  the loop is correct.
 WATCH OUT
-  The mid formula left + (right - left) / 2 cannot overflow. If you change it to
-  (left + right) / 2, the sum can overflow on very large arrays. The comment
-  "this is good but mLogn" is correct: the loop has no early exit for rows that
-  start above target, and no early exit for rows that end below it. An empty row
-  gives right = -1, so the call returns false at once. That case is safe, but
-  the code only handles it by luck of the left > right check.
+  The comment "this is good but mLogn" is right about the cost, but "good" hides
+  the real miss: a row whose values are all larger than target is still
+  searched. Because the rows are ordered, once row[0] > target no later row can
+  match, and the loop could stop there. A row of length 0 is handled safely:
+  right is -1, so left > right and the method returns false at once. The code
+  does not guard against a null row, though.
 FOLLOW-UP AN INTERVIEWER WILL ASK
   1. Can you remove the recursion?
-     Yes. Use a while (left <= right) loop that moves left or right. The logic
-     is the same, and the call stack no longer grows, so extra space becomes
-     O(1).
-  2. How do you do it without the flat index math?
-     Use two binary searches. First search the first column to find the last row
-     whose first value is <= target. Then search only that row. The time is
-     O(log m + log n), which is the same as O(log(m*n)).
-  3. What if each row and each column is sorted, but a row does not start after
-  the previous row ends?
-     The flat view no longer works. Start at the top-right corner. If the value
-     is too big, move left. If it is too small, move down. This takes O(m + n)
-     steps.
+     Yes. Use a while (left <= right) loop that moves left or right. This gives
+     O(1) extra space instead of O(log n) for the call stack. The logic stays
+     the same.
+  2. What if only each row and each column are sorted, and one row does not have
+  to start after the previous row ends?
+     A single flat binary search no longer works. Start at the top-right corner.
+     If the value is bigger than target, move left. If it is smaller, move down.
+     This takes O(m + n) time and O(1) space.
+  3. How would you do it as two searches instead of one flat search?
+     First, binary search on the first value of each row (matrix[r][0]) to find
+     the last row that starts at or below target. Then binary search inside that
+     row. This is O(log m + log n), the same as O(log(m*n)), and you never need
+     the index math with / and %.
+  4. In the flat version, what happens if m*n is very large?
+     m*n can overflow int. Compute the high bound and mid as long, then cast
+     back to int when you index the row and the column.
 TRIGGER
-  A 2D grid where the values read in sorted order row by row should make you
-  think of one binary search over a flattened index.
+  If a 2D grid, read row by row, forms one sorted sequence, treat it as a flat
+  sorted array and run a single binary search.
 C# NOTE
   Array.BinarySearch(row, target) >= 0 does the same job as the hand-written
-  helper. It returns a negative number when the value is missing. The check
-  found == true can also be written as just found.
+  helper, and it is iterative. Also, "if (found == true) return found;" can be
+  written as "if (found) return true;".
 COMPLEXITY
   Time  : O(m log n)
   Space : O(log n)

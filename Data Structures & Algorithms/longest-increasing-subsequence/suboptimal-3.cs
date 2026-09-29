@@ -57,86 +57,78 @@ public class Solution
 
 /*
 ================================================================================
- PATTERN : Take-or-skip recursion with memo on (index, prevIndex)
+ PATTERN : DP on Subsequences - memoized pick / not-pick with prev index
  SOURCE  : Reference solution - not one you solved yourself - marker check on
            submission-5.cs when it was first processed
  STATUS  : Suboptimal
 ================================================================================
 VARIABLES
-  dp           dp[i, prevIndex+1] = LIS length using nums[i..n-1] when the last picked element is nums[prevIndex]
-  prevIndex    index of the last element taken so far, -1 when nothing is taken yet
-  notPick      best answer if we skip nums[i]
-  pick         1 + best answer if we take nums[i], 0 when taking is not allowed
+  dp         dp[i, prevIndex + 1] = length of the longest increasing subsequence (LIS) you can build from nums[i..n-1] when the last picked element is nums[prevIndex]
+  prevIndex  index of the last element taken into the subsequence; -1 means nothing taken yet
+  notPick    best length if nums[i] is skipped
+  pick       best length if nums[i] is taken; stays 0 when taking it is not allowed
 WHY THIS PATTERN
-  The problem asks for the longest strictly increasing subsequence, so at every
-  position there are exactly two choices: take nums[i] or skip it. Whether
-  taking is legal depends only on the last value we kept, so the state is the
-  pair (i, prevIndex) and nothing else from the past matters. F explores both
-  branches and returns the max, and dp caches each state so the same pair is
-  solved once. The +1 shift on prevIndex exists only so the sentinel -1 fits in
-  a zero-based array column.
+  The problem asks for the longest subsequence, so for each element you choose
+  to keep it or skip it. That is the pick / not-pick shape. The only rule is
+  that a kept element must be larger than the last kept one. So the state needs
+  just two numbers: the current position i and the last kept index prevIndex.
+  Many different choice paths reach the same (i, prevIndex) pair, and the memo
+  table dp stores each answer so it is computed only once.
 BETTER APPROACH
-  The better approach is patience sorting: keep a list tails where tails[k] is
-  the smallest possible tail of an increasing subsequence of length k+1, and for
-  each value binary search for the first element >= it and overwrite it (or
-  append). That is O(n log n) time and O(n) space, and the answer is
-  tails.Count. This file loses because it builds an n by (n+1) table and fills
-  most of it, so both time and memory grow with n squared even though only the
-  tails array is really needed. There is also a middle option, the O(n^2)
-  bottom-up dp[i] = 1 + max(dp[j]) over j < i with nums[j] < nums[i], which
-  matches this file in time but uses only O(n) space and no recursion.
+  The better approach is patience sorting. Keep an array tails, where tails[k] =
+  the smallest possible last value of an increasing subsequence of length k+1.
+  For each number, binary search tails and replace the first value that is >=
+  the number, or append the number if none is. This runs in O(n log n) time and
+  O(n) space. This file loses because it checks every (i, prevIndex) pair and
+  stores a full n x (n+1) table. Most of those states are never useful for the
+  final answer.
 INVARIANT
-  F(i, prevIndex) always returns the best length obtainable from the suffix
-  nums[i..n-1] given that the last accepted value is nums[prevIndex]. The guard
-  prevIndex == -1 || nums[i] > nums[prevIndex] keeps every accepted chain
-  strictly increasing, so no returned count can come from an illegal
-  subsequence. Because the pick branch passes i as the new prevIndex, the state
-  always describes the real last choice, and the memo entry written at the end
-  is final for that state. The top call F(0, -1, ...) starts with an empty
-  chain, so the result is the LIS of the whole array.
-THE +1 COLUMN SHIFT
-  dp has n+1 columns, not n, purely because prevIndex ranges over -1 up to n-1.
-  Every read and write uses dp[i, prevIndex + 1], so column 0 means "nothing
-  picked yet". If you ever forget the +1 on one of the three accesses, you get a
-  silent off-by-one that mixes two different states instead of an exception.
+  F(i, prevIndex) returns the longest increasing subsequence that uses only
+  nums[i..n-1] and whose first element is larger than nums[prevIndex]. The base
+  case i == nums.Length returns 0 because no elements are left. At each step the
+  code tries both choices, and pick is only allowed when prevIndex == -1 ||
+  nums[i] > nums[prevIndex]. Every valid subsequence is one path of choices, so
+  the max over both branches is the true best. F(0, -1) then covers the whole
+  array with no limit on the first element.
+COLUMN SHIFT BY ONE
+  prevIndex can be -1, and an array index cannot be negative. So the table has n
+  + 1 columns, and the code always reads and writes dp[i, prevIndex + 1]. Column
+  0 means "nothing taken yet". If you forget the +1 in any one of the three
+  places it is used, you get an IndexOutOfRangeException or read the wrong
+  state.
 WATCH OUT
-  Recursion depth is one frame per element, since notPick walks i, i+1, i+2 ...
-  to the end before returning, so a long input can overflow the stack; this is
-  the main practical failure mode. If nums is empty, n is 0 and dp becomes a 0
-  by 1 array, F returns 0 at the first check without touching dp, so that case
-  is safe. The initialization loop lets prevIndex reach n, which is a valid
-  column index but a state never actually visited, so it is harmless extra work.
-  -1 is used as the "not computed" marker, which is safe only because every real
-  answer is 0 or larger.
+  The recursion goes one level deeper for each index, so the call stack reaches
+  depth n. A very long nums could cause a StackOverflowException, and C# cannot
+  catch that exception. Also, the memo only works because -1 is never a real
+  answer. Every stored value is 0 or more, so -1 can safely mean "not computed
+  yet". If you change the value type or the sentinel, check that this is still
+  true. The comment above the recurrence matches the code, so there is no
+  mismatch to report.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you remove the recursion?
-     Fill the same table bottom-up with i going from n-1 down to 0 and prevIndex
-     from i-1 down to -1. Same O(n^2) work, no stack frames, but you still hold
-     the full table unless you also switch to the one-dimensional dp[i] form.
-  2. How would you print the actual subsequence, not just its length?
-     Keep a parent array alongside the dp, record which branch won at each
-     state, then walk the chain back from the start state. That adds O(n^2)
-     memory here, or O(n) if you move to the dp[i] formulation and store the
-     predecessor index.
-  3. What changes if the subsequence may be non-decreasing instead of strictly
-  increasing?
-     Change the guard from nums[i] > nums[prevIndex] to nums[i] >=
-     nums[prevIndex]. In the binary-search version the matching change is to
-     search for the first element strictly greater than the value instead of
-     greater or equal.
-  4. What if you must also count how many distinct LIS there are?
-     Store a second table of counts next to the lengths and combine them: when
-     pick and notPick tie, add the counts; when one wins, copy its count. Same
-     complexity, twice the memory.
+  1. How do you return the actual subsequence, not just its length?
+     Keep the table, then start at (0, -1) and walk forward. At each i, if
+     picking is allowed and 1 + dp for (i+1, i) equals the stored value, take
+     nums[i] and set prevIndex = i. Otherwise skip it. This costs O(n) extra
+     time. The tails method cannot rebuild the sequence by itself. It also needs
+     a parent-index array.
+  2. What if the subsequence only needs to be non-decreasing?
+     Change nums[i] > nums[prevIndex] to >=. In the tails version, use an
+     upper-bound binary search (first value strictly greater) instead of a
+     lower-bound one.
+  3. How would you count how many longest increasing subsequences exist?
+     Use a 1D O(n^2) DP. Keep two arrays: len[i] (LIS length ending at i) and
+     cnt[i] (how many LIS reach that length ending at i). When a longer length
+     is found, reset cnt[i]. When an equal length is found, add to cnt[i]. The
+     O(n log n) trick does not extend easily to counting.
 TRIGGER
-  A choice of take-or-skip over a sequence where legality depends only on the
-  last item kept - that last item becomes the second dimension of the state.
+  When a problem asks for the longest or best subsequence and each new element
+  is only valid relative to the last element you chose, think pick / not-pick
+  with a "previous index" in the state.
 C# NOTE
-  int[,] is a true rectangular array, so dp is one contiguous block and indexing
-  costs a multiply plus an add; a jagged int[][] would let you size row i to
-  only the columns it needs, at the price of one extra reference hop. Note also
-  that dp is passed on every call even though it never changes - making F a
-  private instance method with dp and nums as fields would shrink each frame.
+  C# fills a new int[,] with zeros, and 0 is a valid answer here. That is why
+  the double loop that writes -1 is needed. Array.Fill only works on
+  one-dimensional arrays, so you cannot use it on int[,]. Another option is
+  int?[,], where null means "not computed", and then you can drop the fill loop.
 COMPLEXITY
   Time  : O(n^2)
   Space : O(n^2)
