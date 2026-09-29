@@ -10,7 +10,7 @@
  *   node scripts/lib/header.test.mjs
  */
 
-import { standing, solutionBody } from './header.mjs';
+import { standing, solutionBody, buildHeader } from './header.mjs';
 import { isSelfMarked } from './complexity.mjs';
 
 let pass = 0, fail = 0;
@@ -55,6 +55,15 @@ is('same time but more space still ranks',
   standing('optimal.cs', SPACE), 'ranks above optimal-variant.cs (O(n) time / O(n) space)');
 is('and reads as below from the other side',
   standing('optimal-variant.cs', SPACE), 'ranks below optimal.cs (O(n) time / O(1) space)');
+
+// ---- the banner itself (format 4): file name and complexity, nothing else ----
+const H = buildHeader('suboptimal.cs', 'submission-0.cs', { time: 'O(n)', space: 'O(n)', algorithm: 'Prefix max', approachKey: 'k', correct: true, note: 'three passes' }, false, BETTER);
+is('the banner is three lines: rule, name and complexity, rule', H.split('\n').length, 3);
+is('and the middle line is the name and the complexity', H.split('\n')[1], '// -  suboptimal.cs         O(n) time / O(n) space');
+is('the algorithm, standing, provenance and note are gone', /Prefix max|ranks|Reference|three passes/.test(H), false);
+is('a solution you marked as yours still gets the # rule', buildHeader('optimal.cs', null, { time: 'O(n)', space: 'O(1)', correct: true }, true, []).startsWith('// ####'), true);
+is('an INCORRECT flag is the one extra line ever printed',
+  buildHeader('optimal.cs', null, { time: 'O(n)', space: 'O(1)', correct: false }, false, []).includes('INCORRECT'), true);
 
 // ---- solutionBody, and the //My solution marker -------------------------
 //

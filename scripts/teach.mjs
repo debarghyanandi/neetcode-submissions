@@ -22,8 +22,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { loadState, saveState, scanRepo, pendingOnly, REPO } from './lib/scan.mjs';
 import { stripHeader, solutionBody } from './lib/header.mjs';
-import { TEACH_INSTRUCTIONS, buildTeachingBlock, statusFor, sourceFor, splitTrailingTeach, toSections, parseTeachText } from './lib/teach.mjs';
-import { isSelfMarked } from './lib/complexity.mjs';
+import { TEACH_INSTRUCTIONS, buildTeachingBlock, splitTrailingTeach, parseTeachText, roleFor, lengthProblem } from './lib/teach.mjs';
 import { report, reportCost, group, endGroup } from './lib/report.mjs';
 import { isOutOfBudget, stop as budgetStop, announce as announceBudget, haltIfStopped } from './lib/budget.mjs';
 import { effortArgs, usageOf, usageLine, leanArgs } from './lib/usage.mjs';
@@ -117,7 +116,7 @@ function extraTurnReasons(events) {
 
 function ask(dir, file, ctx, feedback = null) {
   const prompt = TEACH_INSTRUCTIONS(ctx) + (feedback
-    ? `\n\nYour previous answer could not be read. Fix exactly these, and reply again in the format above:\n${feedback.map((f) => `  - ${f}`).join('\n')}`
+    ? `\n\nYour previous answer was rejected. Fix exactly these, and reply again in the format above:\n${feedback.map((f) => `  - ${f}`).join('\n')}`
     : '');
   const args = [
     '-p', prompt,
@@ -157,9 +156,17 @@ function ask(dir, file, ctx, feedback = null) {
       writeFileSync(join(REPO, '.agent', 'tmp', 'teach-extra-turns.jsonl'), raw, 'utf8');
     } catch { /* diagnostics only */ }
   }
-  const { out, errors } = parseTeachText(env.result);
-  if (out) out.sections = toSections(out, ctx);
-  return { out, errors, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
+  const parsed = parseTeachText(env.result, ctx.role);
+  let { out } = parsed;
+  const errors = [...parsed.errors];
+  // The line limit is checked on the RENDERED block, so it is the length you actually read.
+  let block = null;
+  if (out) {
+    block = buildTeachingBlock(out, ctx);
+    const long = lengthProblem(block, ctx.role);
+    if (long) { errors.push(long); out = null; block = null; }
+  }
+  return { out, block, errors, cost: env.total_cost_usd, turns: env.num_turns, usage: usageOf(env) };
 }
 
 // ---------------------------------------------------------------- run
@@ -243,14 +250,15 @@ for (const p of targets) {
       continue;
     }
 
-    const prov = rec.provenance?.[file] ?? {
-      selfMarked: isSelfMarked(solutionBody(src)) || null,
-      evidence: 'detected from the curated file',
-    };
     const ctx = {
-      source: sourceFor(null, file, prov),
-      status: statusFor(file),
+      slug: p.slug, file, role: roleFor(file),
       time: 'unknown', space: 'unknown',
+      // Every file in the folder with its recorded complexity, so optimal.cs can point its
+      // PATH TO OPTIMAL at the sibling that IS a step, and a short note knows what it is not.
+      siblings: p.curatedFiles.map((f) => {
+        try { const s = JSON.parse(sigs[f]); return { name: f, time: s.time, space: s.space }; }
+        catch { return { name: f, time: '?', space: '?' }; }
+      }),
     };
     // Complexity comes from the stored classification signature, never re-asked.
     if (sig) { try { const s = JSON.parse(sig); ctx.time = s.time; ctx.space = s.space; } catch {} }
@@ -269,10 +277,10 @@ for (const p of targets) {
         spend += a.cost ?? 0;
         reportCost('teach', p.slug, a.cost, a.usage);
         if (a.out) { r = { ...a, cost: spend }; break; }
-        console.log(`  ${file.padEnd(22)} attempt ${attempt} unreadable: ${a.errors.slice(0, 4).join('; ')}`);
+        console.log(`  ${file.padEnd(22)} attempt ${attempt} rejected: ${a.errors.slice(0, 4).join('; ')}`);
         feedback = a.errors.slice(0, 8);
       }
-      if (!r) throw new Error(`reply unreadable twice: ${feedback.slice(0, 3).join('; ')}`);
+      if (!r) throw new Error(`reply rejected twice: ${feedback.slice(0, 3).join('; ')}`);
     }
     catch (e) {
       console.log(`  ${file.padEnd(22)} FAILED: ${e.message}`);
@@ -287,8 +295,8 @@ for (const p of targets) {
       continue;
     }
 
-    const block = buildTeachingBlock(r.out, ctx);
-    console.log(`  ${file.padEnd(22)} ${r.out.sections.length} section(s), ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
+    const block = r.block;
+    console.log(`  ${file.padEnd(22)} ${ctx.role} note, ${block.split('\n').length} lines  ·  $${r.cost} · ${r.turns} turns`);
     console.log(`  ${''.padEnd(22)} ${usageLine(r.usage)}`);
     if (!doApply) {
       console.log(block.split('\n').map((l) => '      ' + l).join('\n'));
@@ -309,7 +317,7 @@ for (const p of targets) {
     // Materialise the record only now that there is something to record.
     const prec = state.problems[p.slug] ?? (state.problems[p.slug] = {});
     (prec.teachSignatures ?? (prec.teachSignatures = {}))[file] = sig;
-    report('teach', p.slug, 'ok', `${file}: ${r.out.sections.length} sections`);
+    report('teach', p.slug, 'ok', `${file}: ${ctx.role} note, ${block.split('\n').length} lines`);
     wrote++;
   }
   endGroup();

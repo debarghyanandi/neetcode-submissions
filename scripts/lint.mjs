@@ -22,7 +22,7 @@
  * those notes are about were being rewritten anyway.
  *
  * These files are a record of what was submitted to NeetCode. Where a name really is
- * opaque, the fix is the VARIABLES section in the teaching block - a glossary beside
+ * opaque, the fix is the teaching block, whose IDEA names them in plain words - beside
  * the code, additive and reversible - not a rewrite of the code, which is neither.
  *
  * So what is left is formatting, which is a function:

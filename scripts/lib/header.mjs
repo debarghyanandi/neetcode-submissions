@@ -107,7 +107,10 @@ export function standing(name, ranked) {
 // Bump when the rendered format changes. Without it a wording or layout fix
 // never reaches existing files: the signature only tracks the facts, so it
 // stays equal and every file politely declines to be rewritten.
-export const HEADER_FORMAT = 3;
+// 4 (2026-09-29): the banner is just the file name and its time / space. The
+// algorithm, standing, provenance and note lines were cut - the teaching block
+// below the code carries the idea, and a revision pass read the same facts twice.
+export const HEADER_FORMAT = 4;
 
 export function headerSignature(name, sol, selfMark, ranked) {
   return JSON.stringify({
@@ -128,45 +131,31 @@ export function headerSignature(name, sol, selfMark, ranked) {
 }
 
 /**
+ * The banner: file name and complexity, nothing else.
+ *
+ * The algorithm, standing ("ranks below optimal.cs"), provenance and a one-line
+ * note used to sit here too. On revision they were read twice - the teaching block
+ * explains the idea and the file name already says optimal / suboptimal - so the
+ * banner shrank to the one fact you want before reading code: how fast it is.
+ * The rule character still carries provenance: # you marked it as yours, - not.
+ * An INCORRECT flag from classification is the one extra line ever printed.
+ *
+ * origin and ranked are unused now but kept, so classify's call and the signature
+ * (which still tracks standing, so a re-rank refreshes the teaching block) stay put.
+ *
  * @param name      final filename, e.g. optimal.cs
- * @param origin    filename it came from, e.g. submission-3.cs (null if already curated)
+ * @param origin    filename it came from (unused)
  * @param sol       classifier output for this file
  * @param selfMark  did the source carry a //My solution marker
- * @param ranked    [{name,time,space}] every solution in the folder, best first
+ * @param ranked    every solution in the folder, best first (unused)
  */
 export function buildHeader(name, origin, sol, selfMark, ranked) {
   const ch = selfMark === true ? '#' : '-';
   const rule = `// ${ch.repeat(WIDTH)}`;
   const L = (t = '') => `// ${ch}  ${t}`.trimEnd();
-
-  // Only a raw NeetCode file is "from submission-N"; a curated file that changed
-  // rank is "was optimal.cs". Saying "from suboptimal" for the latter is wrong.
-  let where = '';
-  if (origin && origin !== name) {
-    where = /^submission-\d+\./.test(origin)
-      ? ` (from ${origin.replace(/\.cs$/, '')})`
-      : ` (was ${origin})`;
-  }
-  const provenance = selfMark === true
-    ? `YOU SOLVED THIS YOURSELF${where}`
-    : selfMark === false
-      ? `Reference solution - not one you solved yourself${where}`
-      : `Provenance unknown${where}`;
-
-  // Every content line wraps to the rule width. One unwrapped line - the
-  // algorithm plus a long approachKey is the usual offender - juts out past the
-  // banner and makes the whole block look broken.
   const W = WIDTH - 4;
-  const W$ = (t) => wrap(t, W).map(L);
 
-  // Keep the approachKey with the algorithm when it fits, give it its own
-  // line when it doesn't, rather than letting wrap() split it mid-slug.
-  const algo = `${sol.algorithm}   [${sol.approachKey}]`.length <= W
-    ? [L(`${sol.algorithm}   [${sol.approachKey}]`)]
-    : [...W$(sol.algorithm), L(`[${sol.approachKey}]`)];
-
-  // The title line is column-aligned on purpose, so it must not go through
-  // wrap() - that collapses runs of spaces and destroys the padding.
+  // Column-aligned on purpose, so it must not go through wrap().
   const title = `${name.padEnd(22)}${sol.time} time / ${sol.space} space`;
   const titleLines = title.length <= W
     ? [L(title)]
@@ -175,13 +164,7 @@ export function buildHeader(name, origin, sol, selfMark, ranked) {
   return [
     rule,
     ...titleLines,
-    ...algo,
-    ...W$(standing(name, ranked)),
-    L(),
-    ...W$(provenance),
-    ...(sol.correct ? [] : [L(), ...W$('*** flagged as INCORRECT by classification - check before trusting ***')]),
-    L(),
-    ...W$(sol.note),
+    ...(sol.correct === false ? wrap('*** flagged as INCORRECT by classification - check before trusting ***', W).map(L) : []),
     rule,
   ].join('\n');
 }

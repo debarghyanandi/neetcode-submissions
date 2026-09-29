@@ -279,6 +279,20 @@ no structures on record - run classify --backfill --apply first for shape enforc
 and falls back to advice instead of enforcement. It still works; it just can't refuse a bad
 shape, which is the whole point of the step.
 
+### After a header format change: reheader, don't reclassify
+
+The banner at the top of each file is written by classify, which only rewrites it when it
+reclassifies the folder - a model call per folder for facts already on record. `reheader` rebuilds
+every banner from `state.json` for free:
+
+```powershell
+node scripts/reheader.mjs            # dry run: how many, and one sample
+node scripts/reheader.mjs --apply
+```
+
+It also stamps the new format on each header signature, which marks every teaching block stale, so
+`node scripts/teach.mjs --backfill --apply` then rewrites exactly the blocks that need it.
+
 ### After a chassis change: reskin, don't regenerate
 
 Every visualizer holds its own copy of the chassis, so improving
