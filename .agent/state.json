@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-29T16:40:55.054Z",
+  "updatedAt": "2026-09-29T17:11:12.314Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -479,14 +479,64 @@
     },
     "car-fleet": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a05689a75313dfee22574d5780ea8a36e65e3f30d12f9305483701f602b2036c": "optimal.cs"
+      },
+      "fingerprints": {
+        "a05689a75313dfee22574d5780ea8a36e65e3f30d12f9305483701f602b2036c": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "a980ca25ec12"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n log n)",
+          "space": "O(n)",
+          "algorithm": "Greedy sort and scan",
+          "approachKey": "greedy-sort-scan",
+          "correct": true,
+          "structures": [
+            "array",
+            "matrix"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":3,\"name\":\"optimal.cs\",\"codePrint\":\"a980ca25ec12\",\"time\":\"O(n log n)\",\"space\":\"O(n)\",\"algorithm\":\"Greedy sort and scan\",\"approachKey\":\"greedy-sort-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "a980ca25ec12"
+        },
+        "structures": [
+          "array",
+          "matrix"
+        ],
+        "builtAt": "2026-09-29T17:11:11.992Z"
+      }
     },
     "climbing-stairs": {
       "topic": "Data Structures & Algorithms",

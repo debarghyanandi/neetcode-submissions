@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">71</span> / 72</b></div>
-      <div class="bar"><span id="bar" style="width:98.6%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">72</span> / 72</b></div>
+      <div class="bar"><span id="bar" style="width:100.0%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -969,23 +969,33 @@ li + li{border-top:2px dashed var(--pencil-light);}
   </ul>
 </section>
 
+<section class="group" data-group="Greedy">
+  <div class="group-head">
+    <h2>Greedy</h2>
+    <span class="group-count"><b class="gdone">1</b> / <b>1</b> at standard</span>
+  </div>
+  <p class="group-note">The locally best choice is provably the globally best one.</p>
+  <ul>
+    <li data-hay="car fleet car-fleet greedy sort + greedy scan - merge into the slowest car ahead array matrix current" data-status="current">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/car-fleet" target="_blank" rel="noopener noreferrer">Car Fleet</a>
+        <span class="why">Sort + Greedy Scan - merge into the slowest car ahead</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(n log n) &middot; O(n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/car-fleet/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/car-fleet/car-fleet-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
+      </span>
+    </li>
+  </ul>
+</section>
+
 <section class="group" data-group="Other">
   <div class="group-head">
     <h2>Other</h2>
-    <span class="group-count"><b class="gdone">1</b> / <b>2</b> at standard</span>
+    <span class="group-count"><b class="gdone">1</b> / <b>1</b> at standard</span>
   </div>
   <p class="group-note">Not yet filed. Add a rule in scripts/lib/patterns.mjs.</p>
   <ul>
-    <li data-hay="car fleet car-fleet other   needs rebuilt" data-status="rebuild">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/car-fleet" target="_blank" rel="noopener noreferrer">Car Fleet</a>
-        <span class="why none">not taught yet</span>
-      </span>
-      <span class="meta">
-        <span class="cx">not curated yet</span><span class="run off">no visualizer</span>
-        <span class="mark-std rebuild" title="needs: lint, classify, teach, visualizer"><i class="dot"></i>Needs rebuilt</span>
-      </span>
-    </li>
     <li data-hay="longest palindromic substring longest-palindromic-substring other expand around center - grow palindromes from 2n-1 centers string current" data-status="current">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/longest-palindromic-substring" target="_blank" rel="noopener noreferrer">Longest Palindromic Substring</a>
