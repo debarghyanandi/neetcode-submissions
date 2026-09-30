@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-29T18:50:24.390Z",
+  "updatedAt": "2026-09-30T14:10:14.312Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1113,6 +1113,17 @@
         ],
         "builtAt": "2026-09-25T23:16:48.490Z"
       }
+    },
+    "decode-ways": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "depth-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
