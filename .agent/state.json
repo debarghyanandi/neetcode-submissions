@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T19:52:04.068Z",
+  "updatedAt": "2026-10-01T19:54:38.733Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4330,32 +4330,43 @@
     "pacific-atlantic-water-flow": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
-        "optimal.cs"
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
-        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs"
+        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs",
+        "236c0757db741856ec02cde5a6e06aae573b97b5949468c24e4dcbb4bee29f25": "optimal-variant.cs"
       },
       "fingerprints": {
-        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs"
+        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs",
+        "236c0757db741856ec02cde5a6e06aae573b97b5949468c24e4dcbb4bee29f25": "optimal-variant.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 2,
           "codePrint": "30f0e743f3ff"
+        },
+        "optimal-variant.cs": {
+          "version": 2,
+          "codePrint": "20722be75186"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse-flow DFS from borders\",\"approachKey\":\"dfs-reverse-flow\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, recursive DFS from ocean\",\"approachKey\":\"reverse-flow-dfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, iterative BFS from ocean\",\"approachKey\":\"reverse-flow-bfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
           "selfMarked": false,
           "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -4363,18 +4374,29 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Reverse-flow DFS from borders",
-          "approachKey": "dfs-reverse-flow",
+          "algorithm": "Reverse flow, recursive DFS from ocean",
+          "approachKey": "reverse-flow-dfs-ocean",
           "correct": true,
           "structures": [
             "matrix",
-            "array",
             "call-stack"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "Reverse flow, iterative BFS from ocean",
+          "approachKey": "reverse-flow-bfs-ocean",
+          "correct": true,
+          "structures": [
+            "matrix",
+            "queue"
           ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse-flow DFS from borders\",\"approachKey\":\"dfs-reverse-flow\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, recursive DFS from ocean\",\"approachKey\":\"reverse-flow-dfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, iterative BFS from ocean\",\"approachKey\":\"reverse-flow-bfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "visualizer": {
         "v": 2,
