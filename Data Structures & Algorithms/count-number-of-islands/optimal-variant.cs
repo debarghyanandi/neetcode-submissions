@@ -49,36 +49,37 @@ public class Solution
 
 /*
 ================================================================================
- PROBLEM : You get a 2D grid of chars: '1' is land and '0' is water. Return
+ PROBLEM : Input is a 2D grid of chars, '1' for land and '0' for water. Return
            how many islands there are. An island is land cells joined up,
-           down, left or right. Diagonal cells do not join.
-           [["1","1","0"],["0","0","0"],["0","1","1"]] -> 2
+           down, left or right; diagonal cells do NOT connect. Example:
+           [[1,1,0],[0,0,0],[0,1,1]] -> 2.
  PATTERN : Grid BFS (flood fill) + visited matrix
 ================================================================================
 IDEA
   Scan every cell. When a cell is '1' and not yet in vis, it starts a new
-  island,
-  so cnt++. A BFS from that cell visits the whole island through a queue. It
-  uses dRow/dCol for the 4 moves and marks each cell in vis when it is
-  enqueued.
-  Every land cell is marked exactly once, so each island is counted once, by
-  its first cell in scan order. This file uses a separate vis array and does
-  not change grid, so the input stays intact.
+  island.
+  So cnt++, and a BFS from it marks every connected land cell in vis.
+  The BFS uses a Queue and the dRow/dCol arrays to try the 4 neighbours.
+  Later scans skip marked cells, so each island is counted exactly once.
+  Unlike a DFS, it uses an explicit queue, so deep islands cannot overflow
+  the call stack. It also keeps grid unchanged by using a separate vis.
 EXAMPLE
-  grid = 110 / 010 / 101
-  (0,0): cnt=1, BFS (0,0)->(0,1)->(1,1), then the queue is empty
-  (2,0): cnt=2. It touches (1,1) only diagonally, so it is a new island
-  (2,2): cnt=3. Answer = 3
+  grid = [[1,1,0],[0,1,0],[1,0,1]]
+  (0,0): cnt=1, BFS marks (0,0) -> (0,1) -> (1,1); (1,1) has no new nbrs.
+  (2,0): cnt=2. It touches (1,1) only by a diagonal, so it is a new island.
+  (2,2): cnt=3. Answer: 3.
 COMPLEXITY
-  Time  O(m * n)  each cell is enqueued at most once and checks 4 neighbours
-  Space O(m * n)  the vis array, plus a queue that can hold many cells of one
-                  island
+  Time  O(m * n)  each cell is marked once and dequeued once; 4 checks per
+                  cell.
+  Space O(m * n)  the vis matrix has rows*cols cells, plus the BFS queue.
 WATCH OUT
-  - Mark vis when you ENQUEUE, not when you dequeue. Otherwise one cell can
-    be added many times by its neighbours. That is still correct, but slower.
-  - An empty grid (rows == 0) crashes on grid[0].Length. Guard it if asked.
-  - Compare with the char '1', not the int 1. grid[r][c] == 1 is always false.
-  - Check the bounds before you read vis or grid. The code relies on && to
-    short-circuit (skip the rest once one test is false).
+  - Mark vis when you ENQUEUE, as the code does. If you mark on dequeue,
+    one cell can be added many times, and the queue can grow far too big.
+  - An empty grid crashes: grid[0].Length throws when rows == 0.
+    Return 0 early if grid.Length == 0.
+  - Cells are chars: compare with '1', not 1. The int test is never true,
+    so the count is always 0.
+  - Check the bounds before you read vis[nRow, nCol] or grid[nRow][nCol].
+    The && short-circuit order in the if statement is what prevents a crash.
 ================================================================================
 */

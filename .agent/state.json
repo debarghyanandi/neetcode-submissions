@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T16:35:39.378Z",
+  "updatedAt": "2026-10-01T16:39:30.644Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -809,25 +809,26 @@
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
+        "optimal.cs",
         "optimal-variant.cs"
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-2.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
         "45e4716f27293935302424ba70535e165d6ab0b4c6c9685ff50d73722ae2baed": "optimal.cs",
-        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs"
+        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs",
+        "f5865f5cd00cd4946b5fef8768bba2923029ba1f75c544fc0de7c1e90e306fe8": "optimal.cs"
       },
       "fingerprints": {
         "45e4716f27293935302424ba70535e165d6ab0b4c6c9685ff50d73722ae2baed": "optimal.cs",
-        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs"
+        "8f1ada83145b7fdcab227a3adcc5943c5745df408d5ff14382f783f26a82dc6d": "optimal-variant.cs",
+        "f5865f5cd00cd4946b5fef8768bba2923029ba1f75c544fc0de7c1e90e306fe8": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 2,
-          "codePrint": "0970729b3771"
+          "codePrint": "e848439b1bf5"
         },
         "optimal-variant.cs": {
           "version": 2,
@@ -835,13 +836,13 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e848439b1bf5\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS with recursion\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"BFS with queue traversal\",\"approachKey\":\"bfs-component\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
           "selfMarked": true,
-          "evidence": "marker check on submission-0.cs when it was first processed",
+          "evidence": "marker check on submission-2.cs when it was first processed",
           "recordedFrom": "classify"
         },
         "optimal-variant.cs": {
@@ -854,8 +855,8 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Recursive DFS island search",
-          "approachKey": "dfs-grid-islands",
+          "algorithm": "DFS with recursion",
+          "approachKey": "dfs-recursion",
           "correct": true,
           "structures": [
             "matrix",
@@ -865,18 +866,19 @@
         "optimal-variant.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Iterative BFS island search",
-          "approachKey": "bfs-grid-islands",
+          "algorithm": "BFS with queue traversal",
+          "approachKey": "bfs-component",
           "correct": true,
           "structures": [
             "matrix",
-            "queue"
+            "queue",
+            "array"
           ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0970729b3771\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Recursive DFS island search\",\"approachKey\":\"dfs-grid-islands\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Iterative BFS island search\",\"approachKey\":\"bfs-grid-islands\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e848439b1bf5\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS with recursion\",\"approachKey\":\"dfs-recursion\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"4a347bbf6332\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"BFS with queue traversal\",\"approachKey\":\"bfs-component\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "visualizer": {
         "v": 2,
@@ -885,7 +887,6 @@
           "optimal-variant.cs"
         ],
         "prints": {
-          "optimal.cs": "0970729b3771",
           "optimal-variant.cs": "4a347bbf6332"
         },
         "structures": [
@@ -3493,7 +3494,9 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
       "knownFingerprints": {
         "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs",
         "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs"
