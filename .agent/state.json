@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-30T14:10:50.493Z",
+  "updatedAt": "2026-10-01T00:39:09.144Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1116,16 +1116,119 @@
     },
     "decode-ways": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs",
-        "submission-2.cs",
-        "submission-3.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal-2.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "3833538d790c08bbca4f43c29d1b88f4af1fe3397c3d53094ab781102282d46b": "optimal.cs",
+        "f7d9f2e22e07388bd8f2d5be9a1bab11d4baf6414b10b628e3ba7910d4657a01": "suboptimal-2.cs",
+        "a9991f8a53bdfee39c99da42f12dfe1cdc8e2721c4f1ea04ca0af74e9ff62fe6": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "3833538d790c08bbca4f43c29d1b88f4af1fe3397c3d53094ab781102282d46b": "optimal.cs",
+        "f7d9f2e22e07388bd8f2d5be9a1bab11d4baf6414b10b628e3ba7910d4657a01": "suboptimal-2.cs",
+        "a9991f8a53bdfee39c99da42f12dfe1cdc8e2721c4f1ea04ca0af74e9ff62fe6": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2d9859175368"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "a87566aad85c"
+        },
+        "suboptimal-2.cs": {
+          "version": 2,
+          "codePrint": "c1cf4a4b7feb"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2d9859175368\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized tabulation\",\"approachKey\":\"space-optimized-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a87566aad85c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Memoization with recursive DFS\",\"approachKey\":\"memoization-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"c1cf4a4b7feb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Bottom-up tabulation DP\",\"approachKey\":\"tabulation-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-3.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal-2.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Space-optimized tabulation",
+          "approachKey": "space-optimized-dp",
+          "correct": true,
+          "structures": [
+            "string"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Memoization with recursive DFS",
+          "approachKey": "memoization-recursion",
+          "correct": true,
+          "structures": [
+            "call-stack",
+            "dp-table",
+            "string"
+          ]
+        },
+        "suboptimal-2.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Bottom-up tabulation DP",
+          "approachKey": "tabulation-dp",
+          "correct": true,
+          "structures": [
+            "dp-table",
+            "string"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2d9859175368\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Space-optimized tabulation\",\"approachKey\":\"space-optimized-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal-2.cs": "{\"v\":4,\"name\":\"suboptimal-2.cs\",\"codePrint\":\"c1cf4a4b7feb\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Bottom-up tabulation DP\",\"approachKey\":\"tabulation-dp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a87566aad85c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Memoization with recursive DFS\",\"approachKey\":\"memoization-recursion\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal-2.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2d9859175368",
+          "suboptimal-2.cs": "c1cf4a4b7feb",
+          "suboptimal.cs": "a87566aad85c"
+        },
+        "structures": [
+          "string",
+          "dp-table",
+          "call-stack"
+        ],
+        "builtAt": "2026-10-01T00:39:08.833Z"
+      }
     },
     "depth-of-binary-tree": {
       "topic": "Data Structures & Algorithms",
