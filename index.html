@@ -128,8 +128,8 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">74</span> / 74</b></div>
-      <div class="bar"><span id="bar" style="width:100.0%"></span></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">73</span> / 74</b></div>
+      <div class="bar"><span id="bar" style="width:98.6%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
   </header>
@@ -822,7 +822,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Graphs">
   <div class="group-head">
     <h2>Graphs</h2>
-    <span class="group-count"><b class="gdone">6</b> / <b>6</b> at standard</span>
+    <span class="group-count"><b class="gdone">5</b> / <b>6</b> at standard</span>
   </div>
   <p class="group-note">Nodes and edges — the traversal is the same, the bookkeeping is the problem.</p>
   <ul>
@@ -836,14 +836,14 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
       </span>
     </li>
-    <li data-hay="count number of islands count-number-of-islands graphs grid dfs flood fill + connected components count matrix call-stack queue current" data-status="current">
+    <li data-hay="count number of islands count-number-of-islands graphs grid bfs (flood fill) + visited matrix matrix call-stack queue needs rebuilt" data-status="rebuild">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/count-number-of-islands" target="_blank" rel="noopener noreferrer">Count Number Of Islands</a>
-        <span class="why">Grid DFS flood fill + connected components count</span>
+        <span class="why">Grid BFS (flood fill) + visited matrix</span>
       </span>
       <span class="meta">
-        <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-number-of-islands/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-number-of-islands/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/count-number-of-islands/count-number-of-islands-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
-        <span class="mark-std current" title="lint, classify, teach and visualizer all at the current standard"><i class="dot"></i>Current</span>
+        <span class="cx" title="time / space">O(m * n) &middot; O(m * n)</span><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-number-of-islands/optimal-variant.cs" target="_blank" rel="noopener noreferrer">optimal-variant</a><a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/count-number-of-islands/count-number-of-islands-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+        <span class="mark-std rebuild" title="needs: lint, classify"><i class="dot"></i>Needs rebuilt</span>
       </span>
     </li>
     <li data-hay="course schedule course-schedule graphs topological sort (kahn's algorithm, bfs on in-degree) array queue call-stack current" data-status="current">
