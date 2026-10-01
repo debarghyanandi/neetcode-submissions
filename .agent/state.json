@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T16:39:30.644Z",
+  "updatedAt": "2026-10-01T17:55:29.772Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3494,30 +3494,30 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
         "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs",
-        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs"
+        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs",
+        "ab17209b589e5f465965f307a97d3d44eecdffa2aa7ff654e2c259133c8b74c9": "optimal.cs"
       },
       "fingerprints": {
         "63b8c19faf0900383f4ae27eb86a358ff258d97dcbda0d49addb203ecd24178a": "optimal.cs",
-        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs"
+        "1d0b24769f454e2ef73da141cd0d7593861d1396e920d705ebc2d4ee32e4242c": "optimal.cs",
+        "ab17209b589e5f465965f307a97d3d44eecdffa2aa7ff654e2c259133c8b74c9": "optimal.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 2,
-          "codePrint": "29b21450bf63"
+          "codePrint": "e5f5f1aa3c6a"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e5f5f1aa3c6a\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island exploration, mark visited\",\"approachKey\":\"dfs-grid-exploration\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "provenance": {
         "optimal.cs": {
           "selfMarked": true,
-          "evidence": "marker check on submission-0.cs when it was first processed",
+          "evidence": "marker check on submission-1.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -3525,8 +3525,8 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "DFS island traversal",
-          "approachKey": "dfs-island-area",
+          "algorithm": "DFS island exploration, mark visited",
+          "approachKey": "dfs-grid-exploration",
           "correct": true,
           "structures": [
             "matrix",
@@ -3535,7 +3535,7 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"29b21450bf63\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island traversal\",\"approachKey\":\"dfs-island-area\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e5f5f1aa3c6a\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"DFS island exploration, mark visited\",\"approachKey\":\"dfs-grid-exploration\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
       },
       "visualizer": {
         "v": 2,
@@ -3543,13 +3543,13 @@
           "optimal.cs"
         ],
         "prints": {
-          "optimal.cs": "29b21450bf63"
+          "optimal.cs": "e5f5f1aa3c6a"
         },
         "structures": [
           "matrix",
           "call-stack"
         ],
-        "builtAt": "2026-09-22T22:06:55.359Z"
+        "builtAt": "2026-10-01T17:55:29.512Z"
       }
     },
     "max-water-container": {
@@ -4326,6 +4326,17 @@
         ],
         "builtAt": "2026-09-23T06:08:12.469Z"
       }
+    },
+    "pacific-atlantic-water-flow": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "permutation-string": {
       "topic": "Data Structures & Algorithms",
