@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T17:55:29.772Z",
+  "updatedAt": "2026-10-01T18:01:02.382Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4329,14 +4329,66 @@
     },
     "pacific-atlantic-water-flow": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs"
+      },
+      "fingerprints": {
+        "063163e2c8bd2b9430b6ae090e741c12b11bc452fe92137dc2b668db08501e31": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "30f0e743f3ff"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse-flow DFS from borders\",\"approachKey\":\"dfs-reverse-flow\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m * n)",
+          "space": "O(m * n)",
+          "algorithm": "Reverse-flow DFS from borders",
+          "approachKey": "dfs-reverse-flow",
+          "correct": true,
+          "structures": [
+            "matrix",
+            "array",
+            "call-stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse-flow DFS from borders\",\"approachKey\":\"dfs-reverse-flow\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "30f0e743f3ff"
+        },
+        "structures": [
+          "matrix",
+          "array",
+          "call-stack"
+        ],
+        "builtAt": "2026-10-01T18:01:02.072Z"
+      }
     },
     "permutation-string": {
       "topic": "Data Structures & Algorithms",
