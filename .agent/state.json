@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T23:18:32.639Z",
+  "updatedAt": "2026-10-01T23:27:23.583Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4329,14 +4329,66 @@
     },
     "n-queens": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "548eeacaf9e474c34a0de6eff8cc6d78d3f5fc6b0590abbd184a9ad139631dc6": "optimal.cs"
+      },
+      "fingerprints": {
+        "548eeacaf9e474c34a0de6eff8cc6d78d3f5fc6b0590abbd184a9ad139631dc6": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "b8b37c642999"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"b8b37c642999\",\"time\":\"O(n * n!)\",\"space\":\"O(n^2)\",\"algorithm\":\"Backtracking depth-first search\",\"approachKey\":\"backtracking-nqueens\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n * n!)",
+          "space": "O(n^2)",
+          "algorithm": "Backtracking depth-first search",
+          "approachKey": "backtracking-nqueens",
+          "correct": true,
+          "structures": [
+            "matrix",
+            "call-stack",
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"b8b37c642999\",\"time\":\"O(n * n!)\",\"space\":\"O(n^2)\",\"algorithm\":\"Backtracking depth-first search\",\"approachKey\":\"backtracking-nqueens\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "b8b37c642999"
+        },
+        "structures": [
+          "matrix",
+          "call-stack",
+          "array"
+        ],
+        "builtAt": "2026-10-01T23:27:23.274Z"
+      }
     },
     "pacific-atlantic-water-flow": {
       "topic": "Data Structures & Algorithms",
