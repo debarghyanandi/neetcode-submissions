@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T19:54:38.733Z",
+  "updatedAt": "2026-10-01T20:02:00.909Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4355,8 +4355,8 @@
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, recursive DFS from ocean\",\"approachKey\":\"reverse-flow-dfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, iterative BFS from ocean\",\"approachKey\":\"reverse-flow-bfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow DFS from ocean borders\",\"approachKey\":\"reverse-flow-dfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow BFS from ocean borders\",\"approachKey\":\"reverse-flow-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "provenance": {
         "optimal.cs": {
@@ -4374,8 +4374,8 @@
         "optimal.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Reverse flow, recursive DFS from ocean",
-          "approachKey": "reverse-flow-dfs-ocean",
+          "algorithm": "Reverse flow DFS from ocean borders",
+          "approachKey": "reverse-flow-dfs",
           "correct": true,
           "structures": [
             "matrix",
@@ -4385,8 +4385,8 @@
         "optimal-variant.cs": {
           "time": "O(m * n)",
           "space": "O(m * n)",
-          "algorithm": "Reverse flow, iterative BFS from ocean",
-          "approachKey": "reverse-flow-bfs-ocean",
+          "algorithm": "Reverse flow BFS from ocean borders",
+          "approachKey": "reverse-flow-bfs",
           "correct": true,
           "structures": [
             "matrix",
@@ -4395,23 +4395,25 @@
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, recursive DFS from ocean\",\"approachKey\":\"reverse-flow-dfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
-        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow, iterative BFS from ocean\",\"approachKey\":\"reverse-flow-bfs-ocean\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"30f0e743f3ff\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow DFS from ocean borders\",\"approachKey\":\"reverse-flow-dfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(m * n) time / O(m * n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"20722be75186\",\"time\":\"O(m * n)\",\"space\":\"O(m * n)\",\"algorithm\":\"Reverse flow BFS from ocean borders\",\"approachKey\":\"reverse-flow-bfs\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(m * n) time / O(m * n) space\"}"
       },
       "visualizer": {
         "v": 2,
         "files": [
-          "optimal.cs"
+          "optimal.cs",
+          "optimal-variant.cs"
         ],
         "prints": {
-          "optimal.cs": "30f0e743f3ff"
+          "optimal.cs": "30f0e743f3ff",
+          "optimal-variant.cs": "20722be75186"
         },
         "structures": [
           "matrix",
-          "array",
-          "call-stack"
+          "call-stack",
+          "queue"
         ],
-        "builtAt": "2026-10-01T18:01:02.072Z"
+        "builtAt": "2026-10-01T20:02:00.906Z"
       }
     },
     "permutation-string": {

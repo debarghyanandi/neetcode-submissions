@@ -86,52 +86,53 @@ public class Solution
 
 /*
 ================================================================================
- PROBLEM : Given an m x n grid of heights, the Pacific touches the top and
-           left edges. The Atlantic touches the bottom and right edges. Water
-           flows to a neighbor (up/down/left/right) of equal or lower height.
-           Return every [row, col] that can reach both oceans. Example:
-           [[1,2],[4,3]] -> [[0,1],[1,0],[1,1]].
+ PROBLEM : Given an m x n grid heights, the Pacific touches the top and left
+           edges. The Atlantic touches the bottom and right edges. Water flows
+           to a neighbor (up/down/left/right) of equal or lower height. Return
+           every [row, col] whose water can reach both oceans. [[1,2],[4,3]]
+           -> [[0,1],[1,0],[1,1]].
  PATTERN : Multi-source DFS from borders (reverse flow)
 ================================================================================
 IDEA
-  Do not ask "where can this cell flow?" for every cell. Ask the reverse
-  question: start at each ocean's border cells and climb uphill. Dfs moves to
-  a cell only if grid[row][col] >= prevHeight, and it marks reached cells in
-  pacific or atlantic. A cell is in res when both arrays are true. This is
-  correct because reverse uphill paths are exactly the downhill water paths.
+  Do not ask "where can this cell flow?". Ask "which cells can reach this
+  ocean?" Start Dfs from every border cell of each ocean and climb uphill:
+  move only to a cell with height >= prevHeight. This fills the pacific and
+  atlantic boolean grids. The answer is every cell marked in both. It is
+  correct because each uphill step backward is a legal downhill step forward.
 EXAMPLE
   heights = [[1,2],[4,3]]
-  pacific: from (0,0)=1 climb to (1,0)=4, (0,1)=2, then (1,1)=3 -> all 4
-  atlantic: (1,0),(1,1),(0,1) start; (0,0)=1 is lower, so it is never reached
-  res = [[0,1],[1,0],[1,1]] ((0,0) reaches only the Pacific)
+  pacific: from (0,0) climb to (1,0)=4 and (0,1)=2, then (1,1)=3 -> all 4
+  atlantic: (1,0),(1,1),(0,1) seeded; 1 < 2 and 1 < 4, so (0,0) is never hit
+  answer (row-major scan): [[0,1],[1,0],[1,1]]
 COMPLEXITY
-  Time  O(m * n)  vis stops repeats, so each cell is expanded at most once per
+  Time  O(m * n)  vis stops repeats; each cell is marked at most once per
                   ocean
-  Space O(m * n)  two bool grids plus a recursion stack up to m * n deep
+  Space O(m * n)  two bool grids plus a recursion stack up to m*n deep
 PATH TO OPTIMAL
-  Brute force: downhill DFS from every cell - O((m*n)^2) - repeats much work.
-  Reverse search from the borders, one pass per ocean - O(m*n) - each cell is
-  marked once per ocean (this file; optimal-variant.cs is the same cost).
+  DFS from every cell to test both oceans - O((m*n)^2) - repeats all work.
+  Reverse DFS from the borders, one pass per ocean - O(m*n) - this file.
+  optimal-variant.cs reaches the same O(m*n) bound with a different version.
 KEYWORDS
-  graph traversal, grid DFS, BFS, multi-source search, reverse flow, matrix
+  graph traversal, multi-source DFS, BFS, reverse flow, grid, flood fill
 WATCH OUT
-  - The check is < prevHeight, not <=. Equal heights must still flow.
-  - Do not climb downhill from the ocean. That is the forward direction.
-  - Deep recursion: a long snake-shaped path can overflow the call stack.
-  - heights[0].Length throws on an empty grid. Return early if rows == 0.
+  - Equal heights must pass. Using <= in "grid[row][col] < prevHeight"
+    wrongly blocks flat plateaus.
+  - Recursion can go m*n deep on a long uphill snake path, which can
+    overflow the stack. Use an explicit stack or BFS for big grids.
+  - heights[0].Length throws on an empty grid. Return an empty list first.
+  - Set vis before recursing. Otherwise equal neighbors loop forever.
 FOLLOW-UP AN INTERVIEWER WILL ASK
-  1. How do you avoid stack overflow on a huge grid?
-     -> Use iterative BFS with a queue, seeded by all border cells of one
-        ocean. The cost stays O(m*n) time and space, with no recursion depth
-        limit.
-  2. Can you use less memory?
-     -> Use one byte grid with bit 1 for Pacific and bit 2 for Atlantic, and
-        collect cells equal to 3. Still O(m*n), but one array instead of two.
-  3. What if there are k oceans, or water flows in 8 directions?
-     -> Run one reverse search per ocean, which is O(k*m*n). For 8 directions,
-        add the four diagonals to the neighbor list. The logic does not change.
+  1. Can you do it without recursion?
+     -> Use BFS with a queue seeded with all border cells of one ocean. Same
+        O(m*n) time and space, with no stack-overflow risk.
+  2. Why not run DFS from each cell forward?
+     -> Each search can touch the whole grid, so it is O((m*n)^2). Reverse
+        search shares work: one pass per ocean covers every cell.
+  3. Can you save memory?
+     -> Store bits in one int grid (1 = Pacific, 2 = Atlantic, 3 = both). This
+        is still O(m*n) space but uses one array instead of two.
 TRIGGER
-  When many start cells ask "can I reach target X?", search backward from X
-  once.
+  When you must find which cells can reach a boundary, search backward from
+  the boundary as many sources at once.
 ================================================================================
 */

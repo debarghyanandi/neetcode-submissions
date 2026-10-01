@@ -651,240 +651,501 @@ function randWord(len, alphabet){
 
 const PROBLEM = {
   title: 'Pacific Atlantic Water Flow',
-  note: 'the flow is run backwards - start at each ocean edge and climb to neighbours that are equal or higher. Every cell the climb reaches can drain to that ocean, and the answer is the cells both climbs reach',
+  note: 'both versions turn the question around: instead of asking, for every cell, whether water can reach an ocean, they start at each ocean and climb inland, only stepping to cells of equal or greater height. One flood marks every cell that can drain to the Pacific, a second marks every cell that can drain to the Atlantic, and the answer is the cells both floods reached. The only difference is whether the climb uses the call stack or a queue',
   inputs: [
-    {id:'grid', label:'heights (rows separated by ;)', value:'1,2,3,5; 3,2,4,4; 6,7,1,4', width:300}
+    {id:'heights', label:'heights rows (comma between rows, space between numbers)', value:'1 2 2,3 4 1,2 1 3', width:280}
   ],
   parse(raw){
-    const lines = String(raw.grid).split(/[;\n|]/).map(s => s.trim()).filter(s => s.length);
-    if (!lines.length) return {ok:false, msg:'Enter rows like 1,2,3; 4,5,6 - commas between cells, semicolons between rows.'};
-    if (lines.length < 2 || lines.length > 4) return {ok:false, msg:'Use 2 to 4 rows so the whole run stays watchable.'};
-    const grid = [];
-    for (const ln of lines){
-      const row = parseInts(ln);
-      if (!row) return {ok:false, msg:'Every row must be comma-separated numbers, e.g. 1,2,3'};
-      if (row.some(v => !Number.isInteger(v) || v < 0 || v > 9)) return {ok:false, msg:'Each height must be a whole number from 0 to 9.'};
-      grid.push(row);
+    const parts = String(raw.heights).split(',').map(s => s.trim()).filter(s => s.length);
+    if (parts.length < 2) return {ok:false, msg:'Give at least 2 rows, e.g. 1 2 2,3 4 1,2 1 3'};
+    if (parts.length > 3) return {ok:false, msg:'Keep it to 3 rows or fewer so the whole run stays watchable.'};
+    const rows = [];
+    for (const p of parts){
+      const nums = p.split(/\s+/).map(Number);
+      if (nums.some(n => !Number.isInteger(n) || n < 0 || n > 99)) return {ok:false, msg:'Each row is whole numbers from 0 to 99 separated by spaces, e.g. 1 2 2'};
+      rows.push(nums);
     }
-    const C = grid[0].length;
-    if (C < 2 || C > 4) return {ok:false, msg:'Use 2 to 4 columns per row.'};
-    if (grid.some(r => r.length !== C)) return {ok:false, msg:'Every row needs the same number of cells.'};
-    return {ok:true, value:{grid: grid}, normalized:{grid: grid.map(r => r.join(',')).join('; ')}};
+    const cols = rows[0].length;
+    for (const r of rows){
+      if (r.length !== cols) return {ok:false, msg:'Every row must be the same length - heights[0].Length is used as the width of all of them.'};
+    }
+    if (cols < 2 || cols > 3) return {ok:false, msg:'Rows must hold 2 or 3 numbers.'};
+    return {ok:true, value:{heights: rows}, normalized:{heights: rows.map(r => r.join(' ')).join(',')}};
   },
   shuffle(){
-    const R = 3, C = 3 + Math.floor(Math.random() * 2);
-    const g = [];
-    for (let r = 0; r < R; r++) g.push(randInts(C, 1, 7));
-    return {grid: g.map(r => r.join(',')).join('; ')};
+    const rows = [];
+    for (let r = 0; r < 3; r++) rows.push(randInts(3, 1, 5).join(' '));
+    return {heights: rows.join(',')};
   },
   solutions: [
   {
-    label: 'Reverse-flow DFS from both ocean borders',
-    badge: 'O(m * n) time · O(m * n) space · reverse-flow DFS from borders · optimal.cs',
-    blurb: 'Asking every cell "can I reach the sea?" repeats work. Instead each ocean floods inward: a DFS from every border cell climbs to any neighbour at least as high, marking what it reaches. A cell marked in both <code>pacific</code> and <code>atlantic</code> drains to both.',
+    label: 'Reverse flow DFS from ocean borders',
+    badge: 'O(m * n) time · O(m * n) space · reverse flow DFS from ocean borders · optimal.cs',
+    blurb: 'Water flows downhill, so if you run it backwards it climbs. Start a <code>Dfs</code> on every border cell and only step to neighbours at least as high: every cell this reaches can drain to that ocean. Each <code>vis</code> grid marks a cell at most once, so both floods are linear, and the answer is the cells true in both grids.',
+    shapeOverride: {skip: ['queue'], reason: 'this version has no queue - the frontier of each climb lives in the recursion, so the call stack is drawn instead.'},
     legend: [
-      {cls:'hot', text:'the cell the top frame just marked'},
-      {cls:'in-window', text:'a cell whose Dfs frame is still open below'},
-      {cls:'good', text:'marked in the ocean being flooded (or, at the end, in both)'},
-      {cls:'dim', text:'at the end: misses at least one ocean'},
-      {cls:'ghost', text:'false - not reached yet'}
+      {cls:'hot', text:'the cell the top frame is standing on'},
+      {cls:'good', text:'true in that grid - can drain to that ocean'},
+      {cls:'dim', text:'at the final scan: never reached by that ocean'}
     ],
     code: [
-      'public List<List<int>> PacificAtlantic(int[][] heights)',
-      '{',
-      '    int rows = heights.Length;',
-      '    int cols = heights[0].Length;',
-      '',
-      '    bool[,] pacific = new bool[rows, cols];',
-      '    bool[,] atlantic = new bool[rows, cols];',
-      '',
-      '    //Pacific',
-      '    for (int col = 0; col < cols; col++)',
+      '    public List<List<int>> PacificAtlantic(int[][] heights)',
       '    {',
-      '        Dfs(0, col, pacific, heights, int.MinValue);',
-      '    }',
+      '        int rows = heights.Length;',
+      '        int cols = heights[0].Length;',
       '',
-      '    for (int row = 0; row < rows; row++)',
-      '    {',
-      '        Dfs(row, 0, pacific, heights, int.MinValue);',
-      '    }',
+      '        bool[,] pacific = new bool[rows, cols];',
+      '        bool[,] atlantic = new bool[rows, cols];',
       '',
-      '    //Atlantic',
-      '    for (int col = 0; col < cols; col++)',
-      '    {',
-      '        Dfs(rows - 1, col, atlantic, heights, int.MinValue);',
-      '    }',
-      '',
-      '    for (int row = 0; row < rows; row++)',
-      '    {',
-      '        Dfs(row, cols - 1, atlantic, heights, int.MinValue);',
-      '    }',
-      '',
-      '',
-      '    List<List<int>> res = new List<List<int>>();',
-      '',
-      '    for (int row = 0; row < rows; row++)',
-      '    {',
+      '        //Pacific',
       '        for (int col = 0; col < cols; col++)',
       '        {',
-      '            if (pacific[row, col] && atlantic[row, col])',
+      '            Dfs(0, col, pacific, heights, int.MinValue);',
+      '        }',
+      '',
+      '        for (int row = 0; row < rows; row++)',
+      '        {',
+      '            Dfs(row, 0, pacific, heights, int.MinValue);',
+      '        }',
+      '',
+      '        //Atlantic',
+      '        for (int col = 0; col < cols; col++)',
+      '        {',
+      '            Dfs(rows - 1, col, atlantic, heights, int.MinValue);',
+      '        }',
+      '',
+      '        for (int row = 0; row < rows; row++)',
+      '        {',
+      '            Dfs(row, cols - 1, atlantic, heights, int.MinValue);',
+      '        }',
+      '',
+      '',
+      '        List<List<int>> res = new List<List<int>>();',
+      '',
+      '        for (int row = 0; row < rows; row++)',
+      '        {',
+      '            for (int col = 0; col < cols; col++)',
       '            {',
-      '                res.Add(new List<int> { row, col });',
+      '                if (pacific[row, col] && atlantic[row, col])',
+      '                {',
+      '                    res.Add(new List<int> { row, col });',
+      '                }',
       '            }',
       '        }',
+      '',
+      '        return res;',
+      '',
       '    }',
       '',
-      '    return res;',
-      '',
-      '}',
-      '',
-      'private void Dfs(int row, int col, bool[,] vis, int[][] grid, int prevHeight)',
-      '{',
-      '    int rows = grid.Length;',
-      '    int cols = grid[0].Length;',
-      '',
-      '    // Invalid',
-      '    if (row < 0 || row >= rows || col < 0 || col >= cols)',
+      '    private void Dfs(int row, int col, bool[,] vis, int[][] grid, int prevHeight)',
       '    {',
-      '        return;',
-      '    }',
+      '        int rows = grid.Length;',
+      '        int cols = grid[0].Length;',
       '',
-      '    // Already visited.',
-      '    if (vis[row, col])',
-      '        return;',
+      '        // Invalid',
+      '        if (row < 0 || row >= rows || col < 0 || col >= cols)',
+      '        {',
+      '            return;',
+      '        }',
       '',
-      '    // Reverse flow',
-      '    // From ocean, we can only move to equal or high cells',
-      '    if (grid[row][col] < prevHeight)',
-      '        return;',
+      '        // Already visited.',
+      '        if (vis[row, col])',
+      '            return;',
       '',
-      '    vis[row, col] = true;',
+      '        // Reverse flow',
+      '        // From ocean, we can only move to equal or high cells',
+      '        if (grid[row][col] < prevHeight)',
+      '            return;',
       '',
-      '    //prev height for next call',
-      '    int currentHeight = grid[row][col];',
+      '        vis[row, col] = true;',
       '',
-      '    Dfs(row - 1, col, vis, grid, currentHeight); //up',
-      '    Dfs(row + 1, col, vis, grid, currentHeight); //down',
-      '    Dfs(row, col - 1, vis, grid, currentHeight); //left',
-      '    Dfs(row, col + 1, vis, grid, currentHeight); //right-',
-      '}'
+      '        //prev height for next call',
+      '        int currentHeight = grid[row][col];',
+      '',
+      '        Dfs(row - 1, col, vis, grid, currentHeight); //up',
+      '        Dfs(row + 1, col, vis, grid, currentHeight); //down',
+      '        Dfs(row, col - 1, vis, grid, currentHeight); //left',
+      '        Dfs(row, col + 1, vis, grid, currentHeight); //right-',
+      '    }'
     ],
     simulate(input){
-      const H = input.grid, R = H.length, C = H[0].length;
-      const pac = Array.from({length: R}, () => new Array(C).fill(false));
-      const atl = Array.from({length: R}, () => new Array(C).fill(false));
-      const frames = [], steps = [], res = [];
-      let ocean = null, loopTxt = '-', calls = 0, visits = 0, maxD = 0, skipped = 0, final = false;
-      let pending = [], popped = [];
+      const H = input.heights, R = H.length, C = H[0].length;
+      const pac = H.map(row => row.map(() => false));
+      const atl = H.map(row => row.map(() => false));
+      const steps = [], frames = [], res = [];
+      let phase = 'setup', calls = 0, maxD = 0, pending = [];
       const rowLabels = H.map((_, r) => 'r' + r);
       const colLabels = H[0].map((_, c) => 'c' + c);
-      const fmtPrev = p => (p === null ? 'int.MinValue' : String(p));
+      const pv = p => p === null ? 'MIN' : String(p);
+      const count = v => v.reduce((s, row) => s + row.filter(Boolean).length, 0);
+      const uniq = a => Array.from(new Set(a)).sort((x, y) => x - y);
+      const dirs = [
+        {dr:-1, dc:0, name:'up', line:74},
+        {dr:1, dc:0, name:'down', line:75},
+        {dr:0, dc:-1, name:'left', line:76},
+        {dr:0, dc:1, name:'right', line:77}
+      ];
 
-      const flush = () => {
-        let s = '';
-        if (pending.length) s += '<em>Rejected since the last step</em> (each of these opened a frame and returned at a guard at once): ' + pending.join('; ') + '. ';
-        if (popped.length) s += '<em>Finished all four directions and popped:</em> ' + popped.join(', ') + '. ';
-        pending = []; popped = [];
-        return s;
-      };
+      const gp = (title, vis, active, hot, fresh) => pGrid(title, H.map((row, r) => row.map((h, c) => {
+        let cls = '';
+        if (active && hot && hot[0] === r && hot[1] === c) cls = 'hot';
+        else if (vis[r][c]) cls = 'good';
+        else if (phase === 'scan' || phase === 'done') cls = 'dim';
+        return {v: h, cls: cls, sub: vis[r][c] ? 'vis' : '', fresh: active && fresh === r + ',' + c};
+      })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.85});
 
-      const panels = (cur, fresh) => {
-        const onStack = (r, c) => frames.some(f => f.r === r && f.c === c);
-        const curVis = ocean === 'pacific' ? pac : (ocean === 'atlantic' ? atl : null);
-        const boolGrid = (g, name) => g.map((row, r) => row.map((v, c) => ({
-          v: v ? 'T' : 'F',
-          cls: (cur && cur[0] === r && cur[1] === c && ocean === name) ? 'hot' : (v ? 'good' : 'ghost'),
-          fresh: ocean === name && fresh === r + ',' + c
-        })));
-        return [
-          pGrid('heights - sub shows P / A once reached', H.map((row, r) => row.map((v, c) => {
-            let cls = '';
-            if (final) cls = (pac[r][c] && atl[r][c]) ? 'good' : 'dim';
-            else if (cur && cur[0] === r && cur[1] === c) cls = 'hot';
-            else if (onStack(r, c)) cls = 'in-window';
-            else if (curVis && curVis[r][c]) cls = 'good';
-            return {v: v, cls: cls, sub: (pac[r][c] ? 'P' : '') + (atl[r][c] ? 'A' : ''), fresh: fresh === r + ',' + c};
-          })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.9}),
-          pGrid('pacific[,]', boolGrid(pac, 'pacific'), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.75}),
-          pGrid('atlantic[,]', boolGrid(atl, 'atlantic'), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.75}),
+      const panels = (hot, fresh, popTop) => {
+        const top = frames.length ? frames[frames.length - 1] : null;
+        const out = [
+          gp('pacific[,] - can drain to the top or left edge', pac, phase === 'pacific', hot, fresh),
+          gp('atlantic[,] - can drain to the bottom or right edge', atl, phase === 'atlantic', hot, fresh),
           pStack('call stack', [{
-            label: 'Dfs frames',
+            label: 'Dfs(row, col, prevHeight)',
             mode: 'stack',
             items: frames.map((f, k) => ({
-              text: 'Dfs(' + f.r + ', ' + f.c + ')',
-              sub: 'prev ' + fmtPrev(f.prev) + ' · ' + f.note,
+              text: 'Dfs(' + f.r + ', ' + f.c + ', ' + pv(f.p) + ')',
+              sub: f.note,
               cls: k === frames.length - 1 ? 'hot' : '',
-              fresh: k === frames.length - 1 && !!fresh
+              fresh: !popTop && k === frames.length - 1 && fresh === f.r + ',' + f.c,
+              popped: popTop && k === frames.length - 1
             })),
-            empty: 'no Dfs frames open',
+            empty: 'no frames - Dfs is not running',
             foot: 'PacificAtlantic',
             top: 'running now'
           }]),
-          pSlots('res', res.length ? res.map(p => ({text: '[' + p[0] + ',' + p[1] + ']', cls: 'good'})) : [{text: ''}]),
           pPills('state', [
-            {k:'ocean', v: ocean || '-', cls: 'hot'},
-            {k:'border loop', v: loopTxt},
+            {k:'phase', v: phase},
+            {k:'prevHeight (top)', v: top ? pv(top.p) : '-'},
             {k:'Dfs calls', v: calls},
-            {k:'cells marked', v: visits},
-            {k:'rejected', v: skipped},
-            {k:'deepest', v: maxD}
+            {k:'pacific true', v: count(pac)},
+            {k:'atlantic true', v: count(atl)},
+            {k:'deepest stack', v: maxD}
           ])
         ];
+        if (phase === 'scan' || phase === 'done') out.push(pSlots('res', res.length ? res.map(p => ({text: '[' + p[0] + ',' + p[1] + ']', cls: 'good'})) : [{text: ''}]));
+        return out;
       };
 
-      const dirs = [[-1, 0, 'up', 74], [1, 0, 'down', 75], [0, -1, 'left', 76], [0, 1, 'right', 77]];
+      const flush = () => {
+        const p = pending;
+        pending = [];
+        return {lines: p.reduce((a, x) => a.concat([x.line, x.guard]), []), txt: p.length ? 'Calls that returned at once: ' + p.map(x => x.txt).join('; ') + '. ' : ''};
+      };
 
-      const dfs = (r, c, vis, prev, via, dir) => {
+      const call = (r, c, prev, vis, line, who, parent) => {
         calls++;
-        const tag = dir + ' (' + r + ',' + c + ')';
-        if (r < 0 || r >= R || c < 0 || c >= C){ skipped++; pending.push(tag + ' is off the grid'); return; }
-        if (vis[r][c]){ skipped++; pending.push(tag + ' is already in ' + ocean); return; }
-        if (prev !== null && H[r][c] < prev){ skipped++; pending.push(tag + ' height ' + H[r][c] + ' &lt; ' + prev); return; }
+        const ocean = vis === pac ? 'pacific' : 'atlantic';
+        const Ocean = vis === pac ? 'Pacific' : 'Atlantic';
+        const tag = '<b>' + who + '</b> <code>Dfs(' + r + ', ' + c + ', ' + pv(prev) + ')</code>';
+        if (r < 0 || r >= R || c < 0 || c >= C){
+          pending.push({line: line, guard: 57, txt: tag + ' is off the board, so the bounds test returns'});
+          return;
+        }
+        if (vis[r][c]){
+          pending.push({line: line, guard: 62, txt: tag + ' lands on a cell already true in <code>' + ocean + '</code>, so it returns'});
+          return;
+        }
+        if (prev !== null && H[r][c] < prev){
+          pending.push({line: line, guard: 67, txt: tag + ' finds height ' + H[r][c] + ' &lt; ' + prev + ' - water there could not flow uphill into the cell that called it, so it returns'});
+          return;
+        }
         vis[r][c] = true;
-        visits++;
-        frames.push({r: r, c: c, prev: prev, note: 'h = ' + H[r][c] + ', just marked'});
+        frames.push({r: r, c: c, p: prev, note: 'just marked'});
         maxD = Math.max(maxD, frames.length);
-        const pre = flush();
-        const why = prev === null
-          ? 'it was called straight from the border loop with <code>prevHeight = int.MinValue</code>, so the height test cannot fail - a border cell touches the ' + ocean + ' directly.'
-          : 'its height <b>' + H[r][c] + '</b> is &gt;= <code>prevHeight</code> = <b>' + prev + '</b> (the neighbour that called it), so water poured here would run ' + (H[r][c] === prev ? 'level' : 'downhill') + ' into that neighbour and on to the ' + ocean + '.';
-        steps.push({lines: [via, 55, 61, 66, 69, 72], msg: pre + '<b>Dfs(' + r + ', ' + c + ')</b> gets past all three guards: it is on the grid, <code>' + ocean + '[' + r + ', ' + c + ']</code> was false, and ' + why + ' So it is marked true for good, and <code>currentHeight = ' + H[r][c] + '</code> becomes the floor its four neighbours must reach. ' + frames.length + ' frame(s) open.', panels: panels([r, c], r + ',' + c)});
+        const h = H[r][c];
+        const fl = flush();
+        const why = parent === null
+          ? 'it is a border cell touching the ' + Ocean + ', and its <code>prevHeight</code> is <code>int.MinValue</code>, so the height test cannot fail - every edge cell drains straight into the ocean it touches'
+          : 'height <b>' + h + '</b> &gt;= prevHeight <b>' + prev + '</b>, so water could run from here down (or level) into (' + parent[0] + ', ' + parent[1] + '), which already drains to the ' + Ocean;
+        steps.push({lines: uniq(fl.lines.concat([line, 49, 55, 61, 66, 69, 72])), msg: fl.txt + tag + ' passes all three guards: in bounds, not yet in <code>' + ocean + '</code>, and ' + why + '. Line 69 marks it <em>before</em> any neighbour is called, so none of the four calls can loop back here. <code>currentHeight</code> = ' + h + ' becomes the floor every neighbour has to reach.', panels: panels([r, c], r + ',' + c, false)});
         const f = frames[frames.length - 1];
         for (const d of dirs){
-          f.note = 'h = ' + H[r][c] + ', waiting on ' + d[2];
-          dfs(r + d[0], c + d[1], vis, H[r][c], d[3], d[2]);
+          f.note = 'in ' + d.name + ' call';
+          call(r + d.dr, c + d.dc, h, vis, d.line, d.name + ' of (' + r + ', ' + c + ')', [r, c]);
         }
+        f.note = 'all four calls done';
+        const fl2 = flush();
+        steps.push({lines: uniq(fl2.lines.concat([78])), msg: fl2.txt + '<b>Dfs(' + r + ', ' + c + ')</b> has made its four calls (up, down, left, right), so it reaches the closing brace and its frame pops. It returns nothing; all it leaves behind is the marks in <code>' + ocean + '</code>.', panels: panels([r, c], null, true)});
         frames.pop();
-        popped.push('Dfs(' + r + ', ' + c + ')');
       };
 
-      steps.push({lines: [3, 4, 6, 7], msg: 'The grid is <b>' + R + '</b> x <b>' + C + '</b>. Two boolean matrices start all false: <code>pacific[r, c]</code> will mean "water from here can reach the Pacific" (top and left edges), <code>atlantic[r, c]</code> the same for the Atlantic (bottom and right edges). Water flows to a neighbour that is equal or lower, so the code reverses it: from the ocean, climb only to neighbours that are equal or <em>higher</em>.', panels: panels(null, null)});
+      steps.push({lines:[3,4,6,7], msg:'The board is <b>' + R + '</b> x <b>' + C + '</b>. Two all-false grids are made: <code>pacific</code> will hold every cell that can drain to the top or left edge, and <code>atlantic</code> every cell that can drain to the bottom or right edge. Testing each cell on its own would mean a separate search per cell. Instead the code starts at the oceans and climbs inland, so each grid is filled by a single flood.', panels: panels(null, null, false)});
 
-      const loops = [
-        {ocean: 'pacific', vis: pac, line: 12, hdr: [9, 10, 12], label: 'top row', cells: H[0].map((_, c) => [0, c]),
-         msg: '<b>Pacific, top row.</b> Every cell in row 0 touches the Pacific, so each gets a <code>Dfs</code> with <code>prevHeight = int.MinValue</code>. Each DFS then climbs inward as far as the heights allow. One search per ocean replaces one search per cell - which is what brings the cost down to O(m * n).'},
-        {ocean: 'pacific', vis: pac, line: 17, hdr: [15, 17], label: 'left column', cells: H.map((_, r) => [r, 0]),
-         msg: '<b>Pacific, left column.</b> The same ocean touches the left edge too. Many of these cells were probably already reached from the top row - the "already visited" guard rejects those at once, so no cell is ever explored twice for the same ocean.'},
-        {ocean: 'atlantic', vis: atl, line: 23, hdr: [20, 21, 23], label: 'bottom row', cells: H[0].map((_, c) => [R - 1, c]),
-         msg: '<b>Atlantic, bottom row.</b> The same <code>Dfs</code> runs again, but now it is handed <code>atlantic</code> as <code>vis</code>. The Pacific marks are left alone - the two floods are completely separate and are only compared at the end.'},
-        {ocean: 'atlantic', vis: atl, line: 28, hdr: [26, 28], label: 'right column', cells: H.map((_, r) => [r, C - 1]),
-         msg: '<b>Atlantic, right column.</b> The last edge. Cells already reached from the bottom row are rejected by the visited guard.'}
-      ];
+      phase = 'pacific';
+      for (let col = 0; col < C; col++) call(0, col, null, pac, 12, 'seed from line 12', null);
+      for (let row = 0; row < R; row++) call(row, 0, null, pac, 17, 'seed from line 17', null);
+      let fl = flush();
+      steps.push({lines: uniq(fl.lines.concat([18])), msg: fl.txt + 'Both Pacific loops are finished. <b>' + count(pac) + '</b> cell(s) of <code>pacific</code> are true: exactly the cells from which water can run downhill or level to the top or left edge. Seeds that landed on already-marked cells cost one call each and nothing more.', panels: panels(null, null, false)});
 
-      for (const L of loops){
-        ocean = L.ocean;
-        loopTxt = L.label;
-        const pre = flush();
-        steps.push({lines: L.hdr, msg: pre + L.msg, panels: panels(null, null)});
-        for (const cell of L.cells) dfs(cell[0], cell[1], L.vis, null, L.line, 'border');
+      phase = 'atlantic';
+      for (let col = 0; col < C; col++) call(R - 1, col, null, atl, 23, 'seed from line 23', null);
+      for (let row = 0; row < R; row++) call(row, C - 1, null, atl, 28, 'seed from line 28', null);
+      fl = flush();
+      steps.push({lines: uniq(fl.lines.concat([29])), msg: fl.txt + 'Both Atlantic loops are finished. <b>' + count(atl) + '</b> cell(s) of <code>atlantic</code> are true. The same <code>Dfs</code> did this work, just handed the other grid as <code>vis</code>. The method never needs to know which ocean it is filling.', panels: panels(null, null, false)});
+
+      phase = 'scan';
+      for (let row = 0; row < R; row++){
+        for (let col = 0; col < C; col++){
+          if (pac[row][col] && atl[row][col]) res.push([row, col]);
+        }
       }
+      steps.push({lines:[32,34,36,38,40], msg:'The final scan visits every cell and keeps it only if <code>pacific[row, col] && atlantic[row, col]</code>. A cell reached by both floods has a downhill path to each ocean. <b>' + res.length + '</b> cell(s) qualify and are added to <code>res</code> in row-major order.', panels: panels(null, null, false)});
+      phase = 'done';
+      steps.push({lines:[45], msg:'<code>res</code> is returned with ' + res.length + ' cell(s). <code>Dfs</code> was called ' + calls + ' time(s): at most 4 per marked cell plus one per seed, so the run is O(m * n). The stack peaked at ' + maxD + ' frame(s). On a long rising snake that depth could reach m * n, which is where the O(m * n) space comes from.', panels: panels(null, null, false)});
+      return steps;
+    }
+  },
+  {
+    label: 'Reverse flow BFS from ocean borders',
+    badge: 'O(m * n) time · O(m * n) space · reverse flow BFS from ocean borders · optimal-variant.cs',
+    blurb: 'Same reversed climb, but each ocean gets a queue seeded with all of its border cells at once. Then each queue spreads inland ring by ring, only to neighbours at least as high as the cell being expanded. Cells are marked when they are enqueued, so each joins a queue at most once. The answer is the cells marked by both floods.',
+    shapeOverride: {skip: ['call-stack'], reason: 'nothing recurses here - Bfs is called once per ocean and its frontier is held explicitly in the queue.'},
+    legend: [
+      {cls:'hot', text:'the cell just dequeued'},
+      {cls:'good', text:'true in that grid - marked when it was enqueued'},
+      {cls:'dim', text:'at the final scan: never reached by that ocean'}
+    ],
+    code: [
+      '    public List<List<int>> PacificAtlantic(int[][] heights)',
+      '    {',
+      '        int rows = heights.Length;',
+      '        int cols = heights[0].Length;',
+      '',
+      '        // Cells reachable from each ocean',
+      '        bool[,] pacific = new bool[rows, cols];',
+      '        bool[,] atlantic = new bool[rows, cols];',
+      '',
+      '        Queue<int[]> pacificQueue = new Queue<int[]>();',
+      '        Queue<int[]> atlanticQueue = new Queue<int[]>();',
+      '',
+      '        // Pacific touches top row',
+      '        // Atlantic touches bottom row',
+      '        for (int col = 0; col < cols; col++)',
+      '        {',
+      '            pacificQueue.Enqueue(new int[] { 0, col });',
+      '            pacific[0, col] = true;',
+      '',
+      '            atlanticQueue.Enqueue(new int[] { rows - 1, col });',
+      '            atlantic[rows - 1, col] = true;',
+      '        }',
+      '',
+      '        // Pacific touches left column',
+      '        // Atlantic touches right column',
+      '        for (int row = 0; row < rows; row++)',
+      '        {',
+      '            pacificQueue.Enqueue(new int[] { row, 0 });',
+      '            pacific[row, 0] = true;',
+      '',
+      '            atlanticQueue.Enqueue(new int[] { row, cols - 1 });',
+      '            atlantic[row, cols - 1] = true;',
+      '        }',
+      '',
+      '        // Reverse BFS from both oceans',
+      '        Bfs(pacificQueue, pacific, heights);',
+      '        Bfs(atlanticQueue, atlantic, heights);',
+      '',
+      '        List<List<int>> result = new List<List<int>>();',
+      '',
+      '        // A cell is valid if it can reach both oceans',
+      '        for (int row = 0; row < rows; row++)',
+      '        {',
+      '            for (int col = 0; col < cols; col++)',
+      '            {',
+      '                if (pacific[row, col] && atlantic[row, col])',
+      '                {',
+      '                    result.Add(new List<int> { row, col });',
+      '                }',
+      '            }',
+      '        }',
+      '',
+      '        return result;',
+      '    }',
+      '',
+      '    private void Bfs(',
+      '        Queue<int[]> queue,',
+      '        bool[,] visited,',
+      '        int[][] heights)',
+      '    {',
+      '        int rows = heights.Length;',
+      '        int cols = heights[0].Length;',
+      '',
+      '        while (queue.Count > 0)',
+      '        {',
+      '            int[] current = queue.Dequeue();',
+      '',
+      '            int row = current[0];',
+      '            int col = current[1];',
+      '',
+      '            foreach (int[] direction in directions)',
+      '            {',
+      '                int nRow = row + direction[0];',
+      '                int nCol = col + direction[1];',
+      '',
+      '                // Invalid position',
+      '                if (nRow < 0 || nRow >= rows ||',
+      '                    nCol < 0 || nCol >= cols)',
+      '                {',
+      '                    continue;',
+      '                }',
+      '',
+      '                // Already reachable from this ocean',
+      '                if (visited[nRow, nCol])',
+      '                    continue;',
+      '',
+      '                // Reverse water flow:',
+      '                // From ocean, move only to equal or higher cells',
+      '                if (heights[nRow][nCol] < heights[row][col])',
+      '                    continue;',
+      '',
+      '                visited[nRow, nCol] = true;',
+      '                queue.Enqueue(new int[] { nRow, nCol });',
+      '            }',
+      '        }',
+      '    }'
+    ],
+    simulate(input){
+      const H = input.heights, R = H.length, C = H[0].length;
+      const pac = H.map(row => row.map(() => false));
+      const atl = H.map(row => row.map(() => false));
+      const dirs = [
+        {dr:1, dc:0, name:'down'},
+        {dr:-1, dc:0, name:'up'},
+        {dr:0, dc:1, name:'right'},
+        {dr:0, dc:-1, name:'left'}
+      ];
+      const steps = [], res = [];
+      const pq = [], aq = [];
+      let phase = 'setup', cur = null, deq = 0, enq = 0;
+      const rowLabels = H.map((_, r) => 'r' + r);
+      const colLabels = H[0].map((_, c) => 'c' + c);
+      const count = v => v.reduce((s, row) => s + row.filter(Boolean).length, 0);
+      const uniq = a => Array.from(new Set(a)).sort((x, y) => x - y);
 
-      const pre = flush();
-      ocean = null; loopTxt = '-'; final = true;
-      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (pac[r][c] && atl[r][c]) res.push([r, c]);
-      steps.push({lines: [32, 34, 36, 38, 40], msg: pre + 'Both floods are done and the call stack is empty. Now one plain pass over every cell: a cell goes into <code>res</code> only when <code>pacific[row, col] && atlantic[row, col]</code> are both true, meaning both climbs reached it, so water from it can drain to both oceans. That gives <b>' + res.length + '</b> cell(s), added in row-major order.', panels: panels(null, null)});
+      const gp = (title, vis, active, fresh) => pGrid(title, H.map((row, r) => row.map((h, c) => {
+        let cls = '';
+        if (active && cur && cur[0] === r && cur[1] === c) cls = 'hot';
+        else if (vis[r][c]) cls = 'good';
+        else if (phase === 'scan' || phase === 'done') cls = 'dim';
+        return {v: h, cls: cls, sub: vis[r][c] ? 'vis' : '', fresh: !!(fresh && fresh.has(r + ',' + c))};
+      })), {rowLabels: rowLabels, colLabels: colLabels, scale: 0.85});
 
-      steps.push({lines: [45], msg: '<code>res</code> is returned with <b>' + res.length + '</b> coordinate pair(s). <code>Dfs</code> was called ' + calls + ' time(s): ' + visits + ' of those marked a cell, and ' + skipped + ' returned at a guard straight away. Each cell is marked at most once per ocean and makes four calls when it is, so the total work is O(m * n). The two matrices and a recursion up to ' + maxD + ' frame(s) deep are the O(m * n) space.', panels: panels(null, null)});
+      const qb = (label, q, nNew, popped) => ({
+        label: label,
+        mode: 'queue',
+        items: (popped ? [{text: '(' + popped[0] + ', ' + popped[1] + ')', sub: 'dequeued', cls: 'hot', popped: true}] : []).concat(q.map((x, k) => ({
+          text: '(' + x[0] + ', ' + x[1] + ')',
+          sub: k === 0 ? 'front' : '',
+          cls: '',
+          fresh: k >= q.length - nNew
+        }))),
+        empty: 'empty',
+        top: 'front - dequeued next',
+        foot: 'back'
+      });
+
+      const panels = (o) => {
+        o = o || {};
+        const out = [
+          gp('pacific[,] - can drain to the top or left edge', pac, phase === 'pacific', o.freshP),
+          gp('atlantic[,] - can drain to the bottom or right edge', atl, phase === 'atlantic', o.freshA),
+          pStack('queues of [row, col] - front at the top', [
+            qb('pacificQueue', pq, o.newP || 0, phase === 'pacific' ? o.popped : null),
+            qb('atlanticQueue', aq, o.newA || 0, phase === 'atlantic' ? o.popped : null)
+          ]),
+          pPills('state', [
+            {k:'phase', v: phase},
+            {k:'dequeued', v: cur ? cur[0] + ',' + cur[1] : '-'},
+            {k:'pacificQueue', v: pq.length},
+            {k:'atlanticQueue', v: aq.length},
+            {k:'enqueues', v: enq},
+            {k:'dequeues', v: deq}
+          ])
+        ];
+        if (phase === 'scan' || phase === 'done') out.push(pSlots('result', res.length ? res.map(p => ({text: '[' + p[0] + ',' + p[1] + ']', cls: 'good'})) : [{text: ''}]));
+        return out;
+      };
+
+      steps.push({lines:[3,4,7,8,10,11], msg:'The board is <b>' + R + '</b> x <b>' + C + '</b>. Each ocean gets a <code>bool</code> grid and its own queue. The plan runs water backwards: start from every cell touching an ocean and spread inland, only uphill or level, because that is the reverse of water flowing downhill into the sea. The <code>directions</code> field lists down, up, right, left, and every expansion tries them in that order.', panels: panels()});
+
+      let fp = new Set(), fa = new Set();
+      for (let col = 0; col < C; col++){
+        pq.push([0, col]); pac[0][col] = true; fp.add('0,' + col);
+        aq.push([R - 1, col]); atl[R - 1][col] = true; fa.add((R - 1) + ',' + col);
+        enq += 2;
+      }
+      steps.push({lines:[15,17,18,20,21], msg:'The first loop walks the columns. Every top-row cell is enqueued into <code>pacificQueue</code> and marked, and every bottom-row cell into <code>atlanticQueue</code> and marked. Marking at enqueue time means a border cell already counts as reached: it drains straight into its ocean.', panels: panels({freshP: fp, freshA: fa, newP: C, newA: C})});
+
+      fp = new Set(); fa = new Set();
+      for (let row = 0; row < R; row++){
+        pq.push([row, 0]); pac[row][0] = true; fp.add(row + ',0');
+        aq.push([row, C - 1]); atl[row][C - 1] = true; fa.add(row + ',' + (C - 1));
+        enq += 2;
+      }
+      steps.push({lines:[26,28,29,31,32], msg:'The second loop walks the rows: left-column cells join the Pacific queue, right-column cells the Atlantic. Nothing checks <code>pacific</code> before these enqueues, so the corner <b>(0, 0)</b> is now in <code>pacificQueue</code> twice, and <b>(' + (R - 1) + ', ' + (C - 1) + ')</b> is in <code>atlanticQueue</code> twice. That is harmless: the second copy will find every neighbour already decided.', panels: panels({freshP: fp, freshA: fa, newP: R, newA: R})});
+
+      const runBfs = (q, vis, name, callLine) => {
+        phase = name;
+        cur = null;
+        const ocean = name === 'pacific' ? 'Pacific' : 'Atlantic';
+        steps.push({lines:[callLine,56,61,62,64], msg:'Line ' + callLine + ' calls <code>Bfs</code> with <code>' + name + 'Queue</code> and the <code>' + name + '</code> grid. All ' + q.length + ' ' + ocean + ' border entries are in the queue together, so the flood spreads from the whole coastline at once rather than from one source.', panels: panels()});
+        const seen = new Set();
+        while (q.length){
+          const front = q.shift();
+          deq++;
+          cur = front;
+          const r = front[0], c = front[1], h = H[r][c];
+          const dup = seen.has(r + ',' + c);
+          seen.add(r + ',' + c);
+          const parts = [];
+          const lines = [64,66,68,69,71,73,74];
+          const fresh = new Set();
+          let added = 0;
+          for (const d of dirs){
+            const nr = r + d.dr, nc = c + d.dc;
+            if (nr < 0 || nr >= R || nc < 0 || nc >= C){
+              parts.push(d.name + ' (' + nr + ', ' + nc + ') is off the board');
+              lines.push(77, 78, 80);
+              continue;
+            }
+            if (vis[nr][nc]){
+              parts.push(d.name + ' (' + nr + ', ' + nc + ') is already true');
+              lines.push(84, 85);
+              continue;
+            }
+            if (H[nr][nc] < h){
+              parts.push(d.name + ' (' + nr + ', ' + nc + ') has height ' + H[nr][nc] + ' &lt; ' + h + ', so water there cannot flow uphill into here');
+              lines.push(89, 90);
+              continue;
+            }
+            vis[nr][nc] = true;
+            q.push([nr, nc]);
+            enq++;
+            added++;
+            fresh.add(nr + ',' + nc);
+            parts.push(d.name + ' (' + nr + ', ' + nc + ') has height ' + H[nr][nc] + ' &gt;= ' + h + ', so it is <b>marked and enqueued</b>');
+            lines.push(89, 92, 93);
+          }
+          const tail = dup
+            ? ' This was the duplicate corner entry: its first copy already settled every neighbour, so this pass changes nothing.'
+            : (added ? ' Each new cell was marked <em>before</em> it was enqueued, so a later cell that sees it will refuse it and it cannot join the queue twice.' : ' Nothing new joined the queue from here.');
+          steps.push({lines: uniq(lines), msg:'<code>Dequeue</code> takes <b>(' + r + ', ' + c + ')</b>, height <b>' + h + '</b>. The <code>foreach</code> tries the four directions in order: ' + parts.join('; ') + '.' + tail, panels: panels(name === 'pacific' ? {freshP: fresh, newP: added, popped: front} : {freshA: fresh, newA: added, popped: front})});
+        }
+        cur = null;
+        steps.push({lines:[64,96], msg:'<code>' + name + 'Queue</code> is empty, so the <code>while</code> ends and <code>Bfs</code> returns. <b>' + count(vis) + '</b> cell(s) of <code>' + name + '</code> are true: every cell with a downhill-or-level path to the ' + ocean + '.', panels: panels()});
+      };
+
+      runBfs(pq, pac, 'pacific', 36);
+      runBfs(aq, atl, 'atlantic', 37);
+
+      phase = 'scan';
+      for (let row = 0; row < R; row++){
+        for (let col = 0; col < C; col++){
+          if (pac[row][col] && atl[row][col]) res.push([row, col]);
+        }
+      }
+      steps.push({lines:[39,42,44,46,48], msg:'The scan keeps a cell only when both grids are true for it. Being reached by both reversed floods means water starting there can run downhill to each ocean. <b>' + res.length + '</b> cell(s) qualify.', panels: panels()});
+      phase = 'done';
+      steps.push({lines:[53], msg:'<code>result</code> is returned with ' + res.length + ' cell(s). There were ' + enq + ' enqueues and ' + deq + ' dequeues: one per border seed (including the two duplicate corners) plus at most one per inland cell per ocean, which keeps the run O(m * n). Each queue can hold O(m * n) entries in the worst case.', panels: panels()});
       return steps;
     }
   }]

@@ -113,38 +113,37 @@ public class Solution
 
 /*
 ================================================================================
- PROBLEM : You get a grid of heights. The Pacific touches the top and left
-           edges. The Atlantic touches the bottom and right edges. Water flows
-           to a neighbour of equal or lower height. Return every [row, col]
-           that can reach both oceans. Example: [[1,2],[3,4]] ->
-           [[0,1],[1,0],[1,1]].
+ PROBLEM : Given an m x n grid heights, water flows from a cell to a
+           4-neighbor whose height is equal or lower. The Pacific touches the
+           top and left edges. The Atlantic touches the bottom and right
+           edges. Return [row, col] of every cell that can reach both oceans:
+           [[1,2],[4,3]] -> [[0,1],[1,0],[1,1]].
  PATTERN : Multi-source BFS from borders (reverse flow)
 ================================================================================
 IDEA
-  Do not start a search from each cell. Start from the oceans and walk uphill.
-  Each ocean's border cells go into pacificQueue or atlanticQueue first. Bfs
-  then moves to a neighbour only if it is equal or higher. It marks reached
-  cells in pacific or atlantic. A cell is in the answer if both flags are
-  true.
-  This is correct because "water flows down from X to the sea" is the same
-  path as "from the sea, climb up to X" read backwards. This variant uses an
-  iterative BFS with queues, so it has no deep recursion.
+  Do not start from every cell. Start from each ocean and climb uphill.
+  pacificQueue holds the top row and left column. atlanticQueue holds the
+  bottom row and right column. Bfs moves only to neighbors with height >=
+  the current cell, and marks them in pacific or atlantic. A reverse step
+  uphill is exactly a forward flow downhill, so a marked cell can drain to
+  that ocean. The answer is every cell marked in both grids. This variant
+  uses iterative BFS with queues, so deep recursion is not a risk.
 EXAMPLE
-  heights = [[1,2],[3,4]]. Pacific seeds (0,0),(0,1),(1,0); BFS adds (1,1).
-  Atlantic seeds (1,0),(1,1),(0,1); (0,0)=1 is lower than 2 and 3, skipped.
-  Both flags: (0,1),(1,0),(1,1). The low corner (0,0) only reaches Pacific.
-  Answer: [[0,1],[1,0],[1,1]] (row-major order from the final scan).
+  heights = [[1,2,3],[8,9,4],[7,6,5]] (a rising spiral)
+  pacific: from 2 -> 9, and 3 -> 4 -> 5 -> 6, so all 9 cells are marked.
+  atlantic: from 6 -> 9 and 7 -> 8, but 8 -> 1 and 3 -> 2 go down. So (0,0)
+  and (0,1) stay false. Result: [0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2].
 COMPLEXITY
-  Time  O(m * n)  each cell is set visited once per ocean, so it is enqueued
-                  once each
-  Space O(m * n)  two bool grids plus queues that hold at most all cells
+  Time  O(m * n)  each cell is enqueued at most once per ocean, and has 4
+                  neighbors.
+  Space O(m * n)  two bool grids plus queues that can hold up to m*n cells.
 WATCH OUT
-  - Flip the height test and you get the wrong answer. In reverse BFS, skip
-    when heights[nRow][nCol] < heights[row][col]. Equal heights must pass.
-  - Set visited when you enqueue, not when you dequeue. Otherwise one cell
-    can enter the queue many times.
-  - An empty heights throws on heights[0].Length. Guard it if asked.
-  - Corners are enqueued twice (top row loop + left column loop). This is
-    harmless here, but it is extra work.
+  - The check is heights[nRow][nCol] < heights[row][col] -> skip. If you
+    write <= instead, plateaus of equal height break and cells are missed.
+  - Mark visited when you enqueue, not when you dequeue. Otherwise the
+    same cell enters the queue many times and the time blows up.
+  - heights[0].Length throws on an empty grid. Guard rows == 0 if needed.
+  - Corner cells are seeded twice by the two loops. This is harmless, but
+    it shows the seeds are not deduplicated.
 ================================================================================
 */
