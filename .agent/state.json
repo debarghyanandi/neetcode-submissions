@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-01T15:32:02.485Z",
+  "updatedAt": "2026-10-01T15:39:26.549Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -5122,14 +5122,64 @@
     },
     "single-number": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "bc0e6115e0e13ac3ed86a5d16a4f9dfa53b36f7f38b43bab6001ca35e7dbf6d2": "optimal.cs"
+      },
+      "fingerprints": {
+        "bc0e6115e0e13ac3ed86a5d16a4f9dfa53b36f7f38b43bab6001ca35e7dbf6d2": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "4fb0adcc75ff"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"4fb0adcc75ff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"XOR bit manipulation\",\"approachKey\":\"xor-cancel-pairs\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "XOR bit manipulation",
+          "approachKey": "xor-cancel-pairs",
+          "correct": true,
+          "structures": [
+            "array",
+            "bitmask"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"4fb0adcc75ff\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"XOR bit manipulation\",\"approachKey\":\"xor-cancel-pairs\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "4fb0adcc75ff"
+        },
+        "structures": [
+          "array",
+          "bitmask"
+        ],
+        "builtAt": "2026-10-01T15:39:26.241Z"
+      }
     },
     "sliding-window-maximum": {
       "topic": "Data Structures & Algorithms",
