@@ -35,7 +35,7 @@ public class Solution
         //mark this node visisted
         vis[row, col] = 1;
 
-        //visit all 6 neighbours
+        //visit all 4 neighbours
         for (int delRow = -1; delRow <= 1; delRow++)
         {
             for (int delCol = -1; delCol <= 1; delCol++)
