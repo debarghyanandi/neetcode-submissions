@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Exercise the generated page's script, including reloads and denied storage.
+// Exercise the generated page: persistence, JSON backups and denied storage.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
@@ -24,11 +24,12 @@ function element(attributes = {}) {
     getAttribute(name) { return this.attributes[name] ?? null; },
     setAttribute(name, value) { this.attributes[name] = value; },
     addEventListener(name, fn) { listeners[name] = fn; },
-    fire(name, event = {}) { if (!this.disabled) listeners[name]?.(event); },
+    fire(name, event = {}) { if (!this.disabled) return listeners[name]?.(event); },
     focus() {},
+    click() { this.clicked = true; return this.fire('click'); }, remove() {},
   };
 }
-function visit(storage = new Map(), slugs = ['longest-increasing-subsequence', 'binary-search'], blocked = false) {
+function visit(storage = new Map(), slugs = ['longest-increasing-subsequence', 'binary-search'], blocked = false, options = {}) {
   const rows = slugs.map((slug) => {
     const row = element({ 'data-problem': `Data Structures & Algorithms/${slug}`,
       'data-hay': slug, 'data-status': slug === 'binary-search' ? 'rebuild' : 'current' });
@@ -40,21 +41,32 @@ function visit(storage = new Map(), slugs = ['longest-increasing-subsequence', '
     row.querySelector = (selector) => selector === '.revision' ? row.button : name;
     return row;
   });
-  const ids = Object.fromEntries(['q', 'clear', 'count', 'empty', 'revision-feedback'].map((id) => [id, element()]));
+  const ids = Object.fromEntries(['q', 'clear', 'count', 'empty', 'revision-feedback', 'revision-backup',
+    'backup-message', 'export-state', 'import-state', 'state-file', 'import-mode'].map((id) => [id, element()]));
+  ids['import-mode'].value = 'merge';
   const chips = ['all', 'current', 'rebuild'].map((filter) => element({ 'data-filter': filter }));
+  const downloads = [], blobs = [], revoked = [];
   const document = {
-    querySelectorAll: (selector) => selector === 'li[data-hay]' ? rows : selector === '.chip' ? chips : [],
+    querySelectorAll: (selector) => ['li[data-hay]', 'li[data-problem]'].includes(selector) ? rows : selector === '.chip' ? chips : [],
     getElementById: (id) => ids[id], addEventListener() {},
+    createElement(tag) { assert.equal(tag, 'a'); const link = element(); link.click = () => downloads.push(link); return link; },
+    body: { appendChild() {} },
   };
   const windowEvents = {};
   const localStorage = {
     getItem(k) { if (blocked) throw new Error('storage denied'); return storage.get(k) ?? null; },
-    setItem(k, v) { if (blocked) throw new Error('storage denied'); storage.set(k, v); },
+    setItem(k, v) { if (blocked || options.failWrite?.(k, v)) throw new Error('storage denied'); storage.set(k, v); },
+    removeItem(k) { if (blocked) throw new Error('storage denied'); storage.delete(k); },
+    key(i) { if (blocked) throw new Error('storage denied'); return [...storage.keys()][i] ?? null; },
+    get length() { if (blocked) throw new Error('storage denied'); return storage.size; },
   };
-  runInNewContext(script, { document, localStorage, window: {
+  const controller = runInNewContext(script, { document, localStorage, window: {
     addEventListener(name, fn) { windowEvents[name] = fn; },
+    Blob,
+    URL: { createObjectURL(blob) { blobs.push(blob); return 'blob:state-' + blobs.length; }, revokeObjectURL(url) { revoked.push(url); } },
+    setTimeout(fn) { fn(); },
   } });
-  return { rows, ids, chips, windowEvents };
+  return { rows, ids, chips, windowEvents, controller, downloads, blobs, revoked };
 }
 
 test('multiple solutions stay in two ordered rows, including the requested 2 + 3 split', () => {
@@ -133,4 +145,122 @@ test('search and pipeline-status filters still work after revision setup', () =>
   ids.q.value = 'subsequence';
   ids.q.fire('input');
   assert.deepEqual(rows.map((r) => r.hidden), [false, true]);
+});
+
+const path = (slug) => `Data Structures & Algorithms/${slug}`;
+const stateFile = (revisions, extra = {}) => JSON.stringify({
+  format: 'neetcode-submissions-revisions', version: 1, revisions, ...extra,
+});
+
+test('export downloads a portable JSON backup, including progress outside the current index', async () => {
+  const storage = new Map([[key('future-problem'), '3'], ['another-app', 'private'],
+    ['neetcode-submissions:cloud:v1:unused', 'private']]);
+  const app = visit(storage);
+  app.rows[0].button.fire('click');
+  app.ids['export-state'].fire('click');
+  assert.equal(app.downloads.length, 1);
+  assert.match(app.downloads[0].download, /^neetcode-revisions-\d{4}-\d{2}-\d{2}\.json$/);
+  assert.deepEqual(app.revoked, ['blob:state-1']);
+  assert.equal(app.blobs[0].type, 'application/json');
+  const backup = JSON.parse(await app.blobs[0].text());
+  assert.equal(backup.format, 'neetcode-submissions-revisions');
+  assert.equal(backup.version, 1);
+  assert.equal(new Date(backup.exportedAt).toISOString(), backup.exportedAt);
+  assert.deepEqual(backup.revisions, {
+    [path('binary-search')]: 0, [path('future-problem')]: 3, [path('longest-increasing-subsequence')]: 1,
+  });
+});
+
+test('an exported file restores progress in a fresh browser and survives new folders and regeneration', () => {
+  const original = visit();
+  original.rows[0].button.fire('click');
+  original.rows[0].button.fire('click');
+  const storage = new Map(), other = visit(storage);
+  other.controller.importState(JSON.stringify(original.controller.exportState()));
+  assert.deepEqual(other.rows.map((r) => r.counter.textContent), ['2/4', '0/4']);
+  assert.deepEqual(visit(storage, ['new-problem', 'longest-increasing-subsequence']).rows.map((r) => r.counter.textContent), ['0/4', '2/4']);
+});
+
+test('merge keeps higher counts, preserves absent problems, and stores not-yet-indexed problems', () => {
+  const storage = new Map([[key('longest-increasing-subsequence'), '3'], [key('binary-search'), '2']]);
+  const app = visit(storage);
+  app.controller.importState(stateFile({ [path('longest-increasing-subsequence')]: 1, [path('future-problem')]: 4 }));
+  assert.deepEqual(app.rows.map((r) => r.counter.textContent), ['3/4', '2/4']);
+  assert.equal(visit(storage, ['future-problem']).rows[0].counter.textContent, '4/4');
+  app.controller.importState(stateFile({ [path('longest-increasing-subsequence')]: 4 }));
+  assert.equal(app.rows[0].counter.textContent, '4/4');
+});
+
+test('replace restores lower and zero counts, resets absent problems, and preserves unrelated storage', () => {
+  const storage = new Map([[key('longest-increasing-subsequence'), '4'], [key('binary-search'), '3'],
+    [key('old-problem'), '2'], ['another-app', 'keep']]);
+  const app = visit(storage);
+  app.controller.importState(stateFile({ [path('longest-increasing-subsequence')]: 1 }), 'replace');
+  assert.deepEqual(app.rows.map((r) => r.counter.textContent), ['1/4', '0/4']);
+  assert.equal(app.rows[0].button.disabled, false);
+  assert.equal(storage.has(key('old-problem')), false);
+  assert.equal(storage.get('another-app'), 'keep');
+  app.controller.importState(stateFile({ [path('longest-increasing-subsequence')]: 0 }), 'replace');
+  assert.equal(app.rows[0].counter.textContent, '0/4');
+  app.controller.importState(stateFile({}), 'replace');
+  assert.equal(storage.has(key('longest-increasing-subsequence')), false);
+});
+
+test('invalid, foreign and unsupported files never change any progress', () => {
+  const storage = new Map([[key('longest-increasing-subsequence'), '2']]), app = visit(storage);
+  const invalid = ['{', 'null', '[]', '{}', stateFile({}, { version: 2 }), stateFile({}, { format: 'foreign' }),
+    stateFile([], {}), stateFile({ 'bad/path/extra': 1 }), stateFile({ 'bad\\topic/problem': 1 }),
+    stateFile({ [path('binary-search')]: 1, [path('longest-increasing-subsequence')]: '3' }),
+    ...[-1, 5, 1.5, null, true].map((n) => stateFile({ [path('longest-increasing-subsequence')]: n })),
+    ' '.repeat(1024 * 1024 + 1)];
+  for (const text of invalid) {
+    assert.throws(() => app.controller.importState(text, 'replace'));
+    assert.equal(storage.get(key('longest-increasing-subsequence')), '2');
+    assert.equal(storage.size, 1);
+    assert.equal(app.rows[0].counter.textContent, '2/4');
+  }
+});
+
+test('the file-picker handler imports JSON, reports errors, and allows selecting the same file again', async () => {
+  const app = visit(), input = app.ids['state-file'];
+  app.ids['import-state'].fire('click');
+  assert.equal(input.clicked, true);
+  input.files = [{ size: 200, text: async () => '\uFEFF' + stateFile({ [path('longest-increasing-subsequence')]: 3 }) }];
+  input.value = 'fake-path';
+  await input.fire('change');
+  assert.equal(app.rows[0].counter.textContent, '3/4');
+  assert.equal(input.value, '');
+  assert.match(app.ids['backup-message'].textContent, /Merged/);
+  app.ids['import-mode'].value = 'replace';
+  app.ids['import-mode'].fire('change');
+  assert.match(app.ids['backup-message'].textContent, /missing from the file reset to 0/);
+  input.files = [{ size: 1, text: async () => '{' }];
+  await input.fire('change');
+  assert.match(app.ids['backup-message'].textContent, /not valid JSON/);
+  assert.equal(app.rows[0].counter.textContent, '3/4');
+  assert.equal(app.ids['import-state'].disabled, false);
+  input.files = [{ size: 1024 * 1024 + 1, text() { throw new Error('must not read oversized file'); } }];
+  await input.fire('change');
+  assert.match(app.ids['backup-message'].textContent, /smaller than 1 MB/);
+});
+
+test('storage failures retain progress for this visit and still allow exporting a backup', async () => {
+  const app = visit(new Map(), undefined, true);
+  app.rows[0].button.fire('click');
+  app.controller.importState(stateFile({ [path('binary-search')]: 3 }));
+  assert.deepEqual(app.rows.map((r) => r.counter.textContent), ['1/4', '3/4']);
+  assert.match(app.ids['backup-message'].textContent, /only for this visit/);
+  app.ids['export-state'].fire('click');
+  assert.equal(JSON.parse(await app.blobs[0].text()).revisions[path('binary-search')], 3);
+});
+
+test('a partial storage write is rolled back and the imported state remains exportable in memory', () => {
+  let writes = 0;
+  const storage = new Map([[key('longest-increasing-subsequence'), '2'], [key('binary-search'), '1']]);
+  const app = visit(storage, undefined, false, { failWrite: () => ++writes === 2 });
+  const saved = app.controller.importState(stateFile({ [path('longest-increasing-subsequence')]: 4, [path('binary-search')]: 3 }), 'replace');
+  assert.equal(saved, false);
+  assert.deepEqual([...storage], [[key('longest-increasing-subsequence'), '2'], [key('binary-search'), '1']]);
+  assert.equal(app.controller.exportState().revisions[path('longest-increasing-subsequence')], 4);
+  assert.match(app.ids['backup-message'].textContent, /only for this visit/);
 });

@@ -80,7 +80,7 @@ li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;
    browser's own [hidden] rule - so every row stayed on screen while the count
    under the chips correctly read "2 of 62". The JS was right; the CSS was
    drawing rows it had been told to hide. Same for the group sections. */
-li[hidden], section[hidden]{display:none !important;}
+[hidden]{display:none !important;}
 li + li{border-top:2px dashed var(--pencil-light);}
 .who{flex:1 1 280px;min-width:0;}
 .name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
@@ -124,6 +124,21 @@ li + li{border-top:2px dashed var(--pencil-light);}
 .revision-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-6px 0 20px;font-size:14px;color:var(--pencil);}
 .revision-key .step{display:inline-flex;align-items:center;gap:4px;}
 .revision-key .swatch{width:11px;height:11px;background:var(--revision-fill);border:1px solid var(--revision-edge);border-radius:50%;}
+.backup-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-6px 0 18px;
+  padding:10px 12px;border:2px solid var(--pencil-light);border-radius:var(--sk-md);background:var(--paper-sunk);}
+.backup-message{flex:1 1 300px;margin:0;font-size:15px;color:var(--pencil);}
+.backup-panel[data-backup-state="error"]{border-color:var(--red);}
+.backup-panel[data-backup-state="error"] .backup-message{color:var(--red);}
+.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:100%;}
+.backup-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--pencil);}
+.backup-mode select{font-family:var(--hand);font-size:14px;padding:5px 6px;max-width:100%;
+  border:1px solid var(--pencil-light);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);}
+.backup-button{font-family:var(--hand);font-size:15px;line-height:1;padding:7px 11px 9px;
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);cursor:pointer;}
+.backup-button.primary{background:var(--orange-soft);}
+.backup-button:hover:not(:disabled){background:var(--orange-soft);}
+.backup-button:disabled{opacity:.6;cursor:default;}
+.backup-button:focus-visible,.backup-mode select:focus-visible{outline:3px solid var(--orange);outline-offset:3px;}
 
 .empty{display:none;border:2px dashed var(--pencil-light);border-radius:var(--sk-lg);padding:26px 22px;text-align:center;color:var(--pencil);}
 .foot{margin-top:28px;padding-top:14px;border-top:2px solid var(--ink);
@@ -168,6 +183,21 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <span class="count" id="count"></span>
   </div>
 
+  <div class="backup-panel" id="revision-backup" hidden>
+    <p class="backup-message" id="backup-message" role="status" aria-live="polite"></p>
+    <div class="backup-actions">
+      <label class="backup-mode">Import mode
+        <select id="import-mode" aria-describedby="backup-message">
+          <option value="merge">Merge · keep higher counts</option>
+          <option value="replace">Replace · restore file exactly</option>
+        </select>
+      </label>
+      <button class="backup-button primary" id="export-state" type="button">Export state</button>
+      <button class="backup-button" id="import-state" type="button">Import state</button>
+      <input id="state-file" type="file" accept=".json,application/json" aria-label="Choose revision state file" hidden>
+    </div>
+  </div>
+
   <p class="revision-key">
     <span>Revisions:</span>
     <span class="step revision-tone" data-revisions="0"><i class="swatch" aria-hidden="true"></i>0 &middot; not revised</span>
@@ -175,7 +205,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <span class="step revision-tone" data-revisions="2"><i class="swatch" aria-hidden="true"></i>2 &middot; twice</span>
     <span class="step revision-tone" data-revisions="3"><i class="swatch" aria-hidden="true"></i>3 &middot; three times</span>
     <span class="step revision-tone" data-revisions="4"><i class="swatch" aria-hidden="true"></i>4 &middot; four times</span>
-    <span>Click Revised after each review. Saved in this browser.</span>
+    <span>Click Revised after each review.</span>
   </p>
   <span class="sr-only" id="revision-feedback" role="status"></span>
 
@@ -1426,50 +1456,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
   var count = document.getElementById('count');
   var empty = document.getElementById('empty');
   var filter = 'all';
-  // One key per folder: regeneration, ordering and new problems cannot reset it.
-  var revisionPrefix = 'neetcode-submissions:revisions:v1:';
-  var feedback = document.getElementById('revision-feedback');
-
-  function revisionKey(li){ return revisionPrefix + li.getAttribute('data-problem'); }
-  function revisionCount(value){
-    var n = Number(value);
-    return Number.isInteger(n) ? Math.max(0, Math.min(4, n)) : 0;
-  }
-  function readRevision(li){
-    try { return revisionCount(localStorage.getItem(revisionKey(li))); }
-    catch { return 0; }
-  }
-  function showRevision(li, n){
-    var btn = li.querySelector('.revision');
-    var title = li.querySelector('.name').textContent;
-    btn.setAttribute('data-revisions', String(n));
-    btn.querySelector('.revision-count').textContent = n + '/4';
-    btn.disabled = n === 4;
-    btn.setAttribute('aria-label', title + ': ' + n + ' of 4 revisions. ' +
-      (n === 4 ? 'Revision goal complete.' : 'Mark revised once more.'));
-    btn.title = n === 4 ? 'Four revisions complete' : 'Mark revision ' + (n + 1) + ' of 4';
-  }
-  rows.forEach(function(li){
-    var btn = li.querySelector('.revision');
-    showRevision(li, readRevision(li));
-    btn.addEventListener('click', function(){
-      var n = Math.min(4, Number(btn.getAttribute('data-revisions')) + 1);
-      var saved = true;
-      try { localStorage.setItem(revisionKey(li), String(n)); }
-      catch { saved = false; }
-      showRevision(li, n);
-      feedback.textContent = li.querySelector('.name').textContent + ': ' + n + ' of 4 revisions.' +
-        (saved ? '' : ' Browser storage is unavailable; this revision is saved only for this visit.');
-      if (!saved) btn.title += ' (saved only for this visit; browser storage unavailable)';
-    });
-    btn.hidden = false;
-  });
-  window.addEventListener('storage', function(e){
-    rows.forEach(function(li){
-      if (e.key === null || e.key === revisionKey(li)) showRevision(li, readRevision(li));
-    });
-  });
-
   function apply(){
     var needle = q.value.trim().toLowerCase();
     var terms = needle ? needle.split(/\s+/) : [];
@@ -1509,6 +1495,178 @@ li + li{border-top:2px dashed var(--pencil-light);}
     });
   });
   apply();
+})();
+(function initRevisions() {
+  'use strict';
+  const prefix = 'neetcode-submissions:revisions:v1:';
+  const format = 'neetcode-submissions-revisions';
+  const maxBytes = 1024 * 1024;
+  const rows = Array.from(document.querySelectorAll('li[data-problem]'));
+  const panel = document.getElementById('revision-backup');
+  const message = document.getElementById('backup-message');
+  const exportButton = document.getElementById('export-state');
+  const importButton = document.getElementById('import-state');
+  const fileInput = document.getElementById('state-file');
+  const mode = document.getElementById('import-mode');
+  const feedback = document.getElementById('revision-feedback');
+  const pathOf = (row) => row.getAttribute('data-problem');
+  const validPath = (path) => typeof path === 'string' && path.length <= 300 &&
+    /^[^/\\\u0000-\u001f]+\/[^/\\\u0000-\u001f]+$/.test(path);
+  const validCount = (n) => Number.isInteger(n) && n >= 0 && n <= 4;
+  const countOf = (value) => Number.isInteger(Number(value)) ? Math.max(0, Math.min(4, Number(value))) : 0;
+  let storageAvailable = true;
+
+  function status(text, error = false) {
+    message.textContent = text;
+    panel.setAttribute('data-backup-state', error ? 'error' : 'ready');
+  }
+  function storedEntries() {
+    const entries = new Map();
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(prefix) && validPath(key.slice(prefix.length))) {
+        entries.set(key.slice(prefix.length), localStorage.getItem(key));
+      }
+    }
+    return entries;
+  }
+  function readStored() {
+    try { return new Map([...storedEntries()].map(([path, value]) => [path, countOf(value)])); }
+    catch { storageAvailable = false; return new Map(); }
+  }
+  let counts = readStored();
+  function snapshot() {
+    const result = readStored();
+    // Memory includes imports and clicks even if browser storage is unavailable.
+    counts.forEach((n, path) => result.set(path, n));
+    rows.forEach((row) => { if (!result.has(pathOf(row))) result.set(pathOf(row), 0); });
+    return result;
+  }
+  function render() {
+    rows.forEach((row) => {
+      const n = counts.get(pathOf(row)) ?? 0;
+      const button = row.querySelector('.revision');
+      const title = row.querySelector('.name').textContent;
+      button.setAttribute('data-revisions', String(n));
+      button.querySelector('.revision-count').textContent = n + '/4';
+      button.disabled = n === 4;
+      button.hidden = false;
+      button.setAttribute('aria-label', title + ': ' + n + ' of 4 revisions. ' +
+        (n === 4 ? 'Revision goal complete.' : 'Mark revised once more.'));
+      button.title = n === 4 ? 'Four revisions complete' : 'Mark revision ' + (n + 1) + ' of 4';
+    });
+  }
+  function exportState() {
+    return {
+      format, version: 1, exportedAt: new Date().toISOString(),
+      revisions: Object.fromEntries([...snapshot()].sort(([a], [b]) => a.localeCompare(b))),
+    };
+  }
+  function validate(text) {
+    if (typeof text !== 'string' || text.length > maxBytes) throw new Error('Choose a JSON state file smaller than 1 MB.');
+    let data;
+    try { data = JSON.parse(text.replace(/^\uFEFF/, '')); }
+    catch { throw new Error('This file is not valid JSON. Choose an exported state file.'); }
+    if (data?.format !== format || data.version !== 1 || !data.revisions ||
+        typeof data.revisions !== 'object' || Array.isArray(data.revisions)) {
+      throw new Error('This is not a supported NeetCode revision state file.');
+    }
+    const entries = Object.entries(data.revisions);
+    if (entries.length > 5000 || !entries.every(([path, n]) => validPath(path) && validCount(n))) {
+      throw new Error('The file contains invalid problem paths or revision counts. Counts must be whole numbers from 0 to 4.');
+    }
+    return new Map(entries);
+  }
+  function persist(next, replace) {
+    let before;
+    try {
+      before = storedEntries();
+      next.forEach((n, path) => localStorage.setItem(prefix + path, String(n)));
+      if (replace) before.forEach((value, path) => {
+        if (!next.has(path)) localStorage.removeItem(prefix + path);
+      });
+      storageAvailable = true;
+      return true;
+    } catch {
+      storageAvailable = false;
+      // A quota error must not leave half of a restored backup in storage.
+      if (before) {
+        const touched = new Set([...before.keys(), ...next.keys()]);
+        touched.forEach((path) => {
+          try {
+            if (before.has(path)) localStorage.setItem(prefix + path, before.get(path));
+            else localStorage.removeItem(prefix + path);
+          } catch { /* The visible status still explains that persistence failed. */ }
+        });
+      }
+      return false;
+    }
+  }
+  function importState(text, importMode = 'merge') {
+    const incoming = validate(text); // Validate the entire file before any change.
+    if (importMode !== 'merge' && importMode !== 'replace') throw new Error('Choose merge or replace.');
+    const next = importMode === 'replace' ? new Map(incoming) : snapshot();
+    if (importMode === 'merge') incoming.forEach((n, path) => next.set(path, Math.max(next.get(path) ?? 0, n)));
+    const saved = persist(next, importMode === 'replace');
+    counts = next;
+    render();
+    const result = (importMode === 'replace' ? 'Restored' : 'Merged') + ' state from ' + incoming.size + ' problem(s).';
+    status(result + (saved ? ' Saved in this browser.' : ' Saved only for this visit; browser storage is unavailable. Export a backup before leaving.'), !saved);
+    return saved;
+  }
+
+  rows.forEach((row) => row.querySelector('.revision').addEventListener('click', () => {
+    const path = pathOf(row), previous = counts.get(path) ?? 0;
+    if (previous >= 4) return;
+    const n = previous + 1;
+    counts.set(path, n);
+    let saved = true;
+    try { localStorage.setItem(prefix + path, String(n)); storageAvailable = true; }
+    catch { saved = false; storageAvailable = false; }
+    render();
+    feedback.textContent = row.querySelector('.name').textContent + ': ' + n + ' of 4 revisions.' +
+      (saved ? '' : ' Browser storage is unavailable; saved only for this visit.');
+    if (!saved) status('Saved only for this visit; browser storage is unavailable. Export a backup before leaving.', true);
+  }));
+  window.addEventListener('storage', (event) => {
+    if (event.key === null || event.key?.startsWith(prefix)) { counts = readStored(); render(); }
+  });
+  exportButton.addEventListener('click', () => {
+    let url;
+    try {
+      const data = exportState();
+      const filename = 'neetcode-revisions-' + data.exportedAt.slice(0, 10) + '.json';
+      url = window.URL.createObjectURL(new window.Blob([JSON.stringify(data, null, 2) + '\n'], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      try { link.click(); } finally { link.remove(); }
+      status('Export requested: ' + filename + '. Keep the file to restore your progress in another browser or PC.');
+    } catch { status('Could not export state. Try again.', true); }
+    finally { if (url) window.setTimeout(() => window.URL.revokeObjectURL(url), 1000); }
+  });
+  importButton.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    const importMode = mode.value;
+    importButton.disabled = true;
+    mode.disabled = true;
+    try {
+      if (file.size > maxBytes) throw new Error('Choose a JSON state file smaller than 1 MB.');
+      importState(await file.text(), importMode);
+    } catch (error) { status(error.message || 'Could not read this state file. Try again.', true); }
+    finally { fileInput.value = ''; importButton.disabled = false; mode.disabled = false; }
+  });
+  mode.addEventListener('change', () => status(mode.value === 'replace'
+    ? 'Replace restores the file exactly. Problems missing from the file reset to 0.'
+    : 'Merge keeps the higher count for each problem. Other progress stays saved.'));
+  panel.hidden = false;
+  render();
+  status(storageAvailable ? 'Saved in this browser. Use a JSON file to move progress to another browser or PC.'
+    : 'Browser storage is unavailable. Use Export state to keep progress from this visit.', !storageAvailable);
+  return { exportState, importState };
 })();
 </script>
 </body>

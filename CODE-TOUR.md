@@ -679,12 +679,20 @@ extra wrapping on small screens. The pipeline standard is shown by a green or
 red dot; its tooltip and screen-reader text still explain the full verdict.
 Each problem also has a **Revised** button: counts 0–4 use parchment, dusty rose,
 muted peach, soft gold and sage green. Four clicks complete the revision goal.
-Counts are stored in the browser's local storage, keyed by the problem folder
-path, so regenerating the page or adding a new folder preserves existing
-progress. They belong to that browser and origin, and do not sync across
-devices or enter `.agent/state.json`. If storage is blocked, the button still
-works for the visit and announces that it could not save. Without JavaScript,
-the source and visualizer links remain usable and revision buttons stay hidden.
+`lib/revisions.mjs` stores counts in browser local storage, keyed by the problem
+folder path, so regenerating the page or adding a new folder preserves progress.
+**Export state** downloads a versioned JSON backup; **Import state** reads that
+file on another browser or PC. The default **Merge** mode keeps the higher count
+for each problem. **Replace** restores the file exactly, including lower counts,
+and resets problems missing from the file to zero. Counts for folders outside
+the current index are preserved so they can appear in a later pipeline run.
+The full file is validated before applying it: counts must be integers 0–4,
+the format/version must match, and files must be no larger than 1 MB.
+These are manual backups; progress belongs to that browser and origin and never
+enters `.agent/state.json`. If storage is blocked, revisions and imports still
+work for the visit, display a warning, and can be exported before leaving.
+Without JavaScript, source and visualizer links remain usable; revision buttons
+and backup controls stay hidden.
 
 ---
 

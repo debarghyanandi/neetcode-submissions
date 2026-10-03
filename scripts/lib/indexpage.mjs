@@ -32,6 +32,7 @@
 import { GROUP_NOTE, groupFor, groupRank } from './patterns.mjs';
 import { atStandard, needs } from './standard.mjs';
 import { VISUALIZER_FORMAT } from './shapes.mjs';
+import { initRevisions } from './revisions.mjs';
 
 const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -204,7 +205,7 @@ li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;
    browser's own [hidden] rule - so every row stayed on screen while the count
    under the chips correctly read "2 of 62". The JS was right; the CSS was
    drawing rows it had been told to hide. Same for the group sections. */
-li[hidden], section[hidden]{display:none !important;}
+[hidden]{display:none !important;}
 li + li{border-top:2px dashed var(--pencil-light);}
 .who{flex:1 1 280px;min-width:0;}
 .name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
@@ -248,6 +249,21 @@ li + li{border-top:2px dashed var(--pencil-light);}
 .revision-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-6px 0 20px;font-size:14px;color:var(--pencil);}
 .revision-key .step{display:inline-flex;align-items:center;gap:4px;}
 .revision-key .swatch{width:11px;height:11px;background:var(--revision-fill);border:1px solid var(--revision-edge);border-radius:50%;}
+.backup-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-6px 0 18px;
+  padding:10px 12px;border:2px solid var(--pencil-light);border-radius:var(--sk-md);background:var(--paper-sunk);}
+.backup-message{flex:1 1 300px;margin:0;font-size:15px;color:var(--pencil);}
+.backup-panel[data-backup-state="error"]{border-color:var(--red);}
+.backup-panel[data-backup-state="error"] .backup-message{color:var(--red);}
+.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:100%;}
+.backup-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--pencil);}
+.backup-mode select{font-family:var(--hand);font-size:14px;padding:5px 6px;max-width:100%;
+  border:1px solid var(--pencil-light);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);}
+.backup-button{font-family:var(--hand);font-size:15px;line-height:1;padding:7px 11px 9px;
+  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);cursor:pointer;}
+.backup-button.primary{background:var(--orange-soft);}
+.backup-button:hover:not(:disabled){background:var(--orange-soft);}
+.backup-button:disabled{opacity:.6;cursor:default;}
+.backup-button:focus-visible,.backup-mode select:focus-visible{outline:3px solid var(--orange);outline-offset:3px;}
 
 .empty{display:none;border:2px dashed var(--pencil-light);border-radius:var(--sk-lg);padding:26px 22px;text-align:center;color:var(--pencil);}
 .foot{margin-top:28px;padding-top:14px;border-top:2px solid var(--ink);
@@ -292,12 +308,27 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <span class="count" id="count"></span>
   </div>
 
+  <div class="backup-panel" id="revision-backup" hidden>
+    <p class="backup-message" id="backup-message" role="status" aria-live="polite"></p>
+    <div class="backup-actions">
+      <label class="backup-mode">Import mode
+        <select id="import-mode" aria-describedby="backup-message">
+          <option value="merge">Merge · keep higher counts</option>
+          <option value="replace">Replace · restore file exactly</option>
+        </select>
+      </label>
+      <button class="backup-button primary" id="export-state" type="button">Export state</button>
+      <button class="backup-button" id="import-state" type="button">Import state</button>
+      <input id="state-file" type="file" accept=".json,application/json" aria-label="Choose revision state file" hidden>
+    </div>
+  </div>
+
   <p class="revision-key">
     <span>Revisions:</span>
     ${['not revised', 'once', 'twice', 'three times', 'four times'].map((label, n) =>
       `<span class="step revision-tone" data-revisions="${n}"><i class="swatch" aria-hidden="true"></i>${n} &middot; ${label}</span>`
     ).join('\n    ')}
-    <span>Click Revised after each review. Saved in this browser.</span>
+    <span>Click Revised after each review.</span>
   </p>
   <span class="sr-only" id="revision-feedback" role="status"></span>
 
@@ -321,50 +352,6 @@ ${groups.map(sectionHtml).join('\n')}
   var count = document.getElementById('count');
   var empty = document.getElementById('empty');
   var filter = 'all';
-  // One key per folder: regeneration, ordering and new problems cannot reset it.
-  var revisionPrefix = 'neetcode-submissions:revisions:v1:';
-  var feedback = document.getElementById('revision-feedback');
-
-  function revisionKey(li){ return revisionPrefix + li.getAttribute('data-problem'); }
-  function revisionCount(value){
-    var n = Number(value);
-    return Number.isInteger(n) ? Math.max(0, Math.min(4, n)) : 0;
-  }
-  function readRevision(li){
-    try { return revisionCount(localStorage.getItem(revisionKey(li))); }
-    catch { return 0; }
-  }
-  function showRevision(li, n){
-    var btn = li.querySelector('.revision');
-    var title = li.querySelector('.name').textContent;
-    btn.setAttribute('data-revisions', String(n));
-    btn.querySelector('.revision-count').textContent = n + '/4';
-    btn.disabled = n === 4;
-    btn.setAttribute('aria-label', title + ': ' + n + ' of 4 revisions. ' +
-      (n === 4 ? 'Revision goal complete.' : 'Mark revised once more.'));
-    btn.title = n === 4 ? 'Four revisions complete' : 'Mark revision ' + (n + 1) + ' of 4';
-  }
-  rows.forEach(function(li){
-    var btn = li.querySelector('.revision');
-    showRevision(li, readRevision(li));
-    btn.addEventListener('click', function(){
-      var n = Math.min(4, Number(btn.getAttribute('data-revisions')) + 1);
-      var saved = true;
-      try { localStorage.setItem(revisionKey(li), String(n)); }
-      catch { saved = false; }
-      showRevision(li, n);
-      feedback.textContent = li.querySelector('.name').textContent + ': ' + n + ' of 4 revisions.' +
-        (saved ? '' : ' Browser storage is unavailable; this revision is saved only for this visit.');
-      if (!saved) btn.title += ' (saved only for this visit; browser storage unavailable)';
-    });
-    btn.hidden = false;
-  });
-  window.addEventListener('storage', function(e){
-    rows.forEach(function(li){
-      if (e.key === null || e.key === revisionKey(li)) showRevision(li, readRevision(li));
-    });
-  });
-
   function apply(){
     var needle = q.value.trim().toLowerCase();
     var terms = needle ? needle.split(/\\s+/) : [];
@@ -405,6 +392,7 @@ ${groups.map(sectionHtml).join('\n')}
   });
   apply();
 })();
+(${initRevisions.toString()})();
 </script>
 </body>
 </html>
