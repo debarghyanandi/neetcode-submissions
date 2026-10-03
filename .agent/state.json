@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-02T20:41:12.097Z",
+  "updatedAt": "2026-10-03T03:04:01.855Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -6060,14 +6060,68 @@
     },
     "valid-sudoku": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "b1b8f56eaaca170e28924ff4c12eb2e1bc7745c7d17b515cc3e01107e893fbe0": "optimal.cs"
+      },
+      "fingerprints": {
+        "b1b8f56eaaca170e28924ff4c12eb2e1bc7745c7d17b515cc3e01107e893fbe0": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "6a889c137c08"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6a889c137c08\",\"time\":\"O(1)\",\"space\":\"O(1)\",\"algorithm\":\"Hash-set constraint tracking, per row/column/box\",\"approachKey\":\"hashset-sudoku-constraints\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(1)",
+          "space": "O(1)",
+          "algorithm": "Hash-set constraint tracking, per row/column/box",
+          "approachKey": "hashset-sudoku-constraints",
+          "correct": true,
+          "structures": [
+            "array",
+            "matrix",
+            "hash-map",
+            "hash-set"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6a889c137c08\",\"time\":\"O(1)\",\"space\":\"O(1)\",\"algorithm\":\"Hash-set constraint tracking, per row/column/box\",\"approachKey\":\"hashset-sudoku-constraints\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "6a889c137c08"
+        },
+        "structures": [
+          "array",
+          "matrix",
+          "hash-map",
+          "hash-set"
+        ],
+        "builtAt": "2026-10-03T03:04:01.590Z"
+      }
     },
     "validate-parentheses": {
       "topic": "Data Structures & Algorithms",
