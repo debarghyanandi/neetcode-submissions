@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-03T13:02:03.078Z",
+  "updatedAt": "2026-10-03T14:03:28.639Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -413,6 +413,17 @@
         ],
         "builtAt": "2026-09-22T23:13:10.288Z"
       }
+    },
+    "binary-tree-right-side-view": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",
@@ -3489,15 +3500,90 @@
     },
     "majority-element": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "e322de30819289f40bd9d37e39c6734d4f188f791658c03fd3e029b1b70d2ab2": "optimal.cs",
+        "8a50d867a50d1942e7e5c45674d5ac547bc12daf3e60279bbe6a065813673f8e": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "e322de30819289f40bd9d37e39c6734d4f188f791658c03fd3e029b1b70d2ab2": "optimal.cs",
+        "8a50d867a50d1942e7e5c45674d5ac547bc12daf3e60279bbe6a065813673f8e": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "e01b4cb50c65"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "424c020e2bae"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e01b4cb50c65\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Boyer-Moore majority voting\",\"approachKey\":\"boyer-moore-voting\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"424c020e2bae\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hashmap-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Boyer-Moore majority voting",
+          "approachKey": "boyer-moore-voting",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Hash map frequency counting",
+          "approachKey": "hashmap-frequency",
+          "correct": true,
+          "structures": [
+            "array",
+            "hash-map"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e01b4cb50c65\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Boyer-Moore majority voting\",\"approachKey\":\"boyer-moore-voting\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"424c020e2bae\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Hash map frequency counting\",\"approachKey\":\"hashmap-frequency\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n) time / O(1) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "e01b4cb50c65",
+          "suboptimal.cs": "424c020e2bae"
+        },
+        "structures": [
+          "array",
+          "hash-map"
+        ],
+        "builtAt": "2026-10-03T14:03:28.309Z"
+      }
     },
     "max-area-of-island": {
       "topic": "Data Structures & Algorithms",
