@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-03T03:04:01.855Z",
+  "updatedAt": "2026-10-03T13:01:26.615Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3486,6 +3486,17 @@
         ],
         "builtAt": "2026-09-23T05:39:08.345Z"
       }
+    },
+    "majority-element": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "max-area-of-island": {
       "topic": "Data Structures & Algorithms",
