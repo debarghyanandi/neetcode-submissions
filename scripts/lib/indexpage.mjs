@@ -29,7 +29,7 @@
  *   never arrives. Search is filtering rows that are already on the page.
  */
 
-import { GROUPS, GROUP_NOTE, groupFor, groupRank } from './patterns.mjs';
+import { GROUP_NOTE, groupFor, groupRank } from './patterns.mjs';
 import { atStandard, needs } from './standard.mjs';
 import { VISUALIZER_FORMAT } from './shapes.mjs';
 
@@ -206,12 +206,15 @@ li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;
    drawing rows it had been told to hide. Same for the group sections. */
 li[hidden], section[hidden]{display:none !important;}
 li + li{border-top:2px dashed var(--pencil-light);}
-.who{flex:1 1 340px;min-width:0;}
+.who{flex:1 1 280px;min-width:0;}
 .name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
 .name:hover{border-bottom-color:var(--orange);background:var(--orange-soft);}
 .why{display:block;font-size:14px;color:var(--pencil);margin-top:2px;}
 .why.none{font-style:italic;color:var(--pencil-light);}
-.meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-left:auto;}
+.meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-left:auto;min-width:0;max-width:100%;}
+.sources{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%;}
+.source-row{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;}
+.actions{display:flex;gap:9px;align-items:center;}
 .cx{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 8px 7px;
   border:2px solid var(--pencil-light);border-radius:var(--sk-sm);color:var(--pencil);white-space:nowrap;}
 .src{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 9px 7px;text-decoration:none;
@@ -221,23 +224,40 @@ li + li{border-top:2px dashed var(--pencil-light);}
   border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--orange-soft);white-space:nowrap;}
 .run:hover{background:var(--orange);}
 .run.off{border-color:var(--pencil-light);color:var(--pencil-light);background:transparent;pointer-events:none;}
-/* The standard marker. Shape as well as colour, so it still reads when the
-   page is printed or the reader cannot separate red from green. */
-.mark-std{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;line-height:1;
-  padding:6px 9px 7px;border:2px solid;border-radius:var(--sk-sm);white-space:nowrap;}
-.mark-std .dot{width:9px;height:9px;border-radius:50%;flex:none;}
-.mark-std.current{border-color:var(--green);color:var(--green);}
+/* The pipeline verdict stays available to screen readers and in the tooltip. */
+.mark-std{display:inline-flex;align-items:center;justify-content:center;width:14px;height:24px;flex:none;}
+.mark-std .dot{width:9px;height:9px;border-radius:50%;}
 .mark-std.current .dot{background:var(--green);}
-.mark-std.rebuild{border-color:var(--red);color:var(--red);}
 .mark-std.rebuild .dot{background:var(--red);}
-.mark-std.none{border-color:var(--pencil-light);color:var(--pencil-light);}
-.mark-std.none .dot{background:var(--pencil-light);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0;}
+
+/* Five quiet ink-and-paper colours, ending in the page's existing sage green. */
+.revision-tone{--revision-fill:var(--paper-sunk);--revision-edge:var(--pencil-light);}
+.revision-tone[data-revisions="1"]{--revision-fill:#EED5CA;--revision-edge:#A56C5A;}
+.revision-tone[data-revisions="2"]{--revision-fill:#F4D5AE;--revision-edge:#AE7A45;}
+.revision-tone[data-revisions="3"]{--revision-fill:#F2E4AE;--revision-edge:#A08B41;}
+.revision-tone[data-revisions="4"]{--revision-fill:#DCE8D5;--revision-edge:var(--green);}
+.revision{font-family:var(--hand);font-size:15px;line-height:1;padding:6px 9px 8px;
+  border:2px solid var(--revision-edge);border-radius:var(--sk-sm);background:var(--revision-fill);
+  color:var(--ink);white-space:nowrap;cursor:pointer;}
+.revision .revision-count{font-family:var(--mono);font-size:11px;margin-left:5px;}
+.revision:hover:not(:disabled){border-color:var(--ink);}
+.revision:disabled{cursor:default;}
+.revision:focus-visible,.src:focus-visible,.run:focus-visible{outline:3px solid var(--orange);outline-offset:3px;}
+.revision-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-6px 0 20px;font-size:14px;color:var(--pencil);}
+.revision-key .step{display:inline-flex;align-items:center;gap:4px;}
+.revision-key .swatch{width:11px;height:11px;background:var(--revision-fill);border:1px solid var(--revision-edge);border-radius:50%;}
 
 .empty{display:none;border:2px dashed var(--pencil-light);border-radius:var(--sk-lg);padding:26px 22px;text-align:center;color:var(--pencil);}
 .foot{margin-top:28px;padding-top:14px;border-top:2px solid var(--ink);
   display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:14px;color:var(--pencil);}
 .foot code{font-family:var(--mono);font-size:12px;}
-@media (max-width:640px){ .meta{margin-left:0;} .count{margin-left:0;} }
+@media (max-width:640px){
+  .meta{margin-left:0;justify-content:flex-start;} .count{margin-left:0;}
+  .source-row{justify-content:flex-start;} .cx{white-space:normal;overflow-wrap:anywhere;}
+  .src{white-space:normal;overflow-wrap:anywhere;max-width:100%;}
+}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto;}}
 </style>
 </head>
@@ -272,6 +292,15 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <span class="count" id="count"></span>
   </div>
 
+  <p class="revision-key">
+    <span>Revisions:</span>
+    ${['not revised', 'once', 'twice', 'three times', 'four times'].map((label, n) =>
+      `<span class="step revision-tone" data-revisions="${n}"><i class="swatch" aria-hidden="true"></i>${n} &middot; ${label}</span>`
+    ).join('\n    ')}
+    <span>Click Revised after each review. Saved in this browser.</span>
+  </p>
+  <span class="sr-only" id="revision-feedback" role="status"></span>
+
 ${groups.map(sectionHtml).join('\n')}
 
   <p class="empty" id="empty">Nothing matches that. Try a pattern name — <em>sliding window</em>, <em>heap</em>, <em>monotonic</em>.</p>
@@ -292,6 +321,49 @@ ${groups.map(sectionHtml).join('\n')}
   var count = document.getElementById('count');
   var empty = document.getElementById('empty');
   var filter = 'all';
+  // One key per folder: regeneration, ordering and new problems cannot reset it.
+  var revisionPrefix = 'neetcode-submissions:revisions:v1:';
+  var feedback = document.getElementById('revision-feedback');
+
+  function revisionKey(li){ return revisionPrefix + li.getAttribute('data-problem'); }
+  function revisionCount(value){
+    var n = Number(value);
+    return Number.isInteger(n) ? Math.max(0, Math.min(4, n)) : 0;
+  }
+  function readRevision(li){
+    try { return revisionCount(localStorage.getItem(revisionKey(li))); }
+    catch { return 0; }
+  }
+  function showRevision(li, n){
+    var btn = li.querySelector('.revision');
+    var title = li.querySelector('.name').textContent;
+    btn.setAttribute('data-revisions', String(n));
+    btn.querySelector('.revision-count').textContent = n + '/4';
+    btn.disabled = n === 4;
+    btn.setAttribute('aria-label', title + ': ' + n + ' of 4 revisions. ' +
+      (n === 4 ? 'Revision goal complete.' : 'Mark revised once more.'));
+    btn.title = n === 4 ? 'Four revisions complete' : 'Mark revision ' + (n + 1) + ' of 4';
+  }
+  rows.forEach(function(li){
+    var btn = li.querySelector('.revision');
+    showRevision(li, readRevision(li));
+    btn.addEventListener('click', function(){
+      var n = Math.min(4, Number(btn.getAttribute('data-revisions')) + 1);
+      var saved = true;
+      try { localStorage.setItem(revisionKey(li), String(n)); }
+      catch { saved = false; }
+      showRevision(li, n);
+      feedback.textContent = li.querySelector('.name').textContent + ': ' + n + ' of 4 revisions.' +
+        (saved ? '' : ' Browser storage is unavailable; this revision is saved only for this visit.');
+      if (!saved) btn.title += ' (saved only for this visit; browser storage unavailable)';
+    });
+    btn.hidden = false;
+  });
+  window.addEventListener('storage', function(e){
+    rows.forEach(function(li){
+      if (e.key === null || e.key === revisionKey(li)) showRevision(li, readRevision(li));
+    });
+  });
 
   function apply(){
     var needle = q.value.trim().toLowerCase();
@@ -349,10 +421,17 @@ function rowHtml(r, web, pages) {
   const cx = (r.time && r.space)
     ? `<span class="cx" title="time / space">${esc(r.time)} &middot; ${esc(r.space)}</span>` : '';
 
-  const src = r.files.length && web
+  const sourceLinks = r.files.length && web
     ? r.files.map((f) =>
         `<a class="src" href="${web}/${linkPath(`${r.path}/${f}`)}" target="_blank" rel="noopener noreferrer">${esc(f.replace(/\.cs$/, ''))}</a>`
-      ).join('')
+      ) : [];
+  // Explicit rows keep five solutions at 2 + 3, instead of pushing the whole
+  // metadata block below the title. On phones each row can wrap further.
+  const split = Math.floor(sourceLinks.length / 2);
+  const sourceRows = sourceLinks.length > 1
+    ? [sourceLinks.slice(0, split), sourceLinks.slice(split)] : [sourceLinks];
+  const src = sourceLinks.length
+    ? `<span class="sources">${sourceRows.map((links) => `<span class="source-row">${links.join('')}</span>`).join('')}</span>`
     : '<span class="cx">not curated yet</span>';
 
   const run = (r.hasVisualizer && pages)
@@ -363,14 +442,22 @@ function rowHtml(r, web, pages) {
     ? `<span class="why">${esc(r.pattern)}</span>`
     : '<span class="why none">not taught yet</span>';
 
-  return `    <li data-hay="${esc(hay)}" data-status="${r.status}">
+  const statusDetail = r.status === 'current'
+    ? 'lint, classify, teach and visualizer all at the current standard'
+    : 'needs: ' + r.needs.join(', ');
+
+  return `    <li data-hay="${esc(hay)}" data-status="${r.status}" data-problem="${esc(r.path)}">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/${esc(r.slug)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>
         ${why}
       </span>
       <span class="meta">
-        ${cx}${src}${run}
-        <span class="mark-std ${r.status}" title="${r.status === 'current' ? 'lint, classify, teach and visualizer all at the current standard' : 'needs: ' + esc(r.needs.join(', '))}"><i class="dot"></i>${STATUS_TEXT[r.status]}</span>
+        ${cx}${src}
+        <span class="actions">
+          ${run}
+          <span class="mark-std ${r.status}" title="${esc(STATUS_TEXT[r.status] + ': ' + statusDetail)}"><i class="dot" aria-hidden="true"></i><span class="sr-only">${STATUS_TEXT[r.status]}: ${esc(statusDetail)}</span></span>
+          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
+        </span>
       </span>
     </li>`;
 }
