@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-03T14:10:40.776Z",
+  "updatedAt": "2026-10-03T23:12:44.772Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -416,15 +416,92 @@
     },
     "binary-tree-right-side-view": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "953cd4c5bf89827dbc75108270d851c490bdbbbea255282ad9eda2b757a28301": "optimal.cs",
+        "e55cdb3b64f31adcfaa90f243291c94f3c2570b1a58d720c82e03850673ed61d": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "953cd4c5bf89827dbc75108270d851c490bdbbbea255282ad9eda2b757a28301": "optimal.cs",
+        "e55cdb3b64f31adcfaa90f243291c94f3c2570b1a58d720c82e03850673ed61d": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "c5b3ac3bb61c"
+        },
+        "optimal-variant.cs": {
+          "version": 2,
+          "codePrint": "d723baf8f020"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c5b3ac3bb61c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order, capture rightmost per level\",\"approachKey\":\"bfs-level-order-rightmost\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"d723baf8f020\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS right-first preorder traversal\",\"approachKey\":\"dfs-right-first\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "BFS level-order, capture rightmost per level",
+          "approachKey": "bfs-level-order-rightmost",
+          "correct": true,
+          "structures": [
+            "queue",
+            "tree"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "DFS right-first preorder traversal",
+          "approachKey": "dfs-right-first",
+          "correct": true,
+          "structures": [
+            "call-stack",
+            "tree"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c5b3ac3bb61c\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"BFS level-order, capture rightmost per level\",\"approachKey\":\"bfs-level-order-rightmost\",\"correct\":true,\"selfMark\":true,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(n) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"d723baf8f020\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"DFS right-first preorder traversal\",\"approachKey\":\"dfs-right-first\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(n) space\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "c5b3ac3bb61c",
+          "optimal-variant.cs": "d723baf8f020"
+        },
+        "structures": [
+          "queue",
+          "tree",
+          "call-stack"
+        ],
+        "builtAt": "2026-10-03T23:12:44.447Z"
+      }
     },
     "buy-and-sell-crypto": {
       "topic": "Data Structures & Algorithms",
