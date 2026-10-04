@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-04T00:56:56.941Z",
+  "updatedAt": "2026-10-04T22:52:49.682Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2105,6 +2105,17 @@
         ],
         "builtAt": "2026-09-25T23:20:45.767Z"
       }
+    },
+    "insert-new-interval": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "invert-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
