@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-03T23:53:48.509Z",
+  "updatedAt": "2026-10-04T00:50:58.002Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2416,11 +2416,70 @@
     },
     "jump-game": {
       "topic": "Data Structures & Algorithms",
+      "curatedFiles": [
+        "optimal.cs"
+      ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "0b709746d2838bc578fcbf0f3efb0882bbbd6cca80c67f190e772dd368ba94e0": "optimal.cs"
+      },
+      "fingerprints": {
+        "0b709746d2838bc578fcbf0f3efb0882bbbd6cca80c67f190e772dd368ba94e0": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2791ea263b26"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2791ea263b26\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy, track maximum reach\",\"approachKey\":\"greedy-max-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Greedy, track maximum reach",
+          "approachKey": "greedy-max-reach",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2791ea263b26\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy, track maximum reach\",\"approachKey\":\"greedy-max-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2791ea263b26"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-04T00:50:57.667Z"
+      }
+    },
+    "jump-game-ii": {
+      "topic": "Data Structures & Algorithms",
       "curatedFiles": [],
       "hasVisualizer": false,
       "processedSubmissions": [],
       "awaitingClassification": [
-        "submission-0.cs"
+        "submission-1.cs"
       ],
       "knownFingerprints": {},
       "fingerprints": {}
