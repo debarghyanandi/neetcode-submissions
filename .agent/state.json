@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-04T00:54:03.229Z",
+  "updatedAt": "2026-10-04T00:56:56.941Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2475,15 +2475,88 @@
     },
     "jump-game-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs",
-        "submission-3.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d2e8c2fe8bc2994961f1d1821a60c7ae23a3fdaf78d5b9394a3da36bbe9e9ad9": "optimal.cs",
+        "15bfcea1005f825fb8bc63fa272f92f6f47f268bb7c455952849cbccc0d809f8": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "d2e8c2fe8bc2994961f1d1821a60c7ae23a3fdaf78d5b9394a3da36bbe9e9ad9": "optimal.cs",
+        "15bfcea1005f825fb8bc63fa272f92f6f47f268bb7c455952849cbccc0d809f8": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "57464074baa8"
+        },
+        "optimal-variant.cs": {
+          "version": 2,
+          "codePrint": "b635a76a9b3a"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"57464074baa8\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy furthest reach level-wise\",\"approachKey\":\"greedy-furthest-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"b635a76a9b3a\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy furthest reach single-pass\",\"approachKey\":\"greedy-furthest-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-3.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Greedy furthest reach level-wise",
+          "approachKey": "greedy-furthest-reach",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Greedy furthest reach single-pass",
+          "approachKey": "greedy-furthest-reach",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"57464074baa8\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy furthest reach level-wise\",\"approachKey\":\"greedy-furthest-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"b635a76a9b3a\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Greedy furthest reach single-pass\",\"approachKey\":\"greedy-furthest-reach\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "57464074baa8",
+          "optimal-variant.cs": "b635a76a9b3a"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-04T00:56:56.693Z"
+      }
     },
     "k-closest-points-to-origin": {
       "topic": "Data Structures & Algorithms",
