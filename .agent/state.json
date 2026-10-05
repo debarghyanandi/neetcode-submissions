@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-05T13:34:41.878Z",
+  "updatedAt": "2026-10-05T13:35:12.392Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -1519,9 +1519,7 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
-      ],
+      "awaitingClassification": [],
       "knownFingerprints": {
         "a6ef6f5741d5338f7f47f0b27a7f66d9536d6fe4bc3d877986606e4dde532626": "optimal.cs",
         "7c299c987eb89ddb3da5edf78e0abd5ac6a9908cc83feff4fe9db1536544eb16": "optimal.cs",
