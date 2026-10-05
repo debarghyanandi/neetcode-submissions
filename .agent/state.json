@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-04T22:52:49.682Z",
+  "updatedAt": "2026-10-05T11:48:00.166Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2108,14 +2108,64 @@
     },
     "insert-new-interval": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "f32a1e0fa088c4e70e7ed09a0353c47335b5435d6196c6e608502a1afb807c2f": "optimal.cs"
+      },
+      "fingerprints": {
+        "f32a1e0fa088c4e70e7ed09a0353c47335b5435d6196c6e608502a1afb807c2f": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "5885b31bbf2b"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5885b31bbf2b\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single-pass linear scan with merging\",\"approachKey\":\"interval-linear-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Single-pass linear scan with merging",
+          "approachKey": "interval-linear-scan",
+          "correct": true,
+          "structures": [
+            "array",
+            "interval"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"5885b31bbf2b\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Single-pass linear scan with merging\",\"approachKey\":\"interval-linear-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "5885b31bbf2b"
+        },
+        "structures": [
+          "array",
+          "interval"
+        ],
+        "builtAt": "2026-10-05T11:47:59.814Z"
+      }
     },
     "invert-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
