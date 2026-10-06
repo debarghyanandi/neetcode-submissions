@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-06T07:41:58.731Z",
+  "updatedAt": "2026-10-06T19:36:22.544Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3019,14 +3019,62 @@
     },
     "longest-common-prefix": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs"
+      },
+      "fingerprints": {
+        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "dd80ea0fe859"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"dd80ea0fe859\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scan with prefix reduction\",\"approachKey\":\"horizontal-scan-reduce\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n * m)",
+          "space": "O(1)",
+          "algorithm": "Horizontal scan with prefix reduction",
+          "approachKey": "horizontal-scan-reduce",
+          "correct": true,
+          "structures": [
+            "string"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"dd80ea0fe859\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scan with prefix reduction\",\"approachKey\":\"horizontal-scan-reduce\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "dd80ea0fe859"
+        },
+        "structures": [
+          "string"
+        ],
+        "builtAt": "2026-10-06T19:36:22.229Z"
+      }
     },
     "longest-common-subsequence": {
       "topic": "Data Structures & Algorithms",
