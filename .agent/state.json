@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-06T19:36:22.544Z",
+  "updatedAt": "2026-10-07T02:40:26.559Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3019,12 +3019,12 @@
     },
     "longest-common-prefix": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [
-        "optimal.cs"
-      ],
-      "hasVisualizer": true,
+      "curatedFiles": [],
+      "hasVisualizer": false,
       "processedSubmissions": [],
-      "awaitingClassification": [],
+      "awaitingClassification": [
+        "submission-4.cs"
+      ],
       "knownFingerprints": {
         "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs"
       },
