@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-07T12:36:34.323Z",
+  "updatedAt": "2026-10-07T12:44:30.402Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4741,15 +4741,88 @@
     },
     "missing-number": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "optimal-variant.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "3791153ae839f99e8a2ead2eece29812132365029a968619e8e89a15cd4b0192": "optimal.cs",
+        "345a075dd73b674904a54cf206bc530c190daacb08e48dec88a688eb5ef03112": "optimal-variant.cs"
+      },
+      "fingerprints": {
+        "3791153ae839f99e8a2ead2eece29812132365029a968619e8e89a15cd4b0192": "optimal.cs",
+        "345a075dd73b674904a54cf206bc530c190daacb08e48dec88a688eb5ef03112": "optimal-variant.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "8e8cd11185ad"
+        },
+        "optimal-variant.cs": {
+          "version": 2,
+          "codePrint": "6517865467c1"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8e8cd11185ad\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Mathematical sum calculation\",\"approachKey\":\"math-sum\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"6517865467c1\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"XOR range cancellation\",\"approachKey\":\"xor-range\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "optimal-variant.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Mathematical sum calculation",
+          "approachKey": "math-sum",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        },
+        "optimal-variant.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "XOR range cancellation",
+          "approachKey": "xor-range",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"8e8cd11185ad\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Mathematical sum calculation\",\"approachKey\":\"math-sum\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal-variant.cs on O(n) time / O(1) space\"}",
+        "optimal-variant.cs": "{\"v\":4,\"name\":\"optimal-variant.cs\",\"codePrint\":\"6517865467c1\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"XOR range cancellation\",\"approachKey\":\"xor-range\",\"correct\":true,\"selfMark\":false,\"standing\":\"ties with optimal.cs on O(n) time / O(1) space\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "optimal-variant.cs"
+        ],
+        "prints": {
+          "optimal.cs": "8e8cd11185ad",
+          "optimal-variant.cs": "6517865467c1"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-07T12:44:30.060Z"
+      }
     },
     "move-zeroes": {
       "topic": "Data Structures & Algorithms",
