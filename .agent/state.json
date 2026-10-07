@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-07T03:01:39.233Z",
+  "updatedAt": "2026-10-07T12:36:34.323Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3019,32 +3019,46 @@
     },
     "longest-common-prefix": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-4.cs",
-        "submission-5.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
       "knownFingerprints": {
-        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs"
+        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs",
+        "40babab972ce7b39456063eb135798e7e6bf16c5982fd11f9116b31f3ef46239": "optimal.cs",
+        "f368daae1b8bed3e91f4cbc64b1d3e396fea87ba3addd82f2fc3a2b7d9102c99": "suboptimal.cs"
       },
       "fingerprints": {
-        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs"
+        "82b586800337046d7670ff213e0701e300f990f8b1540f23cf5b82e08312b2f8": "optimal.cs",
+        "40babab972ce7b39456063eb135798e7e6bf16c5982fd11f9116b31f3ef46239": "optimal.cs",
+        "f368daae1b8bed3e91f4cbc64b1d3e396fea87ba3addd82f2fc3a2b7d9102c99": "suboptimal.cs"
       },
       "lint": {
         "optimal.cs": {
           "version": 2,
-          "codePrint": "dd80ea0fe859"
+          "codePrint": "eae697f27181"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "1dc6bf8988bc"
         }
       },
       "headerSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"dd80ea0fe859\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scan with prefix reduction\",\"approachKey\":\"horizontal-scan-reduce\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"eae697f27181\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scanning, character comparison\",\"approachKey\":\"horizontal-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"1dc6bf8988bc\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Trie construction and traversal\",\"approachKey\":\"trie-lcp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(1) space)\"}"
       },
       "provenance": {
         "optimal.cs": {
           "selfMarked": false,
-          "evidence": "marker check on submission-0.cs when it was first processed",
+          "evidence": "marker check on submission-4.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-5.cs when it was first processed",
           "recordedFrom": "classify"
         }
       },
@@ -3052,29 +3066,49 @@
         "optimal.cs": {
           "time": "O(n * m)",
           "space": "O(1)",
-          "algorithm": "Horizontal scan with prefix reduction",
-          "approachKey": "horizontal-scan-reduce",
+          "algorithm": "Horizontal scanning, character comparison",
+          "approachKey": "horizontal-scan",
           "correct": true,
           "structures": [
+            "array",
+            "string"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n * m)",
+          "space": "O(n * m)",
+          "algorithm": "Trie construction and traversal",
+          "approachKey": "trie-lcp",
+          "correct": true,
+          "structures": [
+            "trie",
+            "hash-map",
+            "array",
             "string"
           ]
         }
       },
       "teachSignatures": {
-        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"dd80ea0fe859\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scan with prefix reduction\",\"approachKey\":\"horizontal-scan-reduce\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"eae697f27181\",\"time\":\"O(n * m)\",\"space\":\"O(1)\",\"algorithm\":\"Horizontal scanning, character comparison\",\"approachKey\":\"horizontal-scan\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n * m) time / O(n * m) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"1dc6bf8988bc\",\"time\":\"O(n * m)\",\"space\":\"O(n * m)\",\"algorithm\":\"Trie construction and traversal\",\"approachKey\":\"trie-lcp\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks below optimal.cs (O(n * m) time / O(1) space)\"}"
       },
       "visualizer": {
         "v": 2,
         "files": [
-          "optimal.cs"
+          "optimal.cs",
+          "suboptimal.cs"
         ],
         "prints": {
-          "optimal.cs": "dd80ea0fe859"
+          "optimal.cs": "eae697f27181",
+          "suboptimal.cs": "1dc6bf8988bc"
         },
         "structures": [
-          "string"
+          "array",
+          "string",
+          "trie",
+          "hash-map"
         ],
-        "builtAt": "2026-10-06T19:36:22.229Z"
+        "builtAt": "2026-10-07T12:36:33.926Z"
       }
     },
     "longest-common-subsequence": {
@@ -4704,6 +4738,18 @@
         ],
         "builtAt": "2026-09-25T22:50:00.585Z"
       }
+    },
+    "missing-number": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs",
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "move-zeroes": {
       "topic": "Data Structures & Algorithms",
