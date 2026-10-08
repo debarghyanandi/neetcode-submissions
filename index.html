@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NeetCode Solutions — by pattern</title>
-<meta name="description" content="85 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
+<meta name="description" content="86 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap">
@@ -159,11 +159,11 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <div>
       <p class="eyebrow">debarghyanandi / neetcode-submissions</p>
       <h1>NeetCode Solutions</h1>
-      <p class="lede">85 problems in C#, grouped the way the roadmap groups them. Every one carries its
+      <p class="lede">86 problems in C#, grouped the way the roadmap groups them. Every one carries its
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">84</span> / 85</b></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">85</span> / 86</b></div>
       <div class="bar"><span id="bar" style="width:98.8%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
@@ -1387,7 +1387,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="2-D DP">
   <div class="group-head">
     <h2>2-D DP</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>2</b> at standard</span>
+    <span class="group-count"><b class="gdone">3</b> / <b>3</b> at standard</span>
   </div>
   <p class="group-note">A table of subproblem answers, filled in an order that never looks forward.</p>
   <ul>
@@ -1400,6 +1400,20 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="cx" title="time / space">O(n * m) &middot; O(m)</span><span class="sources"><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/coin-change/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a></span><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/coin-change/suboptimal-2.cs" target="_blank" rel="noopener noreferrer">suboptimal-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/coin-change/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a></span></span>
         <span class="actions">
           <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/coin-change/coin-change-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+          <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
+          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
+        </span>
+      </span>
+    </li>
+    <li data-hay="count paths count-paths 2-d dp 2d dp (bottom-up tabulation), rolling two rows array dp-table matrix call-stack current" data-status="current" data-problem="Data Structures &amp; Algorithms/count-paths">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/count-paths" target="_blank" rel="noopener noreferrer">Count Paths</a>
+        <span class="why">2D DP (bottom-up tabulation), rolling two rows</span>
+      </span>
+      <span class="meta">
+        <span class="cx" title="time / space">O(m * n) &middot; O(n)</span><span class="sources"><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-paths/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a></span><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-paths/suboptimal-2.cs" target="_blank" rel="noopener noreferrer">suboptimal-2</a><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/count-paths/suboptimal.cs" target="_blank" rel="noopener noreferrer">suboptimal</a></span></span>
+        <span class="actions">
+          <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/count-paths/count-paths-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
           <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
@@ -1529,20 +1543,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
   </div>
   <p class="group-note">Not yet filed. Add a rule in scripts/lib/patterns.mjs.</p>
   <ul>
-    <li data-hay="count paths count-paths other   needs rebuilt" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/count-paths">
-      <span class="who">
-        <a class="name" href="https://neetcode.io/problems/count-paths" target="_blank" rel="noopener noreferrer">Count Paths</a>
-        <span class="why none">not taught yet</span>
-      </span>
-      <span class="meta">
-        <span class="cx">not curated yet</span>
-        <span class="actions">
-          <span class="run off">no visualizer</span>
-          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
-          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
-        </span>
-      </span>
-    </li>
     <li data-hay="missing number missing-number other math (gauss sum formula) / running subtraction array current" data-status="current" data-problem="Data Structures &amp; Algorithms/missing-number">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/missing-number" target="_blank" rel="noopener noreferrer">Missing Number</a>
@@ -1553,6 +1553,20 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="actions">
           <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/missing-number/missing-number-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
           <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
+          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
+        </span>
+      </span>
+    </li>
+    <li data-hay="valid palindrome ii valid-palindrome-ii other   needs rebuilt" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/valid-palindrome-ii">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/valid-palindrome-ii" target="_blank" rel="noopener noreferrer">Valid Palindrome Ii</a>
+        <span class="why none">not taught yet</span>
+      </span>
+      <span class="meta">
+        <span class="cx">not curated yet</span>
+        <span class="actions">
+          <span class="run off">no visualizer</span>
+          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
       </span>
