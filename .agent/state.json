@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-09T13:23:35.523Z",
+  "updatedAt": "2026-10-09T13:24:20.624Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -5612,7 +5612,6 @@
       "hasVisualizer": false,
       "processedSubmissions": [],
       "awaitingClassification": [
-        "submission-0.cs",
         "submission-1.cs"
       ],
       "knownFingerprints": {},
