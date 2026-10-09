@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-08T14:22:39.448Z",
+  "updatedAt": "2026-10-09T13:18:34.478Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -5606,6 +5606,17 @@
         "builtAt": "2026-09-23T05:45:50.441Z"
       }
     },
+    "rotate-matrix": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "rotting-fruit": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -6738,14 +6749,64 @@
     },
     "valid-palindrome-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ada407d41cb718d2085744985746731abfed8773e8c42f1b1d5d6d00c26b325c": "optimal.cs"
+      },
+      "fingerprints": {
+        "ada407d41cb718d2085744985746731abfed8773e8c42f1b1d5d6d00c26b325c": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "6ed978787849"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6ed978787849\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, try skip one\",\"approachKey\":\"two-pointer-skip-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "two-pointer, try skip one",
+          "approachKey": "two-pointer-skip-one",
+          "correct": true,
+          "structures": [
+            "string",
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"6ed978787849\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer, try skip one\",\"approachKey\":\"two-pointer-skip-one\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "6ed978787849"
+        },
+        "structures": [
+          "string",
+          "array"
+        ],
+        "builtAt": "2026-10-09T13:18:34.085Z"
+      }
     },
     "valid-sudoku": {
       "topic": "Data Structures & Algorithms",
