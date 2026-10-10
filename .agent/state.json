@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-09T13:24:20.624Z",
+  "updatedAt": "2026-10-10T20:12:55.140Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4395,7 +4395,9 @@
       ],
       "hasVisualizer": true,
       "processedSubmissions": [],
-      "awaitingClassification": [],
+      "awaitingClassification": [
+        "submission-3.cs"
+      ],
       "knownFingerprints": {
         "ffd9e2faee079e7ff1d91cb26cde039080b7c620b0634670779b27d441d3fe4d": "optimal.cs",
         "2bf99e1f501a8678cae9dfbc60b0dbf6d2e47d50a7180a6a1f4ec5c610955c5a": "optimal.cs",
@@ -5608,14 +5610,62 @@
     },
     "rotate-matrix": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d7270e650e747311fd23907b13dbd05cc0b26239f9014fa9e8fd0c573e460701": "optimal.cs"
+      },
+      "fingerprints": {
+        "d7270e650e747311fd23907b13dbd05cc0b26239f9014fa9e8fd0c573e460701": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "0db3710dddb6"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0db3710dddb6\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"Transpose then reverse rows\",\"approachKey\":\"transpose-then-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n^2)",
+          "space": "O(1)",
+          "algorithm": "Transpose then reverse rows",
+          "approachKey": "transpose-then-reverse",
+          "correct": true,
+          "structures": [
+            "matrix"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0db3710dddb6\",\"time\":\"O(n^2)\",\"space\":\"O(1)\",\"algorithm\":\"Transpose then reverse rows\",\"approachKey\":\"transpose-then-reverse\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "0db3710dddb6"
+        },
+        "structures": [
+          "matrix"
+        ],
+        "builtAt": "2026-10-10T20:12:54.880Z"
+      }
     },
     "rotting-fruit": {
       "topic": "Data Structures & Algorithms",
