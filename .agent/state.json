@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-11T05:03:15.653Z",
+  "updatedAt": "2026-10-11T05:04:50.046Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -5385,14 +5385,62 @@
     },
     "plus-one": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "18f4d73b348084398d5b35137204f2971ca04acc3de77149749029ba0e6c9d50": "optimal.cs"
+      },
+      "fingerprints": {
+        "18f4d73b348084398d5b35137204f2971ca04acc3de77149749029ba0e6c9d50": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "c5a21b495116"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c5a21b495116\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterate right-to-left, handle carry\",\"approachKey\":\"rightToLeft-carry-handling\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "iterate right-to-left, handle carry",
+          "approachKey": "rightToLeft-carry-handling",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c5a21b495116\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"iterate right-to-left, handle carry\",\"approachKey\":\"rightToLeft-carry-handling\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "c5a21b495116"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-11T05:04:49.687Z"
+      }
     },
     "products-of-array-discluding-self": {
       "topic": "Data Structures & Algorithms",
