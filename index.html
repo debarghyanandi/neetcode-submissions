@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NeetCode Solutions — by pattern</title>
-<meta name="description" content="89 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
+<meta name="description" content="90 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap">
@@ -159,11 +159,11 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <div>
       <p class="eyebrow">debarghyanandi / neetcode-submissions</p>
       <h1>NeetCode Solutions</h1>
-      <p class="lede">89 problems in C#, grouped the way the roadmap groups them. Every one carries its
+      <p class="lede">90 problems in C#, grouped the way the roadmap groups them. Every one carries its
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">88</span> / 89</b></div>
+      <div class="meter-line"><span>at current standard</span><b><span id="curCount">89</span> / 90</b></div>
       <div class="bar"><span id="bar" style="width:98.9%"></span></div>
       <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
     </div>
@@ -781,7 +781,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Linked List">
   <div class="group-head">
     <h2>Linked List</h2>
-    <span class="group-count"><b class="gdone">9</b> / <b>10</b> at standard</span>
+    <span class="group-count"><b class="gdone">10</b> / <b>10</b> at standard</span>
   </div>
   <p class="group-note">Pointer surgery. The trick is almost always a dummy head or a second pointer.</p>
   <ul>
@@ -799,16 +799,16 @@ li + li{border-top:2px dashed var(--pencil-light);}
         </span>
       </span>
     </li>
-    <li data-hay="copy linked list with random pointer copy-linked-list-with-random-pointer linked list   needs rebuilt" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/copy-linked-list-with-random-pointer">
+    <li data-hay="copy linked list with random pointer copy-linked-list-with-random-pointer linked list hash map (old node -&gt; new node), two passes linked-list hash-map current" data-status="current" data-problem="Data Structures &amp; Algorithms/copy-linked-list-with-random-pointer">
       <span class="who">
         <a class="name" href="https://neetcode.io/problems/copy-linked-list-with-random-pointer" target="_blank" rel="noopener noreferrer">Copy Linked List With Random Pointer</a>
-        <span class="why none">not taught yet</span>
+        <span class="why">Hash Map (old node -&gt; new node), two passes</span>
       </span>
       <span class="meta">
-        <span class="cx">not curated yet</span>
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><span class="sources"><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/copy-linked-list-with-random-pointer/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a></span></span>
         <span class="actions">
-          <span class="run off">no visualizer</span>
-          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
+          <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/copy-linked-list-with-random-pointer/copy-linked-list-with-random-pointer-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+          <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
       </span>
@@ -1581,7 +1581,7 @@ li + li{border-top:2px dashed var(--pencil-light);}
 <section class="group" data-group="Other">
   <div class="group-head">
     <h2>Other</h2>
-    <span class="group-count"><b class="gdone">2</b> / <b>2</b> at standard</span>
+    <span class="group-count"><b class="gdone">2</b> / <b>3</b> at standard</span>
   </div>
   <p class="group-note">Not yet filed. Add a rule in scripts/lib/patterns.mjs.</p>
   <ul>
@@ -1595,6 +1595,20 @@ li + li{border-top:2px dashed var(--pencil-light);}
         <span class="actions">
           <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/missing-number/missing-number-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
           <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
+          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
+        </span>
+      </span>
+    </li>
+    <li data-hay="plus one plus-one other   needs rebuilt" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/plus-one">
+      <span class="who">
+        <a class="name" href="https://neetcode.io/problems/plus-one" target="_blank" rel="noopener noreferrer">Plus One</a>
+        <span class="why none">not taught yet</span>
+      </span>
+      <span class="meta">
+        <span class="cx">not curated yet</span>
+        <span class="actions">
+          <span class="run off">no visualizer</span>
+          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
       </span>

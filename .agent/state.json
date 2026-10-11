@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-11T04:33:32.095Z",
+  "updatedAt": "2026-10-11T05:03:15.653Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -897,14 +897,64 @@
     },
     "copy-linked-list-with-random-pointer": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "0034b165cacdae24958b3ec8931503b71a80afbd9ee4b667f7267290f6b9ca0f": "optimal.cs"
+      },
+      "fingerprints": {
+        "0034b165cacdae24958b3ec8931503b71a80afbd9ee4b667f7267290f6b9ca0f": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "ac0813aadf78"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ac0813aadf78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map node cloning\",\"approachKey\":\"hashmap-node-copy\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "hash map node cloning",
+          "approachKey": "hashmap-node-copy",
+          "correct": true,
+          "structures": [
+            "linked-list",
+            "hash-map"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ac0813aadf78\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map node cloning\",\"approachKey\":\"hashmap-node-copy\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ac0813aadf78"
+        },
+        "structures": [
+          "linked-list",
+          "hash-map"
+        ],
+        "builtAt": "2026-10-11T05:03:15.285Z"
+      }
     },
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
@@ -5332,6 +5382,17 @@
         ],
         "builtAt": "2026-09-25T22:52:29.760Z"
       }
+    },
+    "plus-one": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "products-of-array-discluding-self": {
       "topic": "Data Structures & Algorithms",
