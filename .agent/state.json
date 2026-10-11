@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-11T03:55:14.099Z",
+  "updatedAt": "2026-10-11T04:33:32.095Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -895,6 +895,17 @@
         "builtAt": "2026-09-22T18:17:33.813Z"
       }
     },
+    "copy-linked-list-with-random-pointer": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-2.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
+    },
     "count-number-of-islands": {
       "topic": "Data Structures & Algorithms",
       "curatedFiles": [
@@ -1106,14 +1117,64 @@
     },
     "counting-bits": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "104a432248b1a93e9957d8e8ae85d24ff287de5357b484b0b2da1bcd8bfa0d1f": "optimal.cs"
+      },
+      "fingerprints": {
+        "104a432248b1a93e9957d8e8ae85d24ff287de5357b484b0b2da1bcd8bfa0d1f": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "ed99a020591f"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ed99a020591f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming with bit shift\",\"approachKey\":\"dp-bitwise-recurrence\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Dynamic programming with bit shift",
+          "approachKey": "dp-bitwise-recurrence",
+          "correct": true,
+          "structures": [
+            "array",
+            "dp-table"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"ed99a020591f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dynamic programming with bit shift\",\"approachKey\":\"dp-bitwise-recurrence\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "ed99a020591f"
+        },
+        "structures": [
+          "array",
+          "dp-table"
+        ],
+        "builtAt": "2026-10-11T04:33:31.735Z"
+      }
     },
     "course-schedule": {
       "topic": "Data Structures & Algorithms",
