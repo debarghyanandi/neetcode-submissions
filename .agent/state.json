@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-12T05:49:08.077Z",
+  "updatedAt": "2026-10-13T07:36:41.904Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -3042,14 +3042,64 @@
     },
     "largest-rectangle-in-histogram": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a73876252b60b49cc531fdb534d052bd32b1e945399784a8202852b75638a288": "optimal.cs"
+      },
+      "fingerprints": {
+        "a73876252b60b49cc531fdb534d052bd32b1e945399784a8202852b75638a288": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "e7848f430e79"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e7848f430e79\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack nearest smaller elements\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Monotonic stack nearest smaller elements",
+          "approachKey": "monotonic-stack",
+          "correct": true,
+          "structures": [
+            "array",
+            "stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"e7848f430e79\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Monotonic stack nearest smaller elements\",\"approachKey\":\"monotonic-stack\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "e7848f430e79"
+        },
+        "structures": [
+          "array",
+          "stack"
+        ],
+        "builtAt": "2026-10-13T07:36:41.657Z"
+      }
     },
     "last-stone-weight": {
       "topic": "Data Structures & Algorithms",
@@ -4674,6 +4724,17 @@
         ],
         "builtAt": "2026-09-24T18:54:46.810Z"
       }
+    },
+    "merge-sorted-array": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "merge-two-sorted-linked-lists": {
       "topic": "Data Structures & Algorithms",
