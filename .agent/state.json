@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-13T07:36:41.904Z",
+  "updatedAt": "2026-10-14T11:19:23.083Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -4727,14 +4727,62 @@
     },
     "merge-sorted-array": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "566b2e102816dbdc3a81c701b5efc93a0e9d65fd9ee4701396139f469b522346": "optimal.cs"
+      },
+      "fingerprints": {
+        "566b2e102816dbdc3a81c701b5efc93a0e9d65fd9ee4701396139f469b522346": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "f8885a2e533a"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f8885a2e533a\",\"time\":\"O(m + n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer merge from end\",\"approachKey\":\"two-pointer-merge-backwards\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(m + n)",
+          "space": "O(1)",
+          "algorithm": "Two-pointer merge from end",
+          "approachKey": "two-pointer-merge-backwards",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f8885a2e533a\",\"time\":\"O(m + n)\",\"space\":\"O(1)\",\"algorithm\":\"Two-pointer merge from end\",\"approachKey\":\"two-pointer-merge-backwards\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "f8885a2e533a"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-14T11:19:22.725Z"
+      }
     },
     "merge-two-sorted-linked-lists": {
       "topic": "Data Structures & Algorithms",
