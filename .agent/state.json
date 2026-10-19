@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-19T23:31:50.498Z",
+  "updatedAt": "2026-10-19T23:34:32.356Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -956,15 +956,92 @@
     },
     "contains-duplicate-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs",
-        "submission-2.cs"
+      "curatedFiles": [
+        "optimal.cs",
+        "suboptimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "52274a3daa38c2b16364419aed409ac8a61d06b346ab2c25b7cf8d5db8dce1a7": "optimal.cs",
+        "0bce6d407792d9269f6af6d0f695b5c46c9bf6cdfe9763d60e2096e2e8f3b2e4": "suboptimal.cs"
+      },
+      "fingerprints": {
+        "52274a3daa38c2b16364419aed409ac8a61d06b346ab2c25b7cf8d5db8dce1a7": "optimal.cs",
+        "0bce6d407792d9269f6af6d0f695b5c46c9bf6cdfe9763d60e2096e2e8f3b2e4": "suboptimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "537c2e7e3fe4"
+        },
+        "suboptimal.cs": {
+          "version": 2,
+          "codePrint": "a93facd5f198"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"537c2e7e3fe4\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"sliding window hash set\",\"approachKey\":\"sliding-window-hashset\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a93facd5f198\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map index tracking\",\"approachKey\":\"hashmap-index-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(k) space)\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-2.cs when it was first processed",
+          "recordedFrom": "classify"
+        },
+        "suboptimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(k)",
+          "algorithm": "sliding window hash set",
+          "approachKey": "sliding-window-hashset",
+          "correct": true,
+          "structures": [
+            "array",
+            "hash-set"
+          ]
+        },
+        "suboptimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "hash map index tracking",
+          "approachKey": "hashmap-index-tracking",
+          "correct": true,
+          "structures": [
+            "array",
+            "hash-map"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"537c2e7e3fe4\",\"time\":\"O(n)\",\"space\":\"O(k)\",\"algorithm\":\"sliding window hash set\",\"approachKey\":\"sliding-window-hashset\",\"correct\":true,\"selfMark\":false,\"standing\":\"ranks above suboptimal.cs (O(n) time / O(n) space)\"}",
+        "suboptimal.cs": "{\"v\":4,\"name\":\"suboptimal.cs\",\"codePrint\":\"a93facd5f198\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"hash map index tracking\",\"approachKey\":\"hashmap-index-tracking\",\"correct\":true,\"selfMark\":true,\"standing\":\"ranks below optimal.cs (O(n) time / O(k) space)\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs",
+          "suboptimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "537c2e7e3fe4",
+          "suboptimal.cs": "a93facd5f198"
+        },
+        "structures": [
+          "array",
+          "hash-set",
+          "hash-map"
+        ],
+        "builtAt": "2026-10-19T23:34:32.027Z"
+      }
     },
     "copy-linked-list-with-random-pointer": {
       "topic": "Data Structures & Algorithms",
