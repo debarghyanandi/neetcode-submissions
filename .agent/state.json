@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-18T21:37:35.985Z",
+  "updatedAt": "2026-10-19T06:19:04.888Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -263,14 +263,62 @@
     },
     "baseball-game": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "97a223a392f0fb592af457cce836bb242e08fd9164bf76e9b4f33f8d352bacd9": "optimal.cs"
+      },
+      "fingerprints": {
+        "97a223a392f0fb592af457cce836bb242e08fd9164bf76e9b4f33f8d352bacd9": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2d79e730b8f6"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2d79e730b8f6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack simulation\",\"approachKey\":\"stack-simulation\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": true,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "Stack simulation",
+          "approachKey": "stack-simulation",
+          "correct": true,
+          "structures": [
+            "stack"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2d79e730b8f6\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"Stack simulation\",\"approachKey\":\"stack-simulation\",\"correct\":true,\"selfMark\":true,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2d79e730b8f6"
+        },
+        "structures": [
+          "stack"
+        ],
+        "builtAt": "2026-10-19T06:19:04.502Z"
+      }
     },
     "binary-search": {
       "topic": "Data Structures & Algorithms",
