@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-21T13:39:38.174Z",
+  "updatedAt": "2026-10-21T17:00:35.998Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -956,14 +956,62 @@
     },
     "concatenation-of-array": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "d2d9cc4a26fd86cf4c6a60645bf48ef113de5dd396471296cdd454d1884826dd": "optimal.cs"
+      },
+      "fingerprints": {
+        "d2d9cc4a26fd86cf4c6a60645bf48ef113de5dd396471296cdd454d1884826dd": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "c4dc2f490366"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c4dc2f490366\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Direct array concatenation\",\"approachKey\":\"direct-concatenation\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Direct array concatenation",
+          "approachKey": "direct-concatenation",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"c4dc2f490366\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Direct array concatenation\",\"approachKey\":\"direct-concatenation\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "c4dc2f490366"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-21T17:00:35.589Z"
+      }
     },
     "contains-duplicate-ii": {
       "topic": "Data Structures & Algorithms",
@@ -5557,6 +5605,17 @@
         ],
         "builtAt": "2026-10-01T20:02:00.906Z"
       }
+    },
+    "pascals-triangle": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-1.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "permutation-string": {
       "topic": "Data Structures & Algorithms",
