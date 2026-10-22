@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-22T04:36:29.013Z",
+  "updatedAt": "2026-10-22T04:40:04.377Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2281,14 +2281,62 @@
     },
     "find-the-town-judge": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "4b988e36dc65d192ec4b72dbb1f22cc752058c08f22746240269ecb2db743d77": "optimal.cs"
+      },
+      "fingerprints": {
+        "4b988e36dc65d192ec4b72dbb1f22cc752058c08f22746240269ecb2db743d77": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "1927e3905c8d"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"1927e3905c8d\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"In-degree, out-degree counting\",\"approachKey\":\"degree-count\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(n)",
+          "algorithm": "In-degree, out-degree counting",
+          "approachKey": "degree-count",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"1927e3905c8d\",\"time\":\"O(n + m)\",\"space\":\"O(n)\",\"algorithm\":\"In-degree, out-degree counting\",\"approachKey\":\"degree-count\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "1927e3905c8d"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-22T04:40:04.004Z"
+      }
     },
     "house-robber": {
       "topic": "Data Structures & Algorithms",
