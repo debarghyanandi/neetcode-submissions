@@ -80,11 +80,12 @@ is('the sheet number is shown', html.includes('>#2</span>'), true);
 is('the search text of a note includes its takeaway',
   /data-hay="([^"]*)"[^>]*data-problem="[^"]*\/note-d"/.exec(html)?.[1].includes('running totals') ?? false, true);
 
-is('the left roadmap has a link per drawn group', (html.match(/class="rail-link"/g) || []).length, 4);
-is('the right note shows notes solved out of the sheet total',
-  html.includes('<p class="tally"><b>2</b> / 2</p>'), true);
-is('the right note shows sheet problems solved out of the sheet total',
-  html.includes('<p class="tally"><b>6</b> / 6</p>'), true);
+is('no side rails are drawn: one column, the stats live in the header',
+  html.includes('rail-link') || html.includes('stickynote'), false);
+is('the header counts notes solved out of the sheet total',
+  html.includes('<b>2</b> / 2 <em>📝 pattern notes solved</em>'), true);
+is('the header counts sheet problems solved out of the sheet total',
+  html.includes('<b>6</b> / 6 <em>of the Blueprint sheet</em>'), true);
 
 // With no sheet at all the page still builds: every solved problem is filed by the rules.
 const bare = buildIndexHtml(problems, state, { web, pages });

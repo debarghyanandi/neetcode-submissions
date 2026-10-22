@@ -7,283 +7,174 @@
 <meta name="description" content="96 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* The same tokens as scripts/templates/visualizer.chassis.html. The index and
-   the thing it opens should look like one piece of work, so the values are
-   copied rather than approximated. Single visual world, painted explicitly. */
+/* Blue reference theme: cool near-white paper, blue actions, green for done.
+   Colours were sampled from the reference screenshot. Solid hairline borders and
+   soft radii throughout; no hand-drawn tilts. */
 :root{
-  --paper:#FBF5E9; --paper-sunk:#F5EDDD;
-  --ink:#211E1A; --pencil:#8A8175; --pencil-light:#C9C0AF;
-  --orange:#F5A93F; --orange-soft:#FBE3BC;
-  --red:#C94F2E; --green:#5E8C61;
-  --hand:'Patrick Hand','Segoe Print','Bradley Hand',cursive;
-  --mono:'Courier Prime',ui-monospace,'Courier New',monospace;
-  --sk-lg:255px 18px 225px 18px / 18px 225px 18px 255px;
-  --sk-md:14px 8px 12px 10px / 10px 12px 8px 14px;
-  --sk-sm:8px 5px 9px 6px / 6px 9px 5px 8px;
+  --bg:#f9fafe; --panel:#ffffff; --panel-soft:#f1f5fd;
+  --ink:#182028; --muted:#5b6a84; --faint:#8d9ab2;
+  --line:#dfe6f3; --line-soft:#edf2fa;
+  --blue:#2870f8; --blue-deep:#1d5ae0; --blue-soft:#e4edff; --blue-edge:#c3d6fb;
+  --green:#28b878; --green-soft:#dff6ea;
+  --red:#e5484d; --red-soft:#fde4e4;
+  --radius:14px; --radius-sm:9px;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{
-  margin:0;background:var(--paper);color:var(--ink);
-  font-family:var(--hand);font-size:17px;line-height:1.5;
-  padding-block:30px 60px;padding-left:clamp(16px,3.5vw,52px);padding-right:clamp(16px,3.5vw,52px);
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-size:15px;line-height:1.5;
+  padding:28px clamp(16px,3vw,48px) 64px;
 }
-/* Three columns on a wide screen: the roadmap in the left margin, the sheet in the middle,
-   a pinned note on the right. Below 1320px the margins go and the sheet is centred alone. */
-.frame{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,980px) minmax(0,1fr);max-width:1600px;margin:0 auto;}
-.wrap{min-width:0;}
+/* Stretched across the screen, with a generous measure on very wide displays. */
+.wrap{max-width:1480px;margin:0 auto;min-width:0;}
 a{color:inherit;}
 
 /* ---------- masthead ---------- */
-.masthead{display:flex;flex-wrap:wrap;gap:18px 40px;align-items:flex-end;justify-content:space-between;
-  padding-bottom:16px;border-bottom:2px solid var(--ink);}
-.eyebrow{margin:0 0 2px;font-size:15px;color:var(--pencil);transform:rotate(-1deg);transform-origin:left bottom;}
-h1{margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.02;font-weight:400;text-wrap:balance;}
-.lede{margin:9px 0 0;max-width:64ch;}
-.lede code{font-family:var(--mono);font-size:13px;background:var(--orange-soft);padding:0 4px;border-radius:var(--sk-sm);}
-.meter{min-width:230px;display:flex;flex-direction:column;gap:7px;}
-.meter-line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px;color:var(--pencil);}
-.meter-line b{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
-.bar{height:14px;border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);overflow:hidden;}
-.bar span{display:block;height:100%;background:var(--green);}
+.masthead{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,440px);gap:24px 48px;
+  align-items:end;padding-bottom:22px;}
+.eyebrow{margin:0 0 6px;font-size:13px;color:var(--faint);}
+h1{margin:0;font-size:clamp(28px,3.2vw,40px);line-height:1.1;font-weight:600;letter-spacing:-.02em;}
+.lede{margin:10px 0 0;max-width:68ch;color:var(--muted);}
+.meter{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px 16px;box-shadow:0 1px 2px rgba(24,32,40,.04);}
+.meter-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;color:var(--muted);font-size:14px;}
+.meter-figure{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;}
+.bar{height:10px;border-radius:999px;background:var(--line-soft);overflow:hidden;margin:12px 0 10px;}
+.bar span{display:block;height:100%;background:var(--green);border-radius:999px;}
+.meter-hint{margin:0;font-size:12.5px;color:var(--faint);}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line-soft);font-size:13px;color:var(--muted);}
+.stat b{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--ink);}
+.stat em{font-style:normal;}
 
 /* ---------- controls ---------- */
-.controls{position:sticky;top:0;z-index:20;background:var(--paper);
-  display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;
-  margin:0 -6px 22px;padding:14px 6px 12px;border-bottom:2px dashed var(--pencil-light);}
-.search{flex:1 1 300px;display:flex;align-items:center;gap:10px;
-  border:2px solid var(--ink);border-radius:var(--sk-md);background:var(--paper);padding:6px 14px;}
+.controls{position:sticky;top:0;z-index:20;background:var(--bg);
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  margin:0 0 16px;padding:14px 0 12px;border-bottom:1px solid var(--line);}
+.search{flex:1 1 320px;display:flex;align-items:center;gap:10px;min-height:42px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 14px;}
+.search:focus-within{border-color:var(--blue);}
 .search input{flex:1;min-width:0;border:0;outline:0;background:transparent;
-  font-family:var(--hand);font-size:17px;color:var(--ink);}
-.search input::placeholder{color:var(--pencil-light);}
-.search .mark{font-size:16px;color:var(--pencil);}
-.search .clear{border:0;background:transparent;cursor:pointer;font-family:var(--hand);font-size:17px;color:var(--pencil);padding:0 2px;}
+  font-family:var(--sans);font-size:15px;color:var(--ink);}
+.search input::placeholder{color:var(--faint);}
+.search .mark{font-size:15px;color:var(--faint);}
+.search .clear{border:0;background:transparent;cursor:pointer;font-family:var(--sans);font-size:18px;color:var(--faint);padding:0 2px;}
 .search .clear:hover{color:var(--red);}
 .chips{display:flex;gap:8px;flex-wrap:wrap;}
-.chip{font-family:var(--hand);font-size:15px;line-height:1;color:var(--ink);background:var(--paper);
-  border:2px solid var(--ink);border-radius:var(--sk-sm);padding:7px 12px 9px;cursor:pointer;white-space:nowrap;}
-.chip:hover{background:var(--orange-soft);}
-.chip[aria-pressed="true"]{background:var(--orange);}
-.chip:focus-visible,.search input:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
-.count{font-family:var(--mono);font-size:13px;color:var(--pencil);font-variant-numeric:tabular-nums;margin-left:auto;}
+.chip{font-family:var(--sans);font-size:14px;line-height:1;color:var(--ink);background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;white-space:nowrap;}
+.chip:hover{border-color:var(--blue-edge);background:var(--blue-soft);}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;}
+.chip:focus-visible,.search input:focus-visible{outline:3px solid var(--blue-edge);outline-offset:2px;}
+.count{font-family:var(--mono);font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums;margin-left:auto;}
+
+/* ---------- backup and revision key ---------- */
+.backup-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px;
+  padding:10px 14px;border:1px solid var(--blue-edge);border-radius:12px;background:var(--blue-soft);}
+.backup-message{flex:1 1 300px;margin:0;font-size:13.5px;color:var(--muted);}
+.backup-panel[data-backup-state="error"]{border-color:var(--red);background:var(--red-soft);}
+.backup-panel[data-backup-state="error"] .backup-message{color:var(--red);}
+.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:100%;}
+.backup-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.backup-mode select{font-family:var(--sans);font-size:13px;padding:6px 8px;max-width:100%;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);}
+.backup-button{font-family:var(--sans);font-size:13.5px;font-weight:500;line-height:1;padding:9px 13px;
+  border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);cursor:pointer;}
+.backup-button.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.backup-button:hover:not(:disabled){border-color:var(--blue-edge);background:var(--blue-soft);}
+.backup-button.primary:hover:not(:disabled){background:var(--blue-deep);border-color:var(--blue-deep);}
+.backup-button:disabled{opacity:.55;cursor:default;}
+.backup-button:focus-visible,.backup-mode select:focus-visible{outline:3px solid var(--blue-edge);outline-offset:2px;}
+
+/* Revision tones: grey at zero, then a warm climb to green at four. */
+.revision-tone{--revision-fill:var(--panel-soft);--revision-edge:#c9d3e6;}
+.revision-tone[data-revisions="1"]{--revision-fill:#fde4e4;--revision-edge:#e5484d;}
+.revision-tone[data-revisions="2"]{--revision-fill:#ffeccc;--revision-edge:#f59f00;}
+.revision-tone[data-revisions="3"]{--revision-fill:#fff6c7;--revision-edge:#d9b400;}
+.revision-tone[data-revisions="4"]{--revision-fill:var(--green-soft);--revision-edge:var(--green);}
+.revision-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0 0 20px;font-size:13px;color:var(--muted);}
+.revision-key .step{display:inline-flex;align-items:center;gap:6px;}
+.revision-key .swatch{width:10px;height:10px;border-radius:50%;background:var(--revision-fill);border:1px solid var(--revision-edge);}
 
 /* ---------- groups ---------- */
-.group{border:2px solid var(--ink);border-radius:var(--sk-lg);padding:18px 22px 8px;margin-bottom:20px;}
-.group-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between;}
-.group h2{margin:0;font-size:24px;font-weight:400;transform:rotate(-.5deg);transform-origin:left center;}
-.group-count{font-family:var(--mono);font-size:13px;color:var(--pencil);font-variant-numeric:tabular-nums;white-space:nowrap;}
-.group-count b{font-weight:700;color:var(--ink);}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 22px 6px;margin-bottom:16px;box-shadow:0 1px 2px rgba(24,32,40,.03);}
+.group-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;justify-content:space-between;}
+.group h2{margin:0;font-size:19px;font-weight:600;letter-spacing:-.01em;}
+.group-count{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.group-count b{font-family:var(--mono);font-weight:500;color:var(--ink);}
 .group-count .gdone{color:var(--green);}
-.group-note{margin:4px 0 12px;font-size:15px;color:var(--pencil);max-width:70ch;}
+.group-note{margin:4px 0 8px;font-size:13.5px;color:var(--muted);max-width:72ch;}
 ul{list-style:none;margin:0;padding:0;}
-li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 2px;}
+li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:13px 0;}
 /* The filter works by setting li.hidden, and the display:flex above beats the
    browser's own [hidden] rule - so every row stayed on screen while the count
-   under the chips correctly read "2 of 62". The JS was right; the CSS was
-   drawing rows it had been told to hide. Same for the group sections. */
+   under the chips correctly read "2 of 62". Same for the group sections. */
 [hidden]{display:none !important;}
-li + li{border-top:2px dashed var(--pencil-light);}
+li + li{border-top:1px solid var(--line-soft);}
 .who{flex:1 1 280px;min-width:0;}
-.name{font-size:19px;text-decoration:none;border-bottom:2px solid var(--pencil-light);}
-.name:hover{border-bottom-color:var(--orange);background:var(--orange-soft);}
-.why{display:block;font-size:14px;color:var(--pencil);margin-top:2px;}
-.why.none{font-style:italic;color:var(--pencil-light);}
+.name-line{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;min-width:0;}
+.name{font-size:15.5px;font-weight:600;text-decoration:none;color:var(--ink);}
+.name:hover{color:var(--blue);text-decoration:underline;text-underline-offset:3px;}
+.sheet-no{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap;}
+/* The pattern-note tag: a blue pill on every problem the Blueprint sheet marks as a note. */
+.note-badge{font-size:12.5px;line-height:1;padding:5px 10px 6px;border:1px solid var(--blue-edge);
+  border-radius:999px;background:var(--blue-soft);color:var(--blue-deep);font-weight:500;
+  white-space:nowrap;cursor:help;}
+.note-badge:hover{background:#d5e4ff;}
+.why{display:block;font-size:13px;color:var(--muted);margin-top:3px;}
+.why.none{font-style:italic;color:var(--faint);}
 .meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-left:auto;min-width:0;max-width:100%;}
 .sources{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%;}
-.source-row{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;}
-.actions{display:flex;gap:9px;align-items:center;}
+.source-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;}
+.actions{display:flex;gap:8px;align-items:center;}
 .cx{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 8px 7px;
-  border:2px solid var(--pencil-light);border-radius:var(--sk-sm);color:var(--pencil);white-space:nowrap;}
+  border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);white-space:nowrap;}
 .src{font-family:var(--mono);font-size:11.5px;line-height:1;padding:6px 9px 7px;text-decoration:none;
-  border:2px solid var(--ink);border-radius:var(--sk-sm);white-space:nowrap;}
-.src:hover{background:var(--orange-soft);}
-.run{font-family:var(--hand);font-size:15px;line-height:1;padding:6px 12px 8px;text-decoration:none;
-  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--orange-soft);white-space:nowrap;}
-.run:hover{background:var(--orange);}
-.run.off{border-color:var(--pencil-light);color:var(--pencil-light);background:transparent;pointer-events:none;}
+  border:1px solid var(--blue-edge);border-radius:7px;background:#f3f7ff;color:var(--ink);white-space:nowrap;}
+.src:hover{background:var(--blue-soft);border-color:var(--blue);}
+.run{font-size:13px;font-weight:500;line-height:1;padding:8px 12px 8px;text-decoration:none;
+  border-radius:8px;background:var(--blue);color:#fff;white-space:nowrap;}
+.run:hover{background:var(--blue-deep);}
+.run.off{background:var(--line-soft);color:var(--faint);pointer-events:none;}
 /* The pipeline verdict stays available to screen readers and in the tooltip. */
-.mark-std{display:inline-flex;align-items:center;justify-content:center;width:14px;height:24px;flex:none;}
+.mark-std{display:inline-flex;align-items:center;justify-content:center;width:12px;height:24px;flex:none;}
 .mark-std .dot{width:9px;height:9px;border-radius:50%;}
 .mark-std.current .dot{background:var(--green);}
 .mark-std.rebuild .dot{background:var(--red);}
+.revision{font-family:var(--sans);font-size:12.5px;line-height:1;padding:8px 10px 8px;
+  border:1px solid var(--revision-edge);border-radius:8px;background:var(--revision-fill);
+  color:var(--ink);white-space:nowrap;cursor:pointer;}
+.revision .revision-count{font-family:var(--mono);font-size:11px;margin-left:5px;color:var(--muted);}
+.revision:hover:not(:disabled){border-color:var(--ink);}
+.revision:disabled{cursor:default;}
+.revision:focus-visible,.src:focus-visible,.run:focus-visible{outline:3px solid var(--blue-edge);outline-offset:2px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip-path:inset(50%);white-space:nowrap;border:0;}
 
-/* Five quiet ink-and-paper colours, ending in the page's existing sage green. */
-.revision-tone{--revision-fill:var(--paper-sunk);--revision-edge:var(--pencil-light);}
-.revision-tone[data-revisions="1"]{--revision-fill:#EED5CA;--revision-edge:#A56C5A;}
-.revision-tone[data-revisions="2"]{--revision-fill:#F4D5AE;--revision-edge:#AE7A45;}
-.revision-tone[data-revisions="3"]{--revision-fill:#F2E4AE;--revision-edge:#A08B41;}
-.revision-tone[data-revisions="4"]{--revision-fill:#DCE8D5;--revision-edge:var(--green);}
-.revision{font-family:var(--hand);font-size:15px;line-height:1;padding:6px 9px 8px;
-  border:2px solid var(--revision-edge);border-radius:var(--sk-sm);background:var(--revision-fill);
-  color:var(--ink);white-space:nowrap;cursor:pointer;}
-.revision .revision-count{font-family:var(--mono);font-size:11px;margin-left:5px;}
-.revision:hover:not(:disabled){border-color:var(--ink);}
-.revision:disabled{cursor:default;}
-.revision:focus-visible,.src:focus-visible,.run:focus-visible{outline:3px solid var(--orange);outline-offset:3px;}
-.revision-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-6px 0 20px;font-size:14px;color:var(--pencil);}
-.revision-key .step{display:inline-flex;align-items:center;gap:4px;}
-.revision-key .swatch{width:11px;height:11px;background:var(--revision-fill);border:1px solid var(--revision-edge);border-radius:50%;}
-.backup-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-6px 0 18px;
-  padding:10px 12px;border:2px solid var(--pencil-light);border-radius:var(--sk-md);background:var(--paper-sunk);}
-.backup-message{flex:1 1 300px;margin:0;font-size:15px;color:var(--pencil);}
-.backup-panel[data-backup-state="error"]{border-color:var(--red);}
-.backup-panel[data-backup-state="error"] .backup-message{color:var(--red);}
-.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:100%;}
-.backup-mode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;color:var(--pencil);}
-.backup-mode select{font-family:var(--hand);font-size:14px;padding:5px 6px;max-width:100%;
-  border:1px solid var(--pencil-light);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);}
-.backup-button{font-family:var(--hand);font-size:15px;line-height:1;padding:7px 11px 9px;
-  border:2px solid var(--ink);border-radius:var(--sk-sm);background:var(--paper);color:var(--ink);cursor:pointer;}
-.backup-button.primary{background:var(--orange-soft);}
-.backup-button:hover:not(:disabled){background:var(--orange-soft);}
-.backup-button:disabled{opacity:.6;cursor:default;}
-.backup-button:focus-visible,.backup-mode select:focus-visible{outline:3px solid var(--orange);outline-offset:3px;}
+.empty{display:none;border:1px dashed var(--line);border-radius:var(--radius);padding:26px 22px;
+  text-align:center;color:var(--muted);background:var(--panel);}
+.foot{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:12.5px;color:var(--faint);}
+.foot code{font-family:var(--mono);font-size:11.5px;}
 
-.empty{display:none;border:2px dashed var(--pencil-light);border-radius:var(--sk-lg);padding:26px 22px;text-align:center;color:var(--pencil);}
-.foot{margin-top:28px;padding-top:14px;border-top:2px solid var(--ink);
-  display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:14px;color:var(--pencil);}
-.foot code{font-family:var(--mono);font-size:12px;}
+@media (max-width:860px){
+  .masthead{grid-template-columns:minmax(0,1fr);}
+}
 @media (max-width:640px){
   .meta{margin-left:0;justify-content:flex-start;} .count{margin-left:0;}
   .source-row{justify-content:flex-start;} .cx{white-space:normal;overflow-wrap:anywhere;}
   .src{white-space:normal;overflow-wrap:anywhere;max-width:100%;}
 }
-/* ---------- the margins ---------- */
-/* Ruled like a notebook page, with one red margin line on the roadmap side. */
-.margin{position:sticky;top:96px;align-self:start;max-height:calc(100vh - 120px);overflow:auto;
-  width:100%;max-width:230px;min-width:0;padding:6px 16px 10px;
-  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(201,192,175,.28) 31px 32px);}
-.margin-left{justify-self:end;border-right:2px solid rgba(201,79,46,.34);padding-right:22px;}
-.margin-right{justify-self:start;padding-left:22px;}
-.rail-title{margin:4px 0 8px;font-size:21px;line-height:1.1;transform:rotate(-1deg);transform-origin:left center;}
-.rail-nav{display:flex;flex-direction:column;gap:2px;}
-/* Each roadmap entry: the number down the left, the name on the first line, the count beneath. */
-.rail-link{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:1px;align-items:baseline;
-  padding:6px 8px 6px 4px;border-radius:var(--sk-sm);color:var(--ink);text-decoration:none;font-size:15px;line-height:1.2;}
-.rail-link:hover{background:var(--orange-soft);}
-.rail-link[aria-current="true"]{background:var(--orange);}
-.rail-link:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
-.rail-no{grid-row:1 / span 2;font-family:var(--mono);font-size:11px;color:var(--pencil);}
-.rail-name{grid-column:2;}
-.rail-count{grid-column:2;font-family:var(--mono);font-size:11px;color:var(--pencil);white-space:nowrap;}
-/* A sticky note, tilted and taped, for the running tally. */
-.stickynote{position:relative;margin-top:16px;padding:20px 16px 16px;background:var(--orange-soft);
-  border:2px solid var(--ink);border-radius:var(--sk-md);transform:rotate(1.2deg);box-shadow:3px 4px 0 var(--pencil-light);}
-.stickynote::before{content:"";position:absolute;top:-12px;left:50%;width:72px;height:20px;margin-left:-36px;
-  background:rgba(245,169,63,.55);transform:rotate(-3deg);border-radius:2px;}
-.tally{margin:8px 0 0;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--pencil);font-size:13px;white-space:nowrap;}
-.tally b{font-size:24px;font-weight:700;color:var(--ink);}
-.tally-sub{margin:0;font-size:14px;color:var(--pencil);}
-.scrawl{margin:16px 0 0;font-size:17px;line-height:1.3;transform:rotate(-1.5deg);}
-/* A row's name line: the title, its sheet number, and the 📝 mark for a pattern note. */
-.name-line{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;min-width:0;}
-.sheet-no{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
-.note-badge{font-size:14px;line-height:1;padding:4px 8px 6px;border:2px solid var(--ink);border-radius:var(--sk-sm);
-  background:var(--paper);white-space:nowrap;cursor:help;}
-.note-badge:hover{background:var(--orange-soft);}
-@media (max-width:1319px){
-  .frame{grid-template-columns:minmax(0,980px);justify-content:center;}
-  .margin{display:none;}
-}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto;}}
 </style>
 </head>
 <body>
-<div class="frame">
-<aside class="margin margin-left" aria-label="Roadmap">
-    <p class="rail-title">Roadmap</p>
-    <nav class="rail-nav" aria-label="Groups">
-      <a class="rail-link" href="#g-arrays-hashing" data-target="g-arrays-hashing">
-        <span class="rail-no">01</span>
-        <span class="rail-name">Arrays &amp; Hashing</span>
-        <span class="rail-count">13 / 34</span>
-      </a>
-      <a class="rail-link" href="#g-two-pointers" data-target="g-two-pointers">
-        <span class="rail-no">02</span>
-        <span class="rail-name">Two Pointers</span>
-        <span class="rail-count">9 / 16</span>
-      </a>
-      <a class="rail-link" href="#g-sliding-window" data-target="g-sliding-window">
-        <span class="rail-no">03</span>
-        <span class="rail-name">Sliding Window</span>
-        <span class="rail-count">8 / 19</span>
-      </a>
-      <a class="rail-link" href="#g-stack" data-target="g-stack">
-        <span class="rail-no">04</span>
-        <span class="rail-name">Stack</span>
-        <span class="rail-count">8 / 20</span>
-      </a>
-      <a class="rail-link" href="#g-binary-search" data-target="g-binary-search">
-        <span class="rail-no">05</span>
-        <span class="rail-name">Binary Search</span>
-        <span class="rail-count">6 / 21</span>
-      </a>
-      <a class="rail-link" href="#g-linked-list" data-target="g-linked-list">
-        <span class="rail-no">06</span>
-        <span class="rail-name">Linked List</span>
-        <span class="rail-count">9 / 23</span>
-      </a>
-      <a class="rail-link" href="#g-trees" data-target="g-trees">
-        <span class="rail-no">07</span>
-        <span class="rail-name">Trees</span>
-        <span class="rail-count">11 / 46</span>
-      </a>
-      <a class="rail-link" href="#g-tries" data-target="g-tries">
-        <span class="rail-no">08</span>
-        <span class="rail-name">Tries</span>
-        <span class="rail-count">2 / 6</span>
-      </a>
-      <a class="rail-link" href="#g-heap-priority-queue" data-target="g-heap-priority-queue">
-        <span class="rail-no">09</span>
-        <span class="rail-name">Heap / Priority Queue</span>
-        <span class="rail-count">3 / 12</span>
-      </a>
-      <a class="rail-link" href="#g-backtracking" data-target="g-backtracking">
-        <span class="rail-no">10</span>
-        <span class="rail-name">Backtracking</span>
-        <span class="rail-count">1 / 19</span>
-      </a>
-      <a class="rail-link" href="#g-graphs" data-target="g-graphs">
-        <span class="rail-no">11</span>
-        <span class="rail-name">Graphs</span>
-        <span class="rail-count">7 / 27</span>
-      </a>
-      <a class="rail-link" href="#g-1-d-dynamic-programming" data-target="g-1-d-dynamic-programming">
-        <span class="rail-no">13</span>
-        <span class="rail-name">1-D Dynamic Programming</span>
-        <span class="rail-count">7 / 25</span>
-      </a>
-      <a class="rail-link" href="#g-2-d-dynamic-programming" data-target="g-2-d-dynamic-programming">
-        <span class="rail-no">14</span>
-        <span class="rail-name">2-D Dynamic Programming</span>
-        <span class="rail-count">2 / 31</span>
-      </a>
-      <a class="rail-link" href="#g-greedy" data-target="g-greedy">
-        <span class="rail-no">15</span>
-        <span class="rail-name">Greedy</span>
-        <span class="rail-count">3 / 18</span>
-      </a>
-      <a class="rail-link" href="#g-intervals" data-target="g-intervals">
-        <span class="rail-no">16</span>
-        <span class="rail-name">Intervals</span>
-        <span class="rail-count">2 / 9</span>
-      </a>
-      <a class="rail-link" href="#g-math-geometry" data-target="g-math-geometry">
-        <span class="rail-no">17</span>
-        <span class="rail-name">Math &amp; Geometry</span>
-        <span class="rail-count">2 / 16</span>
-      </a>
-      <a class="rail-link" href="#g-bit-manipulation" data-target="g-bit-manipulation">
-        <span class="rail-no">18</span>
-        <span class="rail-name">Bit Manipulation</span>
-        <span class="rail-count">3 / 15</span>
-      </a>
-    </nav>
-  </aside>
 <div class="wrap">
 
   <header class="masthead">
@@ -294,9 +185,13 @@ li + li{border-top:2px dashed var(--pencil-light);}
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-line"><span>at current standard</span><b><span id="curCount">95</span> / 96</b></div>
-      <div class="bar"><span id="bar" style="width:99.0%"></span></div>
-      <div class="meter-line"><span>red means lint, classify, teach or the visualizer is not yet at the current standard</span></div>
+      <div class="meter-top"><span>at current standard</span><b class="meter-figure"><span id="curCount">95</span> / 96</b></div>
+      <div class="bar" aria-hidden="true"><span id="bar" style="width:99.0%"></span></div>
+      <p class="meter-hint">red means lint, classify, teach or the visualizer is not yet at the current standard</p>
+      <div class="stats">
+        <span class="stat"><b>49</b> / 166 <em>📝 pattern notes solved</em></span>
+        <span class="stat"><b>96</b> / 376 <em>of the Blueprint sheet</em></span>
+      </div>
     </div>
   </header>
 
@@ -2246,17 +2141,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
     <span>Standard: lint, classify, teach and visualizer <code>v2</code></span>
   </footer>
 </div>
-<aside class="margin margin-right" aria-label="Pattern notes">
-    <div class="stickynote">
-      <p class="rail-title">Pattern notes</p>
-      <p class="tally"><b>49</b> / 166</p>
-      <p class="tally-sub">📝 solved</p>
-      <p class="tally"><b>96</b> / 376</p>
-      <p class="tally-sub">of the Blueprint sheet</p>
-      <p class="scrawl">One problem per pattern. Revisit each one weekly.</p>
-    </div>
-  </aside>
-</div>
 
 <script>
 (function(){
@@ -2281,10 +2165,9 @@ li + li{border-top:2px dashed var(--pencil-light);}
       if (on) shown++;
     });
     // A group with nothing left in it is noise, not structure.
-    groups.forEach(function(g, i){
+    groups.forEach(function(g){
       var any = [].slice.call(g.querySelectorAll('li[data-hay]')).some(function(li){ return !li.hidden; });
       g.hidden = !any;
-      if (railLinks[i]) railLinks[i].hidden = !any;
     });
     empty.style.display = shown ? 'none' : 'block';
     count.textContent = shown === rows.length ? rows.length + ' problems' : shown + ' of ' + rows.length;
@@ -2307,18 +2190,6 @@ li + li{border-top:2px dashed var(--pencil-light);}
       apply();
     });
   });
-  // The roadmap in the left margin follows the page: the last visible group whose
-  // heading has scrolled up past the top of the screen is the one marked current.
-  var railLinks = [].slice.call(document.querySelectorAll('.rail-link'));
-  function spy(){
-    var cur = -1;
-    groups.forEach(function(g, i){
-      if (!g.hidden && g.getBoundingClientRect().top < 150) cur = i;
-    });
-    railLinks.forEach(function(a, i){ a.setAttribute('aria-current', i === cur ? 'true' : 'false'); });
-  }
-  window.addEventListener('scroll', spy, { passive: true });
-  spy();
   apply();
 })();
 (function initRevisions() {
