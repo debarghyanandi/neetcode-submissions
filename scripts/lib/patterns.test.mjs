@@ -111,13 +111,13 @@ const ga = (slug, pattern, algorithm, structures) => groupFor({ slug, pattern, a
 is('a space-optimised DP has no dp-table, and is still 1-D DP',
   ga('house-robber-ii', 'House Robber II - circular array split into two linear DP runs',
      'Dynamic programming, space-optimized, circular constraint split', ['array']),
-  '1-D DP');
+  '1-D Dynamic Programming');
 is('the algorithm field alone is enough',
-  ga('some-problem', '', 'Bottom-up dynamic programming', ['array']), '1-D DP');
+  ga('some-problem', '', 'Bottom-up dynamic programming', ['array']), '1-D Dynamic Programming');
 is('and so is a bare "DP" in the teach block',
-  ga('some-problem', 'bottom-up DP over the prefix', '', ['array']), '1-D DP');
+  ga('some-problem', 'bottom-up DP over the prefix', '', ['array']), '1-D Dynamic Programming');
 is('a dp-table still lands there with nothing else said',
-  ga('x', '', '', ['array', 'dp-table']), '1-D DP');
+  ga('x', '', '', ['array', 'dp-table']), '1-D Dynamic Programming');
 
 // Word-bounded, so it cannot fire on a substring of something else.
 is('"dpi" is not DP - it falls through rather than being filed as one',
@@ -126,14 +126,29 @@ is('"dpi" is not DP - it falls through rather than being filed as one',
 // 2-D is tested first and no longer needs a dp-table either, since a rolling-row
 // grid DP has none.
 is('a grid DP is 2-D, not 1-D',
-  ga('unique-paths', 'DP over a grid of cells', 'Dynamic programming on a matrix', ['matrix']), '2-D DP');
+  ga('unique-paths', 'DP over a grid of cells', 'Dynamic programming on a matrix', ['matrix']), '2-D Dynamic Programming');
 is('and one that keeps its table, likewise',
-  ga('edit-distance', 'tabulate the edit distance', 'Dynamic programming', ['dp-table']), '2-D DP');
+  ga('edit-distance', 'tabulate the edit distance', 'Dynamic programming', ['dp-table']), '2-D Dynamic Programming');
 
 // Greedy is tested AFTER 1-D DP, so a Kadane scan that called itself DP would now be
 // filed as DP. It does not, and this pins that.
 is('Kadane is still greedy',
   ga('maximum-subarray', "Kadane's algorithm, one rolling sum", "Kadane's algorithm", ['array']), 'Greedy');
+
+// ---- the Blueprint's own groups ------------------------------------------
+// Weighted-graph problems are Advanced Graphs, and that is checked before Graphs,
+// so a Dijkstra on a grid is not read as an ordinary graph traversal.
+is('a Bellman-Ford problem is Advanced Graphs',
+  g('cheapest-flights-within-k-stops', 'Bellman-Ford relaxation, at most k edges'), 'Advanced Graphs');
+is('a network-delay problem is Advanced Graphs by name, whatever it is built from',
+  g('network-delay-time', '', ['graph', 'heap']), 'Advanced Graphs');
+is('a plain graph is still Graphs', g('number-of-islands', 'DFS flood fill', ['matrix']), 'Graphs');
+
+// Bit and maths are split: a bit trick is not a number-theory problem.
+is('a XOR trick is Bit Manipulation',
+  g('single-number', 'XOR every value - pairs cancel', []), 'Bit Manipulation');
+is('a bit-counting problem with no pattern line is Bit Manipulation', g('counting-bits', '', []), 'Bit Manipulation');
+is('a sieve is Math & Geometry', g('count-primes', 'Sieve of Eratosthenes over the integers', []), 'Math & Geometry');
 
 console.log(`\n${pass} passed, ${fail} failed.`);
 process.exit(fail ? 1 : 0);

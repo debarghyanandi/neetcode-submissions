@@ -1,10 +1,10 @@
 /**
  * Which pattern a problem belongs to, for the index page.
  *
- * The groups are the NeetCode roadmap's own sections, because that is the map I
- * actually study from - not a taxonomy invented here. Ordering a page by the
- * same sections as the roadmap means "what have I not covered in Trees yet" is
- * answerable by looking at it.
+ * The groups are the Blueprint sheet's categories. A problem the sheet lists is
+ * placed by the sheet itself (lib/sheet.mjs), so the rules below only run for a
+ * solved folder the sheet does not list. They choose which group it joins, and it
+ * goes to the bottom of that group.
  *
  * WHERE THE ANSWER COMES FROM, in order of trust:
  *
@@ -29,7 +29,11 @@
  * name, so a misfiling is visible rather than silent.
  */
 
-/** Display order, and the complete set of group names. NeetCode's sections. */
+/**
+ * Display order, and the complete set of group names: the Blueprint sheet's own
+ * categories, in the order the sheet lists them. 'Other' is the fallback for a solved
+ * folder that the sheet does not list and no rule files. It is drawn only when it has rows.
+ */
 export const GROUPS = [
   'Arrays & Hashing',
   'Two Pointers',
@@ -38,15 +42,17 @@ export const GROUPS = [
   'Binary Search',
   'Linked List',
   'Trees',
+  'Tries',
   'Heap / Priority Queue',
   'Backtracking',
-  'Tries',
   'Graphs',
-  '1-D DP',
-  '2-D DP',
-  'Intervals',
+  'Advanced Graphs',
+  '1-D Dynamic Programming',
+  '2-D Dynamic Programming',
   'Greedy',
-  'Math & Bit Manipulation',
+  'Intervals',
+  'Math & Geometry',
+  'Bit Manipulation',
   'Other',
 ];
 
@@ -63,11 +69,13 @@ export const GROUP_NOTE = {
   'Backtracking': 'Build a candidate, undo the last choice, try the next.',
   'Tries': 'A tree keyed by prefix, so shared beginnings are stored once.',
   'Graphs': 'Nodes and edges — the traversal is the same, the bookkeeping is the problem.',
-  '1-D DP': 'A row of subproblem answers, each built from the ones before it.',
-  '2-D DP': 'A table of subproblem answers, filled in an order that never looks forward.',
+  'Advanced Graphs': 'Weighted edges: shortest paths, spanning trees, and the order that makes them work.',
+  '1-D Dynamic Programming': 'A row of subproblem answers, each built from the ones before it.',
+  '2-D Dynamic Programming': 'A table of subproblem answers, filled in an order that never looks forward.',
   'Intervals': 'Sort by one end, then sweep once.',
   'Greedy': 'The locally best choice is provably the globally best one.',
-  'Math & Bit Manipulation': 'The structure is in the arithmetic, not in a data structure.',
+  'Math & Geometry': 'The structure is in the arithmetic or the shape, not in a data structure.',
+  'Bit Manipulation': 'A number is a row of bits. AND, OR and XOR work on all of them in one step.',
   'Other': 'Not yet filed. Add a rule in scripts/lib/patterns.mjs.',
 };
 
@@ -93,6 +101,12 @@ const RULES = [
       // filed both longest-substring problems under Trees.
       /(^|-)tree|(^|-)bst(-|$)|binary-search-tree/.test(c.slug) ||
       /\bbst\b|subtree|post-order|in-order|preorder|level order/.test(c.pattern) },
+
+  // Weighted edges and spanning trees. Named by algorithm: classify records no structure
+  // that marks a weighted graph, so the algorithm's name is the only signal there is.
+  { group: 'Advanced Graphs', test: (c) =>
+      /dijkstra|bellman|kruskal|\bprim\b|shortest-path|minimum-spanning|network-delay|cheapest-flight/.test(c.slug) ||
+      c.says(/\b(dijkstra|bellman|kruskal|prim)\b|shortest path|minimum spanning|weighted graph/) },
 
   { group: 'Graphs', test: (c) =>
       has(c.structures, 'graph', 'union-find') ||
@@ -136,7 +150,7 @@ const RULES = [
       /two[- ]pointers?/.test(c.pattern) ||
       /is-palindrome|two-integer-sum-ii|three-integer-sum|max-water|move-zeroes|remove-duplicates-from-sorted|trapping-rain/.test(c.slug) },
 
-  { group: '2-D DP', test: (c) =>
+  { group: '2-D Dynamic Programming', test: (c) =>
       // A dp-table paired with matrix is classify's own strongest signal - it means a
       // dp[i][j] grid, not a dp[i] row - so it settles this on its own, with the prose
       // match kept only for folders classified before that pairing existed.
@@ -147,12 +161,15 @@ const RULES = [
   // `\bdp\b` matters as much as the long phrase: the teach block writes "two linear
   // DP runs" and "bottom-up DP", never "dynamic programming" in full. Kept word-bounded
   // so it cannot fire on a substring.
-  { group: '1-D DP', test: (c) => has(c.structures, 'dp-table') || c.says(DP) },
+  { group: '1-D Dynamic Programming', test: (c) => has(c.structures, 'dp-table') || c.says(DP) },
 
   { group: 'Greedy', test: (c) => /kadane|greedy/.test(c.pattern) },
 
-  { group: 'Math & Bit Manipulation', test: (c) =>
-      has(c.structures, 'bitmask') || /bit mask|bitwise|xor|modul/.test(c.pattern) },
+  { group: 'Bit Manipulation', test: (c) =>
+      has(c.structures, 'bitmask') || /bit mask|bitwise|xor/.test(c.pattern) || /(^|-)bit|xor/.test(c.slug) },
+
+  { group: 'Math & Geometry', test: (c) =>
+      /modul|math|geometr|prime|gcd/.test(c.pattern) || /prime|gcd|geometr|sqrt/.test(c.slug) },
 
   { group: 'Arrays & Hashing', test: (c) =>
       has(c.structures, 'hash-map', 'hash-set') ||

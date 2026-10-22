@@ -27,9 +27,15 @@
  *   IT WORKS WITH NO NETWORK AND NO BUILD. One file, no framework, no CDN
  *   except the font, and it degrades to a perfectly readable list if that font
  *   never arrives. Search is filtering rows that are already on the page.
+ *
+ *   THE ORDER IS THE SHEET'S. Groups are the Blueprint sheet's categories, and a
+ *   group is drawn only once a problem in it is solved. Inside a group the 📝
+ *   pattern notes come first, then the rest, each in sheet order. A solved folder
+ *   the sheet does not list goes to the bottom of the group its rules choose.
  */
 
-import { GROUP_NOTE, groupFor, groupRank } from './patterns.mjs';
+import { GROUP_NOTE, GROUPS, groupFor, groupRank } from './patterns.mjs';
+import { buildSheet, matchSheet } from './sheet.mjs';
 import { atStandard, needs } from './standard.mjs';
 import { VISUALIZER_FORMAT } from './shapes.mjs';
 import { initRevisions } from './revisions.mjs';
@@ -42,6 +48,9 @@ const esc = (s) => String(s ?? '')
 const linkPath = (p) => p.split('/').map(encodeURIComponent).join('/');
 
 const nice = (slug) => slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** A stable anchor for a group, so the roadmap in the left margin can jump to it. */
+const groupId = (name) => 'g-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 /**
  * ONE field, covering the whole pipeline.
@@ -68,7 +77,7 @@ const STATUS_TEXT = {
 };
 
 export function buildIndexHtml(problems, state, opts = {}) {
-  const { web, pages, patternOf } = opts;
+  const { web, pages, patternOf, sheet = buildSheet() } = opts;
 
   const rows = problems.map((p) => {
     const cls = state.problems[p.slug]?.classification ?? {};
@@ -79,10 +88,14 @@ export function buildIndexHtml(problems, state, opts = {}) {
     // it dynamic programming - and that sentence is the most reliable signal there is.
     const algorithm = Object.values(cls).map((c) => c.algorithm ?? '').filter(Boolean).join(' · ');
     const pattern = patternOf ? patternOf(p) : '';
+    // The sheet decides first. Only a folder it does not list is filed by the rules.
+    const onSheet = matchSheet(sheet, p.slug);
     return {
       slug: p.slug,
       title: nice(p.slug),
-      group: groupFor({ slug: p.slug, pattern, structures, algorithm }),
+      group: onSheet ? onSheet.category : groupFor({ slug: p.slug, pattern, structures, algorithm }),
+      sheetN: onSheet ? onSheet.n : null,
+      note: onSheet ? onSheet.note : null,
       pattern,
       structures,
       time: best?.time ?? null,
@@ -101,17 +114,52 @@ export function buildIndexHtml(problems, state, opts = {}) {
     if (!byGroup.has(r.group)) byGroup.set(r.group, []);
     byGroup.get(r.group).push(r);
   }
-  for (const list of byGroup.values()) list.sort((a, b) => a.title.localeCompare(b.title));
+  // Inside a group: the 📝 pattern notes first, then the rest of the sheet, each in sheet
+  // order. A folder the sheet does not list goes last, by title.
+  const tier = (r) => (r.sheetN == null ? 2 : r.note ? 0 : 1);
+  for (const list of byGroup.values()) {
+    list.sort((a, b) => tier(a) - tier(b) || (a.sheetN ?? 0) - (b.sheetN ?? 0) || a.title.localeCompare(b.title));
+  }
   const groups = [...byGroup.keys()].sort((a, b) => groupRank(a) - groupRank(b));
 
   const total = rows.length;
   const current = rows.filter((r) => r.status === 'current').length;
+  const notesDone = rows.filter((r) => r.note).length;
+  const sheetDone = rows.filter((r) => r.sheetN != null).length;
+
+  // The margins. Both are built from the same rows as the sections, so they cannot disagree.
+  const groupLinks = groups.map((name) => {
+    const id = groupId(name);
+    const no = GROUPS.indexOf(name) + 1;
+    const of = sheet.categoryCounts.get(name);
+    return `      <a class="rail-link" href="#${id}" data-target="${id}">
+        <span class="rail-no">${no > 0 ? String(no).padStart(2, '0') : '--'}</span>
+        <span class="rail-name">${esc(name)}</span>
+        <span class="rail-count">${byGroup.get(name).length}${of ? ' / ' + of : ''}</span>
+      </a>`;
+  }).join('\n');
+  const leftRail = `<aside class="margin margin-left" aria-label="Roadmap">
+    <p class="rail-title">Roadmap</p>
+    <nav class="rail-nav" aria-label="Groups">
+${groupLinks}
+    </nav>
+  </aside>`;
+  const rightRail = `<aside class="margin margin-right" aria-label="Pattern notes">
+    <div class="stickynote">
+      <p class="rail-title">Pattern notes</p>
+      <p class="tally"><b>${notesDone}</b> / ${sheet.noteCount}</p>
+      <p class="tally-sub">📝 solved</p>
+      <p class="tally"><b>${sheetDone}</b> / ${sheet.count}</p>
+      <p class="tally-sub">of the Blueprint sheet</p>
+      <p class="scrawl">One problem per pattern. Revisit each one weekly.</p>
+    </div>
+  </aside>`;
 
   const sectionHtml = (name) => {
     const list = byGroup.get(name);
     const done = list.filter((r) => r.status === 'current').length;
     return `
-<section class="group" data-group="${esc(name)}">
+<section class="group" id="${groupId(name)}" data-group="${esc(name)}">
   <div class="group-head">
     <h2>${esc(name)}</h2>
     <span class="group-count"><b class="gdone">${done}</b> / <b>${list.length}</b> at standard</span>
@@ -155,7 +203,10 @@ body{
   font-family:var(--hand);font-size:17px;line-height:1.5;
   padding-block:30px 60px;padding-left:clamp(16px,3.5vw,52px);padding-right:clamp(16px,3.5vw,52px);
 }
-.wrap{max-width:1120px;margin:0 auto;}
+/* Three columns on a wide screen: the roadmap in the left margin, the sheet in the middle,
+   a pinned note on the right. Below 1320px the margins go and the sheet is centred alone. */
+.frame{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,980px) minmax(0,1fr);max-width:1600px;margin:0 auto;}
+.wrap{min-width:0;}
 a{color:inherit;}
 
 /* ---------- masthead ---------- */
@@ -274,17 +325,56 @@ li + li{border-top:2px dashed var(--pencil-light);}
   .source-row{justify-content:flex-start;} .cx{white-space:normal;overflow-wrap:anywhere;}
   .src{white-space:normal;overflow-wrap:anywhere;max-width:100%;}
 }
+/* ---------- the margins ---------- */
+/* Ruled like a notebook page, with one red margin line on the roadmap side. */
+.margin{position:sticky;top:96px;align-self:start;max-height:calc(100vh - 120px);overflow:auto;
+  width:100%;max-width:230px;min-width:0;padding:6px 16px 10px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(201,192,175,.28) 31px 32px);}
+.margin-left{justify-self:end;border-right:2px solid rgba(201,79,46,.34);padding-right:22px;}
+.margin-right{justify-self:start;padding-left:22px;}
+.rail-title{margin:4px 0 8px;font-size:21px;line-height:1.1;transform:rotate(-1deg);transform-origin:left center;}
+.rail-nav{display:flex;flex-direction:column;gap:2px;}
+/* Each roadmap entry: the number down the left, the name on the first line, the count beneath. */
+.rail-link{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:1px;align-items:baseline;
+  padding:6px 8px 6px 4px;border-radius:var(--sk-sm);color:var(--ink);text-decoration:none;font-size:15px;line-height:1.2;}
+.rail-link:hover{background:var(--orange-soft);}
+.rail-link[aria-current="true"]{background:var(--orange);}
+.rail-link:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+.rail-no{grid-row:1 / span 2;font-family:var(--mono);font-size:11px;color:var(--pencil);}
+.rail-name{grid-column:2;}
+.rail-count{grid-column:2;font-family:var(--mono);font-size:11px;color:var(--pencil);white-space:nowrap;}
+/* A sticky note, tilted and taped, for the running tally. */
+.stickynote{position:relative;margin-top:16px;padding:20px 16px 16px;background:var(--orange-soft);
+  border:2px solid var(--ink);border-radius:var(--sk-md);transform:rotate(1.2deg);box-shadow:3px 4px 0 var(--pencil-light);}
+.stickynote::before{content:"";position:absolute;top:-12px;left:50%;width:72px;height:20px;margin-left:-36px;
+  background:rgba(245,169,63,.55);transform:rotate(-3deg);border-radius:2px;}
+.tally{margin:8px 0 0;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--pencil);font-size:13px;white-space:nowrap;}
+.tally b{font-size:24px;font-weight:700;color:var(--ink);}
+.tally-sub{margin:0;font-size:14px;color:var(--pencil);}
+.scrawl{margin:16px 0 0;font-size:17px;line-height:1.3;transform:rotate(-1.5deg);}
+/* A row's name line: the title, its sheet number, and the 📝 mark for a pattern note. */
+.name-line{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;min-width:0;}
+.sheet-no{font-family:var(--mono);font-size:11.5px;color:var(--pencil);white-space:nowrap;}
+.note-badge{font-size:14px;line-height:1;padding:4px 8px 6px;border:2px solid var(--ink);border-radius:var(--sk-sm);
+  background:var(--paper);white-space:nowrap;cursor:help;}
+.note-badge:hover{background:var(--orange-soft);}
+@media (max-width:1319px){
+  .frame{grid-template-columns:minmax(0,980px);justify-content:center;}
+  .margin{display:none;}
+}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto;}}
 </style>
 </head>
 <body>
+<div class="frame">
+${leftRail}
 <div class="wrap">
 
   <header class="masthead">
     <div>
       <p class="eyebrow">debarghyanandi / neetcode-submissions</p>
       <h1>NeetCode Solutions</h1>
-      <p class="lede">${total} problems in C#, grouped the way the roadmap groups them. Every one carries its
+      <p class="lede">${total} problems in C#, grouped the way the Blueprint sheet groups them, in sheet order. Every one carries its
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
@@ -337,9 +427,11 @@ ${groups.map(sectionHtml).join('\n')}
   <p class="empty" id="empty">Nothing matches that. Try a pattern name — <em>sliding window</em>, <em>heap</em>, <em>monotonic</em>.</p>
 
   <footer class="foot">
-    <span>Generated by <code>scripts/apply.mjs</code>. Grouping rules live in <code>scripts/lib/patterns.mjs</code>.</span>
+    <span>Generated by <code>scripts/apply.mjs</code>. Order comes from <code>sheet/</code>; unlisted problems are filed by <code>scripts/lib/patterns.mjs</code>.</span>
     <span>Standard: lint, classify, teach and visualizer <code>v${VISUALIZER_FORMAT}</code></span>
   </footer>
+</div>
+${rightRail}
 </div>
 
 <script>
@@ -365,9 +457,10 @@ ${groups.map(sectionHtml).join('\n')}
       if (on) shown++;
     });
     // A group with nothing left in it is noise, not structure.
-    groups.forEach(function(g){
+    groups.forEach(function(g, i){
       var any = [].slice.call(g.querySelectorAll('li[data-hay]')).some(function(li){ return !li.hidden; });
       g.hidden = !any;
+      if (railLinks[i]) railLinks[i].hidden = !any;
     });
     empty.style.display = shown ? 'none' : 'block';
     count.textContent = shown === rows.length ? rows.length + ' problems' : shown + ' of ' + rows.length;
@@ -390,6 +483,18 @@ ${groups.map(sectionHtml).join('\n')}
       apply();
     });
   });
+  // The roadmap in the left margin follows the page: the last visible group whose
+  // heading has scrolled up past the top of the screen is the one marked current.
+  var railLinks = [].slice.call(document.querySelectorAll('.rail-link'));
+  function spy(){
+    var cur = -1;
+    groups.forEach(function(g, i){
+      if (!g.hidden && g.getBoundingClientRect().top < 150) cur = i;
+    });
+    railLinks.forEach(function(a, i){ a.setAttribute('aria-current', i === cur ? 'true' : 'false'); });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
   apply();
 })();
 (${initRevisions.toString()})();
@@ -403,7 +508,8 @@ function rowHtml(r, web, pages) {
   // Everything the search should match, lowercased once here rather than on
   // every keystroke: title, slug, pattern group, the teaching block's PATTERN
   // line, and the structures classify recorded.
-  const hay = [r.title, r.slug, r.group, r.pattern, r.structures.join(' '), STATUS_TEXT[r.status]]
+  const hay = [r.title, r.slug, r.group, r.pattern, r.structures.join(' '), STATUS_TEXT[r.status],
+    r.note ? `${r.note.pattern} ${r.note.takeaway}` : '']
     .join(' ').toLowerCase();
 
   const cx = (r.time && r.space)
@@ -434,9 +540,17 @@ function rowHtml(r, web, pages) {
     ? 'lint, classify, teach and visualizer all at the current standard'
     : 'needs: ' + r.needs.join(', ');
 
+  const note = r.note
+    ? `<span class="note-badge" title="${esc(r.note.takeaway)}">📝 Pattern note${r.note.pattern ? ' · ' + esc(r.note.pattern) : ''}</span>`
+    : '';
+
   return `    <li data-hay="${esc(hay)}" data-status="${r.status}" data-problem="${esc(r.path)}">
       <span class="who">
-        <a class="name" href="https://neetcode.io/problems/${esc(r.slug)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>
+        <span class="name-line">
+          <a class="name" href="https://neetcode.io/problems/${esc(r.slug)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>
+          ${r.sheetN != null ? `<span class="sheet-no" title="Position on the Blueprint sheet">#${r.sheetN}</span>` : ''}
+          ${note}
+        </span>
         ${why}
       </span>
       <span class="meta">

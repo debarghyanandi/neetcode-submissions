@@ -23,6 +23,7 @@ import { join } from 'node:path';
 import { buildIndexHtml } from './lib/indexpage.mjs';
 import { patternLine } from './lib/patterns.mjs';
 import { stripHeader } from './lib/header.mjs';
+import { loadSheet } from './lib/sheet.mjs';
 
 const INDEX_PATH = join(REPO, 'index.html');
 // Pages prefers index.html over index.md, but leaving a stale index.md behind
@@ -136,10 +137,11 @@ function writeIndex(block) {
  * The PATTERN line is read out of the curated source, where the teach step
  * already writes it. No new field, no second pass, nothing to keep in sync.
  */
-function buildIndexPage(problems, state) {
+function buildIndexPage(problems, state, sheet) {
   return buildIndexHtml(problems, state, {
     web: repoWebBase(),
     pages: pagesBase(),
+    sheet,
     patternOf: (p) => {
       for (const f of p.curatedFiles) {
         try {
@@ -171,6 +173,10 @@ function writeIndexPage(text) {
 
 const state = loadState();
 const problems = scanRepo(state);
+// The Blueprint sheet orders the index. A missing sheet is not fatal (the page falls back to
+// the grouping rules), but it is said out loud, because a silently different order is the bug.
+const sheet = loadSheet(REPO);
+if (!sheet.count) console.warn('  sheet/ is missing or empty: the index falls back to the grouping rules');
 
 for (const p of problems) {
   const rec = state.problems[p.slug] ?? {};
@@ -210,7 +216,7 @@ for (const slug of Object.keys(state.problems)) {
 // updatedAt is set by saveState, and only when something actually changed.
 
 const indexChanged = writeIndex(buildIndex(problems));
-const pageChanged = writeIndexPage(buildIndexPage(problems, state));
+const pageChanged = writeIndexPage(buildIndexPage(problems, state, sheet));
 const stateChanged = dryRun ? stateDiffers(state) : saveState(state);
 const changed = indexChanged || pageChanged || stateChanged;
 
