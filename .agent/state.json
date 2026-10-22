@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-21T17:00:35.998Z",
+  "updatedAt": "2026-10-22T04:36:29.013Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2278,6 +2278,17 @@
         ],
         "builtAt": "2026-09-25T22:16:15.658Z"
       }
+    },
+    "find-the-town-judge": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "house-robber": {
       "topic": "Data Structures & Algorithms",
@@ -5608,14 +5619,62 @@
     },
     "pascals-triangle": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "c63d5b1456d1f2106afb5fd57d7847e64008072ddc8a8b3384d6d2e539ae671e": "optimal.cs"
+      },
+      "fingerprints": {
+        "c63d5b1456d1f2106afb5fd57d7847e64008072ddc8a8b3384d6d2e539ae671e": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "f87530f07def"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f87530f07def\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Row-by-row Pascal's triangle generation\",\"approachKey\":\"pascal-row-sum\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n^2)",
+          "space": "O(n)",
+          "algorithm": "Row-by-row Pascal's triangle generation",
+          "approachKey": "pascal-row-sum",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"f87530f07def\",\"time\":\"O(n^2)\",\"space\":\"O(n)\",\"algorithm\":\"Row-by-row Pascal's triangle generation\",\"approachKey\":\"pascal-row-sum\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "f87530f07def"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-22T04:36:28.636Z"
+      }
     },
     "permutation-string": {
       "topic": "Data Structures & Algorithms",
