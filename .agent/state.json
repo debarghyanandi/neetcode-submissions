@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-24T04:54:25.593Z",
+  "updatedAt": "2026-10-24T06:47:42.121Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -6798,14 +6798,62 @@
     },
     "sort-colors": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "0e2f662b682faa0025e4d8d0ab79f49d1f352578b098b4f1cba1662748d147ec": "optimal.cs"
+      },
+      "fingerprints": {
+        "0e2f662b682faa0025e4d8d0ab79f49d1f352578b098b4f1cba1662748d147ec": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "14d25cfe4eae"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"14d25cfe4eae\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dutch National Flag, three-pointer\",\"approachKey\":\"dutch-flag\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "Dutch National Flag, three-pointer",
+          "approachKey": "dutch-flag",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"14d25cfe4eae\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"Dutch National Flag, three-pointer\",\"approachKey\":\"dutch-flag\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "14d25cfe4eae"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-24T06:47:41.847Z"
+      }
     },
     "string-encode-and-decode": {
       "topic": "Data Structures & Algorithms",
@@ -6902,6 +6950,17 @@
         ],
         "builtAt": "2026-09-23T06:10:38.029Z"
       }
+    },
+    "subarray-sum-equals-k": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "subtree-of-a-binary-tree": {
       "topic": "Data Structures & Algorithms",
