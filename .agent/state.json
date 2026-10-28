@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-24T06:47:42.121Z",
+  "updatedAt": "2026-10-28T12:47:49.052Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2185,6 +2185,17 @@
         ],
         "builtAt": "2026-09-25T22:14:26.743Z"
       }
+    },
+    "find-missing-and-repeated-values": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "find-target-in-rotated-sorted-array": {
       "topic": "Data Structures & Algorithms",
@@ -6953,14 +6964,64 @@
     },
     "subarray-sum-equals-k": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "a2d1a50af1a25322043f280fab8faa8e9a4d21de2e0b0c6bf4fe50b3d091bd10": "optimal.cs"
+      },
+      "fingerprints": {
+        "a2d1a50af1a25322043f280fab8faa8e9a4d21de2e0b0c6bf4fe50b3d091bd10": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "0fd60dfe2216"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0fd60dfe2216\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"prefix sum with hash map\",\"approachKey\":\"prefix-sum-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(n)",
+          "algorithm": "prefix sum with hash map",
+          "approachKey": "prefix-sum-hashmap",
+          "correct": true,
+          "structures": [
+            "array",
+            "hash-map"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"0fd60dfe2216\",\"time\":\"O(n)\",\"space\":\"O(n)\",\"algorithm\":\"prefix sum with hash map\",\"approachKey\":\"prefix-sum-hashmap\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "0fd60dfe2216"
+        },
+        "structures": [
+          "array",
+          "hash-map"
+        ],
+        "builtAt": "2026-10-28T12:47:48.772Z"
+      }
     },
     "subtree-of-a-binary-tree": {
       "topic": "Data Structures & Algorithms",

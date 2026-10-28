@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NeetCode Solutions — by pattern</title>
-<meta name="description" content="99 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
+<meta name="description" content="100 NeetCode problems in C#, grouped by pattern, each with its source and a step-through visualizer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -181,16 +181,16 @@ li + li{border-top:1px solid var(--line-soft);}
     <div>
       <p class="eyebrow">debarghyanandi / neetcode-submissions</p>
       <h1>NeetCode Solutions</h1>
-      <p class="lede">99 problems in C#, grouped the way the Blueprint sheet groups them, in sheet order. Every one carries its
+      <p class="lede">100 problems in C#, grouped the way the Blueprint sheet groups them, in sheet order. Every one carries its
         complexity, a teaching block in the source, and a step-through visualizer you can run in the browser.</p>
     </div>
     <div class="meter">
-      <div class="meter-top"><span>at current standard</span><b class="meter-figure"><span id="curCount">98</span> / 99</b></div>
+      <div class="meter-top"><span>at current standard</span><b class="meter-figure"><span id="curCount">99</span> / 100</b></div>
       <div class="bar" aria-hidden="true"><span id="bar" style="width:99.0%"></span></div>
       <p class="meter-hint">red means lint, classify, teach or the visualizer is not yet at the current standard</p>
       <div class="stats">
-        <span class="stat"><b>52</b> / 166 <em>📝 pattern notes solved</em></span>
-        <span class="stat"><b>99</b> / 376 <em>of the Blueprint sheet</em></span>
+        <span class="stat"><b>53</b> / 166 <em>📝 pattern notes solved</em></span>
+        <span class="stat"><b>100</b> / 376 <em>of the Blueprint sheet</em></span>
       </div>
     </div>
   </header>
@@ -239,7 +239,7 @@ li + li{border-top:1px solid var(--line-soft);}
 <section class="group" id="g-arrays-hashing" data-group="Arrays &amp; Hashing">
   <div class="group-head">
     <h2>Arrays &amp; Hashing</h2>
-    <span class="group-count"><b class="gdone">14</b> / <b>15</b> at standard</span>
+    <span class="group-count"><b class="gdone">15</b> / <b>16</b> at standard</span>
   </div>
   <p class="group-note">Trade memory for a lookup, and a nested loop collapses to one pass.</p>
   <ul>
@@ -297,20 +297,20 @@ li + li{border-top:1px solid var(--line-soft);}
         </span>
       </span>
     </li>
-    <li data-hay="subarray sum equals k subarray-sum-equals-k arrays &amp; hashing   needs rebuilt prefix sum + hash map count += seen[prefix − k], seed {0: 1} · twists: contiguous array — store the first index for longest (0 → −1) · divisible by k — key prefix % k, fix negative mod · xor = k — same idea with prefix xor (count subarrays with given xor)" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/subarray-sum-equals-k">
+    <li data-hay="subarray sum equals k subarray-sum-equals-k arrays &amp; hashing prefix sum + hash map (count of earlier prefix sums) array hash-map current prefix sum + hash map count += seen[prefix − k], seed {0: 1} · twists: contiguous array — store the first index for longest (0 → −1) · divisible by k — key prefix % k, fix negative mod · xor = k — same idea with prefix xor (count subarrays with given xor)" data-status="current" data-problem="Data Structures &amp; Algorithms/subarray-sum-equals-k">
       <span class="who">
         <span class="name-line">
           <a class="name" href="https://neetcode.io/problems/subarray-sum-equals-k" target="_blank" rel="noopener noreferrer">Subarray Sum Equals K</a>
           <span class="sheet-no" title="Position on the Blueprint sheet">#10</span>
           <span class="note-badge" title="count += seen[prefix − k], seed {0: 1} · twists: Contiguous Array — store the FIRST index for longest (0 → −1) · Divisible by K — key prefix % k, fix negative mod · XOR = K — same idea with prefix XOR (Count Subarrays with Given XOR)">📝 Pattern note · Prefix sum + hash map</span>
         </span>
-        <span class="why none">not taught yet</span>
+        <span class="why">Prefix Sum + Hash Map (count of earlier prefix sums)</span>
       </span>
       <span class="meta">
-        <span class="cx">not curated yet</span>
+        <span class="cx" title="time / space">O(n) &middot; O(n)</span><span class="sources"><span class="source-row"><a class="src" href="https://github.com/debarghyanandi/neetcode-submissions/blob/main/Data%20Structures%20%26%20Algorithms/subarray-sum-equals-k/optimal.cs" target="_blank" rel="noopener noreferrer">optimal</a></span></span>
         <span class="actions">
-          <span class="run off">no visualizer</span>
-          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
+          <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/subarray-sum-equals-k/subarray-sum-equals-k-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
+          <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
       </span>
@@ -329,6 +329,24 @@ li + li{border-top:1px solid var(--line-soft);}
         <span class="actions">
           <a class="run" href="https://debarghyanandi.github.io/neetcode-submissions/Data%20Structures%20%26%20Algorithms/products-of-array-discluding-self/products-of-array-discluding-self-visualizer.html" target="_blank" rel="noopener noreferrer">&#9654; run</a>
           <span class="mark-std current" title="Current: lint, classify, teach and visualizer all at the current standard"><i class="dot" aria-hidden="true"></i><span class="sr-only">Current: lint, classify, teach and visualizer all at the current standard</span></span>
+          <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
+        </span>
+      </span>
+    </li>
+    <li data-hay="find missing and repeated values find-missing-and-repeated-values arrays &amp; hashing   needs rebuilt missing &amp; repeating two equations (sum and sum of squares), or xor split by the lowest set bit" data-status="rebuild" data-problem="Data Structures &amp; Algorithms/find-missing-and-repeated-values">
+      <span class="who">
+        <span class="name-line">
+          <a class="name" href="https://neetcode.io/problems/find-missing-and-repeated-values" target="_blank" rel="noopener noreferrer">Find Missing And Repeated Values</a>
+          <span class="sheet-no" title="Position on the Blueprint sheet">#28</span>
+          <span class="note-badge" title="Two equations (sum and sum of squares), or XOR split by the lowest set bit">📝 Pattern note · Missing &amp; repeating</span>
+        </span>
+        <span class="why none">not taught yet</span>
+      </span>
+      <span class="meta">
+        <span class="cx">not curated yet</span>
+        <span class="actions">
+          <span class="run off">no visualizer</span>
+          <span class="mark-std rebuild" title="Needs rebuilt: needs: lint, classify, teach, visualizer"><i class="dot" aria-hidden="true"></i><span class="sr-only">Needs rebuilt: needs: lint, classify, teach, visualizer</span></span>
           <button class="revision revision-tone" type="button" data-revisions="0" hidden>Revised<span class="revision-count">0/4</span></button>
         </span>
       </span>
