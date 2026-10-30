@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-29T14:27:02.582Z",
+  "updatedAt": "2026-10-30T22:08:40.523Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -2342,14 +2342,64 @@
     },
     "find-the-index-of-the-first-occurrence-in-a-string": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-1.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "1505554ec77cab5db0cf501f62c695f00cf0974f5551e0ee27b04c1486ee4a85": "optimal.cs"
+      },
+      "fingerprints": {
+        "1505554ec77cab5db0cf501f62c695f00cf0974f5551e0ee27b04c1486ee4a85": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "2692c0428c78"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2692c0428c78\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"KMP string matching\",\"approachKey\":\"kmp-algorithm\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-1.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n + m)",
+          "space": "O(m)",
+          "algorithm": "KMP string matching",
+          "approachKey": "kmp-algorithm",
+          "correct": true,
+          "structures": [
+            "array",
+            "string"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"2692c0428c78\",\"time\":\"O(n + m)\",\"space\":\"O(m)\",\"algorithm\":\"KMP string matching\",\"approachKey\":\"kmp-algorithm\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "2692c0428c78"
+        },
+        "structures": [
+          "array",
+          "string"
+        ],
+        "builtAt": "2026-10-30T22:08:40.107Z"
+      }
     },
     "find-the-town-judge": {
       "topic": "Data Structures & Algorithms",
@@ -6080,6 +6130,17 @@
         ],
         "builtAt": "2026-09-19T06:38:27.612Z"
       }
+    },
+    "remove-duplicates-from-sorted-array-ii": {
+      "topic": "Data Structures & Algorithms",
+      "curatedFiles": [],
+      "hasVisualizer": false,
+      "processedSubmissions": [],
+      "awaitingClassification": [
+        "submission-0.cs"
+      ],
+      "knownFingerprints": {},
+      "fingerprints": {}
     },
     "remove-node-from-end-of-linked-list": {
       "topic": "Data Structures & Algorithms",
