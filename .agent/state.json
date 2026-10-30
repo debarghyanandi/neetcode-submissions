@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-30T22:08:40.523Z",
+  "updatedAt": "2026-10-30T22:17:36.988Z",
   "problems": {
     "add-two-numbers": {
       "topic": "Data Structures & Algorithms",
@@ -6133,14 +6133,62 @@
     },
     "remove-duplicates-from-sorted-array-ii": {
       "topic": "Data Structures & Algorithms",
-      "curatedFiles": [],
-      "hasVisualizer": false,
-      "processedSubmissions": [],
-      "awaitingClassification": [
-        "submission-0.cs"
+      "curatedFiles": [
+        "optimal.cs"
       ],
-      "knownFingerprints": {},
-      "fingerprints": {}
+      "hasVisualizer": true,
+      "processedSubmissions": [],
+      "awaitingClassification": [],
+      "knownFingerprints": {
+        "ea49319967c2ea3883acad50731974e56e1654105336c761e7cdd7f898b45906": "optimal.cs"
+      },
+      "fingerprints": {
+        "ea49319967c2ea3883acad50731974e56e1654105336c761e7cdd7f898b45906": "optimal.cs"
+      },
+      "lint": {
+        "optimal.cs": {
+          "version": 2,
+          "codePrint": "9bb6ad3ce64f"
+        }
+      },
+      "headerSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"9bb6ad3ce64f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer with counting and bounded copy\",\"approachKey\":\"two-pointer-bounded-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "provenance": {
+        "optimal.cs": {
+          "selfMarked": false,
+          "evidence": "marker check on submission-0.cs when it was first processed",
+          "recordedFrom": "classify"
+        }
+      },
+      "classification": {
+        "optimal.cs": {
+          "time": "O(n)",
+          "space": "O(1)",
+          "algorithm": "two-pointer with counting and bounded copy",
+          "approachKey": "two-pointer-bounded-duplicates",
+          "correct": true,
+          "structures": [
+            "array"
+          ]
+        }
+      },
+      "teachSignatures": {
+        "optimal.cs": "{\"v\":4,\"name\":\"optimal.cs\",\"codePrint\":\"9bb6ad3ce64f\",\"time\":\"O(n)\",\"space\":\"O(1)\",\"algorithm\":\"two-pointer with counting and bounded copy\",\"approachKey\":\"two-pointer-bounded-duplicates\",\"correct\":true,\"selfMark\":false,\"standing\":\"the only solution in this folder\"}"
+      },
+      "visualizer": {
+        "v": 2,
+        "files": [
+          "optimal.cs"
+        ],
+        "prints": {
+          "optimal.cs": "9bb6ad3ce64f"
+        },
+        "structures": [
+          "array"
+        ],
+        "builtAt": "2026-10-30T22:17:36.727Z"
+      }
     },
     "remove-node-from-end-of-linked-list": {
       "topic": "Data Structures & Algorithms",
